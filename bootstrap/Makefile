@@ -10,5 +10,5 @@ clean:
 	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR)
 
 $(BINDIR)/poolbc: $(SRCDIR)/commands/poolbc.cpp $(POOLBCLIBS:%=$(LIBDIR)/%) $(BINDIR)
-	@echo "build store"
+	@echo "build poolbc"
 	@$(CC) $(CFLAGS) -I$(INCDIR) -o $@ $< $(POOLBCLIBS:%=$(LIBDIR)/%)
