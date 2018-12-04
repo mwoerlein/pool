@@ -35,7 +35,7 @@ class X86PasmVisitor: public Visitor {
         out << "// class " << classDef.name << "\n";
         out << clsPrefix << "_desc:\n";
         out << "    .long 0\n";
-        out << "    .long " << clsPrefix << "_so_classname\n";
+        out << "    .long " << clsPrefix << "_so_cn_" << classDef.name << "\n";
         out << "    .long (" << tplPrefix << "_end - " << tplPrefix << ")\n"; // instance size
         out << "    .long (" << tplPrefix << " - " << clsPrefix << "_desc)\n"; // instance template offset
         out << "    .long (" << tplPrefix << "_handle_Object - " << tplPrefix << ")\n"; // Object handle offset in instance
@@ -45,11 +45,18 @@ class X86PasmVisitor: public Visitor {
 
         // dependent classes
         out << clsPrefix << "_vtabs:\n";
-        out << clsPrefix << "_vtabs_entry_Object:\n";
-        out << "    .long 0\n"; // @class-desc filled on class loading
-        out << "    .long " << clsPrefix << "_so_classname\n";
-        out << "    .long (" << clsPrefix << "_vtab_Object - " << clsPrefix << "_desc)\n"; // vtab offset in description
-        out << "    .long (" << tplPrefix << "_handle_Object - " << tplPrefix << ")\n"; // handle offset in instance
+        {
+            Iterator<ClassDefNode> &it = classDef.supers.iterator();
+            while (it.hasNext()) {
+                ClassDefNode & super = it.next();
+                out << clsPrefix << "_vtabs_entry_" << super.name << ":\n";
+                out << "    .long 0\n"; // @class-desc filled on class loading
+                out << "    .long " << clsPrefix << "_so_cn_" << super.name << "\n";
+                out << "    .long (" << clsPrefix << "_vtab_" << super.name << " - " << clsPrefix << "_desc)\n"; // vtab offset in description
+                out << "    .long (" << tplPrefix << "_handle_" << super.name << " - " << tplPrefix << ")\n"; // handle offset in instance
+            }
+            it.destroy();
+        }
         out << clsPrefix << "_vtab_end_entry:\n";
         out << "    .long 0\n";
         out << "    .long 0\n";
@@ -58,43 +65,96 @@ class X86PasmVisitor: public Visitor {
         out << "\n";
 
         // vtabs
-        out << "_cObjectVEObject := (" << clsPrefix << "_vtabs_entry_Object - " << clsPrefix << "_desc)\n";
-        out << clsPrefix << "_vtab_Object:\n";
         {
-            Iterator<MethodDefNode> &it = classDef.methods.iterator();
+            Iterator<ClassDefNode> &it = classDef.supers.iterator();
             while (it.hasNext()) {
-                MethodDefNode & methodDef = it.next();
-                out << clsPrefix << "_vtab_Object_method_" << methodDef.name << ":\n";
-                out << "    .long " << clsPrefix << "_mo_" << methodDef.name << "\n";
-                out << "    .long _cObjectVEObject\n";
+                ClassDefNode & super = it.next();
+                out << "_c" << classDef.name << "VE" << super.name << " := (" << clsPrefix << "_vtabs_entry_" << super.name << " - " << clsPrefix << "_desc)\n";
+            }
+            it.destroy();
+        }
+        {
+            Iterator<ClassDefNode> &it = classDef.supers.iterator();
+            while (it.hasNext()) {
+                ClassDefNode & super = it.next();
+                out << clsPrefix << "_vtab_" << super.name << ":\n";
+                {
+                    Iterator<MethodDefNode> &it = super.methods.iterator();
+                    while (it.hasNext()) {
+                        MethodDefNode & methodDef = it.next();
+                        if (super.equals(classDef)) {
+                            out << clsPrefix << "_vtab_" << super.name << "_method_" << methodDef.name << ":\n";
+                        }
+                        ClassDefNode & declClass = super;
+                        out << "    .long class_" << declClass.name << "_mo_" << methodDef.name << "\n";
+                        out << "    .long _c" << classDef.name << "VE" << declClass.name << "\n";
+                    }
+                    it.destroy();
+                }
             }
             it.destroy();
         }
         out << "\n";
         
         // constants
-        out << clsPrefix << "_so_classname := (" << clsPrefix << "_string_classname - " << clsPrefix << "_desc)\n";
-        out << clsPrefix << "_string_classname:\n";
-        out << "    .asciz \"" << classDef.fullQualifiedName << "\"\n";
-        out << "\n";
+        {
+            Iterator<ClassDefNode> &it = classDef.supers.iterator();
+            while (it.hasNext()) {
+                ClassDefNode & super = it.next();
+                out << clsPrefix << "_so_cn_" << super.name << " := (" << clsPrefix << "_string_cn_" << super.name << " - " << clsPrefix << "_desc)\n";
+                out << clsPrefix << "_string_cn_" << super.name << ":\n";
+                out << "    .asciz \"" << super.fullQualifiedName << "\"\n";
+                out << "\n";
+            }
+            it.destroy();
+        }
         
         // instance template and variables
         out << tplPrefix << ":\n";
         out << "    .long 0\n"; // @class-desc
         out << "    .long 0\n"; // @meminfo
+
+        {
+            Iterator<ClassDefNode> &it = classDef.supers.iterator();
+            while (it.hasNext()) {
+                ClassDefNode & super = it.next();
+                
+                out << tplPrefix << "_handle_" << super.name << ":\n";
+                out << "    .long 0\n"; // _call_entry
+                out << "    .long 0\n"; // @inst
+                out << "    .long 0\n"; // vtab-offset
+                Iterator<ClassDefNode> &sit = super.supers.iterator();
+                while (sit.hasNext()) {
+                    ClassDefNode & ssuper = sit.next();
+                    if (super.equals(classDef)) {
+                        out << "handle_" << super.name << "_vars_" << ssuper.name << " := (" << tplPrefix << "_handle_" << super.name << "_vars_" << ssuper.name << " - " << tplPrefix << "_handle_" << super.name << ")\n";
+                    }
+                    out << tplPrefix << "_handle_" << super.name << "_vars_" << ssuper.name << ":\n";
+                    out << "    .long (" << tplPrefix << "_vars_" << ssuper.name << " - " << tplPrefix << ")\n"; // @Super-Obj-Vars
+                }
+                sit.destroy();
+            }
+            it.destroy();
+        }
         
-        out << "handle_Object_vars_Object := (" << tplPrefix << "_handle_Object_vars_Object - " << tplPrefix << "_handle_Object)\n";
-        out << tplPrefix << "_handle_Object:\n";
-        out << "    .long 0\n"; // _call_entry
-        out << "    .long 0\n"; // @inst
-        out << "    .long 0\n"; // vtab-offset
-        out << tplPrefix << "_handle_Object_vars_Object:\n";
-        out << "    .long (" << tplPrefix << "_vars_Object - " << tplPrefix << ")\n"; // @Super-Obj-Vars
-        
-        out << tplPrefix << "_vars_Object:\n";
-        out << ".global Object_i_runtime := (" << tplPrefix << "_vars_Object_runtime - " << tplPrefix << "_vars_Object)\n";
-        out << tplPrefix << "_vars_Object_runtime:\n";
-        out << "    .long 0\n"; // Runtime-handle
+        {
+            Iterator<ClassDefNode> &it = classDef.supers.iterator();
+            while (it.hasNext()) {
+                ClassDefNode & super = it.next();
+                out << tplPrefix << "_vars_" << super.name << ":\n";
+                Iterator<VariableDefNode> &vit = super.variables.iterator();
+                while (vit.hasNext()) {
+                    VariableDefNode &variable = vit.next();
+                    if (super.equals(classDef)) {
+                        out << ".global " << super.name << "_i_" << variable.name << " := (" << tplPrefix << "_vars_" << super.name << "_" << variable.name << " - " << tplPrefix << "_vars_" << super.name << ")\n";
+                        out << tplPrefix << "_vars_" << super.name << "_" << variable.name << ":\n";
+                    }
+                    out << "    .long 0 // " << variable.name << "\n"; // TODO: size_of variable
+                }
+                vit.destroy();
+            }
+            it.destroy();
+        }
         
         out << tplPrefix << "_end:\n";
         out << "\n";
