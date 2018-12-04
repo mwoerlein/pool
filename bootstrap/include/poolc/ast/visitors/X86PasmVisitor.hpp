@@ -137,6 +137,10 @@ class X86PasmVisitor: public Visitor {
         out << "\n";
         return true;
     }
+    
+    virtual bool visit(VariableDefNode & variableDef) {
+        out << "// variable " << variableDef.name << "\n";
+    }
 };
 
 #endif //POOLC_AST_VISITORS_X86PASMVISITOR_HPP_LOCK
