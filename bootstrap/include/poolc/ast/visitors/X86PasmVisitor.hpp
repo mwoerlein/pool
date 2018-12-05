@@ -199,7 +199,7 @@ class X86PasmVisitor: public Visitor {
                 << ")\n";
             
             out << clsPrefix << "_method_" << methodDef.name << ":\n";
-            out << "    pushl %ebp; movl %esp, %ebp;\n";
+            out << "    pushl %ebp; movl %esp, %ebp\n";
             out << "    \n";
             out << methodDef.body;
             out << "    \n";
