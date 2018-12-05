@@ -3,8 +3,10 @@
 
 #include "poolc/ast/Node.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
+#include "poolc/ast/nodes/MethodRefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
 #include "sys/collection/LinkedList.hpp"
+#include "sys/collection/HashMap.hpp"
 
 class ClassDefNode: public Node {
     public:
@@ -13,6 +15,7 @@ class ClassDefNode: public Node {
     String & inlinePasm;
     MutableCollection<ClassDefNode> &supers;
     MutableCollection<VariableDefNode> &variables;
+    MutableMap<String, MethodRefNode> &methodRefs;
     MutableCollection<MethodDefNode> &methods;
     
     ClassDefNode(Environment &env, MemoryInfo &mi)
@@ -22,6 +25,7 @@ class ClassDefNode: public Node {
              inlinePasm(env.create<String>()),
              supers(env.create<LinkedList<ClassDefNode>>()),
              variables(env.create<LinkedList<VariableDefNode>>()),
+             methodRefs(env.create<HashMap<String, MethodRefNode>>()),
              methods(env.create<LinkedList<MethodDefNode>>()) {
     }
     virtual ~ClassDefNode() {
@@ -37,6 +41,12 @@ class ClassDefNode: public Node {
             while (it.hasNext()) { it.next().destroy(); }
             it.destroy();
             variables.destroy();
+        }
+        {
+            Iterator<MethodRefNode> &it = methodRefs.values();
+            while (it.hasNext()) { it.next().destroy(); }
+            it.destroy();
+            methodRefs.destroy();
         }
         {
             Iterator<MethodDefNode> &it = methods.iterator();

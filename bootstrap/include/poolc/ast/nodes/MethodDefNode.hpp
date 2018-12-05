@@ -2,11 +2,13 @@
 #define POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
 
 #include "poolc/ast/Node.hpp"
+#include "poolc/ast/nodes/ClassDefNode.hpp"
 
 class MethodDefNode: public Node {
     public:
     String & name;
     String & body;
+    ClassDefNode *parent;
     
     MethodDefNode(Environment &env, MemoryInfo &mi)
             :Object(env, mi), name(env.create<String>()), body(env.create<String>()) {}

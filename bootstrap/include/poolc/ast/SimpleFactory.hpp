@@ -57,6 +57,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)    // return @class handle\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // int hash()
             {
@@ -68,6 +72,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)    // return @this as hash\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // int equals(ANY)
             {
@@ -85,6 +93,10 @@ class SimpleFactory: virtual public Object {
                     << "_come_ret:\n"    
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // Runtime rt()
             {
@@ -98,6 +110,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                         // return @runtime (Type Runtime)\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // void setRt(Runtime)
             {
@@ -111,6 +127,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, Object_i_runtime(%ebx)           // store @runtime (Type Runtime)\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
         }
         return *objectDef;
@@ -133,17 +153,19 @@ class SimpleFactory: virtual public Object {
                 variable.name = "desc";
                 cls.variables.add(variable);
             }
+            // inherited methods
+            {
+                Iterator<MethodRefNode> &it = getObjectDef().methodRefs.values();
+                while (it.hasNext()) {
+                    MethodRefNode &superRef = it.next();
+                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
+                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
+                    if (&old) { old.destroy(); }
+                    ref.parent = &cls;
+                }
+                it.destroy();
+            }
             // methods
-            // Class getClass() [inherit]
-            { }
-            // int hash() [inherit]
-            { }
-            // int equals(ANY) [inherit]
-            { }
-            // Runtime rt() [inherit]
-            { }
-            // void setRt(Runtime) [inherit]
-            { }
             // ClassDesc getDesc()
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
@@ -156,6 +178,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                      // return @class desc\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // void setDesc(ClassDesc)
             {
@@ -171,6 +197,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %ebx, (%eax)                        // store @this (Type Class) in class desc\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // CString getName()
             {
@@ -186,6 +216,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                      // return cstring-ref\n"
                 ;
                 cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
             }
             // inline pasm
             {

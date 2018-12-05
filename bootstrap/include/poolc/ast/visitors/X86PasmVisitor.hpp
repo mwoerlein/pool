@@ -79,13 +79,21 @@ class X86PasmVisitor: public Visitor {
                 ClassDefNode & super = it.next();
                 out << clsPrefix << "_vtab_" << super.name << ":\n";
                 {
-                    Iterator<MethodDefNode> &it = super.methods.iterator();
+                    Iterator<String> &it = super.methodRefs.keys();
                     while (it.hasNext()) {
-                        MethodDefNode & methodDef = it.next();
+                        MethodRefNode & methodRef = classDef.methodRefs.get(it.next());
+                        MethodDefNode & methodDef = methodRef.methodDef;
                         if (super.equals(classDef)) {
+        
+                            out << ".global " << super.name << "_m_" << methodDef.name
+                                << " := (" 
+                                << clsPrefix << "_vtab_" << super.name << "_method_" << methodDef.name
+                                << " - " 
+                                << clsPrefix << "_vtab_" << super.name
+                                << ")\n";
                             out << clsPrefix << "_vtab_" << super.name << "_method_" << methodDef.name << ":\n";
                         }
-                        ClassDefNode & declClass = super;
+                        ClassDefNode & declClass = *methodDef.parent;
                         out << "    .long class_" << declClass.name << "_mo_" << methodDef.name << "\n";
                         out << "    .long _c" << classDef.name << "VE" << declClass.name << "\n";
                     }
@@ -173,15 +181,12 @@ class X86PasmVisitor: public Visitor {
         return true;
     }
     
+    virtual bool visit(MethodRefNode & methodRef) {
+        out << "// method-ref " << methodRef.methodDef.name << "\n";
+    }
+    
     virtual bool visit(MethodDefNode & methodDef) {
-        out << "// method " << methodDef.name << "\n";
-        
-        out << ".global " << curClass->name << "_m_" << methodDef.name
-            << " := (" 
-            << clsPrefix << "_vtab_" << curClass->name << "_method_" << methodDef.name
-            << " - " 
-            << clsPrefix << "_vtab_" << curClass->name
-            << ")\n";
+        out << "// method-def " << methodDef.name << "\n";
         
         out << ".global " << clsPrefix << "_mo_" << methodDef.name
             << " := ("
