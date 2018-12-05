@@ -188,20 +188,24 @@ class X86PasmVisitor: public Visitor {
     virtual bool visit(MethodDefNode & methodDef) {
         out << "// method-def " << methodDef.name << "\n";
         
-        out << ".global " << clsPrefix << "_mo_" << methodDef.name
-            << " := ("
-            << clsPrefix << "_method_" << methodDef.name
-            << " - "
-            << clsPrefix << "_desc"
-            << ")\n";
-        
-        out << clsPrefix << "_method_" << methodDef.name << ":\n";
-        out << "    pushl %ebp; movl %esp, %ebp;\n";
-        out << "    \n";
-        out << methodDef.body;
-        out << "    \n";
-        out << "    leave\n";
-        out << "    ret\n";
+        if (methodDef.virt) {
+            out << ".global " << clsPrefix << "_mo_" << methodDef.name << " := 0 // virtual method\n";
+        } else {        
+            out << ".global " << clsPrefix << "_mo_" << methodDef.name
+                << " := ("
+                << clsPrefix << "_method_" << methodDef.name
+                << " - "
+                << clsPrefix << "_desc"
+                << ")\n";
+            
+            out << clsPrefix << "_method_" << methodDef.name << ":\n";
+            out << "    pushl %ebp; movl %esp, %ebp;\n";
+            out << "    \n";
+            out << methodDef.body;
+            out << "    \n";
+            out << "    leave\n";
+            out << "    ret\n";
+        }
         out << "\n";
         return true;
     }

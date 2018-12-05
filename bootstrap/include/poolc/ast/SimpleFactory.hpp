@@ -11,12 +11,27 @@ class SimpleFactory: virtual public Object {
     private:
     ClassDefNode * objectDef;
     ClassDefNode * classDef;
+    ClassDefNode * threadDef;
+    ClassDefNode * runtimeDef;
+    ClassDefNode * aDef;
+    ClassDefNode * bDef;
     
     public:
-    SimpleFactory(Environment &env, MemoryInfo &mi):Object(env, mi), objectDef(0), classDef(0) {}
+    SimpleFactory(Environment &env, MemoryInfo &mi)
+            :Object(env, mi),
+             objectDef(0),
+             classDef(0),
+             threadDef(0),
+             runtimeDef(0),
+             aDef(0),
+             bDef(0) {}
     virtual ~SimpleFactory() {
         if (objectDef) { objectDef->destroy(); }
         if (classDef) { classDef->destroy(); }
+        if (threadDef) { threadDef->destroy(); }
+        if (runtimeDef) { runtimeDef->destroy(); }
+        if (aDef) { aDef->destroy(); }
+        if (bDef) { bDef->destroy(); }
     }
     
     virtual ClassDefNode * getDef(String &name) {
@@ -24,6 +39,16 @@ class SimpleFactory: virtual public Object {
             return &getObjectDef();
         } else if (name == "Class" || name == "/my/Class") {
             return &getClassDef();
+        } else if (name == "Thread" || name == "/my/Thread") {
+            return &getThreadDef();
+/*
+        } else if (name == "Runtime" || name == "/my/Runtime") {
+            return &getRuntimeDef();
+        } else if (name == "A" || name == "/my/A") {
+            return &getADef();
+        } else if (name == "B" || name == "/my/B") {
+            return &getBDef();
+*/
         }
         return 0;
     }
@@ -44,6 +69,8 @@ class SimpleFactory: virtual public Object {
                 variable.name = "runtime";
                 cls.variables.add(variable);
             }
+            // inherited methods
+            {}
             // methods
             // Class getClass()
             {
@@ -132,6 +159,8 @@ class SimpleFactory: virtual public Object {
                 if (&old) { old.destroy(); }
                 method.parent = ref.parent = &cls;
             }
+            // inline pasm
+            {}
         }
         return *objectDef;
     }
@@ -238,6 +267,49 @@ class SimpleFactory: virtual public Object {
             }
         }
         return *classDef;
+    }
+    
+    virtual ClassDefNode & getThreadDef() {
+        if (!threadDef) {
+            threadDef = &env().create<ClassDefNode>();
+            ClassDefNode &cls = *threadDef;
+            cls.name = "Thread";
+            cls.fullQualifiedName = "/my/Thread";
+            
+            // supers
+            cls.supers.add(getObjectDef());
+            cls.supers.add(getThreadDef());
+            // vars
+            {}
+            // inherited methods
+            {
+                Iterator<MethodRefNode> &it = getObjectDef().methodRefs.values();
+                while (it.hasNext()) {
+                    MethodRefNode &superRef = it.next();
+                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
+                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
+                    if (&old) { old.destroy(); }
+                    ref.parent = &cls;
+                }
+                it.destroy();
+            }
+            // methods
+            // void run()
+            {
+                MethodDefNode &method = env().create<MethodDefNode>();
+                method.name = "run";
+                method.virt = true;
+                cls.methods.add(method);
+                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
+                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
+                if (&old) { old.destroy(); }
+                method.parent = ref.parent = &cls;
+            }
+            // inline pasm
+            {
+            }
+        }
+        return *threadDef;
     }
 };
 

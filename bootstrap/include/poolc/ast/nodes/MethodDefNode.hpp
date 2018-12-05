@@ -8,10 +8,11 @@ class MethodDefNode: public Node {
     public:
     String & name;
     String & body;
+    bool virt;
     ClassDefNode *parent;
     
     MethodDefNode(Environment &env, MemoryInfo &mi)
-            :Object(env, mi), name(env.create<String>()), body(env.create<String>()) {}
+            :Object(env, mi), name(env.create<String>()), body(env.create<String>()), virt(false), parent(0) {}
     virtual ~MethodDefNode() {
         name.destroy();
         body.destroy();

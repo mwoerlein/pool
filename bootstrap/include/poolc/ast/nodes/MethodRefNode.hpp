@@ -11,7 +11,7 @@ class MethodRefNode: public Node {
     ClassDefNode *parent;
     
     MethodRefNode(Environment &env, MemoryInfo &mi, MethodDefNode & methodDef)
-            :Object(env, mi), methodDef(methodDef) {}
+            :Object(env, mi), methodDef(methodDef), parent(0) {}
     virtual ~MethodRefNode() {
     }
     
