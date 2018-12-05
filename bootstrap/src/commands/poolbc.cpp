@@ -52,7 +52,6 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             Visitor &dump = env().create<X86PasmVisitor, OStream &>(outfile);
         
             classDef->accept(dump);
-            classDef->destroy();
             
             dump.destroy();
             outfile.destroy();

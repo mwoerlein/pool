@@ -7,7 +7,6 @@ class StreamFactory;
 #include "memory/MemoryAllocator.hpp"
 
 void* operator new (size_t size, void* location);
-OStream &operator<<(OStream & out, MemoryInfo * e);
 
 class Environment: virtual public Object {
     private:

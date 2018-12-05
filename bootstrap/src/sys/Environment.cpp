@@ -5,14 +5,6 @@
 void* operator new (size_t size, void* location) {
     return location;
 }
-//*/
-#include "memory/MemoryInfoHelper.hpp"
-OStream &operator<<(OStream & out, MemoryInfo * e) {
-    out << "MemoryInfo "
-               <<(void *) e->buf<<':'<<memoryEnd(e->buf, e->len)<<'['<<(void *) e->len<<']'
-               <<" ("<<(void *) e->prev<<'<'<<(void *) e<<'>'<<(void *)e->next<<")";
-}
-//*/
 
 Environment::Environment():Object(*this, *notAnInfo),ma(0),_out(0),_err(0),_factory(0) {}
 Environment::Environment(Environment &env, MemoryInfo &mi, MemoryAllocator &ma, OStream &out, OStream &err)
