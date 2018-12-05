@@ -177,6 +177,7 @@ class SimpleFactory: virtual public Object {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "getName";
                 method.body
+                    << "class_name_offset := 0x4 //(class_Class_name - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax                      // @this (Type Class)\n"
                     << "    movl handle_Class_vars_Class(%eax), %ebx // inst vars offset (Class)\n"
                     << "    addl 4(%eax), %ebx                       // @this.vars(Class)\n"
@@ -185,6 +186,21 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                      // return cstring-ref\n"
                 ;
                 cls.methods.add(method);
+            }
+            // inline pasm
+            {
+                cls.inlinePasm
+                    << ".global class_vtabs_offset := 0x1c //(class_Class_vtabs - class_Class_desc)\n"
+                    << ".global _cvte_size := 0x10 //(class_Class_vtabs_entry_Class - class_Class_vtabs_entry_Object)\n"
+                    << ".global _cvte_cno := 0x4 //(class_Class_vtabs_entry_class_name - class_Class_vtabs_entry_Class)\n"
+                    << ".global _cvte_cdo := 0x0 //(class_Class_vtabs_entry_class_desc - class_Class_vtabs_entry_Class)\n"
+                    << ".global _cvte_vto := 0x8 //(class_Class_vtabs_entry_vtab_offset - class_Class_vtabs_entry_Class)\n"
+                    << ".global _cvte_ho := 0xc //(class_Class_vtabs_entry_handle - class_Class_vtabs_entry_Class)\n"
+                    << ".global class_instance_size_offset := 0x8 //(class_Class_instance_size - class_Class_desc)\n"
+                    << ".global class_instance_tpl_offset_offset := 0xc //(class_Class_instance_tpl_offset - class_Class_desc)\n"
+                    << ".global class_instance_Object_handle_offset := 0x10 //(class_Class_instance_Object_handle_offset - class_Class_desc)\n"
+                    << ".global class_instance_class_handle_offset := 0x14 //(class_Class_instance_class_handle_offset - class_Class_desc)\n"
+                ;
             }
         }
         return *classDef;

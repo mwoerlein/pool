@@ -10,12 +10,16 @@ class ClassDefNode: public Node {
     public:
     String & name;
     String & fullQualifiedName;
+    String & inlinePasm;
     MutableCollection<ClassDefNode> &supers;
     MutableCollection<VariableDefNode> &variables;
     MutableCollection<MethodDefNode> &methods;
     
     ClassDefNode(Environment &env, MemoryInfo &mi)
-            :Object(env, mi), name(env.create<String>()), fullQualifiedName(env.create<String>()),
+            :Object(env, mi),
+             name(env.create<String>()),
+             fullQualifiedName(env.create<String>()),
+             inlinePasm(env.create<String>()),
              supers(env.create<LinkedList<ClassDefNode>>()),
              variables(env.create<LinkedList<VariableDefNode>>()),
              methods(env.create<LinkedList<MethodDefNode>>()) {
@@ -23,6 +27,7 @@ class ClassDefNode: public Node {
     virtual ~ClassDefNode() {
         name.destroy();
         fullQualifiedName.destroy();
+        inlinePasm.destroy();
         {
             // factory owns all classes 
             supers.destroy();
