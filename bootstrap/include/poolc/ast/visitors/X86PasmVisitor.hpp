@@ -12,6 +12,7 @@ class X86PasmVisitor: public Visitor {
     String &clsPrefix;
     String &tplPrefix;
     ClassDefNode * curClass;
+    ClassDefNode * curSuper;
     
     public:
     X86PasmVisitor(Environment &env, MemoryInfo &mi, OStream &out);

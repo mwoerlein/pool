@@ -10,7 +10,9 @@
 
 // public
 X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, OStream &out)
-        :Object(env, mi), out(out), clsPrefix(env.create<String>()), tplPrefix(env.create<String>()) {}
+        :Object(env, mi), out(out),
+         clsPrefix(env.create<String>()), tplPrefix(env.create<String>()),
+         curClass(0), curSuper(0) {}
 X86PasmVisitor::~X86PasmVisitor() {
     clsPrefix.destroy();
     tplPrefix.destroy();
@@ -23,40 +25,40 @@ bool X86PasmVisitor::visit(ClassRefNode & classRef) {
 
 bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     curClass = &classDef;
-    (clsPrefix = "") << "class_" << classDef.name;
+    (clsPrefix = "") << "class_" << curClass->name;
     (tplPrefix = "") << clsPrefix << "_inst_tpl";
     
     out << "/*[meta]\n";
     out << "mimetype = text/x-pasm\n";
-    out << "description = class \"" << classDef.fullQualifiedName << "\"\n";
+    out << "description = class \"" << curClass->fullQualifiedName << "\"\n";
     out << "[pool]\n";
     out << "version = 0.1.0\n";
     out << "class = true\n";
     out << "*/\n";
     
     // header
-    out << "// class " << classDef.name << "\n";
+    out << "// class " << curClass->name << "\n";
     out << clsPrefix << "_desc:\n";
     out << "    .long 0\n";
-    out << "    .long " << clsPrefix << "_so_cn_" << classDef.name << "\n";
+    out << "    .long " << clsPrefix << "_so_cn_" << curClass->name << "\n";
     out << "    .long (" << tplPrefix << "_end - " << tplPrefix << ")\n"; // instance size
     out << "    .long (" << tplPrefix << " - " << clsPrefix << "_desc)\n"; // instance template offset
     out << "    .long (" << tplPrefix << "_handle_Object - " << tplPrefix << ")\n"; // Object handle offset in instance
-    out << "    .long (" << tplPrefix << "_handle_" << classDef.name << " - " << tplPrefix << ")\n"; // <class> handle offset in instance
+    out << "    .long (" << tplPrefix << "_handle_" << curClass->name << " - " << tplPrefix << ")\n"; // <class> handle offset in instance
     out << "    .long 0x15AC1A55\n";
     out << "\n";
 
     // dependent classes
     out << clsPrefix << "_vtabs:\n";
     {
-        Iterator<ClassDefNode> &it = classDef.supers.iterator();
+        Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
-            ClassDefNode & super = it.next();
-            out << clsPrefix << "_vtabs_entry_" << super.name << ":\n";
+            curSuper = &it.next();
+            out << clsPrefix << "_vtabs_entry_" << curSuper->name << ":\n";
             out << "    .long 0\n"; // @class-desc filled on class loading
-            out << "    .long " << clsPrefix << "_so_cn_" << super.name << "\n";
-            out << "    .long (" << clsPrefix << "_vtab_" << super.name << " - " << clsPrefix << "_desc)\n"; // vtab offset in description
-            out << "    .long (" << tplPrefix << "_handle_" << super.name << " - " << tplPrefix << ")\n"; // handle offset in instance
+            out << "    .long " << clsPrefix << "_so_cn_" << curSuper->name << "\n";
+            out << "    .long (" << clsPrefix << "_vtab_" << curSuper->name << " - " << clsPrefix << "_desc)\n"; // vtab offset in description
+            out << "    .long (" << tplPrefix << "_handle_" << curSuper->name << " - " << tplPrefix << ")\n"; // handle offset in instance
         }
         it.destroy();
     }
@@ -69,63 +71,33 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
 
     // vtabs
     {
-        Iterator<ClassDefNode> &it = classDef.supers.iterator();
+        Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
-            ClassDefNode & super = it.next();
-            out << "_c" << classDef.name << "VE" << super.name << " := (" << clsPrefix << "_vtabs_entry_" << super.name << " - " << clsPrefix << "_desc)\n";
+            curSuper = &it.next();
+            out << "_c" << curClass->name << "VE" << curSuper->name << " := (" << clsPrefix << "_vtabs_entry_" << curSuper->name << " - " << clsPrefix << "_desc)\n";
         }
         it.destroy();
     }
     {
-        Iterator<ClassDefNode> &it = classDef.supers.iterator();
+        Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
-            ClassDefNode & super = it.next();
-            out << clsPrefix << "_vtab_" << super.name << ":\n";
-            {
-                Iterator<String> &it = super.methodRefs.keys();
-                while (it.hasNext()) {
-                    MethodRefNode & methodRef = classDef.methodRefs.get(it.next());
-                    MethodDefNode & methodDef = methodRef.methodDef;
-                    if (super.equals(classDef)) {
-    
-                        out << ".global " << super.name << "_m_" << methodDef.name
-                            << " := (" 
-                            << clsPrefix << "_vtab_" << super.name << "_method_" << methodDef.name
-                            << " - " 
-                            << clsPrefix << "_vtab_" << super.name
-                            << ")\n";
-                        out << clsPrefix << "_vtab_" << super.name << "_method_" << methodDef.name << ":\n";
-                    }
-                    ClassDefNode & declClass = *methodDef.parent;
-                    out << "    .long class_" << declClass.name << "_mo_" << methodDef.name << "\n";
-                    out << "    .long _c" << classDef.name << "VE" << declClass.name << "\n";
-                }
-                it.destroy();
-            }
+            curSuper = &it.next();
+            out << clsPrefix << "_vtab_" << curSuper->name << ":\n";
+            curSuper->methodRefs.acceptAll(*this);
         }
         it.destroy();
     }
     out << "\n";
     
     // constants
+    curClass->consts.acceptAll(*this);
     {
-        Iterator<CStringConstDefNode> &it = classDef.consts.iterator();
+        Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
-            CStringConstDefNode & constant = it.next();
-            out << clsPrefix << "_so_ct_" << constant.name << " := (" << clsPrefix << "_sct_" << constant.name << " - " << clsPrefix << "_desc)\n";
-            out << clsPrefix << "_sct_" << constant.name << ":\n";
-            out << "    .asciz \"" << constant.value << "\"\n";
-            out << "\n";
-        }
-        it.destroy();
-    }
-    {
-        Iterator<ClassDefNode> &it = classDef.supers.iterator();
-        while (it.hasNext()) {
-            ClassDefNode & super = it.next();
-            out << clsPrefix << "_so_cn_" << super.name << " := (" << clsPrefix << "_scn_" << super.name << " - " << clsPrefix << "_desc)\n";
-            out << clsPrefix << "_scn_" << super.name << ":\n";
-            out << "    .asciz \"" << super.fullQualifiedName << "\"\n";
+            curSuper = &it.next();
+            out << clsPrefix << "_so_cn_" << curSuper->name << " := (" << clsPrefix << "_scn_" << curSuper->name << " - " << clsPrefix << "_desc)\n";
+            out << clsPrefix << "_scn_" << curSuper->name << ":\n";
+            out << "    .asciz \"" << curSuper->fullQualifiedName << "\"\n";
             out << "\n";
         }
         it.destroy();
@@ -137,21 +109,20 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     out << "    .long 0\n"; // @meminfo
 
     {
-        Iterator<ClassDefNode> &it = classDef.supers.iterator();
+        Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
-            ClassDefNode & super = it.next();
-            
-            out << tplPrefix << "_handle_" << super.name << ":\n";
+            curSuper = &it.next();
+            out << tplPrefix << "_handle_" << curSuper->name << ":\n";
             out << "    .long 0\n"; // _call_entry
             out << "    .long 0\n"; // @inst
             out << "    .long 0\n"; // vtab-offset
-            Iterator<ClassDefNode> &sit = super.supers.iterator();
+            Iterator<ClassDefNode> &sit = curSuper->supers.iterator();
             while (sit.hasNext()) {
                 ClassDefNode & ssuper = sit.next();
-                if (super.equals(classDef)) {
-                    out << "handle_" << super.name << "_vars_" << ssuper.name << " := (" << tplPrefix << "_handle_" << super.name << "_vars_" << ssuper.name << " - " << tplPrefix << "_handle_" << super.name << ")\n";
+                if (curSuper->equals(classDef)) {
+                    out << "handle_" << curSuper->name << "_vars_" << ssuper.name << " := (" << tplPrefix << "_handle_" << curSuper->name << "_vars_" << ssuper.name << " - " << tplPrefix << "_handle_" << curSuper->name << ")\n";
                 }
-                out << tplPrefix << "_handle_" << super.name << "_vars_" << ssuper.name << ":\n";
+                out << tplPrefix << "_handle_" << curSuper->name << "_vars_" << ssuper.name << ":\n";
                 out << "    .long (" << tplPrefix << "_vars_" << ssuper.name << " - " << tplPrefix << ")\n"; // @Super-Obj-Vars
             }
             sit.destroy();
@@ -160,20 +131,11 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     }
     
     {
-        Iterator<ClassDefNode> &it = classDef.supers.iterator();
+        Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
-            ClassDefNode & super = it.next();
-            out << tplPrefix << "_vars_" << super.name << ":\n";
-            Iterator<VariableDefNode> &vit = super.variables.iterator();
-            while (vit.hasNext()) {
-                VariableDefNode &variable = vit.next();
-                if (super.equals(classDef)) {
-                    out << ".global " << super.name << "_i_" << variable.name << " := (" << tplPrefix << "_vars_" << super.name << "_" << variable.name << " - " << tplPrefix << "_vars_" << super.name << ")\n";
-                    out << tplPrefix << "_vars_" << super.name << "_" << variable.name << ":\n";
-                }
-                out << "    .long 0 // " << variable.name << "\n"; // TODO: size_of variable
-            }
-            vit.destroy();
+            curSuper = &it.next();
+            out << tplPrefix << "_vars_" << curSuper->name << ":\n";
+            curSuper->variables.acceptAll(*this);
         }
         it.destroy();
     }
@@ -182,19 +144,25 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     out << "\n";
     
     // methods
-    {
-        Iterator<MethodDefNode> &it = classDef.methods.iterator();
-        while (it.hasNext()) {
-            it.next().accept(*this);
-        }
-        it.destroy();
-    }
+    curClass->methods.acceptAll(*this);
     
     return true;
 }
 
 bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
-    out << "// method-ref " << methodRef.methodDef.name << "\n";
+    MethodDefNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
+    if (curSuper->equals(*curClass)) {
+        out << ".global " << curSuper->name << "_m_" << methodDef.name
+            << " := (" 
+            << clsPrefix << "_vtab_" << curSuper->name << "_method_" << methodDef.name
+            << " - " 
+            << clsPrefix << "_vtab_" << curSuper->name
+            << ")\n";
+        out << clsPrefix << "_vtab_" << curSuper->name << "_method_" << methodDef.name << ":\n";
+    }
+    ClassDefNode * declClass = methodDef.parent;
+    out << "    .long class_" << declClass->name << "_mo_" << methodDef.name << "\n";
+    out << "    .long _c" << curClass->name << "VE" << declClass->name << "\n";
     return true;
 }
 
@@ -214,13 +182,7 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
         out << clsPrefix << "_method_" << methodDef.name << ":\n";
         out << "    pushl %ebp; movl %esp, %ebp\n";
         out << "    \n";
-        {
-            Iterator<InstructionNode> &it = methodDef.body.iterator();
-            while (it.hasNext()) {
-                it.next().accept(*this);
-            }
-            it.destroy();
-        }
+        methodDef.body.acceptAll(*this);
         out << "    \n";
         out << "    leave\n";
         out << "    ret\n";
@@ -231,11 +193,20 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
 
 bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
     out << "// variable " << variableDef.name << "\n";
+    if (curSuper->equals(*curClass)) {
+        out << ".global " << curSuper->name << "_i_" << variableDef.name << " := (" << tplPrefix << "_vars_" << curSuper->name << "_" << variableDef.name << " - " << tplPrefix << "_vars_" << curSuper->name << ")\n";
+        out << tplPrefix << "_vars_" << curSuper->name << "_" << variableDef.name << ":\n";
+    }
+    out << "    .long 0\n"; // TODO: size_of variable
     return true;
 }
 
 bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
     out << "// string-const " << constDef.name << "\n";
+    out << clsPrefix << "_so_ct_" << constDef.name << " := (" << clsPrefix << "_sct_" << constDef.name << " - " << clsPrefix << "_desc)\n";
+    out << clsPrefix << "_sct_" << constDef.name << ":\n";
+    out << "    .asciz \"" << constDef.value << "\"\n";
+    out << "\n";
     return true;
 }
 

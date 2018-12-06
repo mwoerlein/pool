@@ -4,21 +4,21 @@
 #include "poolc/ast/Node.hpp"
 
 #include "sys/String.hpp"
-#include "sys/collection/MutableCollection.hpp"
-#include "sys/collection/MutableMap.hpp"
+#include "poolc/ast/collection/NodeList.hpp"
+#include "poolc/ast/collection/NodeMap.hpp"
 
 class ClassDefNode: public Node {
     public:
     String & name;
     String & fullQualifiedName;
     
-    MutableCollection<ClassRefNode> &extends;
-    MutableCollection<VariableDefNode> &variables;
-    MutableCollection<CStringConstDefNode> &consts;
-    MutableCollection<MethodDefNode> &methods;
+    NodeList<ClassRefNode> &extends;
+    NodeList<VariableDefNode> &variables;
+    NodeList<CStringConstDefNode> &consts;
+    NodeList<MethodDefNode> &methods;
     
-    MutableMap<String, ClassDefNode> &supers;
-    MutableMap<String, MethodRefNode> &methodRefs;
+    NodeMap<ClassDefNode> &supers;
+    NodeMap<MethodRefNode> &methodRefs;
     
     ClassDefNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassDefNode();

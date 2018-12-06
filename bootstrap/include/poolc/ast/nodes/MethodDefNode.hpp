@@ -4,14 +4,14 @@
 #include "poolc/ast/Node.hpp"
 
 #include "sys/String.hpp"
-#include "sys/collection/MutableCollection.hpp"
+#include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/nodes/InstructionNode.hpp"
 
 class MethodDefNode: public Node {
     public:
     String & name;
     bool virt;
-    MutableCollection<InstructionNode> &body;
+    NodeList<InstructionNode> &body;
     ClassDefNode *parent;
     
     MethodDefNode(Environment &env, MemoryInfo &mi);

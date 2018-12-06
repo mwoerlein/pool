@@ -14,52 +14,25 @@ ClassDefNode::ClassDefNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
          name(env.create<String>()),
          fullQualifiedName(env.create<String>()),
-         extends(env.create<LinkedList<ClassRefNode>>()),
-         variables(env.create<LinkedList<VariableDefNode>>()),
-         consts(env.create<LinkedList<CStringConstDefNode>>()),
-         methods(env.create<LinkedList<MethodDefNode>>()),
-         supers(env.create<HashMap<String, ClassDefNode>>()),
-         methodRefs(env.create<HashMap<String, MethodRefNode>>()) {
+         extends(env.create<NodeList<ClassRefNode>>()),
+         variables(env.create<NodeList<VariableDefNode>>()),
+         consts(env.create<NodeList<CStringConstDefNode>>()),
+         methods(env.create<NodeList<MethodDefNode>>()),
+         supers(env.create<NodeMap<ClassDefNode>>()),
+         methodRefs(env.create<NodeMap<MethodRefNode>>()) {
 }
 ClassDefNode::~ClassDefNode() {
     name.destroy();
     fullQualifiedName.destroy();
     
-    {
-        Iterator<ClassRefNode> &it = extends.iterator();
-        while (it.hasNext()) { it.next().destroy(); }
-        it.destroy();
-        extends.destroy();
-    }
-    {
-        Iterator<VariableDefNode> &it = variables.iterator();
-        while (it.hasNext()) { it.next().destroy(); }
-        it.destroy();
-        variables.destroy();
-    }
-    {
-        Iterator<CStringConstDefNode> &it = consts.iterator();
-        while (it.hasNext()) { it.next().destroy(); }
-        it.destroy();
-        consts.destroy();
-    }
-    {
-        Iterator<MethodDefNode> &it = methods.iterator();
-        while (it.hasNext()) { it.next().destroy(); }
-        it.destroy();
-        methods.destroy();
-    }
+    extends.destroyAll();
+    variables.destroyAll();
+    consts.destroyAll();
+    methods.destroyAll();
     
-    {
-        // factory owns all classes 
-        supers.destroy();
-    }
-    {
-        Iterator<MethodRefNode> &it = methodRefs.values();
-        while (it.hasNext()) { it.next().destroy(); }
-        it.destroy();
-        methodRefs.destroy();
-    }
+    // factory owns all classes 
+    supers.destroy();
+    methodRefs.destroyAll();
 }
 
 bool ClassDefNode::accept(Visitor & visitor) {
