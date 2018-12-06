@@ -72,6 +72,10 @@ class ResolveVisitor: public Visitor {
     virtual bool visit(VariableDefNode & variableDef) {
         return true;
     }
+    
+    virtual bool visit(CStringConstDefNode & constDef) {
+        return true;
+    }
 };
 
 #endif //POOLC_AST_VISITORS_RESOLVEVISITOR_HPP_LOCK

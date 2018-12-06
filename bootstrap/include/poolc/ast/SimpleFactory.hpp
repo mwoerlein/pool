@@ -6,6 +6,7 @@
 #include "poolc/ast/nodes/ClassDefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
+#include "poolc/ast/nodes/CStringConstDefNode.hpp"
 
 // TODO: #2 replace factory with parser
 class SimpleFactory: virtual public Object {
@@ -68,6 +69,8 @@ class SimpleFactory: virtual public Object {
                 variable.name = "runtime";
                 cls.variables.add(variable);
             }
+            // consts
+            {}
             // methods
             // Class getClass()
             {
@@ -167,6 +170,8 @@ class SimpleFactory: virtual public Object {
                 variable.name = "desc";
                 cls.variables.add(variable);
             }
+            // consts
+            {}
             // methods
             // ClassDesc getDesc()
             {
@@ -235,6 +240,8 @@ class SimpleFactory: virtual public Object {
             }
             // vars
             {}
+            // consts
+            {}
             // methods
             // void run()
             {
@@ -276,6 +283,19 @@ class SimpleFactory: virtual public Object {
                 variable.name = "syscall_entry";
                 cls.variables.add(variable);
             }
+            // consts
+            {
+                CStringConstDefNode &constant = env().create<CStringConstDefNode>();
+                constant.name = "class";
+                constant.value = "/my/Class";
+                cls.consts.add(constant);
+            }
+            {
+                CStringConstDefNode &constant = env().create<CStringConstDefNode>();
+                constant.name = "thread";
+                constant.value = "/my/Thread";
+                cls.consts.add(constant);
+            }
             // methods
             // Runtime bootstrap(SysCall-Runtime, SysCall-Entry)
             {
@@ -287,7 +307,7 @@ class SimpleFactory: virtual public Object {
                     << "    \n"
                     << "    movl 0x0, 24(%ebp) // default result: NULL\n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl class_Runtime_so_class, %eax\n"
+                    << "    addl class_Runtime_so_ct_class, %eax\n"
                     << "    \n"
                     << "    pushl 0 // desc\n"
                     << "    pushl %eax        // \"Class\"\n"
@@ -344,7 +364,7 @@ class SimpleFactory: virtual public Object {
                     << "	addl 12, %esp\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl class_Runtime_so_class, %eax\n"
+                    << "    addl class_Runtime_so_ct_class, %eax\n"
                     << "    subl 4, %esp  # return value of createInstance\n"
                     << "    pushl %eax // @classname\n"
                     << "    pushl %esi; pushl Runtime_m_createInstance; call (%esi)\n"
@@ -613,7 +633,7 @@ class SimpleFactory: virtual public Object {
                     << "    addl 0, %ecx; jz _crmct_return // break if not instantiated\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl class_Runtime_so_thread, %eax\n"
+                    << "    addl class_Runtime_so_ct_thread, %eax\n"
                     << "    subl 4, %esp  # return value of as\n"
                     << "    pushl %eax\n"
                     << "    pushl %ecx\n"
@@ -658,7 +678,7 @@ class SimpleFactory: virtual public Object {
                     << "    jnz _crmci_instantiate // class already initialized\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl class_Runtime_so_class, %eax\n"
+                    << "    addl class_Runtime_so_ct_class, %eax\n"
                     << "    subl 4, %esp  # return value of createInstance\n"
                     << "    pushl %eax // @classname\n"
                     << "    pushl %esi; pushl Runtime_m_createInstance; call (%esi)\n"
@@ -697,13 +717,6 @@ class SimpleFactory: virtual public Object {
             // inline pasm
             {
                 cls.inlinePasm
-                    << "class_Runtime_so_class := (class_Runtime_string_class - class_Runtime_desc)\n"
-                    << "class_Runtime_so_thread := (class_Runtime_string_thread - class_Runtime_desc)\n"
-                    << "class_Runtime_string_class:\n"
-                    << "    .asciz \"/my/Class\"\n"
-                    << "class_Runtime_string_thread:\n"
-                    << "    .asciz \"/my/Thread\"\n"
-
                     << "_crh_instantiate: // %eax: @object-meminfo %ebx: @_call_entry %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)\n"
                     << "    movl (%eax), %edi   // @object\n"
                     << "    movl %edx, %esi\n"
@@ -808,6 +821,13 @@ class SimpleFactory: virtual public Object {
                 variable.name = "row";
                 cls.variables.add(variable);
             }
+            // consts
+            {
+                CStringConstDefNode &constant = env().create<CStringConstDefNode>();
+                constant.name = "test";
+                constant.value = " Test\\n";
+                cls.consts.add(constant);
+            }
             // methods
             // void init(int, int)
             {
@@ -894,7 +914,7 @@ class SimpleFactory: virtual public Object {
                     << "    addl 16, %esp\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"A\"\n"
-                    << "    addl class_A_so_test, %eax\n"
+                    << "    addl class_A_so_ct_test, %eax\n"
                     << "    pushl %eax; pushl _err\n"
                     << "    pushl %edx; pushl Runtime_m_printString; call (%edx)\n"
                     << "    addl 16, %esp\n"
@@ -905,13 +925,7 @@ class SimpleFactory: virtual public Object {
                 method.parent = &cls;
             }
             // inline pasm
-            {
-                cls.inlinePasm
-                    << "class_A_so_test := (class_A_string_test - class_A_desc)\n"
-                    << "class_A_string_test:\n"
-                    << "    .asciz \" Test\\n\"\n"
-                ;
-            }
+            {}
         }
         return *aDef;
     }
@@ -936,6 +950,13 @@ class SimpleFactory: virtual public Object {
             }
             // vars
             {}
+            // consts
+            {
+                CStringConstDefNode &constant = env().create<CStringConstDefNode>();
+                constant.name = "doit";
+                constant.value = "DoIt ";
+                cls.consts.add(constant);
+            }
             // methods
             // void run()
             {
@@ -1006,7 +1027,7 @@ class SimpleFactory: virtual public Object {
                     << "    addl 16, %esp\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax         // @class-desc \"B\"\n"
-                    << "    addl class_B_so_doit, %eax // \"DoIt \"\n"
+                    << "    addl class_B_so_ct_doit, %eax // \"DoIt \"\n"
                     << "    pushl %eax; pushl _out\n"
                     << "    pushl %edx; pushl Runtime_m_printString; call (%edx)\n"
                     << "    addl 16, %esp\n"
@@ -1116,13 +1137,7 @@ class SimpleFactory: virtual public Object {
                 method.parent = &cls;
             }
             // inline pasm
-            {
-                cls.inlinePasm
-                    << "class_B_so_doit := (class_B_string_doit - class_B_desc)\n"
-                    << "class_B_string_doit:\n"
-                    << "    .asciz \"DoIt \"\n"
-                ;
-            }
+            {}
         }
         return *bDef;
     }

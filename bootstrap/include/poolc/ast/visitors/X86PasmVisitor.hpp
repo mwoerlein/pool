@@ -111,11 +111,22 @@ class X86PasmVisitor: public Visitor {
         
         // constants
         {
+            Iterator<CStringConstDefNode> &it = classDef.consts.iterator();
+            while (it.hasNext()) {
+                CStringConstDefNode & constant = it.next();
+                out << clsPrefix << "_so_ct_" << constant.name << " := (" << clsPrefix << "_sct_" << constant.name << " - " << clsPrefix << "_desc)\n";
+                out << clsPrefix << "_sct_" << constant.name << ":\n";
+                out << "    .asciz \"" << constant.value << "\"\n";
+                out << "\n";
+            }
+            it.destroy();
+        }
+        {
             Iterator<ClassDefNode> &it = classDef.supers.iterator();
             while (it.hasNext()) {
                 ClassDefNode & super = it.next();
-                out << clsPrefix << "_so_cn_" << super.name << " := (" << clsPrefix << "_string_cn_" << super.name << " - " << clsPrefix << "_desc)\n";
-                out << clsPrefix << "_string_cn_" << super.name << ":\n";
+                out << clsPrefix << "_so_cn_" << super.name << " := (" << clsPrefix << "_scn_" << super.name << " - " << clsPrefix << "_desc)\n";
+                out << clsPrefix << "_scn_" << super.name << ":\n";
                 out << "    .asciz \"" << super.fullQualifiedName << "\"\n";
                 out << "\n";
             }
@@ -218,6 +229,11 @@ class X86PasmVisitor: public Visitor {
     
     virtual bool visit(VariableDefNode & variableDef) {
         out << "// variable " << variableDef.name << "\n";
+        return true;
+    }
+    
+    virtual bool visit(CStringConstDefNode & constDef) {
+        out << "// string-const " << constDef.name << "\n";
         return true;
     }
 };

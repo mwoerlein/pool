@@ -8,6 +8,7 @@ class ClassDefNode;
 class MethodRefNode;
 class MethodDefNode;
 class VariableDefNode;
+class CStringConstDefNode;
 class Visitor: virtual public Object {
     public:
     virtual ~Visitor() {}
@@ -17,6 +18,7 @@ class Visitor: virtual public Object {
     virtual bool visit(MethodRefNode & methodRef) = 0;
     virtual bool visit(MethodDefNode & methodDef) = 0;
     virtual bool visit(VariableDefNode & variableDef) = 0;
+    virtual bool visit(CStringConstDefNode & constDef) = 0;
 };
 
 #endif //POOLC_AST_VISITOR_HPP_LOCK

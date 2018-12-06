@@ -6,6 +6,7 @@
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 #include "poolc/ast/nodes/MethodRefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
+#include "poolc/ast/nodes/CStringConstDefNode.hpp"
 #include "sys/collection/LinkedList.hpp"
 #include "sys/collection/HashMap.hpp"
 
@@ -13,12 +14,15 @@ class ClassDefNode: public Node {
     public:
     String & name;
     String & fullQualifiedName;
+    
     String & inlinePasm;
     MutableCollection<ClassRefNode> &extends;
-    MutableMap<String, ClassDefNode> &supers;
     MutableCollection<VariableDefNode> &variables;
-    MutableMap<String, MethodRefNode> &methodRefs;
+    MutableCollection<CStringConstDefNode> &consts;
     MutableCollection<MethodDefNode> &methods;
+    
+    MutableMap<String, ClassDefNode> &supers;
+    MutableMap<String, MethodRefNode> &methodRefs;
     
     ClassDefNode(Environment &env, MemoryInfo &mi)
             :Object(env, mi),
@@ -26,24 +30,22 @@ class ClassDefNode: public Node {
              fullQualifiedName(env.create<String>()),
              inlinePasm(env.create<String>()),
              extends(env.create<LinkedList<ClassRefNode>>()),
-             supers(env.create<HashMap<String, ClassDefNode>>()),
              variables(env.create<LinkedList<VariableDefNode>>()),
-             methodRefs(env.create<HashMap<String, MethodRefNode>>()),
-             methods(env.create<LinkedList<MethodDefNode>>()) {
+             consts(env.create<LinkedList<CStringConstDefNode>>()),
+             methods(env.create<LinkedList<MethodDefNode>>()),
+             supers(env.create<HashMap<String, ClassDefNode>>()),
+             methodRefs(env.create<HashMap<String, MethodRefNode>>()) {
     }
     virtual ~ClassDefNode() {
         name.destroy();
         fullQualifiedName.destroy();
         inlinePasm.destroy();
+        
         {
             Iterator<ClassRefNode> &it = extends.iterator();
             while (it.hasNext()) { it.next().destroy(); }
             it.destroy();
             extends.destroy();
-        }
-        {
-            // factory owns all classes 
-            supers.destroy();
         }
         {
             Iterator<VariableDefNode> &it = variables.iterator();
@@ -52,16 +54,27 @@ class ClassDefNode: public Node {
             variables.destroy();
         }
         {
-            Iterator<MethodRefNode> &it = methodRefs.values();
+            Iterator<CStringConstDefNode> &it = consts.iterator();
             while (it.hasNext()) { it.next().destroy(); }
             it.destroy();
-            methodRefs.destroy();
+            consts.destroy();
         }
         {
             Iterator<MethodDefNode> &it = methods.iterator();
             while (it.hasNext()) { it.next().destroy(); }
             it.destroy();
             methods.destroy();
+        }
+        
+        {
+            // factory owns all classes 
+            supers.destroy();
+        }
+        {
+            Iterator<MethodRefNode> &it = methodRefs.values();
+            while (it.hasNext()) { it.next().destroy(); }
+            it.destroy();
+            methodRefs.destroy();
         }
     }
     
