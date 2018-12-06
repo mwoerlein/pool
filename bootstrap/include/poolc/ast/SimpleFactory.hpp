@@ -2,6 +2,7 @@
 #define POOLC_AST_SIMPLEFACTORY_HPP_LOCK
 
 #include "sys/Object.hpp"
+#include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/ClassDefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
@@ -58,8 +59,8 @@ class SimpleFactory: virtual public Object {
             cls.name = "Object";
             cls.fullQualifiedName = "/my/Object";
             
-            // supers
-            cls.supers.add(getObjectDef());
+            // extends
+            {}
             // vars
             // Runtime runtime
             {
@@ -67,8 +68,6 @@ class SimpleFactory: virtual public Object {
                 variable.name = "runtime";
                 cls.variables.add(variable);
             }
-            // inherited methods
-            {}
             // methods
             // Class getClass()
             {
@@ -82,10 +81,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)    // return @class handle\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // int hash()
             {
@@ -97,10 +93,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)    // return @this as hash\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // int equals(ANY)
             {
@@ -118,10 +111,7 @@ class SimpleFactory: virtual public Object {
                     << "_come_ret:\n"    
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // Runtime rt()
             {
@@ -135,10 +125,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                         // return @runtime (Type Runtime)\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void setRt(Runtime)
             {
@@ -152,10 +139,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, Object_i_runtime(%ebx)           // store @runtime (Type Runtime)\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // inline pasm
             {}
@@ -170,27 +154,18 @@ class SimpleFactory: virtual public Object {
             cls.name = "Class";
             cls.fullQualifiedName = "/my/Class";
             
-            // supers
-            cls.supers.add(getObjectDef());
-            cls.supers.add(getClassDef());
+            // extends
+            {
+                ClassRefNode &ref = env().create<ClassRefNode>();
+                ref.name = "Object";
+                cls.extends.add(ref);
+            }
             // vars
             // ClassDesc desc
             {
                 VariableDefNode &variable = env().create<VariableDefNode>();
                 variable.name = "desc";
                 cls.variables.add(variable);
-            }
-            // inherited methods
-            {
-                Iterator<MethodRefNode> &it = getObjectDef().methodRefs.values();
-                while (it.hasNext()) {
-                    MethodRefNode &superRef = it.next();
-                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
-                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
-                    if (&old) { old.destroy(); }
-                    ref.parent = &cls;
-                }
-                it.destroy();
             }
             // methods
             // ClassDesc getDesc()
@@ -205,10 +180,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                      // return @class desc\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void setDesc(ClassDesc)
             {
@@ -224,10 +196,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %ebx, (%eax)                        // store @this (Type Class) in class desc\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // CString getName()
             {
@@ -243,26 +212,10 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)                      // return cstring-ref\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // inline pasm
-            {
-                cls.inlinePasm
-                    << ".global class_vtabs_offset := 0x1c //(class_Class_vtabs - class_Class_desc)\n"
-                    << ".global _cvte_size := 0x10 //(class_Class_vtabs_entry_Class - class_Class_vtabs_entry_Object)\n"
-                    << ".global _cvte_cno := 0x4 //(class_Class_vtabs_entry_class_name - class_Class_vtabs_entry_Class)\n"
-                    << ".global _cvte_cdo := 0x0 //(class_Class_vtabs_entry_class_desc - class_Class_vtabs_entry_Class)\n"
-                    << ".global _cvte_vto := 0x8 //(class_Class_vtabs_entry_vtab_offset - class_Class_vtabs_entry_Class)\n"
-                    << ".global _cvte_ho := 0xc //(class_Class_vtabs_entry_handle - class_Class_vtabs_entry_Class)\n"
-                    << ".global class_instance_size_offset := 0x8 //(class_Class_instance_size - class_Class_desc)\n"
-                    << ".global class_instance_tpl_offset_offset := 0xc //(class_Class_instance_tpl_offset - class_Class_desc)\n"
-                    << ".global class_instance_Object_handle_offset := 0x10 //(class_Class_instance_Object_handle_offset - class_Class_desc)\n"
-                    << ".global class_instance_class_handle_offset := 0x14 //(class_Class_instance_class_handle_offset - class_Class_desc)\n"
-                ;
-            }
+            {}
         }
         return *classDef;
     }
@@ -274,23 +227,14 @@ class SimpleFactory: virtual public Object {
             cls.name = "Thread";
             cls.fullQualifiedName = "/my/Thread";
             
-            // supers
-            cls.supers.add(getObjectDef());
-            cls.supers.add(getThreadDef());
+            // extends
+            {
+                ClassRefNode &ref = env().create<ClassRefNode>();
+                ref.name = "Object";
+                cls.extends.add(ref);
+            }
             // vars
             {}
-            // inherited methods
-            {
-                Iterator<MethodRefNode> &it = getObjectDef().methodRefs.values();
-                while (it.hasNext()) {
-                    MethodRefNode &superRef = it.next();
-                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
-                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
-                    if (&old) { old.destroy(); }
-                    ref.parent = &cls;
-                }
-                it.destroy();
-            }
             // methods
             // void run()
             {
@@ -298,10 +242,7 @@ class SimpleFactory: virtual public Object {
                 method.name = "run";
                 method.virt = true;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // inline pasm
             {}
@@ -316,9 +257,12 @@ class SimpleFactory: virtual public Object {
             cls.name = "Runtime";
             cls.fullQualifiedName = "/my/Runtime";
             
-            // supers
-            cls.supers.add(getObjectDef());
-            cls.supers.add(getRuntimeDef());
+            // extends
+            {
+                ClassRefNode &ref = env().create<ClassRefNode>();
+                ref.name = "Object";
+                cls.extends.add(ref);
+            }
             // vars
             // SysCall-Runtime syscall_runtime
             {
@@ -331,18 +275,6 @@ class SimpleFactory: virtual public Object {
                 VariableDefNode &variable = env().create<VariableDefNode>();
                 variable.name = "syscall_entry";
                 cls.variables.add(variable);
-            }
-            // inherited methods
-            {
-                Iterator<MethodRefNode> &it = getObjectDef().methodRefs.values();
-                while (it.hasNext()) {
-                    MethodRefNode &superRef = it.next();
-                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
-                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
-                    if (&old) { old.destroy(); }
-                    ref.parent = &cls;
-                }
-                it.destroy();
             }
             // methods
             // Runtime bootstrap(SysCall-Runtime, SysCall-Entry)
@@ -429,10 +361,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void initSysCall(SysCall-Runtime, SysCall-Entry)
             {
@@ -448,10 +377,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, Runtime_i_syscall_entry(%ebx)      // store @syscall-entry\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // ClassDesc getClassDesc(CString)
             {
@@ -474,10 +400,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // MemInfo allocate(int)
             {
@@ -500,10 +423,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void free(MemInfo)
             {
@@ -525,10 +445,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void printChar()
             {
@@ -551,10 +468,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void printString()
             {
@@ -577,10 +491,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void printInt()
             {
@@ -603,10 +514,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void printHex()
             {
@@ -629,10 +537,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void destroyInstance()
             {
@@ -648,10 +553,7 @@ class SimpleFactory: virtual public Object {
                     << "    addl 12, %esp\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void as()
             {
@@ -690,10 +592,7 @@ class SimpleFactory: virtual public Object {
                     << "    popl %ecx\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void createThread()
             {
@@ -735,10 +634,7 @@ class SimpleFactory: virtual public Object {
                     << "    popl %ecx\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void createInstance()
             {
@@ -796,10 +692,7 @@ class SimpleFactory: virtual public Object {
                     << "    popad\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // inline pasm
             {
@@ -857,6 +750,16 @@ class SimpleFactory: virtual public Object {
                     << "	popl %ecx\n"
                     << "	jmp %ebx                    # goto method\n"
                     << "\n"
+                    << "class_vtabs_offset := 0x1c //(class_Class_vtabs - class_Class_desc)\n"
+                    << "_cvte_size := 0x10 //(class_Class_vtabs_entry_Class - class_Class_vtabs_entry_Object)\n"
+                    << "_cvte_cdo := 0x0 //(class_Class_vtabs_entry_class_desc - class_Class_vtabs_entry_Class)\n"
+                    << "_cvte_vto := 0x8 //(class_Class_vtabs_entry_vtab_offset - class_Class_vtabs_entry_Class)\n"
+                    << "_cvte_ho := 0xc //(class_Class_vtabs_entry_handle - class_Class_vtabs_entry_Class)\n"
+                    << "class_instance_size_offset := 0x8 //(class_Class_instance_size - class_Class_desc)\n"
+                    << "class_instance_tpl_offset_offset := 0xc //(class_Class_instance_tpl_offset - class_Class_desc)\n"
+                    << "class_instance_Object_handle_offset := 0x10 //(class_Class_instance_Object_handle_offset - class_Class_desc)\n"
+                    << "class_instance_class_handle_offset := 0x14 //(class_Class_instance_class_handle_offset - class_Class_desc)\n"
+                    << "\n"
                     << "// print* constants\n"
                     << ".global _out := _sps_out\n"
                     << ".global _err := _sps_err\n"
@@ -886,9 +789,12 @@ class SimpleFactory: virtual public Object {
             cls.name = "A";
             cls.fullQualifiedName = "/my/A";
             
-            // supers
-            cls.supers.add(getObjectDef());
-            cls.supers.add(getADef());
+            // extends
+            {
+                ClassRefNode &ref = env().create<ClassRefNode>();
+                ref.name = "Object";
+                cls.extends.add(ref);
+            }
             // vars
             // int column
             {
@@ -901,18 +807,6 @@ class SimpleFactory: virtual public Object {
                 VariableDefNode &variable = env().create<VariableDefNode>();
                 variable.name = "row";
                 cls.variables.add(variable);
-            }
-            // inherited methods
-            {
-                Iterator<MethodRefNode> &it = getObjectDef().methodRefs.values();
-                while (it.hasNext()) {
-                    MethodRefNode &superRef = it.next();
-                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
-                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
-                    if (&old) { old.destroy(); }
-                    ref.parent = &cls;
-                }
-                it.destroy();
             }
             // methods
             // void init(int, int)
@@ -930,10 +824,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, A_i_column(%ebx) // set this.column\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // int getRow()
             {
@@ -948,10 +839,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)      // return row\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void test(int)
             {
@@ -1014,10 +902,7 @@ class SimpleFactory: virtual public Object {
                     << "    popl %ecx\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // inline pasm
             {
@@ -1038,36 +923,19 @@ class SimpleFactory: virtual public Object {
             cls.name = "B";
             cls.fullQualifiedName = "/my/B";
             
-            // supers
-            cls.supers.add(getObjectDef());
-            cls.supers.add(getThreadDef());
-            cls.supers.add(getADef());
-            cls.supers.add(getBDef());
+            // extends
+            {
+                ClassRefNode &ref = env().create<ClassRefNode>();
+                ref.name = "Thread";
+                cls.extends.add(ref);
+            }
+            {
+                ClassRefNode &ref = env().create<ClassRefNode>();
+                ref.name = "A";
+                cls.extends.add(ref);
+            }
             // vars
             {}
-            // inherited methods
-            {
-                Iterator<MethodRefNode> &it = getThreadDef().methodRefs.values();
-                while (it.hasNext()) {
-                    MethodRefNode &superRef = it.next();
-                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
-                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
-                    if (&old) { old.destroy(); }
-                    ref.parent = &cls;
-                }
-                it.destroy();
-            }
-            {
-                Iterator<MethodRefNode> &it = getADef().methodRefs.values();
-                while (it.hasNext()) {
-                    MethodRefNode &superRef = it.next();
-                    MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
-                    MethodRefNode &old = cls.methodRefs.set(superRef.methodDef.name, ref);
-                    if (&old) { old.destroy(); }
-                    ref.parent = &cls;
-                }
-                it.destroy();
-            }
             // methods
             // void run()
             {
@@ -1116,10 +984,7 @@ class SimpleFactory: virtual public Object {
                     << "    popl %ecx\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // void doIt(A)
             {
@@ -1232,10 +1097,7 @@ class SimpleFactory: virtual public Object {
                     << "    popl %ecx\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // int getRow()
             {
@@ -1251,10 +1113,7 @@ class SimpleFactory: virtual public Object {
                     << "    movl %eax, 16(%ebp)          // return row*2\n"
                 ;
                 cls.methods.add(method);
-                MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(method);
-                MethodRefNode &old = cls.methodRefs.set(method.name, ref);
-                if (&old) { old.destroy(); }
-                method.parent = ref.parent = &cls;
+                method.parent = &cls;
             }
             // inline pasm
             {

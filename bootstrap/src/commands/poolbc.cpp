@@ -2,6 +2,7 @@
 #include "linux/CommandLine.hpp"
 
 #include "poolc/ast/SimpleFactory.hpp"
+#include "poolc/ast/visitors/ResolveVisitor.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
 static const char PROGRAM[] = "poolbc";
@@ -48,11 +49,13 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         argIt.destroy();
         
         if (classDef) {
+            Visitor &resolve = env().create<ResolveVisitor, SimpleFactory &>(f);
+            classDef->accept(resolve);
+            resolve.destroy();
+            
             SeekableIOStream &outfile = env().streamFactory().buildOStream(getStringProperty("o"));
             Visitor &dump = env().create<X86PasmVisitor, OStream &>(outfile);
-        
             classDef->accept(dump);
-            
             dump.destroy();
             outfile.destroy();
         }

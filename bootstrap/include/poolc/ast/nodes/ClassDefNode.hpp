@@ -2,6 +2,7 @@
 #define POOLC_AST_NODES_CLASSDEFNODE_HPP_LOCK
 
 #include "poolc/ast/Node.hpp"
+#include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 #include "poolc/ast/nodes/MethodRefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
@@ -13,7 +14,8 @@ class ClassDefNode: public Node {
     String & name;
     String & fullQualifiedName;
     String & inlinePasm;
-    MutableCollection<ClassDefNode> &supers;
+    MutableCollection<ClassRefNode> &extends;
+    MutableMap<String, ClassDefNode> &supers;
     MutableCollection<VariableDefNode> &variables;
     MutableMap<String, MethodRefNode> &methodRefs;
     MutableCollection<MethodDefNode> &methods;
@@ -23,7 +25,8 @@ class ClassDefNode: public Node {
              name(env.create<String>()),
              fullQualifiedName(env.create<String>()),
              inlinePasm(env.create<String>()),
-             supers(env.create<LinkedList<ClassDefNode>>()),
+             extends(env.create<LinkedList<ClassRefNode>>()),
+             supers(env.create<HashMap<String, ClassDefNode>>()),
              variables(env.create<LinkedList<VariableDefNode>>()),
              methodRefs(env.create<HashMap<String, MethodRefNode>>()),
              methods(env.create<LinkedList<MethodDefNode>>()) {
@@ -32,6 +35,12 @@ class ClassDefNode: public Node {
         name.destroy();
         fullQualifiedName.destroy();
         inlinePasm.destroy();
+        {
+            Iterator<ClassRefNode> &it = extends.iterator();
+            while (it.hasNext()) { it.next().destroy(); }
+            it.destroy();
+            extends.destroy();
+        }
         {
             // factory owns all classes 
             supers.destroy();

@@ -3,6 +3,7 @@
 
 #include "sys/Object.hpp"
 
+class ClassRefNode;
 class ClassDefNode;
 class MethodRefNode;
 class MethodDefNode;
@@ -11,8 +12,9 @@ class Visitor: virtual public Object {
     public:
     virtual ~Visitor() {}
     
+    virtual bool visit(ClassRefNode & classRef) = 0;
     virtual bool visit(ClassDefNode & classDef) = 0;
-    virtual bool visit(MethodRefNode & methodDef) = 0;
+    virtual bool visit(MethodRefNode & methodRef) = 0;
     virtual bool visit(MethodDefNode & methodDef) = 0;
     virtual bool visit(VariableDefNode & variableDef) = 0;
 };

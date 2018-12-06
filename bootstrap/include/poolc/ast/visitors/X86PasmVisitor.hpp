@@ -18,6 +18,11 @@ class X86PasmVisitor: public Visitor {
         tplPrefix.destroy();
     }
     
+    virtual bool visit(ClassRefNode & classRef) {
+        out << "// class-ref " << classRef.name << "\n";
+        return true;
+    }
+    
     virtual bool visit(ClassDefNode & classDef) {
         curClass = &classDef;
         (clsPrefix = "") << "class_" << classDef.name;
@@ -183,6 +188,7 @@ class X86PasmVisitor: public Visitor {
     
     virtual bool visit(MethodRefNode & methodRef) {
         out << "// method-ref " << methodRef.methodDef.name << "\n";
+        return true;
     }
     
     virtual bool visit(MethodDefNode & methodDef) {
@@ -212,6 +218,7 @@ class X86PasmVisitor: public Visitor {
     
     virtual bool visit(VariableDefNode & variableDef) {
         out << "// variable " << variableDef.name << "\n";
+        return true;
     }
 };
 
