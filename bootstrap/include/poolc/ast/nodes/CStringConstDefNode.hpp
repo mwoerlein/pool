@@ -3,22 +3,17 @@
 
 #include "poolc/ast/Node.hpp"
 
+#include "sys/String.hpp"
+
 class CStringConstDefNode: public Node {
     public:
     String & name;
     String & value;
     
-    CStringConstDefNode(Environment &env, MemoryInfo &mi)
-            :Object(env, mi), name(env.create<String>()), value(env.create<String>()) {}
-    virtual ~CStringConstDefNode() {
-        name.destroy();
-        value.destroy();
-    }
+    CStringConstDefNode(Environment &env, MemoryInfo &mi);
+    virtual ~CStringConstDefNode();
     
-    virtual bool accept(Visitor & visitor) {
-        return visitor.visit(*this);
-    }
+    virtual bool accept(Visitor & visitor) override;
 };
 
 #endif //POOLC_AST_NODES_CSTRINGCONSTDEFNODE_HPP_LOCK
-

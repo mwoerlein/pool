@@ -14,7 +14,7 @@ class InlinePasmInstructionNode;
 
 class Visitor: virtual public Object {
     public:
-    virtual ~Visitor() {}
+    virtual ~Visitor();
     
     virtual bool visit(ClassRefNode & classRef) = 0;
     virtual bool visit(ClassDefNode & classDef) = 0;
@@ -27,4 +27,3 @@ class Visitor: virtual public Object {
 };
 
 #endif //POOLC_AST_VISITOR_HPP_LOCK
-

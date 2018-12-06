@@ -5,8 +5,7 @@
 
 class InstructionNode: public Node {
     public:
-    virtual ~InstructionNode() {}
+    virtual ~InstructionNode();
 };
 
 #endif //POOLC_AST_NODES_INSTRUCTIONNODE_HPP_LOCK
-

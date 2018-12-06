@@ -1,6 +1,6 @@
 include ./Makefile.inc
 
-POOLBCLIBS = linux.a sys.a
+POOLBCLIBS = poolc.a linux.a sys.a
 
 .PHONY: all clean
 

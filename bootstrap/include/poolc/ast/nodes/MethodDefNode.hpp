@@ -2,9 +2,10 @@
 #define POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
 
 #include "poolc/ast/Node.hpp"
+
+#include "sys/String.hpp"
+#include "sys/collection/MutableCollection.hpp"
 #include "poolc/ast/nodes/InstructionNode.hpp"
-#include "poolc/ast/nodes/ClassDefNode.hpp"
-#include "sys/collection/LinkedList.hpp"
 
 class MethodDefNode: public Node {
     public:
@@ -13,27 +14,10 @@ class MethodDefNode: public Node {
     MutableCollection<InstructionNode> &body;
     ClassDefNode *parent;
     
-    MethodDefNode(Environment &env, MemoryInfo &mi)
-            :Object(env, mi),
-             name(env.create<String>()),
-             body(env.create<LinkedList<InstructionNode>>()),
-             virt(false),
-             parent(0) {
-    }
-    virtual ~MethodDefNode() {
-        name.destroy();
-        {
-            Iterator<InstructionNode> &it = body.iterator();
-            while (it.hasNext()) { it.next().destroy(); }
-            it.destroy();
-            body.destroy();
-        }
-    }
+    MethodDefNode(Environment &env, MemoryInfo &mi);
+    virtual ~MethodDefNode();
     
-    virtual bool accept(Visitor & visitor) {
-        return visitor.visit(*this);
-    }
+    virtual bool accept(Visitor & visitor) override;
 };
 
 #endif //POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
-
