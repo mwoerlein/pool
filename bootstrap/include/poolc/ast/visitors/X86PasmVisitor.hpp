@@ -192,8 +192,6 @@ class X86PasmVisitor: public Visitor {
             it.destroy();
         }
         
-        out << classDef.inlinePasm << "\n";
-        
         return true;
     }
     

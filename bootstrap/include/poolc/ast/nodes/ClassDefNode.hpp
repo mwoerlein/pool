@@ -15,7 +15,6 @@ class ClassDefNode: public Node {
     String & name;
     String & fullQualifiedName;
     
-    String & inlinePasm;
     MutableCollection<ClassRefNode> &extends;
     MutableCollection<VariableDefNode> &variables;
     MutableCollection<CStringConstDefNode> &consts;
@@ -28,7 +27,6 @@ class ClassDefNode: public Node {
             :Object(env, mi),
              name(env.create<String>()),
              fullQualifiedName(env.create<String>()),
-             inlinePasm(env.create<String>()),
              extends(env.create<LinkedList<ClassRefNode>>()),
              variables(env.create<LinkedList<VariableDefNode>>()),
              consts(env.create<LinkedList<CStringConstDefNode>>()),
@@ -39,7 +37,6 @@ class ClassDefNode: public Node {
     virtual ~ClassDefNode() {
         name.destroy();
         fullQualifiedName.destroy();
-        inlinePasm.destroy();
         
         {
             Iterator<ClassRefNode> &it = extends.iterator();

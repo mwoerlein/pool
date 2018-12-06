@@ -144,8 +144,6 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // inline pasm
-            {}
         }
         return *objectDef;
     }
@@ -219,8 +217,6 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // inline pasm
-            {}
         }
         return *classDef;
     }
@@ -251,8 +247,6 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // inline pasm
-            {}
         }
         return *threadDef;
     }
@@ -467,7 +461,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void printChar()
+            // void printChar(int, int)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "printChar";
@@ -490,7 +484,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void printString()
+            // void printString(CString, int)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "printString";
@@ -513,7 +507,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void printInt()
+            // void printInt(int, int)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "printInt";
@@ -536,7 +530,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void printHex()
+            // void printHex(int, int)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "printHex";
@@ -559,7 +553,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void destroyInstance()
+            // void destroyInstance(ANY)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "destroyInstance";
@@ -575,7 +569,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void as()
+            // ANY as(CString, ANY)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "as";
@@ -614,7 +608,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void createThread()
+            // Thread createThread(CString)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "createThread";
@@ -656,7 +650,7 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // void createInstance()
+            // ANY createInstance(CString)
             {
                 MethodDefNode &method = env().create<MethodDefNode>();
                 method.name = "createInstance";
@@ -714,9 +708,11 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // inline pasm
+            // void __inline_code__()
             {
-                cls.inlinePasm
+                MethodDefNode &method = env().create<MethodDefNode>();
+                method.name = "__inline_code__";
+                method.body
                     << "_crh_instantiate: // %eax: @object-meminfo %ebx: @_call_entry %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)\n"
                     << "    movl (%eax), %edi   // @object\n"
                     << "    movl %edx, %esi\n"
@@ -777,6 +773,7 @@ class SimpleFactory: virtual public Object {
                     << ".global _out := _sps_out\n"
                     << ".global _err := _sps_err\n"
                     << "\n"
+                    << "// SysCall constants\n"
                     << "SysCall_allocate   := 1\n"
                     << "SysCall_free       := 2\n"
                     << "SysCall_find_class := 3\n"
@@ -790,6 +787,8 @@ class SimpleFactory: virtual public Object {
                     << "_sps_out := 0\n"
                     << "_sps_err := 1\n"
                 ;
+                cls.methods.add(method);
+                method.parent = &cls;
             }
         }
         return *runtimeDef;
@@ -924,8 +923,6 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // inline pasm
-            {}
         }
         return *aDef;
     }
@@ -954,7 +951,7 @@ class SimpleFactory: virtual public Object {
             {
                 CStringConstDefNode &constant = env().create<CStringConstDefNode>();
                 constant.name = "doit";
-                constant.value = "DoIt ";
+                constant.value = "OMG! It work's! ";
                 cls.consts.add(constant);
             }
             // methods
@@ -1136,8 +1133,6 @@ class SimpleFactory: virtual public Object {
                 cls.methods.add(method);
                 method.parent = &cls;
             }
-            // inline pasm
-            {}
         }
         return *bDef;
     }
