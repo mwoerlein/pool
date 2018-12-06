@@ -9,6 +9,9 @@ class MethodRefNode;
 class MethodDefNode;
 class VariableDefNode;
 class CStringConstDefNode;
+
+class InlinePasmInstructionNode;
+
 class Visitor: virtual public Object {
     public:
     virtual ~Visitor() {}
@@ -19,6 +22,8 @@ class Visitor: virtual public Object {
     virtual bool visit(MethodDefNode & methodDef) = 0;
     virtual bool visit(VariableDefNode & variableDef) = 0;
     virtual bool visit(CStringConstDefNode & constDef) = 0;
+    
+    virtual bool visit(InlinePasmInstructionNode & pasmInstruction) = 0;
 };
 
 #endif //POOLC_AST_VISITOR_HPP_LOCK

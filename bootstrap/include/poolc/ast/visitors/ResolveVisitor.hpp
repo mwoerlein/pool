@@ -54,7 +54,7 @@ class ResolveVisitor: public Visitor {
                 MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
                 MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
                 if (&old) { old.destroy(); }
-                ref.parent = &classDef;
+                methodDef.parent = ref.parent = &classDef;
             }
             mit.destroy();
         }
@@ -74,6 +74,10 @@ class ResolveVisitor: public Visitor {
     }
     
     virtual bool visit(CStringConstDefNode & constDef) {
+        return true;
+    }
+    
+    virtual bool visit(InlinePasmInstructionNode & pasmInstruction) {
         return true;
     }
 };

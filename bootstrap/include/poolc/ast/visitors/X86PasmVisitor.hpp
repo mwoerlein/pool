@@ -216,7 +216,13 @@ class X86PasmVisitor: public Visitor {
             out << clsPrefix << "_method_" << methodDef.name << ":\n";
             out << "    pushl %ebp; movl %esp, %ebp\n";
             out << "    \n";
-            out << methodDef.body;
+            {
+                Iterator<InstructionNode> &it = methodDef.body.iterator();
+                while (it.hasNext()) {
+                    it.next().accept(*this);
+                }
+                it.destroy();
+            }
             out << "    \n";
             out << "    leave\n";
             out << "    ret\n";
@@ -232,6 +238,11 @@ class X86PasmVisitor: public Visitor {
     
     virtual bool visit(CStringConstDefNode & constDef) {
         out << "// string-const " << constDef.name << "\n";
+        return true;
+    }
+    
+    virtual bool visit(InlinePasmInstructionNode & pasmInstruction) {
+        out << pasmInstruction.pasm;
         return true;
     }
 };

@@ -2,20 +2,32 @@
 #define POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
 
 #include "poolc/ast/Node.hpp"
+#include "poolc/ast/nodes/InstructionNode.hpp"
 #include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "sys/collection/LinkedList.hpp"
 
 class MethodDefNode: public Node {
     public:
     String & name;
-    String & body;
     bool virt;
+    MutableCollection<InstructionNode> &body;
     ClassDefNode *parent;
     
     MethodDefNode(Environment &env, MemoryInfo &mi)
-            :Object(env, mi), name(env.create<String>()), body(env.create<String>()), virt(false), parent(0) {}
+            :Object(env, mi),
+             name(env.create<String>()),
+             body(env.create<LinkedList<InstructionNode>>()),
+             virt(false),
+             parent(0) {
+    }
     virtual ~MethodDefNode() {
         name.destroy();
-        body.destroy();
+        {
+            Iterator<InstructionNode> &it = body.iterator();
+            while (it.hasNext()) { it.next().destroy(); }
+            it.destroy();
+            body.destroy();
+        }
     }
     
     virtual bool accept(Visitor & visitor) {
