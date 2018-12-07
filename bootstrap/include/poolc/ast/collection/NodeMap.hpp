@@ -25,6 +25,13 @@ template <class Obj> class NodeMap: public HashMap<String, Obj> {
         it.destroy();
         this->destroy();
     }
+    
+    virtual Obj * first() {
+        Iterator<Obj> &it = this->iterator();
+        Obj * ret = it.hasNext() ? &it.next() : 0;
+        it.destroy();
+        return ret;        
+    }
 };
 
 #endif //POOLC_AST_COLLECTION_NODEMAP_HPP_LOCK

@@ -4,13 +4,10 @@
 #include "poolc/ast/Visitor.hpp"
 
 #include "sys/stream/OStream.hpp"
-#include "sys/String.hpp"
 
 class X86PasmVisitor: public Visitor {
     private:
     OStream & out;
-    String &clsPrefix;
-    String &tplPrefix;
     ClassDefNode * curClass;
     ClassDefNode * curSuper;
     
