@@ -42,7 +42,7 @@
 #define INSTANCE_OFFSET(end) "(" << end << " - " << instanceStart() << ")"
 #define LABEL(l) out << l << ":\n";
 #define LONG(l) out << "    .long " << l << "\n";
-#define ASCIZ(str) out << "    .asciz \"" << (str) << "\"\n";
+#define ASCIZ(str) {(str).escapeToStream(out << "    .asciz "); out << "\n";}
 #define LOCAL(l,v) out << l << " := " << v << "\n";
 #define GLOBAL(l,v) out << ".global " << l << " := " << v << "\n";
 

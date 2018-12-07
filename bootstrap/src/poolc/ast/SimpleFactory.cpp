@@ -968,7 +968,7 @@ ClassDefNode & SimpleFactory::getADef() {
         {
             CStringConstDefNode &constant = env().create<CStringConstDefNode>();
             constant.name = "test";
-            constant.value = " Test\\n";
+            constant.value = " Test\n";
             cls.consts.add(constant);
         }
         // methods
