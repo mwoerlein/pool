@@ -11,6 +11,7 @@ class ClassDefNode: public Node {
     public:
     String & name;
     String & fullQualifiedName;
+    MethodDefNode * bootstrap;
     
     NodeList<ClassRefNode> &extends;
     NodeList<VariableDefNode> &variables;

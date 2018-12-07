@@ -392,6 +392,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                 method.body.add(pasm);
             }
             cls.methods.add(method);
+            cls.bootstrap = &method;
         }
         // void initSysCall(SysCall-Runtime, SysCall-Entry)
         {

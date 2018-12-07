@@ -66,6 +66,9 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     out << "[pool]\n";
     out << "version = 0.1.0\n";
     out << "class = true\n";
+    if (curClass->bootstrap) {
+        out << "bootstrapOffset = " << methodDeclOffset(curClass->bootstrap) << "\n";
+    }
     out << "*/\n";
     
     // header
