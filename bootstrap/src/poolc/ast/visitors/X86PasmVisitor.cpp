@@ -78,10 +78,9 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LONG(INSTANCE_OFFSET(instanceHandle(curClass->supers.first()))); // Object handle offset in instance
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
     LONG("0x15AC1A55");
-    out << "\n";
 
     // dependent classes
-    out << "// class tab\n";
+    out << "\n// class tab\n";
     {
         Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
@@ -103,10 +102,9 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LONG("0");
     LONG("0");
     LONG("0");
-    out << "\n";
 
     // vtabs
-    out << "// method tabs\n";
+    out << "\n// method tabs\n";
     {
         Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
@@ -116,26 +114,27 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
         }
         it.destroy();
     }
-    out << "\n";
     
     // constants
+    out << "\n// constants";
     curClass->consts.acceptAll(*this);
     {
         Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
+            out << "\n// class-name " << curSuper->name << "\n";
             LOCAL(
                 classNameOffset(curSuper),
                 CLASS_OFFSET(className(curSuper))
             );
             LABEL(className(curSuper));
             ASCIZ(curSuper->fullQualifiedName);
-            out << "\n";
         }
         it.destroy();
     }
     
     // instance template and variables
+    out << "\n// instance template\n";
     LABEL(instanceStart());
     LONG("0"); // @class-desc
     LONG("0"); // @meminfo
@@ -179,6 +178,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LABEL(instanceEnd());
     
     // methods
+    out << "\n// method definitions";
     curClass->methods.acceptAll(*this);
     
     return true;
@@ -199,7 +199,7 @@ bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
 }
 
 bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
-    out << "\n// method-def " << methodDef.name << "\n";
+    out << "\n// method " << methodDef.name << "\n";
     
     if (methodDef.virt) {
         GLOBAL(
@@ -237,14 +237,13 @@ bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
 }
 
 bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
-    out << "// string-const " << constDef.name << "\n";
+    out << "\n// string " << constDef.name << "\n";
     LOCAL(
         constStringOffset(&constDef),
         CLASS_OFFSET(constString(&constDef))
     );
     LABEL(constString(&constDef));
     ASCIZ(constDef.value);
-    out << "\n";
     return true;
 }
 
