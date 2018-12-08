@@ -68,10 +68,11 @@ ClassDefNode & SimpleFactory::getObjectDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
+                    << "class_handle_offset := 0x4 //(class_Class_handle - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax    // @this (Type Object)\n"
                     << "    movl 4(%eax), %eax     // @this\n"
                     << "    movl (%eax), %eax      // @class desc\n"
-                    << "    movl (%eax), %eax      // @class handle\n"
+                    << "    movl class_handle_offset(%eax), %eax // @class handle\n"
                     << "    movl %eax, 16(%ebp)    // return @class handle\n"
                 ;
                 method.body.add(pasm);
@@ -199,13 +200,14 @@ ClassDefNode & SimpleFactory::getClassDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
+                    << "class_handle_offset := 0x4 //(class_Class_handle - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax                      // @this (Type Class)\n"
                     << "    movl handle_Class_vars_Class(%eax), %ebx // inst vars offset (Class)\n"
                     << "    addl 4(%eax), %ebx                       // @this.vars(Class)\n"
                     << "    movl 16(%ebp), %eax                      // param @class desc\n"
                     << "    movl %eax, Class_i_desc(%ebx)            // store @class desc\n"
                     << "    movl 12(%ebp), %ebx                      // @this (Type Class)\n"
-                    << "    movl %ebx, (%eax)                        // store @this (Type Class) in class desc\n"
+                    << "    movl %ebx, class_handle_offset(%eax)     // store @this (Type Class) in class desc\n"
                 ;
                 method.body.add(pasm);
             }
@@ -218,7 +220,7 @@ ClassDefNode & SimpleFactory::getClassDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
-                    << "class_name_offset := 0x4 //(class_Class_name - class_Class_desc)\n"
+                    << "class_name_offset := 0x8 //(class_Class_name - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax                      // @this (Type Class)\n"
                     << "    movl handle_Class_vars_Class(%eax), %ebx // inst vars offset (Class)\n"
                     << "    addl 4(%eax), %ebx                       // @this.vars(Class)\n"
@@ -308,6 +310,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
         {
             MethodDefNode &method = env().create<MethodDefNode>();
             method.name = "bootstrap";
+            method.scope = scope_class;
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
@@ -755,7 +758,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
-                    << "    cmpl 0, (%edx)\n"
+                    << "    cmpl 0, class_handle_offset(%edx)\n"
                     << "    jnz _crmci_instantiate // class already initialized\n"
                     << "    \n"
                 ;
@@ -825,11 +828,12 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
             }
             cls.methods.add(method);
         }
-        // void __inline_code__()
+        // void _crh_instantiate()
         {
             MethodDefNode &method = env().create<MethodDefNode>();
-            method.name = "__inline_code__";
-            // _crh_instantiate
+            method.name = "_crh_instantiate";
+            method.naked = true;
+            method.scope = scope_class;
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
@@ -863,7 +867,14 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                 ;
                 method.body.add(pasm);
             }
-            // _call_entry
+            cls.methods.add(method);
+        }
+        // void _call_entry()
+        {
+            MethodDefNode &method = env().create<MethodDefNode>();
+            method.name = "_call_entry";
+            method.naked = true;
+            method.scope = scope_class;
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
@@ -887,23 +898,15 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                 ;
                 method.body.add(pasm);
             }
-            // instantiate constants
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "class_vtabs_offset := 0x1c //(class_Class_vtabs - class_Class_desc)\n"
-                    << "_cvte_size := 0x10 //(class_Class_vtabs_entry_Class - class_Class_vtabs_entry_Object)\n"
-                    << "_cvte_cdo := 0x0 //(class_Class_vtabs_entry_class_desc - class_Class_vtabs_entry_Class)\n"
-                    << "_cvte_vto := 0x8 //(class_Class_vtabs_entry_vtab_offset - class_Class_vtabs_entry_Class)\n"
-                    << "_cvte_ho := 0xc //(class_Class_vtabs_entry_handle - class_Class_vtabs_entry_Class)\n"
-                    << "class_instance_size_offset := 0x8 //(class_Class_instance_size - class_Class_desc)\n"
-                    << "class_instance_tpl_offset_offset := 0xc //(class_Class_instance_tpl_offset - class_Class_desc)\n"
-                    << "class_instance_Object_handle_offset := 0x10 //(class_Class_instance_Object_handle_offset - class_Class_desc)\n"
-                    << "class_instance_class_handle_offset := 0x14 //(class_Class_instance_class_handle_offset - class_Class_desc)\n"
-                ;
-                method.body.add(pasm);
-            }
-            // print* constants
+            cls.methods.add(method);
+        }
+        // void __constants__()
+        {
+            MethodDefNode &method = env().create<MethodDefNode>();
+            method.name = "__constants__";
+            method.naked = true;
+            method.scope = scope_class;
+            // global print* constants
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
@@ -930,6 +933,24 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "\n"
                     << "_sps_out := 0\n"
                     << "_sps_err := 1\n"
+                ;
+                method.body.add(pasm);
+            }
+            // instantiate constants
+            {
+                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
+                pasm.pasm
+                    << "// instantiate constants\n"
+                    << "class_handle_offset := 0x4 //(class_Class_handle - class_Class_desc)\n"
+                    << "class_instance_tpl_offset_offset := 0xc //(class_Class_instance_tpl_offset - class_Class_desc)\n"
+                    << "class_instance_size_offset := 0x10 //(class_Class_instance_size - class_Class_desc)\n"
+                    << "class_instance_Object_handle_offset := 0x14 //(class_Class_instance_Object_handle_offset - class_Class_desc)\n"
+                    << "class_instance_class_handle_offset := 0x18 //(class_Class_instance_class_handle_offset - class_Class_desc)\n"
+                    << "class_vtabs_offset := 0x1c //(class_Class_vtabs - class_Class_desc)\n"
+                    << "_cvte_size := 0x10 //(class_Class_vtabs_entry_Class - class_Class_vtabs_entry_Object)\n"
+                    << "_cvte_cdo := 0x0 //(class_Class_vtabs_entry_class_desc - class_Class_vtabs_entry_Class)\n"
+                    << "_cvte_vto := 0x8 //(class_Class_vtabs_entry_vtab_offset - class_Class_vtabs_entry_Class)\n"
+                    << "_cvte_ho := 0xc //(class_Class_vtabs_entry_handle - class_Class_vtabs_entry_Class)\n"
                 ;
                 method.body.add(pasm);
             }

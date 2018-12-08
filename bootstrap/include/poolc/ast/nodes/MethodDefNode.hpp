@@ -11,6 +11,8 @@ class MethodDefNode: public Node {
     public:
     String & name;
     bool virt;
+    bool naked;
+    scope_t scope;
     NodeList<InstructionNode> &body;
     ClassDefNode *parent;
     

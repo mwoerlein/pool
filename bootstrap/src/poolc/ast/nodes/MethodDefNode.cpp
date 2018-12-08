@@ -7,7 +7,7 @@ MethodDefNode::MethodDefNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
          name(env.create<String>()),
          body(env.create<NodeList<InstructionNode>>()),
-         virt(false),
+         virt(false), naked(0), scope(scope_instance),
          parent(0) {
 }
 MethodDefNode::~MethodDefNode() {

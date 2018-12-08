@@ -5,6 +5,8 @@
 
 #include "poolc/ast/Visitor.hpp"
 
+enum scope_t { scope_class, scope_instance };
+
 class Node: virtual public Object {
     public:
     virtual ~Node();

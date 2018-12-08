@@ -74,13 +74,13 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     // header
     out << "// class " << curClass->name << "\n";
     LABEL(classDesc());
+    LONG("0x15AC1A55");
     LONG("0");
     LONG(classNameOffset(curClass));
-    LONG(INSTANCE_OFFSET(instanceEnd())); // instance size
     LONG(CLASS_OFFSET(instanceStart())); // instance template offset
+    LONG(INSTANCE_OFFSET(instanceEnd())); // instance size
     LONG(INSTANCE_OFFSET(instanceHandle(curClass->supers.first()))); // Object handle offset in instance
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
-    LONG("0x15AC1A55");
 
     // dependent classes
     out << "\n// class tab\n";
@@ -209,6 +209,8 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
             methodDeclOffset(&methodDef),
             "0" // virtual method
         );
+    } else if (methodDef.naked) {
+        methodDef.body.acceptAll(*this);
     } else {        
         GLOBAL(
             methodDeclOffset(&methodDef),
