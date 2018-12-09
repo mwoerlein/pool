@@ -19,6 +19,7 @@ class ResolveVisitor: public Visitor {
     virtual bool visit(MethodDefNode & methodDef) override;
     virtual bool visit(VariableDefNode & variableDef) override;
     virtual bool visit(CStringConstDefNode & constDef) override;
+    virtual bool visit(IntConstDefNode & constDef) override;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) override;
 };

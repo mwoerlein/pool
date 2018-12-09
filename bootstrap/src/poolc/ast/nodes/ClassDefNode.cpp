@@ -5,6 +5,7 @@
 #include "poolc/ast/nodes/MethodRefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
 #include "poolc/ast/nodes/CStringConstDefNode.hpp"
+#include "poolc/ast/nodes/IntConstDefNode.hpp"
 
 #include "sys/collection/LinkedList.hpp"
 #include "sys/collection/HashMap.hpp"
@@ -18,6 +19,7 @@ ClassDefNode::ClassDefNode(Environment &env, MemoryInfo &mi)
          extends(env.create<NodeList<ClassRefNode>>()),
          variables(env.create<NodeList<VariableDefNode>>()),
          consts(env.create<NodeList<CStringConstDefNode>>()),
+         intConsts(env.create<NodeList<IntConstDefNode>>()),
          methods(env.create<NodeList<MethodDefNode>>()),
          supers(env.create<NodeMap<ClassDefNode>>()),
          methodRefs(env.create<NodeMap<MethodRefNode>>()) {
@@ -29,6 +31,7 @@ ClassDefNode::~ClassDefNode() {
     extends.destroyAll();
     variables.destroyAll();
     consts.destroyAll();
+    intConsts.destroyAll();
     methods.destroyAll();
     
     // factory owns all classes 

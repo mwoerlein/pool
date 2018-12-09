@@ -9,6 +9,7 @@ class MethodRefNode;
 class MethodDefNode;
 class VariableDefNode;
 class CStringConstDefNode;
+class IntConstDefNode;
 
 class InlinePasmInstructionNode;
 
@@ -22,6 +23,7 @@ class Visitor: virtual public Object {
     virtual bool visit(MethodDefNode & methodDef) = 0;
     virtual bool visit(VariableDefNode & variableDef) = 0;
     virtual bool visit(CStringConstDefNode & constDef) = 0;
+    virtual bool visit(IntConstDefNode & constDef) = 0;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) = 0;
 };

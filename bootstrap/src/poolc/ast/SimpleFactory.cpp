@@ -4,6 +4,7 @@
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 #include "poolc/ast/nodes/VariableDefNode.hpp"
 #include "poolc/ast/nodes/CStringConstDefNode.hpp"
+#include "poolc/ast/nodes/IntConstDefNode.hpp"
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
 
 // public
@@ -59,7 +60,13 @@ ClassDefNode & SimpleFactory::getObjectDef() {
             cls.variables.add(variable);
         }
         // consts
-        {}
+        // class header
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_inst_handle";
+            constant.value = 0x4;
+            cls.intConsts.add(constant);
+        }
         // methods
         // Class getClass()
         {
@@ -68,11 +75,10 @@ ClassDefNode & SimpleFactory::getObjectDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
-                    << "class_handle_offset := 0x4 //(class_Class_handle - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax    // @this (Type Object)\n"
                     << "    movl 4(%eax), %eax     // @this\n"
                     << "    movl (%eax), %eax      // @class desc\n"
-                    << "    movl class_handle_offset(%eax), %eax // @class handle\n"
+                    << "    movl class_Object_ict_ch_inst_handle(%eax), %eax // @class handle\n"
                     << "    movl %eax, 16(%ebp)    // return @class handle\n"
                 ;
                 method.body.add(pasm);
@@ -174,7 +180,19 @@ ClassDefNode & SimpleFactory::getClassDef() {
             cls.variables.add(variable);
         }
         // consts
-        {}
+        // class header
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_inst_handle";
+            constant.value = 0x4;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_name";
+            constant.value = 0x8;
+            cls.intConsts.add(constant);
+        }
         // methods
         // ClassDesc getDesc()
         {
@@ -200,14 +218,13 @@ ClassDefNode & SimpleFactory::getClassDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
-                    << "class_handle_offset := 0x4 //(class_Class_handle - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax                      // @this (Type Class)\n"
                     << "    movl handle_Class_vars_Class(%eax), %ebx // inst vars offset (Class)\n"
                     << "    addl 4(%eax), %ebx                       // @this.vars(Class)\n"
                     << "    movl 16(%ebp), %eax                      // param @class desc\n"
                     << "    movl %eax, Class_i_desc(%ebx)            // store @class desc\n"
                     << "    movl 12(%ebp), %ebx                      // @this (Type Class)\n"
-                    << "    movl %ebx, class_handle_offset(%eax)     // store @this (Type Class) in class desc\n"
+                    << "    movl %ebx, class_Class_ict_ch_inst_handle(%eax)     // store @this (Type Class) in class desc\n"
                 ;
                 method.body.add(pasm);
             }
@@ -220,12 +237,11 @@ ClassDefNode & SimpleFactory::getClassDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
-                    << "class_name_offset := 0x8 //(class_Class_name - class_Class_desc)\n"
                     << "    movl 12(%ebp), %eax                      // @this (Type Class)\n"
                     << "    movl handle_Class_vars_Class(%eax), %ebx // inst vars offset (Class)\n"
                     << "    addl 4(%eax), %ebx                       // @this.vars(Class)\n"
                     << "    movl Class_i_desc(%ebx), %eax            // @class desc\n"
-                    << "    addl class_name_offset(%eax), %eax       // load reference to cstring\n"
+                    << "    addl class_Class_ict_ch_name(%eax), %eax       // load reference to cstring\n"
                     << "    movl %eax, 16(%ebp)                      // return cstring-ref\n"
                 ;
                 method.body.add(pasm);
@@ -305,6 +321,146 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
             constant.value = "/my/Thread";
             cls.consts.add(constant);
         }
+        // global print* constants
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "out"; // global alias for sps_out
+            constant.value = 0;
+            constant.global = true;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "err"; // global alias for sps_err
+            constant.value = 1;
+            constant.global = true;
+            cls.intConsts.add(constant);
+        }
+        // SysCall constants
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "SysCall_allocate";
+            constant.value = 1;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "SysCall_free";
+            constant.value = 2;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "SysCall_find_class";
+            constant.value = 3;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "SysCall_print";
+            constant.value = 4;
+            cls.intConsts.add(constant);
+        }
+        // SysCall print kinds
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "spk_char";
+            constant.value = 0;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "spk_int";
+            constant.value = 1;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "spk_hex";
+            constant.value = 2;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "spk_string";
+            constant.value = 3;
+            cls.intConsts.add(constant);
+        }
+        // SysCall print streams
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "sps_out";
+            constant.value = 0;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "sps_err";
+            constant.value = 1;
+            cls.intConsts.add(constant);
+        }
+        // class header
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_inst_handle";
+            constant.value = 0x4;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_cts";
+            constant.value = 0xc;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_tpl";
+            constant.value = 0x14;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_tpl_size";
+            constant.value = 0x18;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_tpl_obj_handle";
+            constant.value = 0x1c;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "ch_tpl_cls_handle";
+            constant.value = 0x20;
+            cls.intConsts.add(constant);
+        }
+        // class tabs
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "cts_cdo";
+            constant.value = 0x0;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "cts_vto";
+            constant.value = 0x8;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "cts_ho";
+            constant.value = 0xc;
+            cls.intConsts.add(constant);
+        }
+        {
+            IntConstDefNode &constant = env().create<IntConstDefNode>();
+            constant.name = "cts_size";
+            constant.value = 0x10;
+            cls.intConsts.add(constant);
+        }
         // methods
         // Runtime bootstrap(SysCall-Runtime, SysCall-Entry)
         {
@@ -323,15 +479,15 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    \n"
                     << "    pushl 0 // desc\n"
                     << "    pushl %eax        // \"Class\"\n"
-                    << "    pushl SysCall_find_class\n"
+                    << "    pushl class_Runtime_ict_SysCall_find_class\n"
                     << "    pushl %esp; pushl 16(%ebp); call 20(%ebp)\n"
                     << "    addl 16, %esp\n"
                     << "    popl -12(%ebp)  // store @class desc\n"
                     << "    \n"
                     << "    movl -12(%ebp), %edx\n"
                     << "    pushl 0     // info\n"
-                    << "    pushl class_instance_size_offset(%edx) // instance size\n"
-                    << "    pushl SysCall_allocate;\n"
+                    << "    pushl class_Runtime_ict_ch_tpl_size(%edx) // instance size\n"
+                    << "    pushl class_Runtime_ict_SysCall_allocate;\n"
                     << "    pushl %esp; pushl 16(%ebp); call 20(%ebp)\n"
                     << "    addl 16, %esp\n"
                     << "    popl %eax   // return info\n"
@@ -349,8 +505,8 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "	\n"
                     << "    movl 8(%ebp), %edx      // @class-desc \"Runtime\"\n"
                     << "    pushl 0     // info\n"
-                    << "    pushl class_instance_size_offset(%edx) // instance size\n"
-                    << "    pushl SysCall_allocate;\n"
+                    << "    pushl class_Runtime_ict_ch_tpl_size(%edx) // instance size\n"
+                    << "    pushl class_Runtime_ict_SysCall_allocate;\n"
                     << "    pushl %esp; pushl 16(%ebp); call 20(%ebp)\n"
                     << "    addl 16, %esp\n"
                     << "    popl %eax   // return info\n"
@@ -431,7 +587,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    \n"
                     << "    pushl 0         // desc\n"
                     << "    pushl 16(%ebp)  // @classname\n"
-                    << "    pushl SysCall_find_class;\n"
+                    << "    pushl class_Runtime_ict_SysCall_find_class;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 16, %esp\n"
                     << "    popl 20(%ebp)   // return @class desc\n"
@@ -457,7 +613,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    \n"
                     << "    pushl 0         // info\n"
                     << "    pushl 16(%ebp)  // param size\n"
-                    << "    pushl SysCall_allocate;\n"
+                    << "    pushl class_Runtime_ict_SysCall_allocate;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 16, %esp\n"
                     << "    popl 20(%ebp)   // return info\n"
@@ -483,7 +639,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    \n"
                     << "    pushl 16(%ebp)  // param info\n"
                     << "    pushl 0         // size\n"
-                    << "    pushl SysCall_free;\n"
+                    << "    pushl class_Runtime_ict_SysCall_free;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 20, %esp\n"
                     << "    \n"
@@ -507,9 +663,9 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    addl 4(%eax), %ebx                            // @this.vars(Runtime)\n"
                     << "    \n"
                     << "    pushl 20(%ebp)  // param c\n"
-                    << "    pushl _spk_char // kind\n"
+                    << "    pushl class_Runtime_ict_spk_char // kind\n"
                     << "    pushl 16(%ebp)  // param stream\n"
-                    << "    pushl SysCall_print;\n"
+                    << "    pushl class_Runtime_ict_SysCall_print;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 24, %esp\n"
                     << "    \n"
@@ -533,9 +689,9 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    addl 4(%eax), %ebx                            // @this.vars(Runtime)\n"
                     << "    \n"
                     << "    pushl 20(%ebp)    // param s\n"
-                    << "    pushl _spk_string // kind\n"
+                    << "    pushl class_Runtime_ict_spk_string // kind\n"
                     << "    pushl 16(%ebp)    // param stream\n"
-                    << "    pushl SysCall_print;\n"
+                    << "    pushl class_Runtime_ict_SysCall_print;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 24, %esp\n"
                     << "    \n"
@@ -559,9 +715,9 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    addl 4(%eax), %ebx                            // @this.vars(Runtime)\n"
                     << "    \n"
                     << "    pushl 20(%ebp)  // param i\n"
-                    << "    pushl _spk_int  // kind\n"
+                    << "    pushl class_Runtime_ict_spk_int  // kind\n"
                     << "    pushl 16(%ebp)  // param stream\n"
-                    << "    pushl SysCall_print;\n"
+                    << "    pushl class_Runtime_ict_SysCall_print;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 24, %esp\n"
                     << "    \n"
@@ -585,9 +741,9 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    addl 4(%eax), %ebx                            // @this.vars(Runtime)\n"
                     << "    \n"
                     << "    pushl 20(%ebp)  // param i\n"
-                    << "    pushl _spk_hex  // kind\n"
+                    << "    pushl class_Runtime_ict_spk_hex  // kind\n"
                     << "    pushl 16(%ebp)  // param stream\n"
-                    << "    pushl SysCall_print;\n"
+                    << "    pushl class_Runtime_ict_SysCall_print;\n"
                     << "    pushl %esp; pushl Runtime_i_syscall_runtime(%ebx); call Runtime_i_syscall_entry(%ebx)\n"
                     << "    addl 24, %esp\n"
                     << "    \n"
@@ -639,16 +795,16 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    movl 16(%ebp), %eax             // @obj (Type ANY)\n"
                     << "    movl 4(%eax), %ebx              // @obj\n"
                     << "    movl (%ebx), %eax               // @obj-class desc\n"
-                    << "    addl class_vtabs_offset, %eax   // @obj-class vtabs\n"
+                    << "    addl class_Runtime_ict_ch_cts(%eax), %eax // @obj-class vtabs entry\n"
                     << "_crma_loop:\n"
                     << "    cmpl (%eax), %ecx\n"
                     << "    je _crma_found\n"
-                    << "    addl _cvte_size, %eax\n"
+                    << "    addl class_Runtime_ict_cts_size, %eax\n"
                     << "    cmpl 0, (%eax)\n"
                     << "    je _crma_return\n"
                     << "    jmp _crma_loop\n"
                     << "_crma_found:\n"
-                    << "    addl _cvte_ho(%eax), %ebx\n"
+                    << "    addl class_Runtime_ict_cts_ho(%eax), %ebx\n"
                     << "    movl %ebx, 24(%ebp) // return correct handle\n"
                     << "_crma_return:\n"
                     << "    popl %esi\n"
@@ -758,7 +914,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
-                    << "    cmpl 0, class_handle_offset(%edx)\n"
+                    << "    cmpl 0, class_Runtime_ict_ch_inst_handle(%edx)\n"
                     << "    jnz _crmci_instantiate // class already initialized\n"
                     << "    \n"
                 ;
@@ -799,7 +955,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "_crmci_instantiate:\n"
                     << "    \n"
                     << "    subl 4, %esp  # return value of allocate\n"
-                    << "    pushl class_instance_size_offset(%edx) // instance size\n"
+                    << "    pushl class_Runtime_ict_ch_tpl_size(%edx) // instance size\n"
                     << "    pushl %esi; pushl Runtime_m_allocate; call (%esi)\n"
                     << "	addl 12, %esp\n"
                     << "    popl %eax                       // @object-meminfo\n"
@@ -840,29 +996,29 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "_crh_instantiate: // %eax: @object-meminfo %ebx: @_call_entry %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)\n"
                     << "    movl (%eax), %edi   // @object\n"
                     << "    movl %edx, %esi\n"
-                    << "    addl class_instance_tpl_offset_offset(%edx), %esi // @instance tpl\n"
-                    << "    movl class_instance_size_offset(%edx), %ecx // instance size\n"
+                    << "    addl class_Runtime_ict_ch_tpl(%edx), %esi // @instance tpl\n"
+                    << "    movl class_Runtime_ict_ch_tpl_size(%edx), %ecx // instance size\n"
                     << "    .byte 0xf3; .byte 0xa4 #// rep movsb // copy template to object\n"
                     << "    \n"
                     << "    movl (%eax), %edi   // @object\n"
                     << "    movl %edx, (%edi)   // store @class desc in instance\n" 
                     << "    movl %eax, 4(%edi)  // store @meminfo in instance\n"
                     << "    \n"
-                    << "    movl %edx, %eax                 // @obj-class desc\n"
-                    << "    addl class_vtabs_offset, %eax   // @obj-class vtabs entry\n"
+                    << "    movl %edx, %eax                     // @obj-class desc\n"
+                    << "    addl class_Runtime_ict_ch_cts(%eax), %eax // @obj-class vtabs entry\n"
                     << "_crhi_loop:\n"
-                    << "    movl _cvte_ho(%eax), %esi\n"
-                    << "    movl _cvte_vto(%eax), %ecx\n"
+                    << "    movl class_Runtime_ict_cts_ho(%eax), %esi\n"
+                    << "    movl class_Runtime_ict_cts_vto(%eax), %ecx\n"
                     << "    movl %ebx, (%edi, %esi)         // store @call-entry in handle\n"
                     << "    movl %edi, 4(%edi, %esi)        // store @object in handle\n"
                     << "    movl %ecx, 8(%edi, %esi)        // store vtab-offset in handle\n"
-                    << "    addl _cvte_size, %eax\n"
+                    << "    addl class_Runtime_ict_cts_size, %eax\n"
                     << "    cmpl 0, (%eax)\n"
                     << "    jne _crhi_loop\n"
                     << "    \n"
                     << "    movl %edi, %esi\n"
-                    << "    addl class_instance_Object_handle_offset(%edx), %edi // @object (Type Object)\n"
-                    << "    addl class_instance_class_handle_offset(%edx), %esi // @object (Type <class>)\n"
+                    << "    addl class_Runtime_ict_ch_tpl_obj_handle(%edx), %edi // @object (Type Object)\n"
+                    << "    addl class_Runtime_ict_ch_tpl_cls_handle(%edx), %esi // @object (Type <class>)\n"
                     << "    ret\n"
                 ;
                 method.body.add(pasm);
@@ -888,69 +1044,13 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "	addl 8(%esp), %eax	        # get vtab-entry by adding method-offset number\n"
                     << "	movl 0(%ecx), %ebx	        # get class-desc\n"
                     << "	addl 4(%eax), %ebx          # get method-vtabs-entry\n"
-                    << "	addl _cvte_ho(%ebx), %ecx   # compute method-@this\n"
+                    << "	addl class_Runtime_ict_cts_ho(%ebx), %ecx   # compute method-@this\n"
                     << "	movl %ecx, 12(%esp)         # store method-@this\n"
-                    << "	movl _cvte_cdo(%ebx), %ebx  # get method-class-desc\n"
+                    << "	movl class_Runtime_ict_cts_cdo(%ebx), %ebx  # get method-class-desc\n"
                     << "	movl %ebx, 8(%esp)          # store method-class-desc\n"
                     << "	addl 0(%eax), %ebx          # compute method-addr\n"
                     << "	popl %ecx\n"
                     << "	jmp %ebx                    # goto method\n"
-                ;
-                method.body.add(pasm);
-            }
-            cls.methods.add(method);
-        }
-        // void __constants__()
-        {
-            MethodDefNode &method = env().create<MethodDefNode>();
-            method.name = "__constants__";
-            method.naked = true;
-            method.scope = scope_class;
-            // global print* constants
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "// print* constants\n"
-                    << ".global _out := _sps_out\n"
-                    << ".global _err := _sps_err\n"
-                ;
-                method.body.add(pasm);
-            }
-            // SysCall constants
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "// SysCall constants\n"
-                    << "SysCall_allocate   := 1\n"
-                    << "SysCall_free       := 2\n"
-                    << "SysCall_find_class := 3\n"
-                    << "SysCall_print      := 4\n"
-                    << "\n"
-                    << "_spk_char   := 0\n"
-                    << "_spk_int    := 1\n"
-                    << "_spk_hex    := 2\n"
-                    << "_spk_string := 3\n"
-                    << "\n"
-                    << "_sps_out := 0\n"
-                    << "_sps_err := 1\n"
-                ;
-                method.body.add(pasm);
-            }
-            // instantiate constants
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "// instantiate constants\n"
-                    << "class_handle_offset := 0x4 //(class_Class_handle - class_Class_desc)\n"
-                    << "class_instance_tpl_offset_offset := 0xc //(class_Class_instance_tpl_offset - class_Class_desc)\n"
-                    << "class_instance_size_offset := 0x10 //(class_Class_instance_size - class_Class_desc)\n"
-                    << "class_instance_Object_handle_offset := 0x14 //(class_Class_instance_Object_handle_offset - class_Class_desc)\n"
-                    << "class_instance_class_handle_offset := 0x18 //(class_Class_instance_class_handle_offset - class_Class_desc)\n"
-                    << "class_vtabs_offset := 0x1c //(class_Class_vtabs - class_Class_desc)\n"
-                    << "_cvte_size := 0x10 //(class_Class_vtabs_entry_Class - class_Class_vtabs_entry_Object)\n"
-                    << "_cvte_cdo := 0x0 //(class_Class_vtabs_entry_class_desc - class_Class_vtabs_entry_Class)\n"
-                    << "_cvte_vto := 0x8 //(class_Class_vtabs_entry_vtab_offset - class_Class_vtabs_entry_Class)\n"
-                    << "_cvte_ho := 0xc //(class_Class_vtabs_entry_handle - class_Class_vtabs_entry_Class)\n"
                 ;
                 method.body.add(pasm);
             }
@@ -1064,31 +1164,31 @@ ClassDefNode & SimpleFactory::getADef() {
                     << "	addl 8, %esp\n"
                     << "    popl %eax // name cstring ref\n"
                     << "    \n"
-                    << "    pushl %eax; pushl _out\n"
+                    << "    pushl %eax; pushl Runtime_c_out\n"
                     << "    pushl %edx; pushl Runtime_m_printString; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 0x20; pushl _out // ' '\n"
+                    << "    pushl 0x20; pushl Runtime_c_out // ' '\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
                     << "    movl handle_A_vars_A(%ecx), %ebx  // inst vars offset (A)\n"
                     << "    addl 4(%ecx), %ebx                // @this.vars(A)\n"
-                    << "    push A_i_column(%ebx); pushl _out // column\n"
+                    << "    push A_i_column(%ebx); pushl Runtime_c_out // column\n"
                     << "    pushl %edx; pushl Runtime_m_printInt; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 0x20; pushl _out // ' '\n"
+                    << "    pushl 0x20; pushl Runtime_c_out // ' '\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 16(%ebp); pushl _out // row\n"
+                    << "    pushl 16(%ebp); pushl Runtime_c_out // row\n"
                     << "    pushl %edx; pushl Runtime_m_printInt; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"A\"\n"
                     << "    addl class_A_so_ct_test, %eax\n"
-                    << "    pushl %eax; pushl _err\n"
+                    << "    pushl %eax; pushl Runtime_c_err\n"
                     << "    pushl %edx; pushl Runtime_m_printString; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
@@ -1199,13 +1299,13 @@ ClassDefNode & SimpleFactory::getBDef() {
                     << "	addl 8, %esp\n"
                     << "    popl %edx   # Runtime(Type Runtime)\n"
                     << "    \n"
-                    << "    pushl 0x40; pushl _err // '@'\n"
+                    << "    pushl 0x40; pushl Runtime_c_err // '@'\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax         // @class-desc \"B\"\n"
                     << "    addl class_B_so_ct_doit, %eax // \"DoIt \"\n"
-                    << "    pushl %eax; pushl _out\n"
+                    << "    pushl %eax; pushl Runtime_c_out\n"
                     << "    pushl %edx; pushl Runtime_m_printString; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
@@ -1215,11 +1315,11 @@ ClassDefNode & SimpleFactory::getBDef() {
                     << "    addl 12, %esp\n"
                     << "    popl %eax\n"
                     << "    \n"
-                    << "    pushl %eax; pushl _out\n"
+                    << "    pushl %eax; pushl Runtime_c_out\n"
                     << "    pushl %edx; pushl Runtime_m_printInt; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 0x20; pushl _out // ' '\n"
+                    << "    pushl 0x20; pushl Runtime_c_out // ' '\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
@@ -1229,7 +1329,7 @@ ClassDefNode & SimpleFactory::getBDef() {
                     << "    addl 12, %esp\n"
                     << "    popl %eax\n"
                     << "    \n"
-                    << "    pushl %eax; pushl _out\n"
+                    << "    pushl %eax; pushl Runtime_c_out\n"
                     << "    pushl %edx; pushl Runtime_m_printInt; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
@@ -1239,31 +1339,31 @@ ClassDefNode & SimpleFactory::getBDef() {
                     << "	addl 12, %esp\n"
                     << "    popl %esi\n"
                     << "    \n"
-                    << "    pushl 0x20; pushl _out // ' '\n"
+                    << "    pushl 0x20; pushl Runtime_c_out // ' '\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl %esi; pushl _out\n"
+                    << "    pushl %esi; pushl Runtime_c_out\n"
                     << "    pushl %edx; pushl Runtime_m_printHex; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 0x20; pushl _out // ' '\n"
+                    << "    pushl 0x20; pushl Runtime_c_out // ' '\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl (%esi); pushl _out\n"
+                    << "    pushl (%esi); pushl Runtime_c_out\n"
                     << "    pushl %edx; pushl Runtime_m_printHex; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 0x20; pushl _out // ' '\n"
+                    << "    pushl 0x20; pushl Runtime_c_out // ' '\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 4(%esi); pushl _out\n" 
+                    << "    pushl 4(%esi); pushl Runtime_c_out\n" 
                     << "    pushl %edx; pushl Runtime_m_printHex; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"
-                    << "    pushl 0xa; pushl _out // '/n'\n"
+                    << "    pushl 0xa; pushl Runtime_c_out // '/n'\n"
                     << "    pushl %edx; pushl Runtime_m_printChar; call (%edx)\n"
                     << "    addl 16, %esp\n"
                     << "    \n"

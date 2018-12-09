@@ -76,6 +76,10 @@ bool ResolveVisitor::visit(CStringConstDefNode & constDef) {
     return true;
 }
 
+bool ResolveVisitor::visit(IntConstDefNode & constDef) {
+    return true;
+}
+
 bool ResolveVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
     return true;
 }

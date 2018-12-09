@@ -16,6 +16,7 @@ class ClassDefNode: public Node {
     NodeList<ClassRefNode> &extends;
     NodeList<VariableDefNode> &variables;
     NodeList<CStringConstDefNode> &consts;
+    NodeList<IntConstDefNode> &intConsts;
     NodeList<MethodDefNode> &methods;
     
     NodeMap<ClassDefNode> &supers;
