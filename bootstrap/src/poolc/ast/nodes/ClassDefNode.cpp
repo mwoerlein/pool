@@ -15,6 +15,8 @@ ClassDefNode::ClassDefNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
          name(env.create<String>()),
          fullQualifiedName(env.create<String>()),
+         globalPrefix(env.create<String>()),
+         localPrefix(env.create<String>()),
          bootstrap(0),
          extends(env.create<NodeList<ClassRefNode>>()),
          variables(env.create<NodeList<VariableDefNode>>()),
@@ -27,6 +29,8 @@ ClassDefNode::ClassDefNode(Environment &env, MemoryInfo &mi)
 ClassDefNode::~ClassDefNode() {
     name.destroy();
     fullQualifiedName.destroy();
+    globalPrefix.destroy();
+    localPrefix.destroy();
     
     extends.destroyAll();
     variables.destroyAll();

@@ -11,6 +11,8 @@ class ClassDefNode: public Node {
     public:
     String & name;
     String & fullQualifiedName;
+    String & globalPrefix;
+    String & localPrefix;
     MethodDefNode * bootstrap;
     
     NodeList<ClassRefNode> &extends;

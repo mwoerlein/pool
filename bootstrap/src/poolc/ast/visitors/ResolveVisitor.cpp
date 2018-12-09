@@ -19,6 +19,23 @@ bool ResolveVisitor::visit(ClassRefNode & classRef) {
 
 bool ResolveVisitor::visit(ClassDefNode & classDef) {
     if (classDef.supers.isEmpty()) {
+        {
+            char tmp;
+            IStream &in = classDef.fullQualifiedName.toIStream();
+            while (!in.isEmpty()) {
+                in >> tmp;
+                switch (tmp) {
+                    case '/':
+                        classDef.globalPrefix << '_';
+                        break;
+                    default:
+                        classDef.globalPrefix << tmp;
+                }
+            }
+            in.destroy();
+            (classDef.localPrefix << '_').printuint(classDef.fullQualifiedName.hash(), 16, 8);
+        }
+        
         Iterator<ClassRefNode> &it = classDef.extends.iterator();
         while (it.hasNext()) {
             ClassRefNode & extend = it.next();
