@@ -19,6 +19,7 @@ bool ResolveVisitor::visit(ClassRefNode & classRef) {
 
 bool ResolveVisitor::visit(ClassDefNode & classDef) {
     if (classDef.supers.isEmpty()) {
+        classDef.fullQualifiedName << "/my/" << classDef.name;
         {
             char tmp;
             IStream &in = classDef.fullQualifiedName.toIStream();

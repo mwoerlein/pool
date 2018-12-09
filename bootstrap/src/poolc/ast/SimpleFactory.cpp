@@ -48,7 +48,6 @@ ClassDefNode & SimpleFactory::getObjectDef() {
         objectDef = &env().create<ClassDefNode>();
         ClassDefNode &cls = *objectDef;
         cls.name = "Object";
-        cls.fullQualifiedName = "/my/Object";
         
         // extends
         {}
@@ -164,7 +163,6 @@ ClassDefNode & SimpleFactory::getClassDef() {
         classDef = &env().create<ClassDefNode>();
         ClassDefNode &cls = *classDef;
         cls.name = "Class";
-        cls.fullQualifiedName = "/my/Class";
         
         // extends
         {
@@ -257,7 +255,6 @@ ClassDefNode & SimpleFactory::getThreadDef() {
         threadDef = &env().create<ClassDefNode>();
         ClassDefNode &cls = *threadDef;
         cls.name = "Thread";
-        cls.fullQualifiedName = "/my/Thread";
         
         // extends
         {
@@ -276,7 +273,6 @@ ClassDefNode & SimpleFactory::getThreadDef() {
             method.name = "run";
             method.virt = true;
             cls.methods.add(method);
-            method.parent = &cls;
         }
     }
     return *threadDef;
@@ -287,7 +283,6 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
         runtimeDef = &env().create<ClassDefNode>();
         ClassDefNode &cls = *runtimeDef;
         cls.name = "Runtime";
-        cls.fullQualifiedName = "/my/Runtime";
         
         // extends
         {
@@ -535,7 +530,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    addl _my_Runtime_coso_class, %eax\n"
                     << "    subl 4, %esp  # return value of createInstance\n"
                     << "    pushl %eax // @classname\n"
-                    << "    pushl %esi; pushl _my_Runtime_m_createInstance2; call (%esi)\n"
+                    << "    pushl %esi; pushl _my_Runtime_m_createInstance; call (%esi)\n"
                     << "	addl 12, %esp\n"
                     << "    popl %eax   // @class (Type Class)\n"
                     << "    addl 0, %eax; jz _crmci_return  // return NULL if class could not be initialized\n"
@@ -1025,151 +1020,6 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
             }
             cls.methods.add(method);
         }
-        // ANY createInstance(CString)
-        {
-            MethodDefNode &method = env().create<MethodDefNode>();
-            method.name = "createInstance2";
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "    \n"
-                    << "    pushad\n"
-                    << "_crmci2_start:\n"
-                    << "    movl 0, 20(%ebp)          // default handle: NULL\n"
-                    << "    movl 12(%ebp), %esi       // @this (Type Runtime)\n"
-                    << "    \n"
-                ;
-                method.body.add(pasm);
-            }
-            // getClassDesc
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "    subl 4, %esp  # return value of getClassDesc\n"
-                    << "    pushl 16(%ebp)  // param @classname\n"
-                    << "    pushl %esi; pushl _my_Runtime_m_getClassDesc; call (%esi)\n"
-                    << "	addl 12, %esp\n"
-                    << "    popl %edx       // @class-desc\n"
-                    << "    addl 0, %edx; jz _crmci2_return  // return NULL if class not exists\n"
-                    << "    \n"
-                ;
-                method.body.add(pasm);
-            }
-            // if (!Class instance exist)
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "    cmpl 0, _my_Runtime_coi_ch_inst_handle(%edx)\n"
-                    << "    jnz _crmci2_instantiate // class already initialized\n"
-                    << "    \n"
-                ;
-                method.body.add(pasm);
-            }
-            // create Class instance
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl _my_Runtime_coso_class, %eax\n"
-                    << "    subl 4, %esp  # return value of createInstance\n"
-                    << "    pushl %eax // @classname\n"
-                    << "    pushl %esi; pushl _my_Runtime_m_createInstance2; call (%esi)\n"
-                    << "	addl 12, %esp\n"
-                    << "    popl %eax   // @class (Type Class)\n"
-                    << "    addl 0, %eax; jz _crmci2_return  // return NULL if class could not be initialized\n"
-                    << "    \n"
-                ;
-                method.body.add(pasm);
-            }
-            // setDescriptor
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "    pushl %edx                      // @class-desc\n"
-                    << "    pushl %eax; pushl _my_Class_m_setDesc; call (%eax)\n"
-                    << "	addl 12, %esp\n"
-                    << "    \n"
-                ;
-                method.body.add(pasm);
-            }
-            // endif
-            // allocate memory for instance
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "_crmci2_instantiate:\n"
-                    << "    \n"
-                    << "    subl 4, %esp  # return value of allocate\n"
-                    << "    pushl _my_Runtime_coi_ch_tpl_size(%edx) // instance size\n"
-                    << "    pushl %esi; pushl _my_Runtime_m_allocate; call (%esi)\n"
-                    << "	addl 12, %esp\n"
-                    << "    popl %eax                       // @object-meminfo\n"
-                    << "    addl 0, %eax; jz _crmci2_return\n"
-                ;
-                method.body.add(pasm);
-            }
-            // call _crh_instantiate AND return correct handle
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "    \n"
-                    << "    pushl %esi // @Runtime for later setRt\n"
-                    << "    movl 8(%ebp), %ebx      // @class-desc \"Runtime\"\n"
-                    << "    addl _cr_mo_call_entry, %ebx\n"
-                    << "    call _crh_instantiate2 // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)\n"
-                    << "    addl 0, %esi; jz _crmci_return  // return NULL if instance could not be generated\n"
-                    << "    movl %esi, 20(%ebp)             // return correct handle\n"
-                    << "    pushl %edi; pushl _my_Object_m_setRt; call (%edi)\n"
-                    << "	addl 12, %esp\n"
-                    << "    \n"
-                    << "_crmci2_return:\n"
-                    << "    popad\n"
-                ;
-                method.body.add(pasm);
-            }
-            cls.methods.add(method);
-        }
-        // void _crh_instantiate()
-        {
-            MethodDefNode &method = env().create<MethodDefNode>();
-            method.name = "_crh_instantiate2";
-            method.naked = true;
-            method.scope = scope_class;
-            {
-                InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
-                pasm.pasm
-                    << "_crh_instantiate2: // %eax: @object-meminfo %ebx: @_call_entry %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)\n"
-                    << "    movl (%eax), %edi   // @object\n"
-                    << "    movl %edx, %esi\n"
-                    << "    addl _my_Runtime_coi_ch_tpl(%edx), %esi // @instance tpl\n"
-                    << "    movl _my_Runtime_coi_ch_tpl_size(%edx), %ecx // instance size\n"
-                    << "    .byte 0xf3; .byte 0xa4 #// rep movsb // copy template to object\n"
-                    << "    \n"
-                    << "    movl (%eax), %edi   // @object\n"
-                    << "    movl %edx, (%edi)   // store @class desc in instance\n" 
-                    << "    movl %eax, 4(%edi)  // store @meminfo in instance\n"
-                    << "    \n"
-                    << "    movl %edx, %eax                     // @obj-class desc\n"
-                    << "    addl _my_Runtime_coi_ch_cts(%eax), %eax // @obj-class vtabs entry\n"
-                    << "_crhi2_loop:\n"
-                    << "    movl _my_Runtime_coi_cts_ho(%eax), %esi\n"
-                    << "    movl _my_Runtime_coi_cts_vto(%eax), %ecx\n"
-                    << "    movl %ebx, (%edi, %esi)         // store @call-entry in handle\n"
-                    << "    movl %edi, 4(%edi, %esi)        // store @object in handle\n"
-                    << "    movl %ecx, 8(%edi, %esi)        // store vtab-offset in handle\n"
-                    << "    addl _my_Runtime_coi_cts_size, %eax\n"
-                    << "    cmpl 0, (%eax)\n"
-                    << "    jne _crhi2_loop\n"
-                    << "    \n"
-                    << "    movl %edi, %esi\n"
-                    << "    addl _my_Runtime_coi_ch_tpl_obj_handle(%edx), %edi // @object (Type Object)\n"
-                    << "    addl _my_Runtime_coi_ch_tpl_cls_handle(%edx), %esi // @object (Type <class>)\n"
-                    << "    ret\n"
-                ;
-                method.body.add(pasm);
-            }
-            cls.methods.add(method);
-        }
         // void _call_entry()
         {
             MethodDefNode &method = env().create<MethodDefNode>();
@@ -1210,7 +1060,6 @@ ClassDefNode & SimpleFactory::getADef() {
         aDef = &env().create<ClassDefNode>();
         ClassDefNode &cls = *aDef;
         cls.name = "A";
-        cls.fullQualifiedName = "/my/A";
         
         // extends
         {
@@ -1352,7 +1201,6 @@ ClassDefNode & SimpleFactory::getBDef() {
         bDef = &env().create<ClassDefNode>();
         ClassDefNode &cls = *bDef;
         cls.name = "B";
-        cls.fullQualifiedName = "/my/B";
         
         // extends
         {
