@@ -21,6 +21,8 @@ class Parser: public ParserBase
         
     public:
         Parser(PoolParser &driver):driver(driver),state(0){};
+        int makeClass();
+        int makeID(String & identifier);
         int parse();
 
     private:

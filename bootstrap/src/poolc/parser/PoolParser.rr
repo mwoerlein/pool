@@ -1,0 +1,84 @@
+#include "poolc/parser/PoolParser.hpp"
+
+#include "Parser.h"
+#define SIZE 50
+
+/*!stags:re2c format = 'char *@@;'; */
+/*!max:re2c*/
+
+// public
+PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), cls(0) {}
+PoolParser::~PoolParser() {}
+
+ClassDefNode * PoolParser::parse(IStream &input) {
+    this->input = &input;
+    
+    Parser parser(*this);
+    if (parser.parse()) {
+        return 0;
+    }
+    
+    return cls;
+}
+
+int PoolParser::lex(Parser & parser)
+{
+    char *o1, *o2;
+    for (;;) {
+        token = current;
+/*!re2c
+        re2c:flags:T = 1;
+        re2c:define:YYCTYPE = char;
+
+        end         = "\x00";
+        eol         = "\r"? "\n" | "\r";
+        wsp         = [ \t]*;
+        comma       = ",";
+        semicolon   = ";";
+        colon       = ":";
+        assign      = ":=";
+
+        bin         = "0"[bB][01]+;
+        oct         = "0"[0-7]+;
+        dec         = "0" | [1-9][0-9]*; 
+        hex         = "0"[xX][0-9a-fA-F]+;
+        number      = "-"? (bin | oct | dec | hex);
+        id          = [a-zA-Z_][a-zA-Z0-9_]+;
+        
+        re2c:define:YYCURSOR = current;
+        re2c:define:YYMARKER = marker;
+        re2c:define:YYCTXMARKER = ctxmarker;
+        re2c:define:YYLIMIT = limit;
+        re2c:yyfill:enable = 1;
+        re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) return 0;";
+        re2c:define:YYFILL:naked = 1;
+        
+        "class"     { return parser.makeClass(); }
+        "{"         { return '{'; }
+        "}"         { return '}'; }
+        "("         { return '('; }
+        ")"         { return ')'; }
+        @o1 id @o2  { return parser.makeID(env().create<String, char *, char *>(o1, o2)); }
+
+        eol         { continue; }
+        wsp         { continue; }
+        end         { return 0; }
+        *           { break; }
+*/
+    }
+    env().err() << "unexpected character : " << *token
+        << " line: " << linesBuffer[token-buffer]
+        << " column: "  << columnsBuffer[token-buffer]
+        << '\n';
+    return -1;
+}
+
+
+bool PoolParser::error(const char* msg) {
+    env().err()<<msg<<"\n";
+    return true;
+}
+
+void PoolParser::shift(size_t freed) {
+    /*!stags:re2c format = "@@ -= freed;\n"; */
+}

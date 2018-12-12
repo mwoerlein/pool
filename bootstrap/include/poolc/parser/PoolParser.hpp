@@ -5,10 +5,16 @@
 #include "sys/stream/IStream.hpp"
 
 #include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "poolc/parser/ParseBuffer.hpp"
 
-class PoolParser: virtual public Object {
+class Parser;
+class PoolParser: public ParseBuffer {
     private:
     ClassDefNode * cls;
+    IStream * input;
+    
+    protected:
+    virtual void shift(size_t freed) override;
     
     public:
     PoolParser(Environment &env, MemoryInfo &mi);
@@ -18,6 +24,7 @@ class PoolParser: virtual public Object {
     virtual void registerClass(ClassDefNode *node) {
         cls = node;
     }
+    virtual int lex(Parser & parser);
 };
 
 #endif //POOLC_PARSER_POOLPARSER_HPP_LOCK

@@ -1,6 +1,7 @@
 #include "linux/LinuxBootstrap.hpp"
 #include "linux/CommandLine.hpp"
 
+#include "poolc/parser/PoolParser.hpp"
 #include "poolc/ast/SimpleFactory.hpp"
 #include "poolc/ast/visitors/ResolveVisitor.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
@@ -45,8 +46,17 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         
         SimpleFactory &f = env().create<SimpleFactory>();
         Iterator<String> & argIt = arguments();
-        ClassDefNode *classDef = f.getDef(argIt.next());
+        String &name = argIt.next();
         argIt.destroy();
+        
+        ClassDefNode *classDef = f.getDef(name);
+        if (!classDef) {
+            PoolParser &p = env().create<PoolParser>();
+            IStream &infile = (name == "-") ? env().streamFactory().buildStdIStream() : env().streamFactory().buildIStream(name);
+            classDef = p.parse(infile);
+            infile.destroy();
+            p.destroy();
+        }
         
         if (classDef) {
             Visitor &resolve = env().create<ResolveVisitor, SimpleFactory &>(f);
