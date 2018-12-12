@@ -6,6 +6,7 @@ class StreamFactory;
 #include "sys/Object.hpp"
 #include "memory/MemoryAllocator.hpp"
 
+#define _NEW
 void* operator new (size_t size, void* location);
 
 class Environment: virtual public Object {

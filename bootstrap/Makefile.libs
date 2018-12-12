@@ -6,9 +6,13 @@ include ./Makefile.inc
 LIBNAME=$(patsubst $(dir $(LIB))%.a,%,$(LIB))
 LIBSRC=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.cpp')
 LIBRE2CSRC=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.re')
+LIBCCSRC=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.cc')
+LIBBISONSRC=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.gram')
 LIBOBJS=\
     $(patsubst $(SRCDIR)/$(LIBNAME)/%.cpp,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBSRC))\
-    $(patsubst $(SRCDIR)/$(LIBNAME)/%.re,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBRE2CSRC))
+    $(patsubst $(SRCDIR)/$(LIBNAME)/%.re,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBRE2CSRC))\
+    $(patsubst $(SRCDIR)/$(LIBNAME)/%.gram,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBBISONSRC))\
+    $(patsubst $(SRCDIR)/$(LIBNAME)/%.cc,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBCCSRC))
 
 .PHONY: all none
 
@@ -24,10 +28,20 @@ $(SRCDIR)/$(LIBNAME)/%.cpp: $(SRCDIR)/$(LIBNAME)/%.re
 	echo "creating $@"
 	re2c -bo $@ $<
 
+$(SRCDIR)/$(LIBNAME)/%.cc: $(SRCDIR)/$(LIBNAME)/%.gram 
+	echo "creating $@"
+	#echo "bisonc++ --target-directory=$(dir $@) -p $(@:$(dir $@)%=%) $<"
+	bisonc++ --target-directory=$(dir $@) -p $(@:$(dir $@)%=%) $<
+
 $(OBJDIR)/$(LIBNAME)/%.o: $(SRCDIR)/$(LIBNAME)/%.cpp $(OBJDIR)/$(LIBNAME) 
 	echo "creating $@"
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
+	
+$(OBJDIR)/$(LIBNAME)/%.o: $(SRCDIR)/$(LIBNAME)/%.cc $(OBJDIR)/$(LIBNAME) 
+	echo "creating $@"
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) -fexceptions -I$(dir $@) -c -o $@ $<
 	
 $(OBJDIR)/$(LIBNAME):
 	mkdir -p $@

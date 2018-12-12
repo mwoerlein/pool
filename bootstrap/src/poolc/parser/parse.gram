@@ -1,0 +1,75 @@
+//DECL
+%baseclass-preinclude poolc/parser/Symbol.hpp
+%union
+{
+    long u_number;
+    String *u_identifier;
+    ClassDefNode *u_class_decl;
+    MethodDefNode *u_method_decl;
+    InstructionNode *u_instruction;
+}
+%token CLASS
+%token <u_identifier> ID
+//%token <u_number> NUMBER
+
+%type <u_class_decl> class_decl
+%type <u_class_decl> class_body
+%type <u_method_decl> method_decl
+%type <u_method_decl> method_body
+%type <u_instruction> instruction
+
+//=
+%%
+//RULES
+translation_unit:    
+        // empty 
+| 
+        class_decl
+;
+
+class_decl:   
+    CLASS ID '{' class_body '}' { 
+//        driver.env().out() << "declaration of class \"" << *$2 << "\" found\n";
+        $$ = $4;
+        $$->name = *$2;
+        driver.registerClass($$);
+    }
+;
+
+class_body:      
+    // empty                
+    {
+//        driver.env().out() << "new class \n";
+        $$ = &driver.env().create<ClassDefNode>();
+    }
+|   class_body method_decl  {
+        $$ = $1;
+        $1->methods.add(*$2);
+    }
+;
+
+method_decl:
+    ID '(' ')' '{' method_body '}'      {
+//        driver.env().out() << "declaration of method \"" << *$1 << "\" found\n";
+//        driver.env().out() << "new method \n";
+        $$ = $5;
+        $$->name = *$1;
+    }
+;
+
+method_body:      
+    // empty                
+    {
+//        driver.env().out() << "new method \n";
+        $$ = &driver.env().create<MethodDefNode>();
+    }
+|   method_body instruction  {
+        $$ = $1;
+        $1->body.add(*$2);
+    }
+;
+
+instruction:
+    'd' // TODO
+;
+//=
