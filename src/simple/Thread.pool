@@ -1,0 +1,4 @@
+// TODO convert to interface 
+class Thread extends Object {
+    abstract void run();
+}

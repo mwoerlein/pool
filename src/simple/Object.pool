@@ -1,0 +1,23 @@
+class Object {
+    // TODO: remove with working ClassHeader "struct"
+    local int ch_inst_handle := 0x4;
+    
+    Runtime runtime;
+    
+    Class getClass() {
+    }
+    
+    int hash() {
+    }
+    
+    // TODO: use generic method instead of plain Object?
+    bool equals(Object any) {
+    }
+    
+    Runtime rt() {
+    }
+    
+    // TODO: move to constructor?
+    void setRt(Runtime rt) {
+    }
+}

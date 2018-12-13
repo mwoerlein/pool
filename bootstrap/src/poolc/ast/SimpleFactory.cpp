@@ -306,13 +306,13 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
         // consts
         {
             CStringConstDefNode &constant = env().create<CStringConstDefNode>();
-            constant.name = "class";
+            constant.name = "mClass";
             constant.value = "/my/Class";
             cls.consts.add(constant);
         }
         {
             CStringConstDefNode &constant = env().create<CStringConstDefNode>();
-            constant.name = "thread";
+            constant.name = "mThread";
             constant.value = "/my/Thread";
             cls.consts.add(constant);
         }
@@ -470,7 +470,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "    \n"
                     << "    movl 0x0, 24(%ebp) // default result: NULL\n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl _my_Runtime_coso_class, %eax\n"
+                    << "    addl _my_Runtime_coso_mClass, %eax\n"
                     << "    \n"
                     << "    pushl 0 // desc\n"
                     << "    pushl %eax        // \"Class\"\n"
@@ -527,7 +527,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                     << "	addl 12, %esp\n"
                     << "    \n"
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl _my_Runtime_coso_class, %eax\n"
+                    << "    addl _my_Runtime_coso_mClass, %eax\n"
                     << "    subl 4, %esp  # return value of createInstance\n"
                     << "    pushl %eax // @classname\n"
                     << "    pushl %esi; pushl _my_Runtime_m_createInstance; call (%esi)\n"
@@ -844,7 +844,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl _my_Runtime_coso_thread, %eax\n"
+                    << "    addl _my_Runtime_coso_mThread, %eax\n"
                     << "    subl 4, %esp  # return value of as\n"
                     << "    pushl %eax\n"
                     << "    pushl %ecx\n"
@@ -920,7 +920,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
                 pasm.pasm
                     << "    movl 8(%ebp), %eax      // @class-desc \"Runtime\"\n"
-                    << "    addl _my_Runtime_coso_class, %eax\n"
+                    << "    addl _my_Runtime_coso_mClass, %eax\n"
                     << "    subl 4, %esp  # return value of createInstance\n"
                     << "    pushl %eax // @classname\n"
                     << "    pushl %esi; pushl _my_Runtime_m_createInstance; call (%esi)\n"

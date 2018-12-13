@@ -1,0 +1,17 @@
+class A extends Object {
+    // TODO: remove after implicit string handling
+    local cstring test := " Test\n";
+    
+    int column;
+    int row;
+    
+    // TODO: move to constructor
+    void init(int column, int row) {
+    }
+    
+    int getRow() {
+    }
+    
+    void test(int row) {
+    }
+}
