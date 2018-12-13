@@ -14,8 +14,10 @@ class PoolParser: public ParseBuffer {
     IStream * input;
 
     int parseIntegerValue(char * start, char * end, int base);
-    String * parseString(char enclosure);
-    String * parseMultilineString();
+    String * readString(char enclosure);
+    String * readMultilineString();
+    String * readLine();
+    String * readComment();
     
     protected:
     virtual void shift(size_t freed) override;

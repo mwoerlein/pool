@@ -3,7 +3,7 @@
 #include "sys/Digit.hpp"
 
 #include "Parser.h"
-#define SIZE 100
+#define SIZE 500
 
 /*!stags:re2c format = 'char *@@;'; */
 /*!max:re2c*/
@@ -51,21 +51,21 @@ int PoolParser::parseIntegerValue(char * start, char * end, int base) {
     return result;
 }
 
-String * PoolParser::parseString(char enclosure) {
+String * PoolParser::readString(char enclosure) {
     String &s = env().create<String>();
     int startLine = linesBuffer[current-buffer];
     int startColumn = columnsBuffer[current-buffer];
     for (;;) {
         token = current;
 /*!re2c
-        *                    { break; }
-        [^\n\\]              { if (enclosure == *token) { return &s; }; s << *token; continue; }
-        "\\n"                { s << '\n'; continue; }
-        "\\r"                { s << '\r'; continue; }
-        "\\t"                { s << '\t'; continue; }
-        "\\\\"               { s << '\\'; continue; }
-        "\\'"                { s << '\''; continue; }
-        "\\\""               { s << '"';  continue; }
+        *           { break; }
+        [^\r\n\\]   { if (enclosure == *token) { return &s; }; s << *token; continue; }
+        "\\n"       { s << '\n'; continue; }
+        "\\r"       { s << '\r'; continue; }
+        "\\t"       { s << '\t'; continue; }
+        "\\\\"      { s << '\\'; continue; }
+        "\\'"       { s << '\''; continue; }
+        "\\\""      { s << '"';  continue; }
 */
     }
     env().err() << "unterminated string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
@@ -73,27 +73,51 @@ String * PoolParser::parseString(char enclosure) {
     return 0;
 }
 
-String * PoolParser::parseMultilineString() {
+String * PoolParser::readMultilineString() {
     String &s = env().create<String>();
     int startLine = linesBuffer[current-buffer];
     int startColumn = columnsBuffer[current-buffer];
     for (;;) {
         token = current;
 /*!re2c
-        end                  { break; }
-        ["]">"               { return &s; }
-        *                    { s << *token; continue; }
-        "\\n"                { s << '\n'; continue; }
-        "\\r"                { s << '\r'; continue; }
-        "\\t"                { s << '\t'; continue; }
-        "\\\\"               { s << '\\'; continue; }
-        "\\'"                { s << '\''; continue; }
-        "\\\""               { s << '"';  continue; }
+        end             { break; }
+        eol wsp ["] ">" { return &s; }
+        *               { s << *token; continue; }
 */
     }
     env().err() << "unterminated multiline string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
     s.destroy();
     return 0;
+}
+
+String * PoolParser::readComment() {
+    String &s = env().create<String>();
+    int startLine = linesBuffer[current-buffer];
+    int startColumn = columnsBuffer[current-buffer];
+    for (;;) {
+        token = current;
+/*!re2c
+        end     { break; }
+        "*" "/" { return &s; }
+        *       { s << *token; continue; }
+*/
+    }
+    env().err() << "unterminated multiline string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
+    s.destroy();
+    return 0;
+}
+
+String * PoolParser::readLine() {
+    String &s = env().create<String>();
+    for (;;) {
+        token = current;
+/*!re2c
+        end     { break; }
+        eol     { break; }
+        *       { s << *token; continue; }
+*/
+    }
+    return &s;
 }
 
 int PoolParser::lex(Parser & parser)
@@ -130,24 +154,33 @@ int PoolParser::lex(Parser & parser)
         "-0"[xX] @o1 [0-9a-fA-F]+ @o2   { return parser.makeNumber(-parseIntegerValue(o1, o2, 16)); }
         "-"? "0"                        { return parser.makeNumber(0); }
         
-        @o1 ['"]    {
-                        String *s = parseString(*o1);
-                        if (!s) break;
-                        return parser.makeString(*s);
-                    }
-        "<" ["]     {
-                        String *s = parseMultilineString();
-                        if (!s) break;
-                        return parser.makeString(*s);
-                    }
-        
         @o1 id @o2  {
                         String &s = env().create<String, char *, char *>(o1, o2);
                         return parser.makeID(s);
                     }
         
-        "//" @o1 [^\n]* @o2 eol { continue; }
-        "/*" @o1 ([^*] | ("*" [^/]))* @o2 "*""/" { continue; }
+        @o1 ['"]    {
+                        String *s = readString(*o1); if (!s) break;
+                        return parser.makeString(*s);
+                    }
+        "<" ["] wsp eol {
+                        String *s = readMultilineString(); if (!s) break;
+                        return parser.makeString(*s);
+                    }
+        
+        "//"        {
+                        String *s = readLine(); if (!s) break;
+                        s->destroy(); continue;
+                    }
+        "/*"        {
+                        String *s = readComment(); if (!s) break;
+                        s->destroy(); continue;
+                    }
+        "/**"       {
+                        String *s = readComment(); if (!s) break;
+                        s->destroy(); continue;
+                    }
+        
         eol         { continue; }
         wsp         { continue; }
         end         { return 0; }
