@@ -19,6 +19,7 @@
 %token GLOBAL
 %token ABSTRACT
 %token NAKED
+%token PASM
 %token <u_string> STRING
 %token <u_string> ID
 %token <u_number> NUMBER
@@ -195,7 +196,13 @@ method_body_empty:
 ;
 
 instruction:
-    'd' // TODO
+    PASM '(' STRING ')' ';'
+    {
+        InlinePasmInstructionNode &node = driver.env().create<InlinePasmInstructionNode>();
+        node.pasm = *$3;
+        $3->destroy();
+        $$ = &node;
+    }
 ;
 
 //=

@@ -228,7 +228,6 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
         LABEL(methodDecl(&methodDef));
         
         out << "    pushl %ebp; movl %esp, %ebp\n";
-        out << "    \n";
         methodDef.body.acceptAll(*this);
         out << "    \n";
         out << "    leave\n";

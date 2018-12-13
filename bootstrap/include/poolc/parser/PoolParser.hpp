@@ -15,6 +15,7 @@ class PoolParser: public ParseBuffer {
 
     int parseIntegerValue(char * start, char * end, int base);
     String * parseString(char enclosure);
+    String * parseMultilineString();
     
     protected:
     virtual void shift(size_t freed) override;

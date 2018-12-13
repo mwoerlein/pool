@@ -3,10 +3,27 @@
 #include "sys/Digit.hpp"
 
 #include "Parser.h"
-#define SIZE 5000
+#define SIZE 100
 
 /*!stags:re2c format = 'char *@@;'; */
 /*!max:re2c*/
+/*!re2c
+        re2c:flags:T = 1;
+        re2c:define:YYCTYPE = char;
+        
+        re2c:define:YYCURSOR = current;
+        re2c:define:YYMARKER = marker;
+        re2c:define:YYCTXMARKER = ctxmarker;
+        re2c:define:YYLIMIT = limit;
+        re2c:yyfill:enable = 1;
+        re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) return 0;";
+        re2c:define:YYFILL:naked = 1;
+        
+        end         = "\x00";
+        eol         = "\r"? "\n" | "\r";
+        wsp         = [ \t]*;
+        id          = [a-zA-Z_][a-zA-Z0-9_]*;
+*/
 
 // public
 PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), cls(0) {}
@@ -39,21 +56,10 @@ String * PoolParser::parseString(char enclosure) {
     int startLine = linesBuffer[current-buffer];
     int startColumn = columnsBuffer[current-buffer];
     for (;;) {
-        char * tok = current;
+        token = current;
 /*!re2c
-        re2c:flags:T = 1;
-        re2c:define:YYCTYPE = char;
-        
-        re2c:define:YYCURSOR = current;
-        re2c:define:YYMARKER = marker;
-        re2c:define:YYCTXMARKER = ctxmarker;
-        re2c:define:YYLIMIT = limit;
-        re2c:yyfill:enable = 1;
-        re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) break;";
-        re2c:define:YYFILL:naked = 1;
-        
         *                    { break; }
-        [^\n\\]              { if (enclosure == *tok) { return &s; }; s << *tok; continue; }
+        [^\n\\]              { if (enclosure == *token) { return &s; }; s << *token; continue; }
         "\\n"                { s << '\n'; continue; }
         "\\r"                { s << '\r'; continue; }
         "\\t"                { s << '\t'; continue; }
@@ -67,28 +73,35 @@ String * PoolParser::parseString(char enclosure) {
     return 0;
 }
 
+String * PoolParser::parseMultilineString() {
+    String &s = env().create<String>();
+    int startLine = linesBuffer[current-buffer];
+    int startColumn = columnsBuffer[current-buffer];
+    for (;;) {
+        token = current;
+/*!re2c
+        end                  { break; }
+        ["]">"               { return &s; }
+        *                    { s << *token; continue; }
+        "\\n"                { s << '\n'; continue; }
+        "\\r"                { s << '\r'; continue; }
+        "\\t"                { s << '\t'; continue; }
+        "\\\\"               { s << '\\'; continue; }
+        "\\'"                { s << '\''; continue; }
+        "\\\""               { s << '"';  continue; }
+*/
+    }
+    env().err() << "unterminated multiline string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
+    s.destroy();
+    return 0;
+}
+
 int PoolParser::lex(Parser & parser)
 {
     char *o1, *o2;
     for (;;) {
         token = current;
 /*!re2c
-        re2c:flags:T = 1;
-        re2c:define:YYCTYPE = char;
-        
-        re2c:define:YYCURSOR = current;
-        re2c:define:YYMARKER = marker;
-        re2c:define:YYCTXMARKER = ctxmarker;
-        re2c:define:YYLIMIT = limit;
-        re2c:yyfill:enable = 1;
-        re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) return 0;";
-        re2c:define:YYFILL:naked = 1;
-        
-        end         = "\x00";
-        eol         = "\r"? "\n" | "\r";
-        wsp         = [ \t]*;
-        id          = [a-zA-Z_][a-zA-Z0-9_]*;
-        
         ","         { return ','; }
         ";"         { return ';'; }
         "="         { return '='; }
@@ -105,6 +118,7 @@ int PoolParser::lex(Parser & parser)
         "global"    { return parser.makeGlobal(); }
         "abstract"  { return parser.makeAbstract(); }
         "__naked__" { return parser.makeNaked(); }
+        "__pasm__"  { return parser.makePasm(); }
         
         "0" [bB] @o1 [01]+ @o2          { return parser.makeNumber( parseIntegerValue(o1, o2,  2)); }
         "-0" [bB] @o1 [01]+ @o2         { return parser.makeNumber(-parseIntegerValue(o1, o2,  2)); }
@@ -118,6 +132,11 @@ int PoolParser::lex(Parser & parser)
         
         @o1 ['"]    {
                         String *s = parseString(*o1);
+                        if (!s) break;
+                        return parser.makeString(*s);
+                    }
+        "<" ["]     {
+                        String *s = parseMultilineString();
                         if (!s) break;
                         return parser.makeString(*s);
                     }

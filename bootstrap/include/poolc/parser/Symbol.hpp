@@ -10,4 +10,6 @@
 #include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 
+#include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
+
 #endif //POOLC_PARSER_SYMBOL_HPP_LOCK

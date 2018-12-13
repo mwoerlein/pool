@@ -28,6 +28,7 @@ class Parser: public ParserBase
         int makeGlobal();
         int makeAbstract();
         int makeNaked();
+        int makePasm();
         
         int makeID(String & identifier);
         int makeString(String & identifier);

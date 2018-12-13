@@ -9,6 +9,7 @@ int Parser::makeLocal() { return LOCAL; }
 int Parser::makeGlobal() { return GLOBAL; }
 int Parser::makeAbstract() { return ABSTRACT; }
 int Parser::makeNaked() { return NAKED; }
+int Parser::makePasm() { return PASM; }
 
 int Parser::makeID(String & identifier) {
     d_val__.u_string = &identifier;
