@@ -1,6 +1,6 @@
 class A extends Object {
     // TODO: remove after implicit string handling
-    local cstring test := " Test\n";
+    local cstring test = " Test\n";
     
     int column;
     int row;

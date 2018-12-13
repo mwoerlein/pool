@@ -1,43 +1,43 @@
 class Runtime extends Object {
     // TODO: remove after implicit string handling
-    local cstring mClass := "/my/Class";
-    local cstring mThread := "/my/Thread";
+    local cstring mClass = "/my/Class";
+    local cstring mThread = "/my/Thread";
     
-    const int out := 0;
-    const int err := 1;
+    global int out = 0;
+    global int err = 1;
     
     // TODO: remove with syscall
     // SysCall constants
-    local int SysCall_allocate := 1;
-    local int SysCall_free := 2;
-    local int SysCall_find_class := 3;
-    local int SysCall_print := 4;
+    local int SysCall_allocate = 1;
+    local int SysCall_free = 2;
+    local int SysCall_find_class = 3;
+    local int SysCall_print = 4;
     
     // TODO: remove with syscall
     // SysCall print kinds
-    local int spk_char := 0;
-    local int spk_int := 1;
-    local int spk_hex := 2;
-    local int spk_string := 3;
+    local int spk_char = 0;
+    local int spk_int = 1;
+    local int spk_hex = 2;
+    local int spk_string = 3;
     
     // TODO: remove with syscall
     // SysCall print streams
-    local int sps_out := 0;
-    local int sps_err := 1;
+    local int sps_out = 0;
+    local int sps_err = 1;
     
     // TODO: remove with working ClassHeader "struct"
-    local int ch_inst_handle := 0x4;
-    local int ch_cts := 0xc;
-    local int ch_tpl := 0x14;
-    local int ch_tpl_size := 0x18;
-    local int ch_tpl_obj_handle := 0x1c;
-    local int ch_tpl_cls_handle := 0x20;
+    local int ch_inst_handle = 0x4;
+    local int ch_cts = 0xc;
+    local int ch_tpl = 0x14;
+    local int ch_tpl_size = 0x18;
+    local int ch_tpl_obj_handle = 0x1c;
+    local int ch_tpl_cls_handle = 0x20;
     
     // TODO: remove with working ClassTab "struct"
-    local int cts_cdo := 0x0;
-    local int cts_vto := 0x8;
-    local int cts_ho := 0xc;
-    local int cts_size := 0x10;
+    local int cts_cdo = 0x0;
+    local int cts_vto = 0x8;
+    local int cts_ho = 0xc;
+    local int cts_size = 0x10;
     
     // TODO: remove after real pool implementation exists
     int syscall_runtime;
@@ -59,19 +59,19 @@ class Runtime extends Object {
     }
     
     // TODO: replace int with working MemInfo "struct"
-    <> free(int) {
+    <> free(int info) {
     }
     
-    <> printChar(int, int) {
+    <> printChar(int c, int stream) {
     }
     
-    <> printString(cstring, int) {
+    <> printString(cstring s, int stream) {
     }
     
-    <> printInt(int, int) {
+    <> printInt(int i, int stream) {
     }
     
-    <> printHex(int, int) {
+    <> printHex(int i, int stream) {
     }
     
     // TODO: use generic method instead of plain Object?
@@ -79,14 +79,14 @@ class Runtime extends Object {
     }
     
     // TODO: use generic method or special cast syntax instead of plain Object?
-    <Object> as(cstring, Object any) {
+    <Object> as(cstring name, Object any) {
     }
     
-    <Thread> createThread(cstring) {
+    <Thread> createThread(cstring name) {
     }
     
     // TODO: use generic method or special new syntax instead of plain Object?
-    <Object> createInstance(cstring) {
+    <Object> createInstance(cstring name) {
     }
     
     __naked__ <> _crh_instantiate() {

@@ -1,7 +1,7 @@
 class Class extends Object {
     // TODO: remove with working ClassHeader "struct"
-    local int ch_inst_handle := 0x4;
-    local int ch_name := 0x8;
+    local int ch_inst_handle = 0x4;
+    local int ch_name = 0x8;
     
     // TODO: replace int with working ClassHeader "struct"
     int desc;
