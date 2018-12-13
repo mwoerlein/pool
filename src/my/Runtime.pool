@@ -43,55 +43,55 @@ class Runtime extends Object {
     int syscall_runtime;
     int syscall_entry;
     
-    global Runtime bootstrap(int syscall_runtime, int syscall_entry) {
+    global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
     }
     
-    void initSysCall(int syscall_runtime, int syscall_entry) {
+    <> initSysCall(int syscall_runtime, int syscall_entry) {
     }
     
     // TODO: replace int with working ClassHeader "struct"
     // TODO: replace cstring with working String class
-    int getClassDesc(cstring name) {
+    <int> getClassDesc(cstring name) {
     }
     
     // TODO: replace int with working MemInfo "struct"
-    int allocate(int size) {
+    <int> allocate(int size) {
     }
     
     // TODO: replace int with working MemInfo "struct"
-    void free(int) {
+    <> free(int) {
     }
     
-    void printChar(int, int) {
+    <> printChar(int, int) {
     }
     
-    void printString(cstring, int) {
+    <> printString(cstring, int) {
     }
     
-    void printInt(int, int) {
+    <> printInt(int, int) {
     }
     
-    void printHex(int, int) {
+    <> printHex(int, int) {
     }
     
     // TODO: use generic method instead of plain Object?
-    void destroyInstance(Object any) {
+    <> destroyInstance(Object any) {
     }
     
     // TODO: use generic method or special cast syntax instead of plain Object?
-    Object as(cstring, Object any) {
+    <Object> as(cstring, Object any) {
     }
     
-    Thread createThread(cstring) {
+    <Thread> createThread(cstring) {
     }
     
     // TODO: use generic method or special new syntax instead of plain Object?
-    Object createInstance(cstring) {
+    <Object> createInstance(cstring) {
     }
     
-    __naked__ void _crh_instantiate() {
+    __naked__ <> _crh_instantiate() {
     }
     
-    __naked__ void _call_entry() {
+    __naked__ <> _call_entry() {
     }
 }

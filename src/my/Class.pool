@@ -7,15 +7,15 @@ class Class extends Object {
     int desc;
     
     // TODO: replace int with working ClassHeader "struct"
-    int getDesc() {
+    <int> getDesc() {
     }
     
     // TODO: move to constructor?
     // TODO: replace int with working ClassHeader "struct"
-    void setDesc(int desc) {
+    <> setDesc(int desc) {
     }
     
     // TODO: replace cstring with working String class
-    cstring getName() {
+    <cstring> getName() {
     }
 }

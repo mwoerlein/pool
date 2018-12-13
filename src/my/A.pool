@@ -6,12 +6,15 @@ class A extends Object {
     int row;
     
     // TODO: move to constructor
-    void init(int column, int row) {
+    <> init(int column, int row) {
     }
     
-    int getRow() {
+    <int> getRow() {
     }
     
-    void test(int row) {
+    <int, int> getRowAndColumn() {
+    }
+    
+    <> test(int row) {
     }
 }

@@ -4,20 +4,20 @@ class Object {
     
     Runtime runtime;
     
-    Class getClass() {
+    <Class> getClass() {
     }
     
-    int hash() {
+    <int> hash() {
     }
     
     // TODO: use generic method instead of plain Object?
-    bool equals(Object any) {
+    <bool> equals(Object any) {
     }
     
-    Runtime rt() {
+    <Runtime> rt() {
     }
     
     // TODO: move to constructor?
-    void setRt(Runtime rt) {
+    <> setRt(Runtime rt) {
     }
 }
