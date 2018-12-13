@@ -9,6 +9,9 @@
 #include "poolc/ast/nodes/ClassDefNode.hpp"
 #include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
+#include "poolc/ast/nodes/VariableDefNode.hpp"
+#include "poolc/ast/nodes/IntConstDefNode.hpp"
+#include "poolc/ast/nodes/CStringConstDefNode.hpp"
 
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
 

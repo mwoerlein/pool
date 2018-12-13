@@ -82,7 +82,7 @@ String * PoolParser::readMultilineString() {
 /*!re2c
         end             { break; }
         eol wsp ["] ">" { return &s; }
-        *               { s << *token; continue; }
+        *               { if (startLine != linesBuffer[token-buffer]) { s << *token; } continue; }
 */
     }
     env().err() << "unterminated multiline string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
@@ -143,6 +143,7 @@ int PoolParser::lex(Parser & parser)
         "abstract"  { return parser.makeAbstract(); }
         "__naked__" { return parser.makeNaked(); }
         "__pasm__"  { return parser.makePasm(); }
+        "__bootstrap__" { return parser.makeBootstrap(); }
         
         "0" [bB] @o1 [01]+ @o2          { return parser.makeNumber( parseIntegerValue(o1, o2,  2)); }
         "-0" [bB] @o1 [01]+ @o2         { return parser.makeNumber(-parseIntegerValue(o1, o2,  2)); }
@@ -163,7 +164,7 @@ int PoolParser::lex(Parser & parser)
                         String *s = readString(*o1); if (!s) break;
                         return parser.makeString(*s);
                     }
-        "<" ["] wsp eol {
+        "<" ["] wsp / eol {
                         String *s = readMultilineString(); if (!s) break;
                         return parser.makeString(*s);
                     }

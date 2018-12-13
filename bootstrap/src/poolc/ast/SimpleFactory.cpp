@@ -271,7 +271,7 @@ ClassDefNode & SimpleFactory::getThreadDef() {
         {
             MethodDefNode &method = env().create<MethodDefNode>();
             method.name = "run";
-            method.virt = true;
+            method.kind = abstract;
             cls.methods.add(method);
         }
     }
@@ -461,6 +461,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
         {
             MethodDefNode &method = env().create<MethodDefNode>();
             method.name = "bootstrap";
+            method.kind = bootstrap;
             method.scope = scope_class;
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
@@ -546,7 +547,6 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
                 method.body.add(pasm);
             }
             cls.methods.add(method);
-            cls.bootstrap = &method;
         }
         // void initSysCall(SysCall-Runtime, SysCall-Entry)
         {
@@ -983,7 +983,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
         {
             MethodDefNode &method = env().create<MethodDefNode>();
             method.name = "_crh_instantiate";
-            method.naked = true;
+            method.kind = naked;
             method.scope = scope_class;
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();
@@ -1024,7 +1024,7 @@ ClassDefNode & SimpleFactory::getRuntimeDef() {
         {
             MethodDefNode &method = env().create<MethodDefNode>();
             method.name = "_call_entry";
-            method.naked = true;
+            method.kind = naked;
             method.scope = scope_class;
             {
                 InlinePasmInstructionNode &pasm = env().create<InlinePasmInstructionNode>();

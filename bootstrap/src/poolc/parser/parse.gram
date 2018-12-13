@@ -8,9 +8,9 @@
     MutableMap<String, String> *u_string_map;
     ClassDefNode *u_class_decl;
     MethodDefNode *u_method_decl;
-    MethodDefNode *u_variable_decl;
-    MethodDefNode *u_const_int_decl;
-    MethodDefNode *u_const_cstring_decl;
+    VariableDefNode *u_variable_decl;
+    IntConstDefNode *u_const_int_decl;
+    CStringConstDefNode *u_const_cstring_decl;
     InstructionNode *u_instruction;
 }
 %token CLASS
@@ -20,6 +20,7 @@
 %token ABSTRACT
 %token NAKED
 %token PASM
+%token BOOTSTRAP
 %token <u_string> STRING
 %token <u_string> ID
 %token <u_number> NUMBER
@@ -132,14 +133,17 @@ class_body_empty:
 |   class_body_empty variable_decl
     {
         $$ = $1;
+        $$->variables.add(*$2);
     }
 |   class_body_empty const_int_decl
     {
         $$ = $1;
+        $$->intConsts.add(*$2);
     }
 |   class_body_empty const_cstring_decl
     {
         $$ = $1;
+        $$->consts.add(*$2);
     }
 ;
 
@@ -159,29 +163,64 @@ method_decl:
     {
         $$ = $10;
         $$->name = *$5;
-        $$->naked = true;
+        $$->kind = naked;
+        $$->scope = scope_class;
+    }
+|   BOOTSTRAP '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
+    {
+        $$ = $10;
+        $$->name = *$5;
+        $$->kind = bootstrap;
         $$->scope = scope_class;
     }
 |   ABSTRACT '<' id_list_empty '>' ID '(' id_map_empty ')' ';'
     {
         $$ = &driver.env().create<MethodDefNode>();
         $$->name = *$5;
-        $$->virt = true;
+        $$->kind = abstract;
     }
 ;
 
 variable_decl:
     ID ID ';'
+    {
+        $$ = &driver.env().create<VariableDefNode>();
+        $$->name = *$2;
+        $1->destroy();
+        $2->destroy();
+    }
 ;
 
 const_int_decl:
     LOCAL ID ID '=' NUMBER ';'
+    {
+        $$ = &driver.env().create<IntConstDefNode>();
+        $$->name = *$3;
+        $$->value = $5;
+        $2->destroy();
+        $3->destroy();
+    }
 |   GLOBAL ID ID '=' NUMBER ';'
+    {
+        $$ = &driver.env().create<IntConstDefNode>();
+        $$->name = *$3;
+        $$->value = $5;
+        $$->global = true;
+        $2->destroy();
+        $3->destroy();
+    }
 ;
 
 const_cstring_decl:
     LOCAL ID ID '=' STRING ';'
-|   GLOBAL ID ID '=' STRING ';'
+    {
+        $$ = &driver.env().create<CStringConstDefNode>();
+        $$->name = *$3;
+        $$->value = *$5;
+        $2->destroy();
+        $3->destroy();
+        $5->destroy();
+    }
 ;
 
 method_body_empty:
@@ -189,7 +228,8 @@ method_body_empty:
     {
         $$ = &driver.env().create<MethodDefNode>();
     }
-|   method_body_empty instruction  {
+|   method_body_empty instruction
+    {
         $$ = $1;
         $1->body.add(*$2);
     }

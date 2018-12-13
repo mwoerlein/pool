@@ -213,25 +213,29 @@ bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
 bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
     out << "\n// method " << methodDef.name << "\n";
     
-    if (methodDef.virt) {
-        GLOBAL(
-            gMethodDeclOffset(&methodDef),
-            "0" // virtual method
-        );
-    } else if (methodDef.naked) {
-        methodDef.body.acceptAll(*this);
-    } else {        
-        GLOBAL(
-            gMethodDeclOffset(&methodDef),
-            CLASS_OFFSET(methodDecl(&methodDef))
-        );
-        LABEL(methodDecl(&methodDef));
-        
-        out << "    pushl %ebp; movl %esp, %ebp\n";
-        methodDef.body.acceptAll(*this);
-        out << "    \n";
-        out << "    leave\n";
-        out << "    ret\n";
+    switch (methodDef.kind) {
+        case abstract:
+            GLOBAL(
+                gMethodDeclOffset(&methodDef),
+                "0" // virtual method
+            );
+            break;
+        case naked:
+            methodDef.body.acceptAll(*this);
+            break;
+        default:
+            GLOBAL(
+                gMethodDeclOffset(&methodDef),
+                CLASS_OFFSET(methodDecl(&methodDef))
+            );
+            LABEL(methodDecl(&methodDef));
+            
+            out << "    pushl %ebp; movl %esp, %ebp\n";
+            out << "    \n";
+            methodDef.body.acceptAll(*this);
+            out << "    \n";
+            out << "    leave\n";
+            out << "    ret\n";
     }
     return true;
 }
@@ -277,6 +281,6 @@ bool X86PasmVisitor::visit(IntConstDefNode & constDef) {
 }
 
 bool X86PasmVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
-    out << pasmInstruction.pasm;
+    out << pasmInstruction.pasm << "\n";
     return true;
 }

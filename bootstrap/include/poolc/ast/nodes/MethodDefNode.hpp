@@ -7,11 +7,12 @@
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/nodes/InstructionNode.hpp"
 
+enum method_kind { abstract, naked, bootstrap, normal };
+
 class MethodDefNode: public Node {
     public:
     String & name;
-    bool virt;
-    bool naked;
+    enum method_kind kind;
     scope_t scope;
     NodeList<InstructionNode> &body;
     ClassDefNode *parent;

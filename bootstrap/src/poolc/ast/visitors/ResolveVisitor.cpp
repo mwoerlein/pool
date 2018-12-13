@@ -65,8 +65,11 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
         Iterator<MethodDefNode> &mit = classDef.methods.iterator();
         while (mit.hasNext()) {
             MethodDefNode &methodDef = mit.next();
-            if (methodDef.naked) {
-                continue;
+            switch (methodDef.kind) {
+                case naked:
+                    continue;
+                case bootstrap:
+                    classDef.bootstrap = &methodDef;
             }
             MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
             MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
