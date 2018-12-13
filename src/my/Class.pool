@@ -8,14 +8,38 @@ class Class extends Object {
     
     // TODO: replace int with working ClassHeader "struct"
     <int> getDesc() {
+        __pasm__ (<"
+            movl 12(%ebp), %eax                     // @this (Type Class)
+            movl _my_Class_hvo_my_Class(%eax), %ebx // inst vars offset (Class)
+            addl 4(%eax), %ebx                      // @this.vars(Class)
+            movl _my_Class_i_desc(%ebx), %eax       // @class desc
+            movl %eax, 16(%ebp)                     // return @class desc
+        ">);
     }
     
     // TODO: move to constructor?
     // TODO: replace int with working ClassHeader "struct"
     <> setDesc(int desc) {
+        __pasm__ (<"
+            movl 12(%ebp), %eax                     // @this (Type Class)
+            movl _my_Class_hvo_my_Class(%eax), %ebx // inst vars offset (Class)
+            addl 4(%eax), %ebx                      // @this.vars(Class)
+            movl 16(%ebp), %eax                     // param @class desc
+            movl %eax, _my_Class_i_desc(%ebx)       // store @class desc
+            movl 12(%ebp), %ebx                     // @this (Type Class)
+            movl %ebx, _my_Class_coi_ch_inst_handle(%eax)   // store @this (Type Class) in class desc
+        ">);
     }
     
     // TODO: replace cstring with working String class
     <cstring> getName() {
+        __pasm__ (<"
+            movl 12(%ebp), %eax                     // @this (Type Class)
+            movl _my_Class_hvo_my_Class(%eax), %ebx // inst vars offset (Class)
+            addl 4(%eax), %ebx                      // @this.vars(Class)
+            movl _my_Class_i_desc(%ebx), %eax       // @class desc
+            addl _my_Class_coi_ch_name(%eax), %eax  // load reference to cstring
+            movl %eax, 16(%ebp)                     // return cstring-ref
+        ">);
     }
 }

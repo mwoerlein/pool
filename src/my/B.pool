@@ -3,11 +3,168 @@ class B extends Thread, A {
     local cstring doit = "OMG! Compiling work's! ";
     
     <> run() {
+        __pasm__ (<"
+            pushl %ecx
+            pushl %edx
+            pushl %edi
+            
+            movl 12(%ebp), %ecx // @this (Type B)
+            
+            subl 4, %esp        // return value of rt
+            pushl %ecx; pushl _my_B_m_rt; call (%ecx)
+        	addl 8, %esp
+            popl %edi           // Runtime(Type Runtime)
+            
+            pushl 20
+            pushl 2
+            pushl %ecx; pushl _my_B_m_init; call (%ecx)
+        	addl 16, %esp
+        	
+            movl 8(%ebp), %eax          // @class-desc "B"
+            addl _my_B_cno_my_A, %eax   // "/my/A"
+            subl 4, %esp  # return value of createInstance
+            pushl %eax
+            pushl %edi; pushl _my_Runtime_m_createInstance; call (%edi)
+        	addl 12, %esp
+            popl %edx; // inst_A (type A)
+            
+            pushl 5
+            pushl 2
+            pushl %edx; pushl _my_A_m_init; call (%edx)
+        	addl 16, %esp
+            
+            pushl %edx    
+            pushl %ecx; pushl _my_B_m_doIt; call (%ecx)
+        	addl 12, %esp
+            
+            pushl %edx
+            pushl %edi; pushl _my_Runtime_m_destroyInstance; call (%edi)
+        	addl 12, %esp
+            
+            popl %edi
+            popl %edx
+            popl %ecx
+        ">);
     }
     
     <> doIt(A a) {
+        __pasm__ (<"
+            pushl %ecx
+            pushl %edx
+            
+            movl 12(%ebp), %ecx // @this (Type B)
+            
+            subl 4, %esp        // return value of rt
+            pushl %ecx; pushl _my_B_m_rt; call (%ecx)
+        	addl 8, %esp
+            popl %edx           // Runtime(Type Runtime)
+            
+            pushl 0x40; pushl _my_Runtime_c_err // '@'
+            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            addl 16, %esp
+            
+            movl 8(%ebp), %eax         // @class-desc "B"
+            addl _my_B_coso_doit, %eax // "DoIt "
+            pushl %eax; pushl _my_Runtime_c_out
+            pushl %edx; pushl _my_Runtime_m_printString; call (%edx)
+            addl 16, %esp
+            
+            subl 4, %esp    // return value of equals
+            pushl 12(%ebp)  // @this (Type B)
+            pushl %ecx; pushl _my_B_m_equals; call (%ecx)
+            addl 12, %esp
+            popl %eax
+            
+            pushl %eax; pushl _my_Runtime_c_out
+            pushl %edx; pushl _my_Runtime_m_printInt; call (%edx)
+            addl 16, %esp
+            
+            pushl 0x20; pushl _my_Runtime_c_out // ' '
+            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            addl 16, %esp
+            
+            subl 4, %esp    // return value of equals
+            pushl 16(%ebp)  // param @a (Type A)
+            pushl %ecx; pushl _my_B_m_equals; call (%ecx)
+            addl 12, %esp
+            popl %eax
+            
+            pushl %eax; pushl _my_Runtime_c_out
+            pushl %edx; pushl _my_Runtime_m_printInt; call (%edx)
+            addl 16, %esp
+            
+            subl 4, %esp    // return value of allocate
+            pushl 0x124
+            pushl %edx; pushl _my_Runtime_m_allocate; call (%edx)
+        	addl 12, %esp
+            popl %esi
+            
+            pushl 0x20; pushl _my_Runtime_c_out // ' '
+            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            addl 16, %esp
+            
+            pushl %esi; pushl _my_Runtime_c_out
+            pushl %edx; pushl _my_Runtime_m_printHex; call (%edx)
+            addl 16, %esp
+            
+            pushl 0x20; pushl _my_Runtime_c_out // ' '
+            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            addl 16, %esp
+            
+            pushl (%esi); pushl _my_Runtime_c_out
+            pushl %edx; pushl _my_Runtime_m_printHex; call (%edx)
+            addl 16, %esp
+            
+            pushl 0x20; pushl _my_Runtime_c_out // ' '
+            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            addl 16, %esp
+            
+            pushl 4(%esi); pushl _my_Runtime_c_out 
+            pushl %edx; pushl _my_Runtime_m_printHex; call (%edx)
+            addl 16, %esp
+            
+            pushl 0xa; pushl _my_Runtime_c_out // '/n'
+            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            addl 16, %esp
+            
+            pushl %esi 
+            pushl %edx; pushl _my_Runtime_m_free; call (%edx)
+            addl 12, %esp
+            
+            subl 4, %esp    // return value of getRow
+            pushl %ecx; pushl _my_B_m_getRow; call (%ecx)
+        	addl 8, %esp
+            popl %eax
+            
+            pushl %eax      // row
+            pushl %ecx; pushl _my_B_m_test; call (%ecx)
+        	addl 12, %esp
+            
+            movl 16(%ebp), %ecx // param @a (Type A)
+        	
+            subl 4, %esp    // return value of getRow
+            pushl %ecx; pushl _my_A_m_getRow; call (%ecx)
+        	addl 8, %esp
+            popl %eax
+            
+            pushl %eax      // row
+            pushl %ecx; pushl _my_A_m_test; call (%ecx)
+        	addl 12, %esp
+        	
+            popl %edx
+            popl %ecx
+        ">);
     }
     
     <int> getRow() {
+        __pasm__ (<"
+            movl 12(%ebp), %eax             // @this (Type B)
+            movl _my_B_hvo_my_A(%eax), %ebx // inst vars offset (A)
+            addl 4(%eax), %ebx              // @this.vars(A)
+            
+            movl _my_A_i_row(%ebx), %eax    // row
+            addl %eax, %eax                 // *2
+            movl %eax, 16(%ebp)             // return row*2
+        ">);
     }
 }
