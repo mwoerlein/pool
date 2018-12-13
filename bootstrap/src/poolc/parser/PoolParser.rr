@@ -1,7 +1,9 @@
 #include "poolc/parser/PoolParser.hpp"
 
+#include "sys/Digit.hpp"
+
 #include "Parser.h"
-#define SIZE 50
+#define SIZE 5000
 
 /*!stags:re2c format = 'char *@@;'; */
 /*!max:re2c*/
@@ -21,6 +23,50 @@ ClassDefNode * PoolParser::parse(IStream &input) {
     return cls;
 }
 
+int PoolParser::parseIntegerValue(char * start, char * end, int base) {
+    int result = 0;
+    Digit d(env());
+    while (start < end) {
+        d = *start++;
+        result *= base;
+        result += (int) d;
+    }
+    return result;
+}
+
+String * PoolParser::parseString(char enclosure) {
+    String &s = env().create<String>();
+    int startLine = linesBuffer[current-buffer];
+    int startColumn = columnsBuffer[current-buffer];
+    for (;;) {
+        char * tok = current;
+/*!re2c
+        re2c:flags:T = 1;
+        re2c:define:YYCTYPE = char;
+        
+        re2c:define:YYCURSOR = current;
+        re2c:define:YYMARKER = marker;
+        re2c:define:YYCTXMARKER = ctxmarker;
+        re2c:define:YYLIMIT = limit;
+        re2c:yyfill:enable = 1;
+        re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) break;";
+        re2c:define:YYFILL:naked = 1;
+        
+        *                    { break; }
+        [^\n\\]              { if (enclosure == *tok) { return &s; }; s << *tok; continue; }
+        "\\n"                { s << '\n'; continue; }
+        "\\r"                { s << '\r'; continue; }
+        "\\t"                { s << '\t'; continue; }
+        "\\\\"               { s << '\\'; continue; }
+        "\\'"                { s << '\''; continue; }
+        "\\\""               { s << '"';  continue; }
+*/
+    }
+    env().err() << "unterminated string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
+    s.destroy();
+    return 0;
+}
+
 int PoolParser::lex(Parser & parser)
 {
     char *o1, *o2;
@@ -29,21 +75,6 @@ int PoolParser::lex(Parser & parser)
 /*!re2c
         re2c:flags:T = 1;
         re2c:define:YYCTYPE = char;
-
-        end         = "\x00";
-        eol         = "\r"? "\n" | "\r";
-        wsp         = [ \t]*;
-        comma       = ",";
-        semicolon   = ";";
-        colon       = ":";
-        assign      = ":=";
-
-        bin         = "0"[bB][01]+;
-        oct         = "0"[0-7]+;
-        dec         = "0" | [1-9][0-9]*; 
-        hex         = "0"[xX][0-9a-fA-F]+;
-        number      = "-"? (bin | oct | dec | hex);
-        id          = [a-zA-Z_][a-zA-Z0-9_]+;
         
         re2c:define:YYCURSOR = current;
         re2c:define:YYMARKER = marker;
@@ -53,13 +84,51 @@ int PoolParser::lex(Parser & parser)
         re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) return 0;";
         re2c:define:YYFILL:naked = 1;
         
-        "class"     { return parser.makeClass(); }
+        end         = "\x00";
+        eol         = "\r"? "\n" | "\r";
+        wsp         = [ \t]*;
+        id          = [a-zA-Z_][a-zA-Z0-9_]*;
+        
+        ","         { return ','; }
+        ";"         { return ';'; }
+        "="         { return '='; }
+        "<"         { return '<'; }
+        ">"         { return '>'; }
         "{"         { return '{'; }
         "}"         { return '}'; }
         "("         { return '('; }
         ")"         { return ')'; }
-        @o1 id @o2  { return parser.makeID(env().create<String, char *, char *>(o1, o2)); }
-
+        
+        "class"     { return parser.makeClass(); }
+        "extends"   { return parser.makeExtends(); }
+        "local"     { return parser.makeLocal(); }
+        "global"    { return parser.makeGlobal(); }
+        "abstract"  { return parser.makeAbstract(); }
+        "__naked__" { return parser.makeNaked(); }
+        
+        "0" [bB] @o1 [01]+ @o2          { return parser.makeNumber( parseIntegerValue(o1, o2,  2)); }
+        "-0" [bB] @o1 [01]+ @o2         { return parser.makeNumber(-parseIntegerValue(o1, o2,  2)); }
+        "0" @o1 [0-7]+ @o2              { return parser.makeNumber( parseIntegerValue(o1, o2,  8)); }
+        "-0" @o1 [0-7]+ @o2             { return parser.makeNumber(-parseIntegerValue(o1, o2,  8)); }
+        @o1 [1-9][0-9]* @o2             { return parser.makeNumber( parseIntegerValue(o1, o2, 10)); } 
+        "-" @o1 [1-9][0-9]* @o2         { return parser.makeNumber(-parseIntegerValue(o1, o2, 10)); } 
+        "0"[xX] @o1 [0-9a-fA-F]+ @o2    { return parser.makeNumber( parseIntegerValue(o1, o2, 16)); }
+        "-0"[xX] @o1 [0-9a-fA-F]+ @o2   { return parser.makeNumber(-parseIntegerValue(o1, o2, 16)); }
+        "-"? "0"                        { return parser.makeNumber(0); }
+        
+        @o1 ['"]    {
+                        String *s = parseString(*o1);
+                        if (!s) break;
+                        return parser.makeString(*s);
+                    }
+        
+        @o1 id @o2  {
+                        String &s = env().create<String, char *, char *>(o1, o2);
+                        return parser.makeID(s);
+                    }
+        
+        "//" @o1 [^\n]* @o2 eol { continue; }
+        "/*" @o1 ([^*] | ("*" [^/]))* @o2 "*""/" { continue; }
         eol         { continue; }
         wsp         { continue; }
         end         { return 0; }

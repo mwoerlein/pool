@@ -3,13 +3,26 @@
 
 #include "poolc/parser/PoolParser.hpp"
 
-int Parser::makeClass() {
-    return CLASS;
-}
+int Parser::makeClass() { return CLASS; }
+int Parser::makeExtends() { return EXTENDS; }
+int Parser::makeLocal() { return LOCAL; }
+int Parser::makeGlobal() { return GLOBAL; }
+int Parser::makeAbstract() { return ABSTRACT; }
+int Parser::makeNaked() { return NAKED; }
 
 int Parser::makeID(String & identifier) {
-    d_val__.u_identifier = &identifier;
+    d_val__.u_string = &identifier;
     return ID;
+}
+
+int Parser::makeString(String & identifier) {
+    d_val__.u_string = &identifier;
+    return STRING;
+}
+
+int Parser::makeNumber(long value) {
+    d_val__.u_number = value;
+    return NUMBER;
 }
 
 int Parser::lex()

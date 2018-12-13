@@ -3,67 +3,192 @@
 %union
 {
     long u_number;
-    String *u_identifier;
+    String *u_string;
+    MutableCollection<String> *u_string_list;
+    MutableMap<String, String> *u_string_map;
     ClassDefNode *u_class_decl;
     MethodDefNode *u_method_decl;
+    MethodDefNode *u_variable_decl;
+    MethodDefNode *u_const_int_decl;
+    MethodDefNode *u_const_cstring_decl;
     InstructionNode *u_instruction;
 }
 %token CLASS
-%token <u_identifier> ID
-//%token <u_number> NUMBER
+%token EXTENDS
+%token LOCAL
+%token GLOBAL
+%token ABSTRACT
+%token NAKED
+%token <u_string> STRING
+%token <u_string> ID
+%token <u_number> NUMBER
 
 %type <u_class_decl> class_decl
-%type <u_class_decl> class_body
+%type <u_class_decl> class_body_empty
 %type <u_method_decl> method_decl
-%type <u_method_decl> method_body
+%type <u_method_decl> method_body_empty
+%type <u_variable_decl> variable_decl
+%type <u_const_int_decl> const_int_decl
+%type <u_const_cstring_decl> const_cstring_decl
 %type <u_instruction> instruction
+%type <u_string_list> id_list
+%type <u_string_list> id_list_empty
+%type <u_string_map> id_map
+%type <u_string_map> id_map_empty
 
 //=
 %%
 //RULES
-translation_unit:    
-        // empty 
+translation_unit:
+        // empty
 | 
         class_decl
 ;
 
-class_decl:   
-    CLASS ID '{' class_body '}' { 
-//        driver.env().out() << "declaration of class \"" << *$2 << "\" found\n";
+class_decl:
+    CLASS ID '{' class_body_empty '}'
+    {
         $$ = $4;
         $$->name = *$2;
+        $2->destroy();
+        driver.registerClass($$);
+    }
+|   CLASS ID EXTENDS id_list '{' class_body_empty '}'
+    {
+        $$ = $6;
+        $$->name = *$2;
+        $2->destroy();
+        Iterator<String> &it = $4->iterator();
+        while (it.hasNext()) {
+            ClassRefNode &ref = driver.env().create<ClassRefNode>();
+            ref.name = it.next();
+            $$->extends.add(ref);
+        }
+        it.destroy();
+        $4->destroy();
         driver.registerClass($$);
     }
 ;
 
-class_body:      
-    // empty                
+id_list:
+    ID
     {
-//        driver.env().out() << "new class \n";
+        $$ = &driver.env().create<LinkedList<String>>();
+        $$->add(*$1);
+    }
+|   id_list ',' ID
+    {
+        $$ = $1;
+        $$->add(*$3);
+    }
+;
+
+id_list_empty:
+    // empty
+    {
+        $$ = &driver.env().create<LinkedList<String>>();
+    }
+|   id_list
+    {
+        $$ = $1;
+    }
+;
+
+id_map:
+    ID ID
+    {
+        $$ = &driver.env().create<HashMap<String, String>>();
+        $$->set(*$1, *$2);
+    }
+|   id_map ',' ID ID
+    {
+        $$ = $1;
+        $$->set(*$3, *$4);
+    }
+;
+
+id_map_empty:
+    // empty
+    {
+        $$ = &driver.env().create<HashMap<String, String>>();
+    }
+|   id_map
+    {
+        $$ = $1;
+    }
+;
+
+class_body_empty:
+    // empty
+    {
         $$ = &driver.env().create<ClassDefNode>();
     }
-|   class_body method_decl  {
+|   class_body_empty method_decl
+    {
         $$ = $1;
         $1->methods.add(*$2);
+    }
+|   class_body_empty variable_decl
+    {
+        $$ = $1;
+    }
+|   class_body_empty const_int_decl
+    {
+        $$ = $1;
+    }
+|   class_body_empty const_cstring_decl
+    {
+        $$ = $1;
     }
 ;
 
 method_decl:
-    ID '(' ')' '{' method_body '}'      {
-//        driver.env().out() << "declaration of method \"" << *$1 << "\" found\n";
-//        driver.env().out() << "new method \n";
-        $$ = $5;
-        $$->name = *$1;
+    '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
+    {
+        $$ = $9;
+        $$->name = *$4;
+    }
+|   GLOBAL '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
+    {
+        $$ = $10;
+        $$->name = *$5;
+        $$->scope = scope_class;
+    }
+|   NAKED '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
+    {
+        $$ = $10;
+        $$->name = *$5;
+        $$->naked = true;
+        $$->scope = scope_class;
+    }
+|   ABSTRACT '<' id_list_empty '>' ID '(' id_map_empty ')' ';'
+    {
+        $$ = &driver.env().create<MethodDefNode>();
+        $$->name = *$5;
+        $$->virt = true;
     }
 ;
 
-method_body:      
-    // empty                
+variable_decl:
+    ID ID ';'
+;
+
+const_int_decl:
+    LOCAL ID ID '=' NUMBER ';'
+|   GLOBAL ID ID '=' NUMBER ';'
+;
+
+const_cstring_decl:
+    LOCAL ID ID '=' STRING ';'
+|   GLOBAL ID ID '=' STRING ';'
+;
+
+method_body_empty:
+    // empty
     {
-//        driver.env().out() << "new method \n";
         $$ = &driver.env().create<MethodDefNode>();
     }
-|   method_body instruction  {
+|   method_body_empty instruction  {
         $$ = $1;
         $1->body.add(*$2);
     }
@@ -72,4 +197,5 @@ method_body:
 instruction:
     'd' // TODO
 ;
+
 //=

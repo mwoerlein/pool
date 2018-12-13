@@ -12,6 +12,9 @@ class PoolParser: public ParseBuffer {
     private:
     ClassDefNode * cls;
     IStream * input;
+
+    int parseIntegerValue(char * start, char * end, int base);
+    String * parseString(char enclosure);
     
     protected:
     virtual void shift(size_t freed) override;
