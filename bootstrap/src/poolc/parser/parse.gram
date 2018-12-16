@@ -11,22 +11,34 @@
     VariableDefNode *u_variable_decl;
     IntConstDefNode *u_const_int_decl;
     CStringConstDefNode *u_const_cstring_decl;
+    NamespaceDefNode *u_namespace_decl;
+    UseStatementNode *u_use_stmt;
     InstructionNode *u_instruction;
+    TranslationUnitNode *u_unit;
 }
 %lsp-needed
 
 %token COLON_EQUAL
+
+%token ABSTRACT
 %token CLASS
 %token EXTENDS
 %token GLOBAL
-%token ABSTRACT
+%token NAMESPACE
+%token USE
+
+%token BOOTSTRAP
 %token NAKED
 %token PASM
-%token BOOTSTRAP
+
 %token <u_string> STRING
 %token <u_string> ID
+%token <u_string> FQN
 %token <u_number> NUMBER
 
+%type <u_unit> translation_unit
+%type <u_namespace_decl> namespace_decl
+%type <u_use_stmt> use_stmt
 %type <u_class_decl> class_decl
 %type <u_class_decl> class_body_empty
 %type <u_method_decl> method_decl
@@ -44,9 +56,60 @@
 %%
 //RULES
 translation_unit:
-        // empty
-| 
-        class_decl
+    namespace_decl
+    {
+        $$ = driver.getUnit();
+        $$->ns = $1;
+    }
+|   translation_unit use_stmt
+    {
+        $$ = $1;
+        $$->uses.add(*$2);
+    }
+|   translation_unit class_decl
+    {
+        $$ = $1;
+        $$->classes.add(*$2);
+    }
+;
+
+namespace_decl:
+    NAMESPACE ID ';'
+    {
+        $$ = &driver.env().create<NamespaceDefNode>();
+        $$->name = *$2;
+        $2->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   NAMESPACE FQN ';'
+    {
+        $$ = &driver.env().create<NamespaceDefNode>();
+        $$->name = *$2;
+        $2->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+;
+
+use_stmt:
+    USE FQN ';'
+    {
+        $$ = &driver.env().create<UseStatementNode>();
+        $$->name = *$2;
+        $2->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
 ;
 
 class_decl:
@@ -65,8 +128,6 @@ class_decl:
         $$->first_column = @1.first_column;
         $$->last_line = @5.last_line;
         $$->last_column = @5.last_column;
-        
-        driver.registerClass($$);
     }
 |   CLASS ID EXTENDS id_list '{' class_body_empty '}'
     {
@@ -91,8 +152,6 @@ class_decl:
         $$->first_column = @1.first_column;
         $$->last_line = @7.last_line;
         $$->last_column = @7.last_column;
-        
-        driver.registerClass($$);
     }
 ;
 

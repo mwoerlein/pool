@@ -24,13 +24,6 @@ template <class Obj> class NodeList: public LinkedList<Obj> {
         it.destroy();
         this->destroy();
     }
-    
-    virtual Obj * first() {
-        Iterator<Obj> &it = this->iterator();
-        Obj * ret = it.hasNext() ? &it.next() : 0;
-        it.destroy();
-        return ret;        
-    }
 };
 
 #endif //POOLC_AST_COLLECTION_NODELIST_HPP_LOCK

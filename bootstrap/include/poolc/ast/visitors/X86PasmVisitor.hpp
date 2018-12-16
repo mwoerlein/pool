@@ -8,6 +8,7 @@
 class X86PasmVisitor: public Visitor {
     private:
     OStream & out;
+    TranslationUnitNode * curUnit;
     ClassDefNode * curClass;
     ClassDefNode * curSuper;
     
@@ -15,13 +16,18 @@ class X86PasmVisitor: public Visitor {
     X86PasmVisitor(Environment &env, MemoryInfo &mi, OStream &out);
     virtual ~X86PasmVisitor();
     
-    virtual bool visit(ClassRefNode & classRef) override;
+    virtual bool visit(TranslationUnitNode & translationUnit) override;
+
+    virtual bool visit(NamespaceDefNode & namespaceDef) override;
+    virtual bool visit(UseStatementNode & useStmt) override;
     virtual bool visit(ClassDefNode & classDef) override;
-    virtual bool visit(MethodRefNode & methodRef) override;
-    virtual bool visit(MethodDefNode & methodDef) override;
-    virtual bool visit(VariableDefNode & variableDef) override;
+    
+    virtual bool visit(ClassRefNode & classRef) override;
     virtual bool visit(CStringConstDefNode & constDef) override;
     virtual bool visit(IntConstDefNode & constDef) override;
+    virtual bool visit(VariableDefNode & variableDef) override;
+    virtual bool visit(MethodRefNode & methodRef) override;
+    virtual bool visit(MethodDefNode & methodDef) override;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) override;
 };

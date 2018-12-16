@@ -1,3 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace my;
+
+use my::core::Thread;
+use my::core::Runtime;
+
 class B extends Thread, A {
     // TODO: remove after implicit string handling
     cstring doit := "OMG! Compiling work's! ";

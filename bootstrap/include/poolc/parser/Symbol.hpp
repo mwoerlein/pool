@@ -6,6 +6,9 @@
 #include "sys/collection/LinkedList.hpp"
 #include "sys/collection/HashMap.hpp"
 
+#include "poolc/ast/nodes/TranslationUnitNode.hpp"
+#include "poolc/ast/nodes/NamespaceDefNode.hpp"
+#include "poolc/ast/nodes/UseStatementNode.hpp"
 #include "poolc/ast/nodes/ClassDefNode.hpp"
 #include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"

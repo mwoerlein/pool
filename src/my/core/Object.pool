@@ -1,3 +1,10 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace my::core;
+
 class Object {
     // TODO: remove with working ClassHeader "struct"
     int ch_inst_handle := 0x4;

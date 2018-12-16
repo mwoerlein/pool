@@ -32,24 +32,24 @@ template <class Obj> class LinkedList: public MutableCollection<Obj> {
         }
     };
     
-    _Element *first;
-    _Element *last;
+    _Element *_first;
+    _Element *_last;
     int _size;
     
     public:
-    LinkedList(Environment &env, MemoryInfo &mi = *notAnInfo): Object(env, mi), first(0), last(0), _size(0) {}
+    LinkedList(Environment &env, MemoryInfo &mi = *notAnInfo): Object(env, mi), _first(0), _last(0), _size(0) {}
     virtual ~LinkedList() {
         clear();
     }
     
     virtual void clear() override {
-        _Element * cur = first;
+        _Element * cur = _first;
         while (cur) {
             _Element * kill = cur;
             cur = cur->next;
             kill->destroy();
         }
-        last = first = 0;
+        _last = _first = 0;
         _size = 0;
     }
     
@@ -60,16 +60,16 @@ template <class Obj> class LinkedList: public MutableCollection<Obj> {
     virtual bool add(Obj & o) override {
         _Element *newElem = &Object::env().create<_Element, Obj*>(&o);
         if (_size) {
-            last = last->next = newElem;
+            _last = _last->next = newElem;
         } else {
-            first = last = newElem;
+            _first = _last = newElem;
         }
         _size++;
         return true;
     }
     
     virtual bool contains(Obj & o) override {
-        for (_Element *e = first; e; e = e->next) {
+        for (_Element *e = _first; e; e = e->next) {
             if (e->val->equals(o)) {
                 return true;
             }
@@ -79,23 +79,23 @@ template <class Obj> class LinkedList: public MutableCollection<Obj> {
     
     virtual bool remove(Obj & o) override {
         if (_size) {
-            if (first->val->equals(o)) {
-                _Element *found = first;
-                first = found->next;
-                if (last == found) {
-                    last = 0;
+            if (_first->val->equals(o)) {
+                _Element *found = _first;
+                _first = found->next;
+                if (_last == found) {
+                    _last = 0;
                 }
                 --_size;
                 found->destroy();
                 return true;
             }
             
-            for (_Element *e = first; e->next; e = e->next) {
+            for (_Element *e = _first; e->next; e = e->next) {
                 if (e->next->val->equals(o)) {
                     _Element *found = e->next;
                     e->next = found->next;
-                    if (last == found) {
-                        last = e;
+                    if (_last == found) {
+                        _last = e;
                     }
                     --_size;
                     found->destroy();
@@ -107,8 +107,11 @@ template <class Obj> class LinkedList: public MutableCollection<Obj> {
     }
     
     virtual Iterator<Obj> & iterator() override {
-        return Object::env().create<_Iterator, _Element*>(first);
+        return Object::env().create<_Iterator, _Element*>(_first);
     }
+    
+    virtual Obj * first() { return _first ? _first->val : 0; }
+    virtual Obj * last() { return _last ? _last->val : 0; }
 };
 
 #endif //COLLECTION_LINKEDLIST_HPP_LOCK

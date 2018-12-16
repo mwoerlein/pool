@@ -17,6 +17,7 @@ class String: public OStream, public ComparableC<char *>, public ComparableC<con
     int _hash;
     
     virtual void clear();
+    virtual void markModified();
     
     public:
     String(Environment &env, MemoryInfo &mi = *notAnInfo);

@@ -3,13 +3,18 @@
 
 #include "sys/Object.hpp"
 
-class ClassRefNode;
+class TranslationUnitNode;
+
+class NamespaceDefNode;
+class UseStatementNode;
 class ClassDefNode;
-class MethodRefNode;
-class MethodDefNode;
-class VariableDefNode;
+
+class ClassRefNode;
 class CStringConstDefNode;
 class IntConstDefNode;
+class MethodDefNode;
+class MethodRefNode;
+class VariableDefNode;
 
 class InlinePasmInstructionNode;
 
@@ -17,13 +22,18 @@ class Visitor: virtual public Object {
     public:
     virtual ~Visitor();
     
-    virtual bool visit(ClassRefNode & classRef) = 0;
+    virtual bool visit(TranslationUnitNode & translationUnit) = 0;
+
+    virtual bool visit(NamespaceDefNode & namespaceDef) = 0;
+    virtual bool visit(UseStatementNode & useStmt) = 0;
     virtual bool visit(ClassDefNode & classDef) = 0;
-    virtual bool visit(MethodRefNode & methodRef) = 0;
-    virtual bool visit(MethodDefNode & methodDef) = 0;
-    virtual bool visit(VariableDefNode & variableDef) = 0;
+    
+    virtual bool visit(ClassRefNode & classRef) = 0;
     virtual bool visit(CStringConstDefNode & constDef) = 0;
     virtual bool visit(IntConstDefNode & constDef) = 0;
+    virtual bool visit(VariableDefNode & variableDef) = 0;
+    virtual bool visit(MethodRefNode & methodRef) = 0;
+    virtual bool visit(MethodDefNode & methodDef) = 0;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) = 0;
 };

@@ -80,6 +80,7 @@ OStream & String::operator <<(char c) {
     _length++;
     _hash += _hash << 5;
     _hash += c;
+    markModified();
     return *this;
 }
 
@@ -246,4 +247,8 @@ void String::clear() {
     }
     last = first = 0;
     _length = _hash = 0;
+    markModified();
+}
+
+void String::markModified() {
 }

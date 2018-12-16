@@ -4,22 +4,31 @@
 #include "poolc/parser/PoolParser.hpp"
 
 int Parser::makeColonEqual() { return COLON_EQUAL; }
-int Parser::makeClass() { return CLASS; }
-int Parser::makeExtends() { return EXTENDS; }
-int Parser::makeGlobal() { return GLOBAL; }
-int Parser::makeAbstract() { return ABSTRACT; }
-int Parser::makeNaked() { return NAKED; }
-int Parser::makePasm() { return PASM; }
-int Parser::makeBootstrap() { return BOOTSTRAP; }
 
-int Parser::makeID(String & identifier) {
-    d_val__.u_string = &identifier;
+int Parser::makeAbstract()  { return ABSTRACT; }
+int Parser::makeClass()     { return CLASS; }
+int Parser::makeExtends()   { return EXTENDS; }
+int Parser::makeGlobal()    { return GLOBAL; }
+int Parser::makeNamespace() { return NAMESPACE; }
+int Parser::makeUse()       { return USE; }
+
+int Parser::makeBootstrap() { return BOOTSTRAP; }
+int Parser::makeNaked()     { return NAKED; }
+int Parser::makePasm()      { return PASM; }
+
+int Parser::makeID(String & s) {
+    d_val__.u_string = &s;
     return ID;
 }
 
-int Parser::makeString(String & identifier) {
-    d_val__.u_string = &identifier;
+int Parser::makeString(String & s) {
+    d_val__.u_string = &s;
     return STRING;
+}
+
+int Parser::makeFullQualifiedName(String & s) {
+    d_val__.u_string = &s;
+    return FQN;
 }
 
 int Parser::makeNumber(long value) {
@@ -36,7 +45,7 @@ void Parser::setLocation(int first_line, int first_column, int last_line, int la
 
 int Parser::lex()
 {
-    return driver.lex(*this);
+    return driver.lex();
 }
 
 void Parser::error()

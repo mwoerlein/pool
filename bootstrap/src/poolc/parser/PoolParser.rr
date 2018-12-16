@@ -26,18 +26,33 @@
 */
 
 // public
-PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), cls(0), parser(0) {}
+PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), unit(0), parser(0) {}
 PoolParser::~PoolParser() {}
 
-ClassDefNode * PoolParser::parse(IStream &input) {
-    this->input = &input;
-    
+TranslationUnitNode * PoolParser::parse(IStream &input, String & name) {
+    TranslationUnitNode &unit = env().create<TranslationUnitNode>();
+    unit.name = name;
     Parser parser(*this);
-    if (parser.parse()) {
+     
+    this->input = &input;
+    this->unit = &unit;
+    this->parser = &parser;
+    
+    int parseResult = parser.parse(); 
+    this->input = 0;
+    this->unit = 0;
+    this->parser = 0;
+    
+    if (parseResult) {
+        unit.destroy();
         return 0;
     }
-    
-    return cls;
+
+    return &unit;
+}
+
+TranslationUnitNode * PoolParser::getUnit() {
+    return unit;
 }
 
 void PoolParser::setLocation() {
@@ -124,9 +139,8 @@ String * PoolParser::readLine() {
     return &s;
 }
 
-int PoolParser::lex(Parser & p)
+int PoolParser::lex()
 {
-    parser = &p;
     char *o1, *o2;
     for (;;) {
         token = current;
@@ -147,6 +161,8 @@ int PoolParser::lex(Parser & p)
         "class"         { setLocation(); return parser->makeClass(); }
         "extends"       { setLocation(); return parser->makeExtends(); }
         "global"        { setLocation(); return parser->makeGlobal(); }
+        "namespace"     { setLocation(); return parser->makeNamespace(); }
+        "use"           { setLocation(); return parser->makeUse(); }
         
         "__bootstrap__" { setLocation(); return parser->makeBootstrap(); }
         "__naked__"     { setLocation(); return parser->makeNaked(); }
@@ -162,6 +178,11 @@ int PoolParser::lex(Parser & p)
         "-0"[xX] @o1 [0-9a-fA-F]+ @o2   { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2, 16)); }
         "-"? "0"                        { setLocation(); return parser->makeNumber(0); }
         
+        @o1 id ("::" id)+ @o2  {
+                        String &s = env().create<String, char *, char *>(o1, o2);
+                        setLocation();
+                        return parser->makeFullQualifiedName(s);
+                    }
         @o1 id @o2  {
                         String &s = env().create<String, char *, char *>(o1, o2);
                         setLocation();
@@ -207,11 +228,15 @@ int PoolParser::lex(Parser & p)
 
 
 bool PoolParser::error(const char* msg, int line, int column) {
-    env().err()<<msg;
-    if (line >= 0) {
-        env().err()<<" (at l" << line << ":c" << column << ")";
+    OStream & err = env().err();
+    if (unit) {
+        err << unit->name << ": ";
     }
-    env().err()<<"\n";
+    err << msg;
+    if (line >= 0) {
+        err << " (at l" << line << ":c" << column << ")";
+    }
+    err << "\n";
     return true;
 }
 

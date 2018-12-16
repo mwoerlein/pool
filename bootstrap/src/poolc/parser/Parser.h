@@ -25,16 +25,21 @@ class Parser: public ParserBase
         void setLocation(int first_line, int first_column, int last_line, int last_column);
         
         int makeColonEqual();
+        
+        int makeAbstract();
         int makeClass();
         int makeExtends();
         int makeGlobal();
-        int makeAbstract();
+        int makeNamespace();
+        int makeUse();
+        
+        int makeBootstrap();
         int makeNaked();
         int makePasm();
-        int makeBootstrap();
         
-        int makeID(String & identifier);
-        int makeString(String & identifier);
+        int makeID(String & s);
+        int makeString(String & s);
+        int makeFullQualifiedName(String & s);
         int makeNumber(long value);
         
         int parse();

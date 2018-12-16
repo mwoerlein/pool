@@ -4,13 +4,13 @@
 #include "sys/Object.hpp"
 #include "sys/stream/IStream.hpp"
 
-#include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "poolc/ast/nodes/TranslationUnitNode.hpp"
 #include "poolc/parser/ParseBuffer.hpp"
 
 class Parser;
 class PoolParser: public ParseBuffer {
     private:
-    ClassDefNode * cls;
+    TranslationUnitNode * unit;
     IStream * input;
     Parser * parser;
 
@@ -27,12 +27,11 @@ class PoolParser: public ParseBuffer {
     public:
     PoolParser(Environment &env, MemoryInfo &mi);
     virtual ~PoolParser();
-    virtual ClassDefNode * parse(IStream &input);
+    virtual TranslationUnitNode * parse(IStream &input, String &name);
+    
+    virtual TranslationUnitNode * getUnit();
     virtual bool error(const char * msg, int line = -1, int column = -1);
-    virtual void registerClass(ClassDefNode *node) {
-        cls = node;
-    }
-    virtual int lex(Parser & parser);
+    virtual int lex();
 };
 
 #endif //POOLC_PARSER_POOLPARSER_HPP_LOCK

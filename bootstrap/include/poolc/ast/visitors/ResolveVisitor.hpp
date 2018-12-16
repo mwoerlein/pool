@@ -13,13 +13,18 @@ class ResolveVisitor: public Visitor {
     ResolveVisitor(Environment &env, MemoryInfo &mi, SimpleFactory & factory);
     virtual ~ResolveVisitor();
     
-    virtual bool visit(ClassRefNode & classRef) override;
+    virtual bool visit(TranslationUnitNode & translationUnit) override;
+
+    virtual bool visit(NamespaceDefNode & namespaceDef) override;
+    virtual bool visit(UseStatementNode & useStmt) override;
     virtual bool visit(ClassDefNode & classDef) override;
-    virtual bool visit(MethodRefNode & methodRef) override;
-    virtual bool visit(MethodDefNode & methodDef) override;
-    virtual bool visit(VariableDefNode & variableDef) override;
+    
+    virtual bool visit(ClassRefNode & classRef) override;
     virtual bool visit(CStringConstDefNode & constDef) override;
     virtual bool visit(IntConstDefNode & constDef) override;
+    virtual bool visit(VariableDefNode & variableDef) override;
+    virtual bool visit(MethodRefNode & methodRef) override;
+    virtual bool visit(MethodDefNode & methodDef) override;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) override;
 };

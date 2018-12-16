@@ -54,9 +54,13 @@ class StdFileIOStream: public SeekableIOStream {
     public:
     StdFileIOStream(Environment &env, MemoryInfo &mi, const char *name, const char *mode)
         : Object(env, mi), file(std::fopen(name, mode)) {
-        std::fseek(file, 0, SEEK_END); // seek to end of file
-        _length = std::ftell(file); // get current file pointer
-        std::fseek(file, 0, SEEK_SET); // seek back to beginning of file
+        if (file) {
+            std::fseek(file, 0, SEEK_END); // seek to end of file
+            _length = std::ftell(file); // get current file pointer
+            std::fseek(file, 0, SEEK_SET); // seek back to beginning of file
+        } else {
+            env.err()<<"could not open file '"<<name<<"'\n";
+        }
     }
     virtual ~StdFileIOStream() { std::fclose(file); }
     

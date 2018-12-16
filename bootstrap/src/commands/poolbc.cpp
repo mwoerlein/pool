@@ -49,25 +49,24 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         String &name = argIt.next();
         argIt.destroy();
         
-        ClassDefNode *classDef = f.getDef(name);
-        if (!classDef) {
-            PoolParser &p = env().create<PoolParser>();
-            IStream &infile = (name == "-") ? env().streamFactory().buildStdIStream() : env().streamFactory().buildIStream(name);
-            classDef = p.parse(infile);
-            infile.destroy();
-            p.destroy();
-        }
+        PoolParser &p = env().create<PoolParser>();
+        IStream &infile = (name == "-") ? env().streamFactory().buildStdIStream() : env().streamFactory().buildIStream(name);
+        TranslationUnitNode *unit = p.parse(infile, name);
+        infile.destroy();
+        p.destroy();
         
-        if (classDef) {
+        if (unit) {
             Visitor &resolve = env().create<ResolveVisitor, SimpleFactory &>(f);
-            classDef->accept(resolve);
+            unit->accept(resolve);
             resolve.destroy();
             
             SeekableIOStream &outfile = env().streamFactory().buildOStream(getStringProperty("o"));
             Visitor &dump = env().create<X86PasmVisitor, OStream &>(outfile);
-            classDef->accept(dump);
+            unit->accept(dump);
             dump.destroy();
             outfile.destroy();
+            
+            unit->destroy();
         }
 
         f.destroy();

@@ -1,3 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace my;
+
+use my::core::Object;
+use my::core::Runtime;
+
 class A extends Object {
     // TODO: remove after implicit string handling
     cstring test := " Test\n";

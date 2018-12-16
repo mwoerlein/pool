@@ -1,5 +1,8 @@
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
+#include "poolc/ast/nodes/TranslationUnitNode.hpp"
+#include "poolc/ast/nodes/NamespaceDefNode.hpp"
+#include "poolc/ast/nodes/UseStatementNode.hpp"
 #include "poolc/ast/nodes/ClassDefNode.hpp"
 #include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
@@ -56,6 +59,20 @@ X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, OStream &out)
          curClass(0), curSuper(0) {}
 X86PasmVisitor::~X86PasmVisitor() {}
 
+bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
+    curUnit = &translationUnit;
+    translationUnit.classes.acceptAll(*this);
+    return true;
+}
+
+bool X86PasmVisitor::visit(NamespaceDefNode & namespaceDef) {
+    return true;
+}
+
+bool X86PasmVisitor::visit(UseStatementNode & useStmt) {
+    return true;
+}
+
 bool X86PasmVisitor::visit(ClassRefNode & classRef) {
     out << "// class-ref " << classRef.name << "\n";
     return true;
@@ -73,6 +90,8 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     if (curClass->bootstrap) {
         out << "bootstrapOffset = " << gMethodDeclOffset(curClass->bootstrap) << "\n";
     }
+    out << "[pool_source]\n";
+    out << "unit = " << curUnit->name << "\n";
     out << "*/\n";
     
     // header

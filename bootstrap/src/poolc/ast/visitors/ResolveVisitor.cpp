@@ -1,5 +1,9 @@
 #include "poolc/ast/visitors/ResolveVisitor.hpp"
 
+#include "poolc/ast/nodes/TranslationUnitNode.hpp"
+#include "poolc/ast/nodes/NamespaceDefNode.hpp"
+#include "poolc/ast/nodes/UseStatementNode.hpp"
+#include "poolc/ast/nodes/ClassDefNode.hpp"
 #include "poolc/ast/nodes/ClassRefNode.hpp"
 #include "poolc/ast/nodes/MethodDefNode.hpp"
 #include "poolc/ast/nodes/MethodRefNode.hpp"
@@ -8,6 +12,26 @@
 ResolveVisitor::ResolveVisitor(Environment &env, MemoryInfo &mi, SimpleFactory & factory)
         :Object(env, mi), factory(factory) {}
 ResolveVisitor::~ResolveVisitor() {}
+
+
+bool ResolveVisitor::visit(TranslationUnitNode & translationUnit) {
+    if (!translationUnit.ns) {
+        env().err() << translationUnit.name << ": " << "missing namespace" << "\n";
+        return false;
+    }
+    translationUnit.ns->accept(*this);
+    translationUnit.uses.acceptAll(*this);
+    translationUnit.classes.acceptAll(*this);
+    return true;
+}
+
+bool ResolveVisitor::visit(NamespaceDefNode & namespaceDef) {
+    return true;
+}
+
+bool ResolveVisitor::visit(UseStatementNode & useStmt) {
+    return true;
+}
 
 bool ResolveVisitor::visit(ClassRefNode & classRef) {
     if (!classRef.classDef) {
