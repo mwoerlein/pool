@@ -56,7 +56,7 @@ TranslationUnitNode * PoolParser::getUnit() {
 }
 
 void PoolParser::setLocation() {
-    parser->setLocation(linesBuffer[token-buffer],columnsBuffer[token-buffer],linesBuffer[current-buffer],columnsBuffer[current-buffer]);
+    parser->setLocation(getLine(token), getColumn(token), getLine(current), getColumn(current));
 }
 
 int PoolParser::parseIntegerValue(char * start, char * end, int base) {
@@ -72,8 +72,8 @@ int PoolParser::parseIntegerValue(char * start, char * end, int base) {
 
 String * PoolParser::readString(char enclosure) {
     String &s = env().create<String>();
-    int startLine = linesBuffer[current-buffer];
-    int startColumn = columnsBuffer[current-buffer];
+    int startLine = getLine(current);
+    int startColumn = getColumn(current);
     for (;;) {
         token = current;
 /*!re2c
@@ -94,14 +94,14 @@ String * PoolParser::readString(char enclosure) {
 
 String * PoolParser::readMultilineString() {
     String &s = env().create<String>();
-    int startLine = linesBuffer[current-buffer];
-    int startColumn = columnsBuffer[current-buffer];
+    int startLine = getLine(current);
+    int startColumn = getColumn(current);
     for (;;) {
         token = current;
 /*!re2c
         end             { break; }
         eol wsp ["] ">" { return &s; }
-        *               { if (startLine != linesBuffer[token-buffer]) { s << *token; } continue; }
+        *               { if (startLine != getLine(token)) { s << *token; } continue; }
 */
     }
     env().err() << "unterminated multiline string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
@@ -111,8 +111,8 @@ String * PoolParser::readMultilineString() {
 
 String * PoolParser::readComment() {
     String &s = env().create<String>();
-    int startLine = linesBuffer[current-buffer];
-    int startColumn = columnsBuffer[current-buffer];
+    int startLine = getLine(current);
+    int startColumn = getColumn(current);
     for (;;) {
         token = current;
 /*!re2c
@@ -121,7 +121,7 @@ String * PoolParser::readComment() {
         *       { s << *token; continue; }
 */
     }
-    env().err() << "unterminated multiline string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
+    env().err() << "unterminated comment '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
     s.destroy();
     return 0;
 }
@@ -220,8 +220,8 @@ int PoolParser::lex()
 */
     }
     env().err() << "unexpected character : " << *token
-        << " line: " << linesBuffer[token-buffer]
-        << " column: "  << columnsBuffer[token-buffer]
+        << " line: " << getLine(token)
+        << " column: "  << getColumn(token)
         << '\n';
     return -1;
 }

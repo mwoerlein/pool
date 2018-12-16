@@ -11,6 +11,7 @@ ParseBuffer::ParseBuffer(Environment &env, MemoryInfo &mi, size_t size, size_t l
     buffer((char*) buffersInfo.buf),
     linesBuffer((int*) memoryEnd(buffersInfo.buf, (size + lookahead) * sizeof(char))),
     columnsBuffer((int*) memoryEnd(buffersInfo.buf, (size + lookahead) * (sizeof(char) + sizeof(int)))),
+    bufferPos(0),
     currentLine(1),
     currentColumn(1) {
     token = current = marker = ctxmarker = limit = buffer + size;
@@ -36,6 +37,7 @@ bool ParseBuffer::freeBuffer(size_t need) {
     token -= free;
     marker -= free;
     ctxmarker -= free;
+    bufferPos += free;
     shift(free);
     return true;
 }

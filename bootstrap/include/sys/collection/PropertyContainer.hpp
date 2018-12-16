@@ -11,6 +11,7 @@ class PropertyContainer: protected HashMap<String, Object>, protected LinkedList
     inline int size() { return HashMap::size(); }
     inline bool isEmpty() { return HashMap::isEmpty(); }
     inline bool contains(Object & o) { return HashMap::contains(o); }
+    inline Iterator<String> & properties() { return HashMap::keys(); }
     inline Iterator<Object> & iterator() { return HashMap::iterator(); }
     
     public:

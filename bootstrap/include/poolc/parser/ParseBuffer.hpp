@@ -11,6 +11,12 @@ class ParseBuffer: virtual public Object {
     MemoryInfo & buffersInfo;
     size_t size;
     size_t lookahead;
+    
+    int *linesBuffer;
+    int *columnsBuffer;
+    int bufferPos;
+    int currentLine;
+    int currentColumn;
         
     bool freeBuffer(size_t need);
     
@@ -25,16 +31,15 @@ class ParseBuffer: virtual public Object {
     char *marker;
     char *ctxmarker;
     
-    int *linesBuffer;
-    int *columnsBuffer;
-    int currentLine;
-    int currentColumn;
-    
     public:
     ParseBuffer(Environment &env, MemoryInfo &mi, size_t size, size_t lookahead);
     virtual ~ParseBuffer();
     
     bool fillBuffer(size_t need, IStream & input);
+    
+    inline int getPos(char *ptr) { return bufferPos + (ptr - buffer); }
+    inline int getLine(char *ptr) { return linesBuffer[ptr - buffer]; }
+    inline int getColumn(char *ptr) { return columnsBuffer[ptr - buffer]; }
 };
 
 #endif //POOLC_PARSER_PARSEBUFFER_HPP_LOCK
