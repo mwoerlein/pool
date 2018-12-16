@@ -27,6 +27,13 @@ int Parser::makeNumber(long value) {
     return NUMBER;
 }
 
+void Parser::setLocation(int first_line, int first_column, int last_line, int last_column) {
+    d_loc__.first_line = first_line;
+    d_loc__.first_column = first_column;
+    d_loc__.last_line = last_line;
+    d_loc__.last_column = last_column;
+}
+
 int Parser::lex()
 {
     return driver.lex(*this);

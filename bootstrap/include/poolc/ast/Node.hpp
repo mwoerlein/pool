@@ -9,6 +9,11 @@ enum scope_t { scope_class, scope_instance };
 
 class Node: virtual public Object {
     public:
+    int first_line;
+    int first_column;
+    int last_line;
+    int last_column;
+    
     virtual ~Node();
     
     virtual bool accept(Visitor & visitor) = 0;

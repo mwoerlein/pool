@@ -26,7 +26,7 @@
 */
 
 // public
-PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), cls(0) {}
+PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), cls(0), parser(0) {}
 PoolParser::~PoolParser() {}
 
 ClassDefNode * PoolParser::parse(IStream &input) {
@@ -38,6 +38,10 @@ ClassDefNode * PoolParser::parse(IStream &input) {
     }
     
     return cls;
+}
+
+void PoolParser::setLocation() {
+    parser->setLocation(linesBuffer[token-buffer],columnsBuffer[token-buffer],linesBuffer[current-buffer],columnsBuffer[current-buffer]);
 }
 
 int PoolParser::parseIntegerValue(char * start, char * end, int base) {
@@ -120,53 +124,57 @@ String * PoolParser::readLine() {
     return &s;
 }
 
-int PoolParser::lex(Parser & parser)
+int PoolParser::lex(Parser & p)
 {
+    parser = &p;
     char *o1, *o2;
     for (;;) {
         token = current;
 /*!re2c
-        ","         { return ','; }
-        ";"         { return ';'; }
-        "="         { return '='; }
-        "<"         { return '<'; }
-        ">"         { return '>'; }
-        "{"         { return '{'; }
-        "}"         { return '}'; }
-        "("         { return '('; }
-        ")"         { return ')'; }
+        ","         { setLocation(); return ','; }
+        ";"         { setLocation(); return ';'; }
+        "="         { setLocation(); return '='; }
+        "<"         { setLocation(); return '<'; }
+        ">"         { setLocation(); return '>'; }
+        "{"         { setLocation(); return '{'; }
+        "}"         { setLocation(); return '}'; }
+        "("         { setLocation(); return '('; }
+        ")"         { setLocation(); return ')'; }
         
-        "class"     { return parser.makeClass(); }
-        "extends"   { return parser.makeExtends(); }
-        "local"     { return parser.makeLocal(); }
-        "global"    { return parser.makeGlobal(); }
-        "abstract"  { return parser.makeAbstract(); }
-        "__naked__" { return parser.makeNaked(); }
-        "__pasm__"  { return parser.makePasm(); }
-        "__bootstrap__" { return parser.makeBootstrap(); }
+        "class"     { setLocation(); return parser->makeClass(); }
+        "extends"   { setLocation(); return parser->makeExtends(); }
+        "local"     { setLocation(); return parser->makeLocal(); }
+        "global"    { setLocation(); return parser->makeGlobal(); }
+        "abstract"  { setLocation(); return parser->makeAbstract(); }
+        "__naked__" { setLocation(); return parser->makeNaked(); }
+        "__pasm__"  { setLocation(); return parser->makePasm(); }
+        "__bootstrap__" { setLocation(); return parser->makeBootstrap(); }
         
-        "0" [bB] @o1 [01]+ @o2          { return parser.makeNumber( parseIntegerValue(o1, o2,  2)); }
-        "-0" [bB] @o1 [01]+ @o2         { return parser.makeNumber(-parseIntegerValue(o1, o2,  2)); }
-        "0" @o1 [0-7]+ @o2              { return parser.makeNumber( parseIntegerValue(o1, o2,  8)); }
-        "-0" @o1 [0-7]+ @o2             { return parser.makeNumber(-parseIntegerValue(o1, o2,  8)); }
-        @o1 [1-9][0-9]* @o2             { return parser.makeNumber( parseIntegerValue(o1, o2, 10)); } 
-        "-" @o1 [1-9][0-9]* @o2         { return parser.makeNumber(-parseIntegerValue(o1, o2, 10)); } 
-        "0"[xX] @o1 [0-9a-fA-F]+ @o2    { return parser.makeNumber( parseIntegerValue(o1, o2, 16)); }
-        "-0"[xX] @o1 [0-9a-fA-F]+ @o2   { return parser.makeNumber(-parseIntegerValue(o1, o2, 16)); }
-        "-"? "0"                        { return parser.makeNumber(0); }
+        "0" [bB] @o1 [01]+ @o2          { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2,  2)); }
+        "-0" [bB] @o1 [01]+ @o2         { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2,  2)); }
+        "0" @o1 [0-7]+ @o2              { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2,  8)); }
+        "-0" @o1 [0-7]+ @o2             { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2,  8)); }
+        @o1 [1-9][0-9]* @o2             { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2, 10)); } 
+        "-" @o1 [1-9][0-9]* @o2         { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2, 10)); } 
+        "0"[xX] @o1 [0-9a-fA-F]+ @o2    { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2, 16)); }
+        "-0"[xX] @o1 [0-9a-fA-F]+ @o2   { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2, 16)); }
+        "-"? "0"                        { setLocation(); return parser->makeNumber(0); }
         
         @o1 id @o2  {
                         String &s = env().create<String, char *, char *>(o1, o2);
-                        return parser.makeID(s);
+                        setLocation();
+                        return parser->makeID(s);
                     }
         
         @o1 ['"]    {
                         String *s = readString(*o1); if (!s) break;
-                        return parser.makeString(*s);
+                        setLocation();
+                        return parser->makeString(*s);
                     }
         "<" ["] wsp / eol {
                         String *s = readMultilineString(); if (!s) break;
-                        return parser.makeString(*s);
+                        setLocation();
+                        return parser->makeString(*s);
                     }
         
         "//"        {

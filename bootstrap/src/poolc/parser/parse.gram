@@ -13,6 +13,8 @@
     CStringConstDefNode *u_const_cstring_decl;
     InstructionNode *u_instruction;
 }
+%lsp-needed
+
 %token CLASS
 %token EXTENDS
 %token LOCAL
@@ -53,6 +55,17 @@ class_decl:
         $$ = $4;
         $$->name = *$2;
         $2->destroy();
+        
+        $4->first_line = @3.first_line;
+        $4->first_column = @3.first_column;
+        $4->last_line = @5.last_line;
+        $4->last_column = @5.last_column;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @5.last_line;
+        $$->last_column = @5.last_column;
+        
         driver.registerClass($$);
     }
 |   CLASS ID EXTENDS id_list '{' class_body_empty '}'
@@ -68,6 +81,17 @@ class_decl:
         }
         it.destroy();
         $4->destroy();
+        
+        $6->first_line = @5.first_line;
+        $6->first_column = @5.first_column;
+        $6->last_line = @7.last_line;
+        $6->last_column = @7.last_column;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @7.last_line;
+        $$->last_column = @7.last_column;
+        
         driver.registerClass($$);
     }
 ;
@@ -152,12 +176,32 @@ method_decl:
     {
         $$ = $9;
         $$->name = *$4;
+        
+        $9->first_line = @8.first_line;
+        $9->first_column = @8.first_column;
+        $9->last_line = @10.last_line;
+        $9->last_column = @10.last_column;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @10.last_line;
+        $$->last_column = @10.last_column;
     }
 |   GLOBAL '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
     {
         $$ = $10;
         $$->name = *$5;
         $$->scope = scope_class;
+        
+        $10->first_line = @9.first_line;
+        $10->first_column = @9.first_column;
+        $10->last_line = @11.last_line;
+        $10->last_column = @11.last_column;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @11.last_line;
+        $$->last_column = @11.last_column;
     }
 |   NAKED '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
     {
@@ -165,6 +209,16 @@ method_decl:
         $$->name = *$5;
         $$->kind = naked;
         $$->scope = scope_class;
+        
+        $10->first_line = @9.first_line;
+        $10->first_column = @9.first_column;
+        $10->last_line = @11.last_line;
+        $10->last_column = @11.last_column;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @11.last_line;
+        $$->last_column = @11.last_column;
     }
 |   BOOTSTRAP '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
     {
@@ -172,12 +226,27 @@ method_decl:
         $$->name = *$5;
         $$->kind = bootstrap;
         $$->scope = scope_class;
+        
+        $10->first_line = @9.first_line;
+        $10->first_column = @9.first_column;
+        $10->last_line = @11.last_line;
+        $10->last_column = @11.last_column;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @11.last_line;
+        $$->last_column = @11.last_column;
     }
 |   ABSTRACT '<' id_list_empty '>' ID '(' id_map_empty ')' ';'
     {
         $$ = &driver.env().create<MethodDefNode>();
         $$->name = *$5;
         $$->kind = abstract;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @9.last_line;
+        $$->last_column = @9.last_column;
     }
 ;
 
@@ -188,6 +257,11 @@ variable_decl:
         $$->name = *$2;
         $1->destroy();
         $2->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 ;
 
@@ -199,6 +273,11 @@ const_int_decl:
         $$->value = $5;
         $2->destroy();
         $3->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @6.last_line;
+        $$->last_column = @6.last_column;
     }
 |   GLOBAL ID ID '=' NUMBER ';'
     {
@@ -208,6 +287,11 @@ const_int_decl:
         $$->global = true;
         $2->destroy();
         $3->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @6.last_line;
+        $$->last_column = @6.last_column;
     }
 ;
 
@@ -220,6 +304,11 @@ const_cstring_decl:
         $2->destroy();
         $3->destroy();
         $5->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @6.last_line;
+        $$->last_column = @6.last_column;
     }
 ;
 
@@ -242,6 +331,11 @@ instruction:
         node.pasm = *$3;
         $3->destroy();
         $$ = &node;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @5.last_line;
+        $$->last_column = @5.last_column;
     }
 ;
 
