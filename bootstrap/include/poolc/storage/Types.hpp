@@ -1,0 +1,7 @@
+#ifndef POOLC_STORAGE_TYPES_HPP_LOCK
+#define POOLC_STORAGE_TYPES_HPP_LOCK
+
+#define MIMETYPE_POOL "text/x-pool"
+#define MIMETYPE_PASM "text/x-pasm"
+
+#endif //POOLC_STORAGE_TYPES_HPP_LOCK

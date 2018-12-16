@@ -1,0 +1,22 @@
+#ifndef LINUX_DIRECTORYPOOLSTORAGE_HPP_LOCK
+#define LINUX_DIRECTORYPOOLSTORAGE_HPP_LOCK
+
+#include "poolc/storage/PoolStorage.hpp"
+#include "poolc/storage/HeaderParser.hpp"
+
+class DirectoryPoolStorage: public PoolStorage {
+    private:
+    const char * baseDir;
+    HeaderParser & headerParser;
+    
+    String & buildFilePath(String & classname, String & mimetype);
+    
+    public:
+    DirectoryPoolStorage(Environment & env, MemoryInfo & mi, const char * baseDir = ".");
+    virtual ~DirectoryPoolStorage();
+    
+    virtual StorageElement * getElement(String & classname, String & mimetype) override;
+    virtual OStream & writeElement(String & classname, String & mimetype) override;
+};
+
+#endif //LINUX_DIRECTORYPOOLSTORAGE_HPP_LOCK

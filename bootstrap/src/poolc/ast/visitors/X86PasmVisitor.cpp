@@ -1,5 +1,7 @@
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
+#include "poolc/storage/Types.hpp"
+
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
 #include "poolc/ast/nodes/NamespaceDefNode.hpp"
 #include "poolc/ast/nodes/UseStatementNode.hpp"
@@ -82,7 +84,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     curClass = &classDef;
     
     out << "/*[meta]\n";
-    out << "mimetype = text/x-pasm\n";
+    out << "mimetype = " << MIMETYPE_PASM << "\n";
     out << "description = class \"" << curClass->fullQualifiedName << "\"\n";
     out << "[pool]\n";
     out << "version = 0.1.0\n";
