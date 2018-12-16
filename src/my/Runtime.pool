@@ -1,43 +1,44 @@
 class Runtime extends Object {
-    // TODO: remove after implicit string handling
-    local cstring mClass = "/my/Class";
-    local cstring mThread = "/my/Thread";
+    // streams
+    global int out := 0;
+    global int err := 1;
     
-    global int out = 0;
-    global int err = 1;
+    // TODO: remove after implicit string handling
+    cstring mClass := "/my/Class";
+    cstring mThread := "/my/Thread";
     
     // TODO: remove with syscall
     // SysCall constants
-    local int SysCall_allocate = 1;
-    local int SysCall_free = 2;
-    local int SysCall_find_class = 3;
-    local int SysCall_print = 4;
+    int SysCall_allocate := 1;
+    int SysCall_free := 2;
+    int SysCall_find_class := 3;
+    int SysCall_print := 4;
     
     // TODO: remove with syscall
     // SysCall print kinds
-    local int spk_char = 0;
-    local int spk_int = 1;
-    local int spk_hex = 2;
-    local int spk_string = 3;
+    int spk_char := 0;
+    int spk_int := 1;
+    int spk_hex := 2;
+    int spk_string := 3;
     
     // TODO: remove with syscall
     // SysCall print streams
-    local int sps_out = 0;
-    local int sps_err = 1;
+    int sps_out := 0;
+    int sps_err := 1;
     
     // TODO: remove with working ClassHeader "struct"
-    local int ch_inst_handle = 0x4;
-    local int ch_cts = 0xc;
-    local int ch_tpl = 0x14;
-    local int ch_tpl_size = 0x18;
-    local int ch_tpl_obj_handle = 0x1c;
-    local int ch_tpl_cls_handle = 0x20;
+    int ch_inst_handle := 0x4;
+    int ch_cts := 0xc;
+    int ch_tpl := 0x14;
+    int ch_tpl_size := 0x18;
+    int ch_tpl_obj_handle := 0x1c;
+    int ch_tpl_cls_handle := 0x20;
     
     // TODO: remove with working ClassTab "struct"
-    local int cts_cdo = 0x0;
-    local int cts_vto = 0x8;
-    local int cts_ho = 0xc;
-    local int cts_size = 0x10;
+    int cts_cdo := 0x0;
+    int cts_vto := 0x8;
+    int cts_ho := 0xc;
+    int cts_size := 0x10;
     
     // TODO: remove after real pool implementation exists
     int syscall_runtime;

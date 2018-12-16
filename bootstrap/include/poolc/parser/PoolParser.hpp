@@ -28,7 +28,7 @@ class PoolParser: public ParseBuffer {
     PoolParser(Environment &env, MemoryInfo &mi);
     virtual ~PoolParser();
     virtual ClassDefNode * parse(IStream &input);
-    virtual bool error(const char * msg);
+    virtual bool error(const char * msg, int line = -1, int column = -1);
     virtual void registerClass(ClassDefNode *node) {
         cls = node;
     }

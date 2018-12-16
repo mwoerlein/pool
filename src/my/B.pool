@@ -1,6 +1,6 @@
 class B extends Thread, A {
     // TODO: remove after implicit string handling
-    local cstring doit = "OMG! Compiling work's! ";
+    cstring doit := "OMG! Compiling work's! ";
     
     <> run() {
         __pasm__ (<"

@@ -1,6 +1,6 @@
 class Object {
     // TODO: remove with working ClassHeader "struct"
-    local int ch_inst_handle = 0x4;
+    int ch_inst_handle := 0x4;
     
     Runtime runtime;
     

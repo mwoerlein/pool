@@ -3,9 +3,9 @@
 
 #include "poolc/parser/PoolParser.hpp"
 
+int Parser::makeColonEqual() { return COLON_EQUAL; }
 int Parser::makeClass() { return CLASS; }
 int Parser::makeExtends() { return EXTENDS; }
-int Parser::makeLocal() { return LOCAL; }
 int Parser::makeGlobal() { return GLOBAL; }
 int Parser::makeAbstract() { return ABSTRACT; }
 int Parser::makeNaked() { return NAKED; }
@@ -41,7 +41,7 @@ int Parser::lex()
 
 void Parser::error()
 {
-    driver.error("Syntax error");
+    driver.error("Syntax error", d_loc__.first_line, d_loc__.first_column);
 }
 
 void Parser::exceptionHandler(std::exception const &exc)         

@@ -141,14 +141,16 @@ int PoolParser::lex(Parser & p)
         "("         { setLocation(); return '('; }
         ")"         { setLocation(); return ')'; }
         
-        "class"     { setLocation(); return parser->makeClass(); }
-        "extends"   { setLocation(); return parser->makeExtends(); }
-        "local"     { setLocation(); return parser->makeLocal(); }
-        "global"    { setLocation(); return parser->makeGlobal(); }
-        "abstract"  { setLocation(); return parser->makeAbstract(); }
-        "__naked__" { setLocation(); return parser->makeNaked(); }
-        "__pasm__"  { setLocation(); return parser->makePasm(); }
+        ":="            { setLocation(); return parser->makeColonEqual(); }
+        
+        "abstract"      { setLocation(); return parser->makeAbstract(); }
+        "class"         { setLocation(); return parser->makeClass(); }
+        "extends"       { setLocation(); return parser->makeExtends(); }
+        "global"        { setLocation(); return parser->makeGlobal(); }
+        
         "__bootstrap__" { setLocation(); return parser->makeBootstrap(); }
+        "__naked__"     { setLocation(); return parser->makeNaked(); }
+        "__pasm__"      { setLocation(); return parser->makePasm(); }
         
         "0" [bB] @o1 [01]+ @o2          { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2,  2)); }
         "-0" [bB] @o1 [01]+ @o2         { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2,  2)); }
@@ -204,8 +206,12 @@ int PoolParser::lex(Parser & p)
 }
 
 
-bool PoolParser::error(const char* msg) {
-    env().err()<<msg<<"\n";
+bool PoolParser::error(const char* msg, int line, int column) {
+    env().err()<<msg;
+    if (line >= 0) {
+        env().err()<<" (at l" << line << ":c" << column << ")";
+    }
+    env().err()<<"\n";
     return true;
 }
 
