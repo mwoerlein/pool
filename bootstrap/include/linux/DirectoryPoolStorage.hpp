@@ -9,10 +9,11 @@ class DirectoryPoolStorage: public PoolStorage {
     const char * baseDir;
     HeaderParser & headerParser;
     
-    String & buildFilePath(String & classname, String & mimetype);
+    String & buildFilePath(String & classname, String & mimetype, bool createPath = false);
     
     public:
     DirectoryPoolStorage(Environment & env, MemoryInfo & mi, const char * baseDir = ".");
+    DirectoryPoolStorage(Environment & env, MemoryInfo & mi, String & baseDir);
     virtual ~DirectoryPoolStorage();
     
     virtual StorageElement * getElement(String & classname, String & mimetype) override;

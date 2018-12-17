@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "poolc/storage/Types.hpp"
 #include "poolc/parser/token/FullQualifiedName.hpp"
@@ -74,6 +75,13 @@ DirectoryPoolStorage::DirectoryPoolStorage(Environment & env, MemoryInfo & mi, c
     this->baseDir = realpath(baseDir, 0);
 }
 
+DirectoryPoolStorage::DirectoryPoolStorage(Environment & env, MemoryInfo & mi, String & baseDir)
+        :Object(env, mi), headerParser(env.create<HeaderParser>()) {
+    char buffer[FILENAME_MAX];
+    baseDir >> buffer;
+    this->baseDir = realpath(buffer, 0);
+}
+
 DirectoryPoolStorage::~DirectoryPoolStorage() {
     headerParser.destroy();
 }
@@ -96,7 +104,7 @@ StorageElement * DirectoryPoolStorage::getElement(String & classname, String & m
 }
 
 OStream & DirectoryPoolStorage::writeElement(String & classname, String & mimetype) {
-    String & filePath = buildFilePath(classname, mimetype);
+    String & filePath = buildFilePath(classname, mimetype, true);
     char buffer[FILENAME_MAX];
     filePath >> buffer;
     filePath.destroy();
@@ -108,16 +116,24 @@ OStream & DirectoryPoolStorage::writeElement(String & classname, String & mimety
     return env().create<StdFileIOStream2, std::FILE *>(file);
 }
 
-String & DirectoryPoolStorage::buildFilePath(String & classname, String & mimetype) {
+String & DirectoryPoolStorage::buildFilePath(String & classname, String & mimetype, bool createPath) {
+    char buffer[FILENAME_MAX];
     String & filePath = env().create<String, const char *>(baseDir);
     FullQualifiedName & fqn = env().create<FullQualifiedName>();
     fqn = classname;
     Iterator<String> & it = fqn.parts();
     while (it.hasNext()) {
+        if (createPath) {
+            filePath >> buffer;
+            mkdir(buffer, 0755);
+        }
         filePath << "/" << it.next();
     }
     if (mimetype == MIMETYPE_POOL) {
         filePath << ".pool";
+    }
+    if (mimetype == MIMETYPE_PASM) {
+        filePath << ".pasm";
     }
     return filePath;
 }

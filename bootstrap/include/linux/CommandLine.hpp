@@ -10,7 +10,15 @@
 class CommandLine: public PropertyContainer {
     protected:
     MutableCollection<String> &_arguments;
+    MutableMap<String, String> &_optionAliases;
+    MutableMap<String, MutableCollection<String>> &_optionSets;
     Bool &True;
+    MutableCollection<String> &Empty;
+    
+    virtual void registerOptionAlias(const char *option, const char *alias); 
+    virtual void registerOptionSet(const char *option);
+    virtual void setOption(String &option); 
+    virtual void setOption(String &option, String &value); 
         
     public:
     CommandLine(Environment & env, MemoryInfo & mi);
@@ -18,6 +26,9 @@ class CommandLine: public PropertyContainer {
     
     virtual bool parse(int argc, char* argv[]);
     inline Iterator<String> & arguments() { return _arguments.iterator(); }
+    
+    virtual int optionSetSize(const char *option);
+    virtual Iterator<String> & optionSet(const char *option);
 };
 
 // http://docopt.org/
