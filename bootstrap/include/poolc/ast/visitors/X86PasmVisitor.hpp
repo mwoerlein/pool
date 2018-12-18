@@ -3,17 +3,20 @@
 
 #include "poolc/ast/Visitor.hpp"
 
+#include "sys/String.hpp"
 #include "sys/stream/OStream.hpp"
+#include "poolc/storage/PoolStorage.hpp"
 
 class X86PasmVisitor: public Visitor {
     private:
-    OStream & out;
-    TranslationUnitNode * curUnit;
+    String & mime;
+    PoolStorage & ps;
+    OStream * curOut;
     ClassDefNode * curClass;
     ClassDefNode * curSuper;
     
     public:
-    X86PasmVisitor(Environment &env, MemoryInfo &mi, OStream &out);
+    X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps);
     virtual ~X86PasmVisitor();
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;

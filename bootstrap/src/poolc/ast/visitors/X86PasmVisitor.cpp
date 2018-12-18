@@ -49,20 +49,22 @@
 #define OFFSET(start, end) "(" << end << " - " << start << ")"
 #define CLASS_OFFSET(end) "(" << end << " - " << classDesc() << ")"
 #define INSTANCE_OFFSET(end) "(" << end << " - " << instanceStart() << ")"
-#define LABEL(l) out << l << ":\n";
-#define LONG(l) out << "    .long " << l << "\n";
-#define ASCIZ(str) {(str).escapeToStream(out << "    .asciz "); out << "\n";}
-#define LOCAL(l,v) out << l << " := " << v << "\n";
-#define GLOBAL(l,v) out << ".global " << l << " := " << v << "\n";
+#define LABEL(l) *curOut << l << ":\n";
+#define LONG(l) *curOut << "    .long " << l << "\n";
+#define ASCIZ(str) {(str).escapeToStream(*curOut << "    .asciz "); *curOut << "\n";}
+#define LOCAL(l,v) *curOut << l << " := " << v << "\n";
+#define GLOBAL(l,v) *curOut << ".global " << l << " := " << v << "\n";
 
 // public
-X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, OStream &out)
-        :Object(env, mi), out(out),
-         curClass(0), curSuper(0) {}
-X86PasmVisitor::~X86PasmVisitor() {}
+X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps)
+        :Object(env, mi), ps(ps),
+         mime(env.create<String, const char*>(MIMETYPE_PASM)),
+         curOut(0), curClass(0), curSuper(0) {}
+X86PasmVisitor::~X86PasmVisitor() {
+    mime.destroy();
+}
 
 bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
-    curUnit = &translationUnit;
     translationUnit.classes.acceptAll(*this);
     return true;
 }
@@ -75,29 +77,28 @@ bool X86PasmVisitor::visit(UseStatementNode & useStmt) {
     return true;
 }
 
-bool X86PasmVisitor::visit(ClassRefNode & classRef) {
-    out << "// class-ref " << classRef.name << "\n";
-    return true;
-}
-
 bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     curClass = &classDef;
-    
-    out << "/*[meta]\n";
-    out << "mimetype = " << MIMETYPE_PASM << "\n";
-    out << "description = class \"" << curClass->fullQualifiedName << "\"\n";
-    out << "[pool]\n";
-    out << "version = 0.1.0\n";
-    out << "class = true\n";
-    if (curClass->bootstrap) {
-        out << "bootstrapOffset = " << gMethodDeclOffset(curClass->bootstrap) << "\n";
+    curOut = &ps.writeElement(curClass->fullQualifiedName, mime);
+    if (!curOut) {
+        return false;
     }
-    out << "[pool_source]\n";
-    out << "unit = " << curUnit->name << "\n";
-    out << "*/\n";
+    
+    *curOut << "/*[meta]\n";
+    *curOut << "mimetype = " << MIMETYPE_PASM << "\n";
+    *curOut << "description = class \"" << curClass->fullQualifiedName << "\"\n";
+    *curOut << "[pool]\n";
+    *curOut << "version = 0.1.0\n";
+    *curOut << "class = true\n";
+    if (curClass->bootstrap) {
+        *curOut << "bootstrapOffset = " << gMethodDeclOffset(curClass->bootstrap) << "\n";
+    }
+    *curOut << "[pool_source]\n";
+    *curOut << "unit = " << curClass->unit->name << "\n";
+    *curOut << "*/\n";
     
     // header
-    out << "// class " << curClass->name << "\n";
+    *curOut << "// class " << curClass->name << "\n";
     LABEL(classDesc());
     LONG("0x15AC1A55");
     LONG("0");
@@ -110,7 +111,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
 
     // dependent classes
-    out << "\n// class tab\n";
+    *curOut << "\n// class tab\n";
     LABEL(classTabs());
     {
         Iterator<ClassDefNode> &it = curClass->supers.iterator();
@@ -128,14 +129,14 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
         }
         it.destroy();
     }
-    out << "// class tab end\n";
+    *curOut << "// class tab end\n";
     LONG("0");
     LONG("0");
     LONG("0");
     LONG("0");
 
     // vtabs
-    out << "\n// method tabs\n";
+    *curOut << "\n// method tabs\n";
     LABEL(methodTabs());
     {
         Iterator<ClassDefNode> &it = curClass->supers.iterator();
@@ -148,14 +149,14 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     }
     
     // constants
-    out << "\n// constants";
+    *curOut << "\n// constants";
     curClass->consts.acceptAll(*this);
     curClass->intConsts.acceptAll(*this);
     {
         Iterator<ClassDefNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
-            out << "\n// class-name " << curSuper->name << "\n";
+            *curOut << "\n// class-name " << curSuper->name << "\n";
             LOCAL(
                 classNameOffset(curSuper),
                 CLASS_OFFSET(className(curSuper))
@@ -167,7 +168,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     }
     
     // instance template and variables
-    out << "\n// instance template\n";
+    *curOut << "\n// instance template\n";
     LABEL(instanceStart());
     LONG("0"); // @class-desc
     LONG("0"); // @meminfo
@@ -211,9 +212,17 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LABEL(instanceEnd());
     
     // methods
-    out << "\n// method definitions";
+    *curOut << "\n// method definitions";
     curClass->methods.acceptAll(*this);
     
+    curOut->destroy();
+    curOut = 0;
+    
+    return true;
+}
+
+bool X86PasmVisitor::visit(ClassRefNode & classRef) {
+    *curOut << "// class-ref " << classRef.name << "\n";
     return true;
 }
 
@@ -232,7 +241,7 @@ bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
 }
 
 bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
-    out << "\n// method " << methodDef.name << "\n";
+    *curOut << "\n// method " << methodDef.name << "\n";
     
     switch (methodDef.kind) {
         case abstract:
@@ -251,18 +260,18 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
             );
             LABEL(methodDecl(&methodDef));
             
-            out << "    pushl %ebp; movl %esp, %ebp\n";
-            out << "    \n";
+            *curOut << "    pushl %ebp; movl %esp, %ebp\n";
+            *curOut << "    \n";
             methodDef.body.acceptAll(*this);
-            out << "    \n";
-            out << "    leave\n";
-            out << "    ret\n";
+            *curOut << "    \n";
+            *curOut << "    leave\n";
+            *curOut << "    ret\n";
     }
     return true;
 }
 
 bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
-    out << "// variable " << variableDef.name << "\n";
+    *curOut << "// variable " << variableDef.name << "\n";
     if (curSuper->equals(*curClass)) {
         GLOBAL(
             gInstanceVarOffset(curSuper, &variableDef),
@@ -275,7 +284,7 @@ bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
 }
 
 bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
-    out << "\n// string " << constDef.name << "\n";
+    *curOut << "\n// string " << constDef.name << "\n";
     LOCAL(
         constStringOffset(&constDef),
         CLASS_OFFSET(constString(&constDef))
@@ -286,7 +295,7 @@ bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
 }
 
 bool X86PasmVisitor::visit(IntConstDefNode & constDef) {
-    out << "\n// int " << constDef.name << "\n";
+    *curOut << "\n// int " << constDef.name << "\n";
     if (constDef.global) {
         GLOBAL(
             gConstInt(&constDef),
@@ -302,6 +311,6 @@ bool X86PasmVisitor::visit(IntConstDefNode & constDef) {
 }
 
 bool X86PasmVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
-    out << pasmInstruction.pasm << "\n";
+    *curOut << pasmInstruction.pasm << "\n";
     return true;
 }
