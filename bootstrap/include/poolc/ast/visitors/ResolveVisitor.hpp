@@ -3,14 +3,14 @@
 
 #include "poolc/ast/Visitor.hpp"
 
-#include "poolc/ast/SimpleFactory.hpp"
+#include "poolc/parser/ClassLoader.hpp"
 
 class ResolveVisitor: public Visitor {
     private:
-    SimpleFactory & factory;
+    ClassLoader & loader;
     
     public:
-    ResolveVisitor(Environment &env, MemoryInfo &mi, SimpleFactory & factory);
+    ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader);
     virtual ~ResolveVisitor();
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;

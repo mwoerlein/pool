@@ -2,11 +2,7 @@
 #include "linux/CommandLine.hpp"
 #include "linux/DirectoryPoolStorage.hpp"
 
-#include "poolc/storage/Types.hpp"
-#include "poolc/storage/ClassPathStorage.hpp"
-#include "poolc/parser/PoolParser.hpp"
-#include "poolc/ast/SimpleFactory.hpp"
-#include "poolc/ast/visitors/ResolveVisitor.hpp"
+#include "poolc/parser/ClassLoader.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
 static const char PROGRAM[] = "poolbc";
@@ -53,57 +49,35 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             return -1;
         }
         
-        SimpleFactory &f = env().create<SimpleFactory>();
-        String & mimePasm = env().create<String, const char*>(MIMETYPE_PASM);
-        
-        DirectoryPoolStorage &out = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
-        ClassPathStorage &cp = env().create<ClassPathStorage>();
+        ClassLoader &loader = env().create<ClassLoader>();
         {
             Iterator<String> &it = optionSet("classpath");
             while (it.hasNext()) {
-                cp.addStore(env().create<DirectoryPoolStorage, String&>(it.next()));
+                loader.addStore(env().create<DirectoryPoolStorage, String&>(it.next()));
             }
             it.destroy();
         }
         
-        Iterator<String> & argIt = arguments();
-        while (argIt.hasNext()) {
-            String &name = argIt.next();
-//            env().out()<<"compile "<<name<<"\n";
-            
-            TranslationUnitNode *unit = 0;
-            
-            if (StorageElement *e = cp.getElement(name)) {
-                IStream &infile = e->getContent();
-                PoolParser &p = env().create<PoolParser>();
-                unit = p.parse(infile, name);
-                p.destroy();
-                infile.destroy();
-            }
-            
-            if (unit) {
-                Visitor &resolve = env().create<ResolveVisitor, SimpleFactory &>(f);
-                unit->accept(resolve);
-                resolve.destroy();
+        DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
+        Visitor &dump = env().create<X86PasmVisitor, PoolStorage &>(outPS);
+        
+        {
+            Iterator<String> &it = arguments();
+            while (it.hasNext()) {
+                String &name = it.next();
+//                env().out()<<"compile "<<name<<"\n";
                 
-                OStream &output = out.writeElement(name, mimePasm);
-                if (&output) {
-                    Visitor &dump = env().create<X86PasmVisitor, OStream &>(output);
-                    unit->accept(dump);
-                    dump.destroy();
-                    output.destroy();
+                if (ClassDefNode * classDef = loader.getClass(name)) {
+                    classDef->accept(dump);
                 }
-                
-                unit->destroy();
             }
+            it.destroy();
         }
-        argIt.destroy();
         
-        out.destroy();
-        cp.destroy();
+        dump.destroy();
+        outPS.destroy();
+        loader.destroy();
         
-        mimePasm.destroy();
-        f.destroy();
         return 0;
     }
 };
