@@ -34,7 +34,7 @@ class B extends Thread, A {
             addl _my_B_cno_my_A, %eax   // "/my/A"
             subl 4, %esp  # return value of createInstance
             pushl %eax
-            pushl %edi; pushl _my_Runtime_m_createInstance; call (%edi)
+            pushl %edi; pushl _my_core_Runtime_m_createInstance; call (%edi)
         	addl 12, %esp
             popl %edx; // inst_A (type A)
             
@@ -48,7 +48,7 @@ class B extends Thread, A {
         	addl 12, %esp
             
             pushl %edx
-            pushl %edi; pushl _my_Runtime_m_destroyInstance; call (%edi)
+            pushl %edi; pushl _my_core_Runtime_m_destroyInstance; call (%edi)
         	addl 12, %esp
             
             popl %edi
@@ -69,14 +69,14 @@ class B extends Thread, A {
         	addl 8, %esp
             popl %edx           // Runtime(Type Runtime)
             
-            pushl 0x40; pushl _my_Runtime_c_err // '@'
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x40; pushl _my_core_Runtime_c_err // '@'
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
             movl 8(%ebp), %eax         // @class-desc "B"
             addl _my_B_coso_doit, %eax // "DoIt "
-            pushl %eax; pushl _my_Runtime_c_out
-            pushl %edx; pushl _my_Runtime_m_printString; call (%edx)
+            pushl %eax; pushl _my_core_Runtime_c_out
+            pushl %edx; pushl _my_core_Runtime_m_printString; call (%edx)
             addl 16, %esp
             
             subl 4, %esp    // return value of equals
@@ -85,12 +85,12 @@ class B extends Thread, A {
             addl 12, %esp
             popl %eax
             
-            pushl %eax; pushl _my_Runtime_c_out
-            pushl %edx; pushl _my_Runtime_m_printInt; call (%edx)
+            pushl %eax; pushl _my_core_Runtime_c_out
+            pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
             addl 16, %esp
             
-            pushl 0x20; pushl _my_Runtime_c_out // ' '
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x20; pushl _my_core_Runtime_c_out // ' '
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
             subl 4, %esp    // return value of equals
@@ -99,46 +99,46 @@ class B extends Thread, A {
             addl 12, %esp
             popl %eax
             
-            pushl %eax; pushl _my_Runtime_c_out
-            pushl %edx; pushl _my_Runtime_m_printInt; call (%edx)
+            pushl %eax; pushl _my_core_Runtime_c_out
+            pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
             addl 16, %esp
             
             subl 4, %esp    // return value of allocate
             pushl 0x124
-            pushl %edx; pushl _my_Runtime_m_allocate; call (%edx)
+            pushl %edx; pushl _my_core_Runtime_m_allocate; call (%edx)
         	addl 12, %esp
             popl %esi
             
-            pushl 0x20; pushl _my_Runtime_c_out // ' '
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x20; pushl _my_core_Runtime_c_out // ' '
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
-            pushl %esi; pushl _my_Runtime_c_out
-            pushl %edx; pushl _my_Runtime_m_printHex; call (%edx)
+            pushl %esi; pushl _my_core_Runtime_c_out
+            pushl %edx; pushl _my_core_Runtime_m_printHex; call (%edx)
             addl 16, %esp
             
-            pushl 0x20; pushl _my_Runtime_c_out // ' '
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x20; pushl _my_core_Runtime_c_out // ' '
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
-            pushl (%esi); pushl _my_Runtime_c_out
-            pushl %edx; pushl _my_Runtime_m_printHex; call (%edx)
+            pushl (%esi); pushl _my_core_Runtime_c_out
+            pushl %edx; pushl _my_core_Runtime_m_printHex; call (%edx)
             addl 16, %esp
             
-            pushl 0x20; pushl _my_Runtime_c_out // ' '
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x20; pushl _my_core_Runtime_c_out // ' '
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
-            pushl 4(%esi); pushl _my_Runtime_c_out 
-            pushl %edx; pushl _my_Runtime_m_printHex; call (%edx)
+            pushl 4(%esi); pushl _my_core_Runtime_c_out 
+            pushl %edx; pushl _my_core_Runtime_m_printHex; call (%edx)
             addl 16, %esp
             
-            pushl 0xa; pushl _my_Runtime_c_out // '/n'
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0xa; pushl _my_core_Runtime_c_out // '/n'
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
             pushl %esi 
-            pushl %edx; pushl _my_Runtime_m_free; call (%edx)
+            pushl %edx; pushl _my_core_Runtime_m_free; call (%edx)
             addl 12, %esp
             
             subl 4, %esp    // return value of getRow

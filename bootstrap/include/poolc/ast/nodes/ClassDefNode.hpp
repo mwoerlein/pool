@@ -6,14 +6,16 @@
 #include "sys/String.hpp"
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/collection/NodeMap.hpp"
+#include "poolc/parser/token/FullQualifiedName.hpp"
 
 class ClassDefNode: public Node {
     public:
     String & name;
-    String & fullQualifiedName;
+    FullQualifiedName & fullQualifiedName;
     String & globalPrefix;
     String & localPrefix;
     MethodDefNode * bootstrap;
+    TranslationUnitNode * unit;
     
     NodeList<ClassRefNode> &extends;
     NodeList<VariableDefNode> &variables;

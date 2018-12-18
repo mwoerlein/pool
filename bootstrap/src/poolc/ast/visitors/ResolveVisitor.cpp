@@ -43,21 +43,21 @@ bool ResolveVisitor::visit(ClassRefNode & classRef) {
 
 bool ResolveVisitor::visit(ClassDefNode & classDef) {
     if (classDef.supers.isEmpty()) {
-        classDef.fullQualifiedName << "/my/" << classDef.name;
+        if (classDef.unit) {
+            classDef.fullQualifiedName << classDef.unit->ns->name << "::" << classDef.name;
+        // TODO: #2 remove hardcoded namespaces with simple factory
+        } else if (classDef.name == "A" || classDef.name == "B") {
+            classDef.fullQualifiedName << "my::" << classDef.name;
+        } else {
+            classDef.fullQualifiedName << "my::core::" << classDef.name;
+        }
+
         {
-            char tmp;
-            IStream &in = classDef.fullQualifiedName.toIStream();
-            while (!in.isEmpty()) {
-                in >> tmp;
-                switch (tmp) {
-                    case '/':
-                        classDef.globalPrefix << '_';
-                        break;
-                    default:
-                        classDef.globalPrefix << tmp;
-                }
+            Iterator<String> &it = classDef.fullQualifiedName.parts();
+            while (it.hasNext()) {
+                classDef.globalPrefix << '_' << it.next();
             }
-            in.destroy();
+            it.destroy();
             (classDef.localPrefix << '_').printuint(classDef.fullQualifiedName.hash(), 16, 8);
         }
         

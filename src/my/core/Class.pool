@@ -17,9 +17,9 @@ class Class extends Object {
     <int> getDesc() {
         __pasm__ (<"
             movl 12(%ebp), %eax                     // @this (Type Class)
-            movl _my_Class_hvo_my_Class(%eax), %ebx // inst vars offset (Class)
+            movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
             addl 4(%eax), %ebx                      // @this.vars(Class)
-            movl _my_Class_i_desc(%ebx), %eax       // @class desc
+            movl _my_core_Class_i_desc(%ebx), %eax       // @class desc
             movl %eax, 16(%ebp)                     // return @class desc
         ">);
     }
@@ -29,12 +29,12 @@ class Class extends Object {
     <> setDesc(int desc) {
         __pasm__ (<"
             movl 12(%ebp), %eax                     // @this (Type Class)
-            movl _my_Class_hvo_my_Class(%eax), %ebx // inst vars offset (Class)
+            movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
             addl 4(%eax), %ebx                      // @this.vars(Class)
             movl 16(%ebp), %eax                     // param @class desc
-            movl %eax, _my_Class_i_desc(%ebx)       // store @class desc
+            movl %eax, _my_core_Class_i_desc(%ebx)       // store @class desc
             movl 12(%ebp), %ebx                     // @this (Type Class)
-            movl %ebx, _my_Class_coi_ch_inst_handle(%eax)   // store @this (Type Class) in class desc
+            movl %ebx, _my_core_Class_coi_ch_inst_handle(%eax)   // store @this (Type Class) in class desc
         ">);
     }
     
@@ -42,10 +42,10 @@ class Class extends Object {
     <cstring> getName() {
         __pasm__ (<"
             movl 12(%ebp), %eax                     // @this (Type Class)
-            movl _my_Class_hvo_my_Class(%eax), %ebx // inst vars offset (Class)
+            movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
             addl 4(%eax), %ebx                      // @this.vars(Class)
-            movl _my_Class_i_desc(%ebx), %eax       // @class desc
-            addl _my_Class_coi_ch_name(%eax), %eax  // load reference to cstring
+            movl _my_core_Class_i_desc(%ebx), %eax       // @class desc
+            addl _my_core_Class_coi_ch_name(%eax), %eax  // load reference to cstring
             movl %eax, 16(%ebp)                     // return cstring-ref
         ">);
     }

@@ -16,7 +16,7 @@ class Object {
             movl 12(%ebp), %eax    // @this (Type Object)
             movl 4(%eax), %eax     // @this
             movl (%eax), %eax      // @class desc
-            movl _my_Object_coi_ch_inst_handle(%eax), %eax // @class handle
+            movl _my_core_Object_coi_ch_inst_handle(%eax), %eax // @class handle
             movl %eax, 16(%ebp)    // return @class handle
         ">);
     }
@@ -47,9 +47,9 @@ class Object {
     <Runtime> rt() {
         __pasm__ (<"
             movl 12(%ebp), %eax                         // @this (Type Object)
-            movl _my_Object_hvo_my_Object(%eax), %ebx   // inst vars offset (Object)
+            movl _my_core_Object_hvo_my_core_Object(%eax), %ebx   // inst vars offset (Object)
             addl 4(%eax), %ebx                          // @this.vars(Object)
-            movl _my_Object_i_runtime(%ebx), %eax       // load @runtime (Type Runtime)
+            movl _my_core_Object_i_runtime(%ebx), %eax       // load @runtime (Type Runtime)
             movl %eax, 16(%ebp)                         // return @runtime (Type Runtime)
         ">);
     }
@@ -58,10 +58,10 @@ class Object {
     <> setRt(Runtime rt) {
         __pasm__ (<"
             movl 12(%ebp), %eax                         // @this (Type Object)
-            movl _my_Object_hvo_my_Object(%eax), %ebx   // inst vars offset (Object)
+            movl _my_core_Object_hvo_my_core_Object(%eax), %ebx   // inst vars offset (Object)
             addl 4(%eax), %ebx                          // @this.vars(Object)
             movl 16(%ebp), %eax                         // arg @runtime (Type Runtime)
-            movl %eax, _my_Object_i_runtime(%ebx)       // store @runtime (Type Runtime)
+            movl %eax, _my_core_Object_i_runtime(%ebx)       // store @runtime (Type Runtime)
         ">);
     }
 }

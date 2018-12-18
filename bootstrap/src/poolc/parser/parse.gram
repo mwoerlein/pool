@@ -70,6 +70,7 @@ translation_unit:
     {
         $$ = $1;
         $$->classes.add(*$2);
+        $2->unit = $1;
     }
 ;
 

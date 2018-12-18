@@ -71,41 +71,41 @@ class A extends Object {
             popl %eax // Class instance ("A"|"B") (Type Class)
 /*
             subl 4, %esp  # return value of getClass
-            pushl %eax; pushl _my_Class_m_getClass; call (%eax)
+            pushl %eax; pushl _my_core_Class_m_getClass; call (%eax)
         	addl 8, %esp
             popl %eax // Class instance "Class" (Type Class)
 */
             subl 4, %esp  # return value of getName
-            pushl %eax; pushl _my_Class_m_getName; call (%eax)
+            pushl %eax; pushl _my_core_Class_m_getName; call (%eax)
         	addl 8, %esp
             popl %eax // name cstring ref
             
-            pushl %eax; pushl _my_Runtime_c_out
-            pushl %edx; pushl _my_Runtime_m_printString; call (%edx)
+            pushl %eax; pushl _my_core_Runtime_c_out
+            pushl %edx; pushl _my_core_Runtime_m_printString; call (%edx)
             addl 16, %esp
             
-            pushl 0x20; pushl _my_Runtime_c_out // ' '
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x20; pushl _my_core_Runtime_c_out // ' '
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
             movl _my_A_hvo_my_A(%ecx), %ebx     // inst vars offset (A)
             addl 4(%ecx), %ebx                  // @this.vars(A)
-            push _my_A_i_column(%ebx); pushl _my_Runtime_c_out // column
-            pushl %edx; pushl _my_Runtime_m_printInt; call (%edx)
+            push _my_A_i_column(%ebx); pushl _my_core_Runtime_c_out // column
+            pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
             addl 16, %esp
             
-            pushl 0x20; pushl _my_Runtime_c_out // ' '
-            pushl %edx; pushl _my_Runtime_m_printChar; call (%edx)
+            pushl 0x20; pushl _my_core_Runtime_c_out // ' '
+            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
-            pushl 16(%ebp); pushl _my_Runtime_c_out // row
-            pushl %edx; pushl _my_Runtime_m_printInt; call (%edx)
+            pushl 16(%ebp); pushl _my_core_Runtime_c_out // row
+            pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
             addl 16, %esp
             
             movl 8(%ebp), %eax      // @class-desc "A"
             addl _my_A_coso_test, %eax
-            pushl %eax; pushl _my_Runtime_c_err
-            pushl %edx; pushl _my_Runtime_m_printString; call (%edx)
+            pushl %eax; pushl _my_core_Runtime_c_err
+            pushl %edx; pushl _my_core_Runtime_m_printString; call (%edx)
             addl 16, %esp
             
             popl %ecx
