@@ -10,15 +10,18 @@ ParseBuffer::ParseBuffer(Environment &env, MemoryInfo &mi, size_t size, size_t l
     buffersInfo(env.getAllocator().allocate((size + lookahead) * (sizeof(char) + sizeof(int) + sizeof(int)))),
     buffer((char*) buffersInfo.buf),
     linesBuffer((int*) memoryEnd(buffersInfo.buf, (size + lookahead) * sizeof(char))),
-    columnsBuffer((int*) memoryEnd(buffersInfo.buf, (size + lookahead) * (sizeof(char) + sizeof(int)))),
-    bufferPos(-size),
-    currentLine(1),
-    currentColumn(1) {
-    token = current = marker = ctxmarker = limit = buffer + size;
+    columnsBuffer((int*) memoryEnd(buffersInfo.buf, (size + lookahead) * (sizeof(char) + sizeof(int)))) {
+    resetBuffer();
 }
 
 ParseBuffer::~ParseBuffer() {
     env().getAllocator().free(buffersInfo);
+}
+
+void ParseBuffer::resetBuffer() {
+    token = current = marker = ctxmarker = limit = buffer + size;
+    bufferPos = -size;
+    currentLine = currentColumn = 1;
 }
 
 bool ParseBuffer::freeBuffer(size_t need) {

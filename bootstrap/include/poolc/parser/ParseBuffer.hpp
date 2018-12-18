@@ -22,6 +22,8 @@ class ParseBuffer: virtual public Object {
     
     protected:
     virtual void shift(size_t freed) = 0;
+    virtual void resetBuffer();
+    virtual bool fillBuffer(size_t need, IStream & input);
     
     public:
     char *buffer;
@@ -34,8 +36,6 @@ class ParseBuffer: virtual public Object {
     public:
     ParseBuffer(Environment &env, MemoryInfo &mi, size_t size, size_t lookahead);
     virtual ~ParseBuffer();
-    
-    bool fillBuffer(size_t need, IStream & input);
     
     inline int getPos(char *ptr) { return bufferPos + (ptr - buffer); }
     inline int getLine(char *ptr) { return linesBuffer[ptr - buffer]; }

@@ -30,6 +30,7 @@ PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SI
 PoolParser::~PoolParser() {}
 
 TranslationUnitNode * PoolParser::parse(IStream &input, String & name) {
+    resetBuffer();
     TranslationUnitNode &unit = env().create<TranslationUnitNode>();
     unit.name = name;
     Parser parser(*this);

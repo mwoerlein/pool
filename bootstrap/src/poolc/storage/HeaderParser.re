@@ -31,6 +31,7 @@ HeaderParser::~HeaderParser() {}
 
 size_t HeaderParser::parse(IStream & input, PropertyContainer & result) {
     char *b1, *b2, *o1, *o2, *o3, *o4;
+    resetBuffer();
     
     if (!fillBuffer(3, input) || (*current++ != '/') || (*current++ != '*') || (*current != '[')) {
         // no parsable header found
