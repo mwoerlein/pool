@@ -70,6 +70,9 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
     }
     
     classDef.fullQualifiedName << curUnit->ns->name << "::" << classDef.name;
+    if (classDef.fullQualifiedName != curUnit->name) {
+        env().err() << curUnit->name << ": class name '" << classDef.fullQualifiedName << "' does not match compilation unit\n";
+    }
     classDef.unit = curUnit;
     loader.registerClass(classDef);
 
@@ -113,8 +116,6 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
         switch (methodDef.kind) {
             case naked:
                 continue;
-            case bootstrap:
-                classDef.bootstrap = &methodDef;
         }
         MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
         MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
@@ -123,6 +124,14 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
     }
     mit.destroy();
     
+    if (curUnit->element.hasStringProperty("pool.bootstrap")) {
+        String & bsName = curUnit->element.getStringProperty("pool.bootstrap");
+        MethodRefNode &bsRef = classDef.methodRefs.get(bsName);
+        if (!&bsRef) {
+            env().err() << curUnit->name << ": missing bootstrap method '" << bsName << "'\n";
+            return false;
+        }
+    }
     return true;
 }
 

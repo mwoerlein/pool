@@ -3,7 +3,8 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 [pool]
-bootstrap = my::core::Runtime:bootstrap(int, int)
+bootstrap = bootstrap
+bootstrap2 = my::core::Runtime:bootstrap(int, int)
 */
 namespace my::core;
 
@@ -53,8 +54,7 @@ class Runtime extends Object {
     int syscall_runtime;
     int syscall_entry;
     
-//    global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
-    __bootstrap__ <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
+    global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
         __pasm__ (<"
             subl 12, %esp
             pushad

@@ -84,17 +84,32 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
         return false;
     }
     
+    StorageElement &e = curClass->unit->element;
+    
     *curOut << "/*[meta]\n";
     *curOut << "mimetype = " << MIMETYPE_PASM << "\n";
     *curOut << "description = class \"" << curClass->fullQualifiedName << "\"\n";
     *curOut << "[pool]\n";
-    *curOut << "version = 0.1.0\n";
     *curOut << "class = true\n";
-    if (curClass->bootstrap) {
-        *curOut << "bootstrapOffset = " << gMethodDeclOffset(curClass->bootstrap) << "\n";
+    if (e.hasStringProperty("meta.version")) {
+        *curOut << "version = " << e.getStringProperty("meta.version") << "\n";
+    }
+    if (e.hasStringProperty("pool.bootstrap")) {
+        MethodDefNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
+        if (bs.scope != scope_class || bs.kind != normal) {
+            env().err() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessable via pool-ABI.\n";
+            return false;
+        }
+        *curOut << "bootstrapOffset = " << gMethodDeclOffset(&bs) << "\n";
     }
     *curOut << "[pool_source]\n";
     *curOut << "unit = " << curClass->unit->name << "\n";
+    if (e.hasStringProperty("meta.version")) {
+        *curOut << "version = " << e.getStringProperty("meta.version") << "\n";
+    }
+    if (e.hasStringProperty("meta.author")) {
+        *curOut << "author = " << e.getStringProperty("meta.author") << "\n";
+    }
     *curOut << "*/\n";
     
     // header

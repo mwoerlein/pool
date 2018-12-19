@@ -6,6 +6,7 @@
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
 #include "poolc/parser/ParseBuffer.hpp"
+#include "poolc/storage/StorageElement.hpp"
 
 class Parser;
 class PoolParser: public ParseBuffer {
@@ -27,7 +28,7 @@ class PoolParser: public ParseBuffer {
     public:
     PoolParser(Environment &env, MemoryInfo &mi);
     virtual ~PoolParser();
-    virtual TranslationUnitNode * parse(IStream &input, String &name);
+    virtual TranslationUnitNode * parse(StorageElement &element, String &name);
     
     virtual TranslationUnitNode * getUnit();
     virtual bool error(const char * msg, int line = -1, int column = -1);

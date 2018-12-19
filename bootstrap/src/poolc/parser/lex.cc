@@ -13,7 +13,6 @@ int Parser::makeGlobal()    { return GLOBAL; }
 int Parser::makeNamespace() { return NAMESPACE; }
 int Parser::makeUse()       { return USE; }
 
-int Parser::makeBootstrap() { return BOOTSTRAP; }
 int Parser::makeNaked()     { return NAKED; }
 int Parser::makePasm()      { return PASM; }
 

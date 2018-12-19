@@ -28,7 +28,6 @@
 %token NAMESPACE
 %token USE
 
-%token BOOTSTRAP
 %token NAKED
 %token PASM
 
@@ -319,23 +318,6 @@ method_decl:
         $$->last_line = @11.last_line;
         $$->last_column = @11.last_column;
     }
-|   BOOTSTRAP '<' id_list_empty '>' ID '(' id_map_empty ')' '{' method_body_empty '}'
-    {
-        $$ = $10;
-        $$->name = *$5;
-        $$->kind = bootstrap;
-        $$->scope = scope_class;
-        
-        $10->first_line = @9.first_line;
-        $10->first_column = @9.first_column;
-        $10->last_line = @11.last_line;
-        $10->last_column = @11.last_column;
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @11.last_line;
-        $$->last_column = @11.last_column;
-    }
 |   ABSTRACT '<' id_list_empty '>' ID '(' id_map_empty ')' ';'
     {
         $$ = &driver.env().create<MethodDefNode>();
@@ -350,7 +332,6 @@ method_decl:
 |   '<' error '}'
 |   GLOBAL '<' error '}'
 |   NAKED '<' error '}'
-|   BOOTSTRAP '<' error '}'
 |   ABSTRACT '<' error ';'
 ;
 

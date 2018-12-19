@@ -34,7 +34,6 @@ class Parser: public ParserBase
         int makeNamespace();
         int makeUse();
         
-        int makeBootstrap();
         int makeNaked();
         int makePasm();
         

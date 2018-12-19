@@ -6,16 +6,18 @@
 
 #include "sys/String.hpp"
 #include "poolc/ast/collection/NodeList.hpp"
+#include "poolc/storage/StorageElement.hpp"
 
 class TranslationUnitNode: public Node, private HashMap<String, ClassDefNode> {
     public:
-    String & name;
+    StorageElement &element;
+    String &name;
     
     NamespaceDefNode * ns;
     NodeList<UseStatementNode> &uses;
     NodeList<ClassDefNode> &classes;
     
-    TranslationUnitNode(Environment &env, MemoryInfo &mi);
+    TranslationUnitNode(Environment &env, MemoryInfo &mi, StorageElement &element);
     virtual ~TranslationUnitNode();
     
     virtual bool accept(Visitor & visitor) override;

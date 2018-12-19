@@ -30,7 +30,7 @@ ClassDefNode * ClassLoader::getClass(String & fullQualifiedName) {
 //        env().out()<<"load and parse "<<fullQualifiedName<<"\n";
         
         IStream &in = e->getContent();
-        TranslationUnitNode * unit = parser.parse(in, fullQualifiedName);
+        TranslationUnitNode * unit = parser.parse(*e, fullQualifiedName);
         in.destroy();
         if (!unit) {
             return 0;

@@ -29,17 +29,19 @@
 PoolParser::PoolParser(Environment &env, MemoryInfo &mi):ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi), input(0), unit(0), parser(0) {}
 PoolParser::~PoolParser() {}
 
-TranslationUnitNode * PoolParser::parse(IStream &input, String & name) {
+TranslationUnitNode * PoolParser::parse(StorageElement &element, String & name) {
     resetBuffer();
-    TranslationUnitNode &unit = env().create<TranslationUnitNode>();
+    TranslationUnitNode &unit = env().create<TranslationUnitNode, StorageElement&>(element);
     unit.name = name;
     Parser parser(*this);
      
-    this->input = &input;
+    this->input = &element.getContent();
     this->unit = &unit;
     this->parser = &parser;
     
-    int parseResult = parser.parse(); 
+    int parseResult = parser.parse();
+    
+    this->input->destroy();
     this->input = 0;
     this->unit = 0;
     this->parser = 0;
@@ -166,7 +168,6 @@ int PoolParser::lex()
         "namespace"     { setLocation(); return parser->makeNamespace(); }
         "use"           { setLocation(); return parser->makeUse(); }
         
-        "__bootstrap__" { setLocation(); return parser->makeBootstrap(); }
         "__naked__"     { setLocation(); return parser->makeNaked(); }
         "__pasm__"      { setLocation(); return parser->makePasm(); }
         

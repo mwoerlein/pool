@@ -5,14 +5,16 @@
 #include "poolc/ast/nodes/UseStatementNode.hpp"
 
 // public
-TranslationUnitNode::TranslationUnitNode(Environment &env, MemoryInfo &mi)
+TranslationUnitNode::TranslationUnitNode(Environment &env, MemoryInfo &mi, StorageElement &element)
         :HashMap(env, mi), Object(env, mi),
+         element(element),
          name(env.create<String>()),
          uses(env.create<NodeList<UseStatementNode>>()),
          classes(env.create<NodeList<ClassDefNode>>()),
          ns(0) {
 }
 TranslationUnitNode::~TranslationUnitNode() {
+    element.destroy();
     name.destroy();
     uses.destroyAll();
     classes.destroyAll();

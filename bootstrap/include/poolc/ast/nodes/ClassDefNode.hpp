@@ -14,7 +14,6 @@ class ClassDefNode: public Node {
     FullQualifiedName & fullQualifiedName;
     String & globalPrefix;
     String & localPrefix;
-    MethodDefNode * bootstrap;
     TranslationUnitNode * unit;
     
     NodeList<ClassRefNode> &extends;

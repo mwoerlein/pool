@@ -7,7 +7,7 @@
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/nodes/InstructionNode.hpp"
 
-enum method_kind { abstract, naked, bootstrap, normal };
+enum method_kind { abstract, naked, normal };
 
 class MethodDefNode: public Node {
     public:

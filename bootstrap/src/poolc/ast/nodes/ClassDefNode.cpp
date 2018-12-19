@@ -17,7 +17,7 @@ ClassDefNode::ClassDefNode(Environment &env, MemoryInfo &mi)
          fullQualifiedName(env.create<FullQualifiedName>()),
          globalPrefix(env.create<String>()),
          localPrefix(env.create<String>()),
-         bootstrap(0), unit(0),
+         unit(0),
          extends(env.create<NodeList<ClassRefNode>>()),
          variables(env.create<NodeList<VariableDefNode>>()),
          consts(env.create<NodeList<CStringConstDefNode>>()),
