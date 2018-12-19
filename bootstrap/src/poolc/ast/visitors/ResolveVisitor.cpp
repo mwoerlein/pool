@@ -10,18 +10,24 @@
 
 // public
 ResolveVisitor::ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader)
-        :Object(env, mi), loader(loader) {}
+        :Object(env, mi), loader(loader), curUnit(0) {}
 ResolveVisitor::~ResolveVisitor() {}
 
 
 bool ResolveVisitor::visit(TranslationUnitNode & translationUnit) {
-    if (!translationUnit.ns) {
-        env().err() << translationUnit.name << ": " << "missing namespace" << "\n";
+    TranslationUnitNode *tmpUnit = curUnit;
+    curUnit = &translationUnit;
+    
+    if (!curUnit->ns) {
+        env().err() << curUnit->name << ": " << "missing namespace" << "\n";
+        curUnit = tmpUnit;
         return false;
     }
-    translationUnit.ns->accept(*this);
-    translationUnit.uses.acceptAll(*this);
-    translationUnit.classes.acceptAll(*this);
+    curUnit->ns->accept(*this);
+    curUnit->uses.acceptAll(*this);
+    curUnit->classes.acceptAll(*this);
+    
+    curUnit = tmpUnit;
     return true;
 }
 
@@ -30,22 +36,32 @@ bool ResolveVisitor::visit(NamespaceDefNode & namespaceDef) {
 }
 
 bool ResolveVisitor::visit(UseStatementNode & useStmt) {
-    return true;
+    ClassDefNode *classDef = loader.getClass(useStmt.name);
+    if (classDef) {
+        curUnit->registerClass(useStmt.alias, *classDef);
+    }
+    return classDef;
 }
 
 bool ResolveVisitor::visit(ClassRefNode & classRef) {
     if (!classRef.classDef) {
-        String &tmp = env().create<String>();
-        // TODO: #6 get full qualified name from use-statements
-        if (classRef.name == "A" || classRef.name == "B") {
-            tmp << "my::" << classRef.name;
+        ClassDefNode * classDef = 0;
+        if (classRef.name.isFullQualified()) {
+            classRef.classDef = loader.getClass(classRef.name);
         } else {
-            tmp << "my::core::" << classRef.name;
+            classRef.classDef = curUnit->getClass(classRef.name);
+            if (!classRef.classDef) {
+                String & fqn = env().create<String>();
+                fqn << curUnit->ns->name << "::" << classRef.name;
+                classRef.classDef = loader.getClass(fqn);
+                fqn.destroy();
+                if (classRef.classDef) {
+                    curUnit->registerClass(classRef.classDef->name, *classRef.classDef);
+                }
+            }
         }
-        classRef.classDef = loader.getClass(tmp);
-        tmp.destroy();
     }
-    return true;
+    return classRef.classDef;
 }
 
 bool ResolveVisitor::visit(ClassDefNode & classDef) {
@@ -53,10 +69,8 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
         env().out() << classDef.name << ": already resolved" << "\n";
     }
     
-    if (!classDef.unit) {
-        env().err() << classDef.name << ": " << "missing translation unit" << "\n";
-    }
-    classDef.fullQualifiedName << classDef.unit->ns->name << "::" << classDef.name;
+    classDef.fullQualifiedName << curUnit->ns->name << "::" << classDef.name;
+    classDef.unit = curUnit;
     loader.registerClass(classDef);
 
     {

@@ -96,7 +96,7 @@ StorageElement * DirectoryPoolStorage::getElement(String & classname, String & m
         input->destroy();
     }
     
-    if (element._offset < 0) {
+    if (element._offset == -1) {
         element.destroy();
         return 0;
     }

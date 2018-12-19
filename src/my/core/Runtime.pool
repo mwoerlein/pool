@@ -298,7 +298,7 @@ class Runtime extends Object {
     }
     
     // TODO: use generic method or special cast syntax instead of plain Object?
-    <Object> as(cstring name, Object any) {
+    <Object> cast(cstring name, Object any) {
         __pasm__ (<"
             pushl %ecx
             pushl %esi
@@ -357,7 +357,7 @@ class Runtime extends Object {
             subl 4, %esp        // return value of as
             pushl %eax
             pushl %ecx
-            pushl %esi; pushl _my_core_Runtime_m_as; call (%esi)
+            pushl %esi; pushl _my_core_Runtime_m_cast; call (%esi)
             addl 16, %esp
             popl %eax;          // @instance (type "Thread")
             addl 0, %eax; jz _crmct_cleanup // destroy instance if not a thread

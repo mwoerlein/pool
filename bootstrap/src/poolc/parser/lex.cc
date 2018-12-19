@@ -6,6 +6,7 @@
 int Parser::makeColonEqual() { return COLON_EQUAL; }
 
 int Parser::makeAbstract()  { return ABSTRACT; }
+int Parser::makeAs()        { return AS; }
 int Parser::makeClass()     { return CLASS; }
 int Parser::makeExtends()   { return EXTENDS; }
 int Parser::makeGlobal()    { return GLOBAL; }

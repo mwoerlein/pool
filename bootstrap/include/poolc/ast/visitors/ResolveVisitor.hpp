@@ -8,6 +8,7 @@
 class ResolveVisitor: public Visitor {
     private:
     ClassLoader & loader;
+    TranslationUnitNode * curUnit;
     
     public:
     ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader);

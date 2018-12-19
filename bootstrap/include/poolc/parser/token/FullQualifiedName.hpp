@@ -18,6 +18,7 @@ class FullQualifiedName: public String {
     using String::operator =;
     using OStream::operator <<;
     
+    inline bool isFullQualified() { return getParts().size() > 1; }
     inline Iterator<String> & parts() { return getParts().iterator(); }
     inline String & lastPart() { return *getParts().last(); }
 };

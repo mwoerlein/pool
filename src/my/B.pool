@@ -5,10 +5,10 @@ version = 0.1.0
 */
 namespace my;
 
-use my::core::Thread;
+use my::core::Thread as myThread;
 use my::core::Runtime;
 
-class B extends Thread, A {
+class B extends myThread, my::A {
     // TODO: remove after implicit string handling
     cstring doit := "OMG! Compiling work's! ";
     

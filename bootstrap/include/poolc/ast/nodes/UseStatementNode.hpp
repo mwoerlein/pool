@@ -7,6 +7,7 @@
 
 class UseStatementNode: public Node {
     public:
+    String & alias;
     FullQualifiedName & name;
     
     UseStatementNode(Environment &env, MemoryInfo &mi);

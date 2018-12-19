@@ -3,11 +3,11 @@
 
 #include "poolc/ast/Node.hpp"
 
-#include "sys/String.hpp"
+#include "poolc/parser/token/FullQualifiedName.hpp"
 
 class ClassRefNode: public Node {
     public:
-    String & name;
+    FullQualifiedName & name;
     ClassDefNode *classDef;
     
     ClassRefNode(Environment &env, MemoryInfo &mi);

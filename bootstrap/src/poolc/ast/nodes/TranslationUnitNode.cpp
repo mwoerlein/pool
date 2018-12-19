@@ -6,7 +6,7 @@
 
 // public
 TranslationUnitNode::TranslationUnitNode(Environment &env, MemoryInfo &mi)
-        :Object(env, mi),
+        :HashMap(env, mi), Object(env, mi),
          name(env.create<String>()),
          uses(env.create<NodeList<UseStatementNode>>()),
          classes(env.create<NodeList<ClassDefNode>>()),
@@ -21,4 +21,12 @@ TranslationUnitNode::~TranslationUnitNode() {
 
 bool TranslationUnitNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
+}
+
+ClassDefNode * TranslationUnitNode::getClass(String & alias) {
+    return &HashMap::get(alias);
+}
+
+void TranslationUnitNode::registerClass(String & alias, ClassDefNode & classDef) {
+    HashMap::set(alias, classDef);
 }

@@ -21,6 +21,7 @@
 %token COLON_EQUAL
 
 %token ABSTRACT
+%token AS
 %token CLASS
 %token EXTENDS
 %token GLOBAL
@@ -47,6 +48,7 @@
 %type <u_const_int_decl> const_int_decl
 %type <u_const_cstring_decl> const_cstring_decl
 %type <u_instruction> instruction
+%type <u_string_list> type_list
 %type <u_string_list> id_list
 %type <u_string_list> id_list_empty
 %type <u_string_map> id_map
@@ -70,7 +72,6 @@ translation_unit:
     {
         $$ = $1;
         $$->classes.add(*$2);
-        $2->unit = $1;
     }
 ;
 
@@ -104,12 +105,26 @@ use_stmt:
     {
         $$ = &driver.env().create<UseStatementNode>();
         $$->name = *$2;
+        $$->alias = $$->name.lastPart();
         $2->destroy();
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @3.last_line;
         $$->last_column = @3.last_column;
+    }
+|   USE FQN AS ID ';'
+    {
+        $$ = &driver.env().create<UseStatementNode>();
+        $$->name = *$2;
+        $$->alias = *$4;
+        $2->destroy();
+        $4->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @5.last_line;
+        $$->last_column = @5.last_column;
     }
 ;
 
@@ -130,7 +145,7 @@ class_decl:
         $$->last_line = @5.last_line;
         $$->last_column = @5.last_column;
     }
-|   CLASS ID EXTENDS id_list '{' class_body_empty '}'
+|   CLASS ID EXTENDS type_list '{' class_body_empty '}'
     {
         $$ = $6;
         $$->name = *$2;
@@ -153,6 +168,29 @@ class_decl:
         $$->first_column = @1.first_column;
         $$->last_line = @7.last_line;
         $$->last_column = @7.last_column;
+    }
+;
+
+type_list:
+    ID
+    {
+        $$ = &driver.env().create<LinkedList<String>>();
+        $$->add(*$1);
+    }
+|   FQN
+    {
+        $$ = &driver.env().create<LinkedList<String>>();
+        $$->add(*$1);
+    }
+|   type_list ',' ID
+    {
+        $$ = $1;
+        $$->add(*$3);
+    }
+|   type_list ',' FQN
+    {
+        $$ = $1;
+        $$->add(*$3);
     }
 ;
 

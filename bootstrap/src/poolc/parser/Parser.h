@@ -27,6 +27,7 @@ class Parser: public ParserBase
         int makeColonEqual();
         
         int makeAbstract();
+        int makeAs();
         int makeClass();
         int makeExtends();
         int makeGlobal();
