@@ -335,12 +335,13 @@ class Runtime extends Object {
         ">);
     }
     
-    <Thread> createThread(cstring name) {
+    <> createAndRunThread(cstring name) {
         __pasm__ (<"
+// TODO #3: inline method-indices in method-call-generation
+        _my_core_Thread_m_run := 40
             pushl %ecx
             pushl %esi
-        _crmct_start:
-            movl 0, 20(%ebp)    // default handle: NULL
+        _mcrmcart_start:
             movl 12(%ebp), %esi // @this (Type Runtime)
         ">);
         // createInstance
@@ -350,7 +351,7 @@ class Runtime extends Object {
             pushl %esi; pushl _my_core_Runtime_m_createInstance; call (%esi)
         	addl 12, %esp
             popl %ecx;          // @instance (type <classname>)
-            addl 0, %ecx; jz _crmct_return // break if not instantiated
+            addl 0, %ecx; jz _mcrmcart_return // break if not instantiated
         ">);
         // cast to Thread
         __pasm__ (<"
@@ -362,17 +363,24 @@ class Runtime extends Object {
             pushl %esi; pushl _my_core_Runtime_m_cast; call (%esi)
             addl 16, %esp
             popl %eax;          // @instance (type "Thread")
-            addl 0, %eax; jz _crmct_cleanup // destroy instance if not a thread
+            addl 0, %eax; jz _mcrmcart_cleanup // destroy instance if not a thread
+            movl %eax, %ecx
         ">);
-        // return or cleanup
+        // run thread
         __pasm__ (<"
-            movl %eax, 20(%ebp)  // return @instance (type "Thread")
-        	jmp _crmct_return
-        _crmct_cleanup:
+            pushl %ecx; pushl _my_core_Thread_m_run; call (%ecx)
+            addl 8, %esp
+        ">);
+        // cleanup
+        __pasm__ (<"
+        _mcrmcart_cleanup:
             pushl %ecx
             pushl %esi; pushl _my_core_Runtime_m_destroyInstance; call (%esi)
         	addl 12, %esp
-        _crmct_return:
+        ">);
+        // return
+        __pasm__ (<"
+        _mcrmcart_return:
             popl %esi
             popl %ecx
         ">);

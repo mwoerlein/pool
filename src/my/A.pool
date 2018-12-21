@@ -72,7 +72,7 @@ class A extends Object {
         _my_core_Runtime_m_printHex := 104
         _my_core_Runtime_m_destroyInstance := 112
         _my_core_Runtime_m_cast := 120
-        _my_core_Runtime_m_createThread := 128
+        _my_core_Runtime_m_createAndRunThread := 128
         _my_core_Runtime_m_createInstance := 136
 //*/            
             pushl %ecx
