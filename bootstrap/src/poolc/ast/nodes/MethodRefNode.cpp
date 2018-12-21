@@ -5,7 +5,7 @@
 
 // public
 MethodRefNode::MethodRefNode(Environment &env, MemoryInfo &mi, MethodDefNode & methodDef)
-        :Object(env, mi), methodDef(methodDef), parent(0) {}
+        :Object(env, mi), methodDef(methodDef), parent(0), index(-1) {}
 MethodRefNode::~MethodRefNode() {
 }
 

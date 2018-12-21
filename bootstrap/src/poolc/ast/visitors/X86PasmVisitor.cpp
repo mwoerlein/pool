@@ -32,19 +32,18 @@
 #define methodTabs() localClsPrefix(curClass) << "_mts"
 #define methodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
 #define methodRef(cls, m) localClsPrefix(curClass) << "_mtm" << localClsPrefix(cls) << "_" << (m)->name
+#define methodRefOffset(cls, m) manualClsPrefix(cls) << "_m_" << (m)->name
 
 #define instanceStart() localClsPrefix(curClass) << "_tpl"
 #define instanceEnd() localClsPrefix(curClass) << "_tpl_end"
 #define instanceHandle(cls) localClsPrefix(curClass) << "_tpl_h" << localClsPrefix(cls)
 #define instanceHandleVars(cls) localClsPrefix(curClass) << "_tpl_hv" << localClsPrefix(cls)
+#define instanceHandleVarsOffset(cls) manualClsPrefix(curClass) << "_hvo" << manualClsPrefix(cls)
 #define instanceVars(cls) localClsPrefix(curClass) << "_tpl_vs" << localClsPrefix(cls)
 #define instanceVar(cls, var) localClsPrefix(curClass) << "_tpl_v" << localClsPrefix(cls) << "_" << (var)->name
-#define instanceHandleVarsOffset(cls) manualClsPrefix(curClass) << "_hvo" << manualClsPrefix(cls)
+#define instanceVarOffset(cls, var) manualClsPrefix(cls) << "_i_" << (var)->name
 
-#define gConstInt(c) globalClsPrefix(curClass) << "_c_" << (c)->name
 #define gMethodDeclOffset(m) globalClsPrefix((m)->parent) << "_mdo_" << (m)->name
-#define gMethodRefOffset(cls, m) globalClsPrefix(cls) << "_m_" << (m)->name
-#define gInstanceVarOffset(cls, var) globalClsPrefix(cls) << "_i_" << (var)->name
 
 #define OFFSET(start, end) "(" << end << " - " << start << ")"
 #define CLASS_OFFSET(end) "(" << end << " - " << classDesc() << ")"
@@ -243,13 +242,8 @@ bool X86PasmVisitor::visit(ClassRefNode & classRef) {
 
 bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
     MethodDefNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
-    if (curSuper->equals(*curClass)) {
-        GLOBAL(
-            gMethodRefOffset(curSuper, &methodDef), 
-            OFFSET(methodTab(curSuper), methodRef(curSuper, &methodDef))
-        );
-        LABEL(methodRef(curSuper, &methodDef));
-    }
+// TODO #3: inline method-indices in method-call-generation
+    LOCAL(methodRefOffset(curSuper, &methodDef), 8 * methodRef.index);
     LONG(gMethodDeclOffset(&methodDef));
     LONG(classTabOffset(methodDef.parent));
     return true;
@@ -287,13 +281,11 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
 
 bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
     *curOut << "// variable " << variableDef.name << "\n";
-    if (curSuper->equals(*curClass)) {
-        GLOBAL(
-            gInstanceVarOffset(curSuper, &variableDef),
-            OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
-        );
-        LABEL(instanceVar(curSuper, &variableDef));
-    }
+    LOCAL(
+        instanceVarOffset(curSuper, &variableDef),
+        OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
+    );
+    LABEL(instanceVar(curSuper, &variableDef));
     LONG("0"); // TODO: size_of variable
     return true;
 }
@@ -311,17 +303,10 @@ bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
 
 bool X86PasmVisitor::visit(IntConstDefNode & constDef) {
     *curOut << "\n// int " << constDef.name << "\n";
-    if (constDef.global) {
-        GLOBAL(
-            gConstInt(&constDef),
-            constDef.value
-        );
-    } else {
-        LOCAL(
-            constInt(&constDef),
-            constDef.value
-        );
-    }
+    LOCAL(
+        constInt(&constDef),
+        constDef.value
+    );
     return true;
 }
 

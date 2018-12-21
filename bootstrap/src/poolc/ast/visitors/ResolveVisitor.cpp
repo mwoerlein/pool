@@ -109,20 +109,30 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
     it.destroy();
     
     classDef.supers.set(classDef.fullQualifiedName, classDef);
-  
-    Iterator<MethodDefNode> &mit = classDef.methods.iterator();
-    while (mit.hasNext()) {
-        MethodDefNode &methodDef = mit.next();
-        switch (methodDef.kind) {
-            case naked:
-                continue;
+    {
+        Iterator<MethodDefNode> &mit = classDef.methods.iterator();
+        while (mit.hasNext()) {
+            MethodDefNode &methodDef = mit.next();
+            switch (methodDef.kind) {
+                case naked:
+                    continue;
+            }
+            MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
+            MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
+            if (&old) { old.destroy(); }
+            methodDef.parent = ref.parent = &classDef;
         }
-        MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
-        MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
-        if (&old) { old.destroy(); }
-        methodDef.parent = ref.parent = &classDef;
+        mit.destroy();
     }
-    mit.destroy();
+    
+    {
+        Iterator<MethodRefNode> &mit = classDef.methodRefs.values();
+        int index = 0;
+        while (mit.hasNext()) {
+            mit.next().index = index++;
+        }
+        mit.destroy();
+    }
     
     if (curUnit->element.hasStringProperty("pool.bootstrap")) {
         String & bsName = curUnit->element.getStringProperty("pool.bootstrap");

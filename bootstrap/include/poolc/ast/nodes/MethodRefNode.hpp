@@ -7,6 +7,7 @@ class MethodRefNode: public Node {
     public:
     MethodDefNode & methodDef;
     ClassDefNode *parent;
+    int index;
     
     MethodRefNode(Environment &env, MemoryInfo &mi, MethodDefNode & methodDef);
     virtual ~MethodRefNode();
