@@ -16,6 +16,7 @@ class MethodDefNode: public Node {
     scope_t scope;
     NodeList<InstructionNode> &body;
     ClassDefNode *parent;
+    int index;
     
     MethodDefNode(Environment &env, MemoryInfo &mi);
     virtual ~MethodDefNode();

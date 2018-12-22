@@ -39,10 +39,11 @@ class Runtime extends Object {
     // TODO: remove with working ClassHeader "struct"
     int ch_inst_handle := 0x4;
     int ch_cts := 0xc;
-    int ch_tpl := 0x14;
-    int ch_tpl_size := 0x18;
-    int ch_tpl_obj_handle := 0x1c;
-    int ch_tpl_cls_handle := 0x20;
+    int ch_mt := 0x14;
+    int ch_tpl := 0x18;
+    int ch_tpl_size := 0x1c;
+    int ch_tpl_obj_handle := 0x20;
+    int ch_tpl_cls_handle := 0x24;
     
     // TODO: remove with working ClassTab "struct"
     int cts_cdo := 0x0;
@@ -495,11 +496,14 @@ class Runtime extends Object {
             addl 8(%esp), %eax	// get vtab-entry by adding method-offset number
             movl 0(%ecx), %ebx	// get class-desc
             addl 4(%eax), %ebx  // get method-vtabs-entry
-            addl _my_core_Runtime_coi_cts_ho(%ebx), %ecx   // compute method-@this
+            addl _my_core_Runtime_coi_cts_ho(%ebx), %ecx  // compute method-@this
             movl %ecx, 12(%esp) // store method-@this
-            movl _my_core_Runtime_coi_cts_cdo(%ebx), %ebx  // get method-class-desc
+            movl _my_core_Runtime_coi_cts_cdo(%ebx), %ebx // get method-class-desc
             movl %ebx, 8(%esp)  // store method-class-desc
-            addl 0(%eax), %ebx  // compute method-addr
+            movl %ebx, %ecx
+            addl _my_core_Runtime_coi_ch_mt(%ecx), %ecx   // get methods-tab
+            addl 0(%eax), %ecx  // get method-offset-addr
+            addl (%ecx), %ebx   // compute method-addr
             popl %ecx
             jmp %ebx            // goto method
         ">);

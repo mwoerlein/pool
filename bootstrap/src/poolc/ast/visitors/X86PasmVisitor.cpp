@@ -14,7 +14,6 @@
 #include "poolc/ast/nodes/IntConstDefNode.hpp"
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
 
-#define globalClsPrefix(cls) (cls)->globalPrefix
 #define localClsPrefix(cls) (cls)->localPrefix
 // TODO: #3 replace with localClsPrefix after inline pasm is replaced with method-code generation
 #define manualClsPrefix(cls) (cls)->globalPrefix
@@ -28,7 +27,9 @@
 #define constInt(c) manualClsPrefix(curClass) << "_coi_" << (c)->name
 #define constString(c) localClsPrefix(curClass) << "_cos_" << (c)->name
 #define constStringOffset(c) manualClsPrefix(curClass) << "_coso_" << (c)->name
+#define methodDeclTab() localClsPrefix(curClass) << "_mdt"
 #define methodDecl(m) localClsPrefix((m)->parent) << "_md_" << (m)->name
+#define methodDeclOffset(m) manualClsPrefix((m)->parent) << "_mdo_" << (m)->name
 #define methodTabs() localClsPrefix(curClass) << "_mts"
 #define methodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
 #define methodRef(cls, m) localClsPrefix(curClass) << "_mtm" << localClsPrefix(cls) << "_" << (m)->name
@@ -43,8 +44,6 @@
 #define instanceVar(cls, var) localClsPrefix(curClass) << "_tpl_v" << localClsPrefix(cls) << "_" << (var)->name
 #define instanceVarOffset(cls, var) manualClsPrefix(cls) << "_i_" << (var)->name
 
-#define gMethodDeclOffset(m) globalClsPrefix((m)->parent) << "_mdo_" << (m)->name
-
 #define OFFSET(start, end) "(" << end << " - " << start << ")"
 #define CLASS_OFFSET(end) "(" << end << " - " << classDesc() << ")"
 #define INSTANCE_OFFSET(end) "(" << end << " - " << instanceStart() << ")"
@@ -52,7 +51,6 @@
 #define LONG(l) *curOut << "    .long " << l << "\n";
 #define ASCIZ(str) {(str).escapeToStream(*curOut << "    .asciz "); *curOut << "\n";}
 #define LOCAL(l,v) *curOut << l << " := " << v << "\n";
-#define GLOBAL(l,v) *curOut << ".global " << l << " := " << v << "\n";
 
 // public
 X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps)
@@ -96,10 +94,10 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     if (e.hasStringProperty("pool.bootstrap")) {
         MethodDefNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
         if (bs.scope != scope_class || bs.kind != normal) {
-            env().err() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessable via pool-ABI.\n";
+            env().err() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessible via pool-ABI.\n";
             return false;
         }
-        *curOut << "bootstrapOffset = " << gMethodDeclOffset(&bs) << "\n";
+        *curOut << "bootstrapOffset = " << methodDeclOffset(&bs) << "\n";
     }
     *curOut << "[pool_source]\n";
     *curOut << "unit = " << curClass->unit->name << "\n";
@@ -119,6 +117,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LONG(classNameOffset(curClass));
     LONG(CLASS_OFFSET(classTabs()));      // class tabs offset
     LONG(CLASS_OFFSET(methodTabs()));     // method tabs offset
+    LONG(CLASS_OFFSET(methodDeclTab()));  // methods tab offset
     LONG(CLASS_OFFSET(instanceStart()));  // instance template offset
     LONG(INSTANCE_OFFSET(instanceEnd())); // instance size
     LONG(INSTANCE_OFFSET(instanceHandle(curClass->supers.first()))); // Object handle offset in instance
@@ -158,6 +157,29 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
             curSuper = &it.next();
             LABEL(methodTab(curSuper));
             curSuper->methodRefs.acceptAll(*this);
+        }
+        it.destroy();
+    }
+    
+    // methods tab
+    *curOut << "\n// methods tab\n";
+    LABEL(methodDeclTab());
+    {
+        Iterator<MethodDefNode> &it = curClass->methods.iterator();
+        while (it.hasNext()) {
+            MethodDefNode &methodDef = it.next();
+            switch (methodDef.kind) {
+                case abstract:
+                case naked:
+                    LONG("0");
+                    break;
+                default:
+                    LOCAL(
+                        methodDeclOffset(&methodDef),
+                        CLASS_OFFSET(methodDecl(&methodDef))
+                    );
+                    LONG(methodDeclOffset(&methodDef));
+            }
         }
         it.destroy();
     }
@@ -244,7 +266,7 @@ bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
     MethodDefNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
 // TODO #3: inline method-indices in method-call-generation
     LOCAL(methodRefOffset(curSuper, &methodDef), 8 * methodRef.index);
-    LONG(gMethodDeclOffset(&methodDef));
+    LONG(4 * methodDef.index);
     LONG(classTabOffset(methodDef.parent));
     return true;
 }
@@ -254,21 +276,12 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
     
     switch (methodDef.kind) {
         case abstract:
-            GLOBAL(
-                gMethodDeclOffset(&methodDef),
-                "0" // virtual method
-            );
             break;
         case naked:
             methodDef.body.acceptAll(*this);
             break;
         default:
-            GLOBAL(
-                gMethodDeclOffset(&methodDef),
-                CLASS_OFFSET(methodDecl(&methodDef))
-            );
             LABEL(methodDecl(&methodDef));
-            
             *curOut << "    pushl %ebp; movl %esp, %ebp\n";
             *curOut << "    \n";
             methodDef.body.acceptAll(*this);

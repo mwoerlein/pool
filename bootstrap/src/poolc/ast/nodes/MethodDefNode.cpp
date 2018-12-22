@@ -8,7 +8,7 @@ MethodDefNode::MethodDefNode(Environment &env, MemoryInfo &mi)
          name(env.create<String>()),
          body(env.create<NodeList<InstructionNode>>()),
          kind(normal), scope(scope_instance),
-         parent(0) {
+         parent(0), index(-1) {
 }
 MethodDefNode::~MethodDefNode() {
     name.destroy();

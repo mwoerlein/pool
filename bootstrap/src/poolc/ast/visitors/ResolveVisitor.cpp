@@ -111,8 +111,11 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
     classDef.supers.set(classDef.fullQualifiedName, classDef);
     {
         Iterator<MethodDefNode> &mit = classDef.methods.iterator();
+        int index = 0;
         while (mit.hasNext()) {
             MethodDefNode &methodDef = mit.next();
+            methodDef.parent = &classDef;
+            methodDef.index = index++;
             switch (methodDef.kind) {
                 case naked:
                     continue;
@@ -120,7 +123,7 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
             MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
             MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
             if (&old) { old.destroy(); }
-            methodDef.parent = ref.parent = &classDef;
+            ref.parent = &classDef;
         }
         mit.destroy();
     }

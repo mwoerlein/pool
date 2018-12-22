@@ -15,7 +15,7 @@ class B extends myThread, my::A {
     int err := 1;
     
     // TODO: remove after implicit string handling
-    cstring doit := "OMG! Compiling work's! ";
+    cstring doit := "OMG! Compiling still work's! ";
     
     <> run() {
         __pasm__ (<"
