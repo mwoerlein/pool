@@ -4,6 +4,8 @@
 #include "poolc/parser/PoolParser.hpp"
 
 int Parser::makeColonEqual() { return COLON_EQUAL; }
+int Parser::makeDot()        { return DOT; }
+int Parser::makeEqual()      { return EQUAL; }
 
 int Parser::makeAbstract()  { return ABSTRACT; }
 int Parser::makeAs()        { return AS; }
@@ -11,6 +13,8 @@ int Parser::makeClass()     { return CLASS; }
 int Parser::makeExtends()   { return EXTENDS; }
 int Parser::makeGlobal()    { return GLOBAL; }
 int Parser::makeNamespace() { return NAMESPACE; }
+int Parser::makeReturn()    { return RETURN; }
+int Parser::makeThis()      { return THIS; }
 int Parser::makeUse()       { return USE; }
 
 int Parser::makeNaked()     { return NAKED; }

@@ -153,7 +153,6 @@ int PoolParser::lex()
 /*!re2c
         ","         { setLocation(); return ','; }
         ";"         { setLocation(); return ';'; }
-        "="         { setLocation(); return '='; }
         "<"         { setLocation(); return '<'; }
         ">"         { setLocation(); return '>'; }
         "{"         { setLocation(); return '{'; }
@@ -162,6 +161,8 @@ int PoolParser::lex()
         ")"         { setLocation(); return ')'; }
         
         ":="            { setLocation(); return parser->makeColonEqual(); }
+        "."             { setLocation(); return parser->makeDot(); }
+        "="             { setLocation(); return parser->makeEqual(); }
         
         "abstract"      { setLocation(); return parser->makeAbstract(); }
         "as"            { setLocation(); return parser->makeAs(); }
@@ -169,6 +170,8 @@ int PoolParser::lex()
         "extends"       { setLocation(); return parser->makeExtends(); }
         "global"        { setLocation(); return parser->makeGlobal(); }
         "namespace"     { setLocation(); return parser->makeNamespace(); }
+        "return"        { setLocation(); return parser->makeReturn(); }
+        "this"          { setLocation(); return parser->makeThis(); }
         "use"           { setLocation(); return parser->makeUse(); }
         
         "__naked__"     { setLocation(); return parser->makeNaked(); }
@@ -195,7 +198,21 @@ int PoolParser::lex()
                         return parser->makeID(s);
                     }
         
-        @o1 ['"]    {
+        @o1 [']     {
+                        String *s = readString(*o1); if (!s) break;
+                        if (s->length() != 1) {
+                            error() << "invalid length of character '" << *s <<"'\n";
+                            break;
+                        }
+                        {
+                            IStream &in = s->toIStream();
+                            int n = in.readRawChar();
+                            in.destroy();
+                            setLocation();
+                            return parser->makeNumber(n);
+                        }
+                    }
+        @o1 ["]     {
                         String *s = readString(*o1); if (!s) break;
                         setLocation();
                         return parser->makeString(*s);

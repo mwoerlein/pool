@@ -25,6 +25,8 @@ class Parser: public ParserBase
         void setLocation(int first_line, int first_column, int last_line, int last_column);
         
         int makeColonEqual();
+        int makeDot();
+        int makeEqual();
         
         int makeAbstract();
         int makeAs();
@@ -32,6 +34,8 @@ class Parser: public ParserBase
         int makeExtends();
         int makeGlobal();
         int makeNamespace();
+        int makeReturn();
+        int makeThis();
         int makeUse();
         
         int makeNaked();

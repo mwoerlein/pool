@@ -19,6 +19,8 @@
 %lsp-needed
 
 %token COLON_EQUAL
+%right DOT
+%right EQUAL
 
 %token ABSTRACT
 %token AS
@@ -26,6 +28,8 @@
 %token EXTENDS
 %token GLOBAL
 %token NAMESPACE
+%token RETURN
+%token THIS
 %token USE
 
 %token NAKED
@@ -46,12 +50,14 @@
 %type <u_variable_decl> variable_decl
 %type <u_const_int_decl> const_int_decl
 %type <u_const_cstring_decl> const_cstring_decl
-%type <u_instruction> instruction
 %type <u_string_list> type_list
 %type <u_string_list> id_list
 %type <u_string_list> id_list_empty
 %type <u_string_map> id_map
 %type <u_string_map> id_map_empty
+
+%type <u_instruction> instruction
+%type <u_instruction> inline_pasm_inst
 
 //=
 %%
@@ -65,12 +71,12 @@ translation_unit:
 |   translation_unit use_stmt
     {
         $$ = $1;
-        $$->uses.add(*$2);
+        if ($2) { $$->uses.add(*$2); }
     }
 |   translation_unit class_decl
     {
         $$ = $1;
-        $$->classes.add(*$2);
+        if ($2) { $$->classes.add(*$2); }
     }
 ;
 
@@ -249,22 +255,22 @@ class_body_empty:
 |   class_body_empty method_decl
     {
         $$ = $1;
-        $1->methods.add(*$2);
+        if ($2) { $1->methods.add(*$2); }
     }
 |   class_body_empty variable_decl
     {
         $$ = $1;
-        $$->variables.add(*$2);
+        if ($2) { $$->variables.add(*$2); }
     }
 |   class_body_empty const_int_decl
     {
         $$ = $1;
-        $$->intConsts.add(*$2);
+        if ($2) { $$->intConsts.add(*$2); }
     }
 |   class_body_empty const_cstring_decl
     {
         $$ = $1;
-        $$->consts.add(*$2);
+        if ($2) { $$->consts.add(*$2); }
     }
 |   class_body_empty error ';'
 ;
@@ -405,11 +411,132 @@ method_body_empty:
 |   method_body_empty instruction
     {
         $$ = $1;
-        $1->body.add(*$2);
+        if ($2) { $1->body.add(*$2); }
     }
 ;
 
+
+// EXPRESSIONS
+expression:
+    NUMBER
+    {
+        driver.debug() << "-- NUMBER ("<<(int)$1<<")\n";
+    }
+|   STRING
+    {
+        driver.debug() << "-- STRING ("<<*$1<<")\n";
+    }
+|   variable_expr
+    {
+        driver.debug() << "-- expression (1)\n";
+    }
+|   assignment_expr
+    {
+        driver.debug() << "-- expression (2)\n";
+    }
+|   method_call_expr
+    {
+        driver.debug() << "-- expression (3)\n";
+    }
+|   '(' expression ')'
+    {
+        driver.debug() << "-- expression (4)\n";
+    }
+;
+
+expression_list:
+    expression
+|   expression_list ',' expression
+;
+
+expression_list_empty:
+    // empty
+|   expression_list
+;
+
+variable_expr:
+    ID
+    {
+        driver.debug() << "-- variable_expr (1)\n";
+    }
+|   THIS
+    {
+        driver.debug() << "-- variable_expr (2)\n";
+    }
+|   THIS DOT ID
+    {
+        driver.debug() << "-- variable_expr (3)\n";
+    }
+;
+
+assignment_expr:
+    variable_expr EQUAL expression
+    {
+        driver.debug() << "-- assignment_expr (1)\n";
+    }
+;
+
+method_call_expr:
+    ID DOT ID '(' expression_list_empty ')'
+    {
+        driver.debug() << "-- method_call_expr (1)\n";
+    }
+|   THIS DOT ID '(' expression_list_empty ')'
+    {
+        driver.debug() << "-- method_call_expr (2)\n";
+    }
+;
+
+
+// INSTRUCTIONS
 instruction:
+    expression ';'
+    {
+        driver.debug() << "-- instruction (1)\n";
+        $$ = 0;
+    }
+|   variable_initializer_inst
+    {
+        driver.debug() << "-- instruction (3)\n";
+        $$ = 0;
+    }
+|   return_inst
+    {
+        driver.debug() << "-- instruction (4)\n";
+        $$ = 0;
+    }
+|   inline_pasm_inst
+    {
+        driver.debug() << "-- instruction (5)\n";
+        $$ = $1;
+    }
+|   '{' instruction_list_empty '}'
+    {
+        driver.debug() << "-- instruction (6)\n";
+        $$ = 0;
+    }
+|   error ';'
+;
+
+instruction_list_empty:
+    //empty
+|   instruction_list_empty instruction
+;
+
+return_inst:
+    RETURN ';'
+|   RETURN expression ';'
+|   RETURN '<' expression_list_empty '>' ';'
+;
+
+variable_initializer_inst:
+    ID ID EQUAL expression ';'
+|   ID ID COLON_EQUAL expression ';'
+|   '<' id_map '>' EQUAL method_call_expr ';'
+|   '<' id_map '>' COLON_EQUAL method_call_expr ';'
+;
+
+inline_pasm_inst:
     PASM '(' STRING ')' ';'
     {
         InlinePasmInstructionNode &node = driver.env().create<InlinePasmInstructionNode>();
