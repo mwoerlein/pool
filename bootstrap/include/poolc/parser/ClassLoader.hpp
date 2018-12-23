@@ -5,11 +5,12 @@
 #include "sys/collection/HashMap.hpp"
 
 #include "sys/String.hpp"
+#include "sys/log/LoggerAware.hpp"
 #include "poolc/parser/PoolParser.hpp"
 #include "poolc/ast/nodes/ClassDefNode.hpp"
 
 class ResolveVisitor;
-class ClassLoader: public ClassPathStorage, private HashMap<String, ClassDefNode> {
+class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private HashMap<String, ClassDefNode> {
     private:
     PoolParser & parser;
     ResolveVisitor & resolve;
@@ -17,6 +18,8 @@ class ClassLoader: public ClassPathStorage, private HashMap<String, ClassDefNode
     public:
     ClassLoader(Environment &env, MemoryInfo &mi);
     virtual ~ClassLoader();
+    
+    virtual void setLogger(Logger &logger) override;
     
     virtual ClassDefNode * getClass(String & fullQualifiedName);
     virtual void registerClass(ClassDefNode & classDef);

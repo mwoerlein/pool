@@ -50,10 +50,10 @@ int Parser::lex()
 
 void Parser::error()
 {
-    driver.error("Syntax error", d_loc__.first_line, d_loc__.first_column);
+    driver.logError("Syntax error", d_loc__.first_line, d_loc__.first_column);
 }
 
 void Parser::exceptionHandler(std::exception const &exc)         
 {
-    if (driver.error(exc.what())) throw;
+    if (driver.logError(exc.what())) throw;
 }

@@ -10,7 +10,7 @@
 
 // public
 ResolveVisitor::ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader)
-        :Object(env, mi), loader(loader), curUnit(0) {}
+        :Object(env, mi), LoggerAware(env, mi), loader(loader), curUnit(0) {}
 ResolveVisitor::~ResolveVisitor() {}
 
 
@@ -19,7 +19,7 @@ bool ResolveVisitor::visit(TranslationUnitNode & translationUnit) {
     curUnit = &translationUnit;
     
     if (!curUnit->ns) {
-        env().err() << curUnit->name << ": " << "missing namespace" << "\n";
+        error() << curUnit->name << ": " << "missing namespace" << "\n";
         curUnit = tmpUnit;
         return false;
     }
@@ -66,12 +66,12 @@ bool ResolveVisitor::visit(ClassRefNode & classRef) {
 
 bool ResolveVisitor::visit(ClassDefNode & classDef) {
     if (!classDef.supers.isEmpty()) {
-        env().out() << classDef.name << ": already resolved" << "\n";
+        info() << classDef.name << ": already resolved" << "\n";
     }
     
     classDef.fullQualifiedName << curUnit->ns->name << "::" << classDef.name;
     if (classDef.fullQualifiedName != curUnit->name) {
-        env().err() << curUnit->name << ": class name '" << classDef.fullQualifiedName << "' does not match compilation unit\n";
+        error() << curUnit->name << ": class name '" << classDef.fullQualifiedName << "' does not match compilation unit\n";
     }
     classDef.unit = curUnit;
     loader.registerClass(classDef);
@@ -141,7 +141,8 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
         String & bsName = curUnit->element.getStringProperty("pool.bootstrap");
         MethodRefNode &bsRef = classDef.methodRefs.get(bsName);
         if (!&bsRef) {
-            env().err() << curUnit->name << ": missing bootstrap method '" << bsName << "'\n";
+            warn() << curUnit->name << ": ignore missing bootstrap method '" << bsName << "'\n";
+            curUnit->element.unsetProperty("pool.bootstrap");
             return false;
         }
     }

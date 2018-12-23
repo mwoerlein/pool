@@ -2,6 +2,7 @@
 #define POOLC_AST_VISITOR_HPP_LOCK
 
 #include "sys/Object.hpp"
+#include "sys/log/LoggerAware.hpp"
 
 class TranslationUnitNode;
 
@@ -18,7 +19,7 @@ class VariableDefNode;
 
 class InlinePasmInstructionNode;
 
-class Visitor: virtual public Object {
+class Visitor: virtual public Object, virtual public LoggerAware {
     public:
     virtual ~Visitor();
     

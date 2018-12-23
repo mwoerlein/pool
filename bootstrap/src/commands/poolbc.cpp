@@ -2,6 +2,7 @@
 #include "linux/CommandLine.hpp"
 #include "linux/DirectoryPoolStorage.hpp"
 
+#include "sys/log/Logger.hpp"
 #include "poolc/parser/ClassLoader.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
@@ -16,6 +17,8 @@ R"(Pool Bootstrap Compiler.
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
+      -v --verbose                  Set verbose.
+      -d --debug                    Set debug.
       -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
 )";
@@ -25,6 +28,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
     PoolBootstrapCompilerCommand(Environment & env, MemoryInfo & mi = *notAnInfo)
             :CommandLine(env, mi), Object(env, mi) {
         registerOptionAlias("help", "h");
+        registerOptionAlias("verbose", "v");
+        registerOptionAlias("debug", "d");
         registerOptionAlias("output", "o");
         registerOptionAlias("classpath", "c");
         
@@ -49,7 +54,11 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             return -1;
         }
         
+        Logger &logger = env().create<Logger, log_level>(
+            hasProperty("debug") ? log_debug : (hasProperty("verbose") ? log_info : log_warn)
+        );
         ClassLoader &loader = env().create<ClassLoader>();
+        loader.setLogger(logger);
         {
             Iterator<String> &it = optionSet("classpath");
             while (it.hasNext()) {
@@ -60,15 +69,19 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
         Visitor &dump = env().create<X86PasmVisitor, PoolStorage &>(outPS);
+        dump.setLogger(logger);
         
         {
             Iterator<String> &it = arguments();
             while (it.hasNext()) {
                 String &name = it.next();
-//                env().out()<<"compile "<<name<<"\n";
+                logger.info() << "compile " << name << "\n";
                 
-                if (ClassDefNode * classDef = loader.getClass(name)) {
+                ClassDefNode * classDef = loader.getClass(name);
+                if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
+                if (classDef) {
                     classDef->accept(dump);
+                    if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
             }
             it.destroy();
@@ -77,6 +90,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         dump.destroy();
         outPS.destroy();
         loader.destroy();
+        logger.destroy();
         
         return 0;
     }

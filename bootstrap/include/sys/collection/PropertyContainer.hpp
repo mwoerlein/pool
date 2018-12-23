@@ -42,6 +42,12 @@ class PropertyContainer: protected HashMap<String, Object>, protected LinkedList
     inline Object & setProperty(String & name, Object & o) {
         return HashMap::set(name, o);
     }
+    inline Object & unsetProperty(const char* name) {
+        return HashMap::unset(createOwn<String, const char*>(name));
+    }
+    inline Object & unsetProperty(String & name) {
+        return HashMap::unset(name);
+    }
     
     // String accessors
     virtual bool hasStringProperty(const char* name);

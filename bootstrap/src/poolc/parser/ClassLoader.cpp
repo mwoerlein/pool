@@ -5,7 +5,7 @@
 
 // public
 ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi)
-        :ClassPathStorage(env, mi), HashMap(env, mi), Object(env, mi),
+        :ClassPathStorage(env, mi), LoggerAware(env, mi), HashMap(env, mi), Object(env, mi),
          parser(env.create<PoolParser>()),
          resolve(env.create<ResolveVisitor, ClassLoader &>(*this)) {
 }
@@ -13,6 +13,12 @@ ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi)
 ClassLoader::~ClassLoader() {
     parser.destroy();
     resolve.destroy();
+}
+    
+void ClassLoader::setLogger(Logger &logger) {
+    LoggerAware::setLogger(logger);
+    parser.setLogger(logger);
+    resolve.setLogger(logger);
 }
 
 void ClassLoader::registerClass(ClassDefNode & classDef) {
@@ -23,11 +29,11 @@ ClassDefNode * ClassLoader::getClass(String & fullQualifiedName) {
     if (!HashMap::has(fullQualifiedName)) {
         StorageElement *e = ClassPathStorage::getElement(fullQualifiedName);
         if (!e) {
-            env().err() << "class '" << fullQualifiedName << "' not found!\n";
+            error() << "class '" << fullQualifiedName << "' not found!\n";
             return 0;
         }
         
-//        env().out()<<"load and parse "<<fullQualifiedName<<"\n";
+        debug() << "load and parse " << fullQualifiedName << "\n";
         
         IStream &in = e->getContent();
         TranslationUnitNode * unit = parser.parse(*e, fullQualifiedName);

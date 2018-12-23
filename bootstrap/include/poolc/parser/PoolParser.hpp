@@ -3,13 +3,14 @@
 
 #include "sys/Object.hpp"
 #include "sys/stream/IStream.hpp"
+#include "sys/log/LoggerAware.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
 #include "poolc/parser/ParseBuffer.hpp"
 #include "poolc/storage/StorageElement.hpp"
 
 class Parser;
-class PoolParser: public ParseBuffer {
+class PoolParser: public ParseBuffer, virtual public LoggerAware {
     private:
     TranslationUnitNode * unit;
     IStream * input;
@@ -31,7 +32,7 @@ class PoolParser: public ParseBuffer {
     virtual TranslationUnitNode * parse(StorageElement &element, String &name);
     
     virtual TranslationUnitNode * getUnit();
-    virtual bool error(const char * msg, int line = -1, int column = -1);
+    virtual bool logError(const char * msg, int line = -1, int column = -1);
     virtual int lex();
 };
 

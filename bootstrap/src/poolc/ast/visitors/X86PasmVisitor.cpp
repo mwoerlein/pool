@@ -54,7 +54,7 @@
 
 // public
 X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps)
-        :Object(env, mi), ps(ps),
+        :Object(env, mi), LoggerAware(env, mi), ps(ps),
          mime(env.create<String, const char*>(MIMETYPE_PASM)),
          curOut(0), curClass(0), curSuper(0) {}
 X86PasmVisitor::~X86PasmVisitor() {
@@ -94,7 +94,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     if (e.hasStringProperty("pool.bootstrap")) {
         MethodDefNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
         if (bs.scope != scope_class || bs.kind != normal) {
-            env().err() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessible via pool-ABI.\n";
+            error() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessible via pool-ABI.\n";
             return false;
         }
         *curOut << "bootstrapOffset = " << methodDeclOffset(&bs) << "\n";
