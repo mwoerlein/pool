@@ -17,8 +17,10 @@ R"(Pool Bootstrap Compiler.
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
-      -v --verbose                  Set verbose.
       -d --debug                    Set debug.
+      -v --verbose                  Set verbose.
+      --warning                     Set warning.
+      --error                       Set error.
       -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
 )";
@@ -53,10 +55,12 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             env().out()<<USAGE;
             return -1;
         }
-        
-        Logger &logger = env().create<Logger, log_level>(
-            hasProperty("debug") ? log_debug : (hasProperty("verbose") ? log_info : log_warn)
-        );
+        log_level ll = log_note;
+        if (hasProperty("verbose")) ll = log_info; 
+        if (hasProperty("debug")) ll = log_debug; 
+        if (hasProperty("warning")) ll = log_warn; 
+        if (hasProperty("error")) ll = log_error; 
+        Logger &logger = env().create<Logger, log_level>(ll);
         ClassLoader &loader = env().create<ClassLoader>();
         loader.setLogger(logger);
         {
@@ -75,7 +79,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             Iterator<String> &it = arguments();
             while (it.hasNext()) {
                 String &name = it.next();
-                logger.info() << "compile " << name << "\n";
+                logger.note() << "compile " << name << "\n";
                 
                 ClassDefNode * classDef = loader.getClass(name);
                 if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
