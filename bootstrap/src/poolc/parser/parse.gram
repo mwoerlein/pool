@@ -16,8 +16,6 @@
     
     InstructionNode *u_instruction;
     MutableCollection<InstructionNode> *u_instruction_list;
-    IntConstAssignNode *u_const_int_decl;
-    CStringConstAssignNode *u_const_cstring_decl;
     
     ExpressionNode *u_expression;
     MutableCollection<ExpressionNode> *u_expression_list;
@@ -68,8 +66,6 @@
 %type <u_instruction> instruction
 %type <u_instruction_list> instruction_list_empty
 %type <u_instruction> inline_pasm_inst
-%type <u_const_int_decl> const_int_decl
-%type <u_const_cstring_decl> const_cstring_decl
 
 %type <u_expression> expression
 %type <u_expression_list> expression_list
@@ -200,17 +196,40 @@ class_body_empty:
 |   class_body_empty variable_decl ';'
     {
         $$ = $1;
-        if ($2) { $$->variables.add(*$2); }
+        if ($2) {
+            $2->scope = scope_instance;
+            
+            $2->last_line = @3.last_line;
+            $2->last_column = @3.last_column;
+            
+            $$->variables.add(*$2);
+        }
     }
-|   class_body_empty const_int_decl ';'
+|   class_body_empty variable_decl COLON_EQUAL expression ';'
     {
         $$ = $1;
-        if ($2) { $$->intConsts.add(*$2); }
+        if ($2) { 
+            $2->scope = scope_class;
+            $2->initializer = $4;
+            
+            $2->last_line = @5.last_line;
+            $2->last_column = @5.last_column;
+            
+            $$->consts.add(*$2);
+        }
     }
-|   class_body_empty const_cstring_decl ';'
+|   class_body_empty GLOBAL variable_decl COLON_EQUAL expression ';'
     {
         $$ = $1;
-        if ($2) { $$->consts.add(*$2); }
+        if ($3) { 
+            $3->scope = scope_class;
+            $3->initializer = $5;
+            
+            $3->last_line = @6.last_line;
+            $3->last_column = @6.last_column;
+            
+            $$->consts.add(*$3);
+        }
     }
 |   class_body_empty error ';'
 ;
@@ -286,16 +305,12 @@ type_list_empty:
 variable_decl:
     type ID
     {
-        $$ = &driver.env().create<VariableDeclNode>();
-        $$->name = *$2;
+        $$ = &driver.env().create<VariableDeclNode, TypeRefNode&, String&>(*$1, *$2);
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @2.last_line;
         $$->last_column = @2.last_column;
-        
-        $1->destroy();
-        $2->destroy();
     }
 ;
 
@@ -318,52 +333,6 @@ variable_decl_list_empty:
         $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
     }
 |   variable_decl_list
-;
-
-const_int_decl:
-    variable_decl COLON_EQUAL NUMBER
-    {
-        $$ = &driver.env().create<IntConstAssignNode>();
-        $$->name = $1->name;
-        $$->value = $3;
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @3.last_line;
-        $$->last_column = @3.last_column;
-        
-        $1->destroy();
-    }
-|   GLOBAL variable_decl COLON_EQUAL NUMBER
-    {
-        $$ = &driver.env().create<IntConstAssignNode>();
-        $$->name = $2->name;
-        $$->value = $4;
-        $$->global = true;
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @4.last_line;
-        $$->last_column = @4.last_column;
-        
-        $2->destroy();
-    }
-;
-
-const_cstring_decl:
-    variable_decl COLON_EQUAL STRING
-    {
-        $$ = &driver.env().create<CStringConstAssignNode>();
-        $$->name = $1->name;
-        $$->value = *$3;
-        $1->destroy();
-        $3->destroy();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @3.last_line;
-        $$->last_column = @3.last_column;
-    }
 ;
 
 method_decl:

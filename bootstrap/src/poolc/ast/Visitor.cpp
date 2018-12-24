@@ -16,8 +16,6 @@ bool Visitor::visit(IntRefNode & type) { return false; }
 bool Visitor::visit(MethodRefNode & methodRef) { return false; }
 bool Visitor::visit(UseStatementNode & useStmt) { return false; }
 
-bool Visitor::visit(CStringConstAssignNode & constDef) { return false; }
-bool Visitor::visit(IntConstAssignNode & constDef) { return false; }
 bool Visitor::visit(InlinePasmInstructionNode & pasmInstruction) { return false; }
 
 bool Visitor::visit(AssignmentExprNode & assignment) { return false; }

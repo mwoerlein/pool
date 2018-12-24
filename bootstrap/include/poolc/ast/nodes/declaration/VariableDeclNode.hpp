@@ -3,11 +3,18 @@
 
 #include "poolc/ast/Node.hpp"
 
+#include "poolc/ast/nodes/ExpressionNode.hpp"
+#include "poolc/ast/nodes/reference/TypeRefNode.hpp"
+
 class VariableDeclNode: public Node {
     public:
     String & name;
+    TypeRefNode & type;
+    ExpressionNode * initializer;
+    scope_t scope;
+    bool global;
     
-    VariableDeclNode(Environment &env, MemoryInfo &mi);
+    VariableDeclNode(Environment &env, MemoryInfo &mi, TypeRefNode & type, String &name);
     virtual ~VariableDeclNode();
     
     virtual bool accept(Visitor & visitor) override;

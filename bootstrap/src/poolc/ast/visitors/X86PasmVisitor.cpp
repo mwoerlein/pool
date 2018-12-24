@@ -3,16 +3,20 @@
 #include "poolc/storage/Types.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
-#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
+
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
-#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
-#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
+#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
-#include "poolc/ast/nodes/instruction/CStringConstAssignNode.hpp"
-#include "poolc/ast/nodes/instruction/IntConstAssignNode.hpp"
+
+#include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
+#include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
+
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
+
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
+#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
+#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
 
 #define localClsPrefix(cls) (cls)->localPrefix
 // TODO: #3 replace with localClsPrefix after inline pasm is replaced with method-code generation
@@ -63,14 +67,6 @@ X86PasmVisitor::~X86PasmVisitor() {
 
 bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
     translationUnit.classes.acceptAll(*this);
-    return true;
-}
-
-bool X86PasmVisitor::visit(NamespaceDeclNode & namespaceDef) {
-    return true;
-}
-
-bool X86PasmVisitor::visit(UseStatementNode & useStmt) {
     return true;
 }
 
@@ -187,7 +183,6 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     // constants
     *curOut << "\n// constants";
     curClass->consts.acceptAll(*this);
-    curClass->intConsts.acceptAll(*this);
     {
         Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
@@ -257,11 +252,6 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(ClassRefNode & classRef) {
-    *curOut << "// class-ref " << classRef.name << "\n";
-    return true;
-}
-
 bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
     MethodDeclNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
 // TODO #3: inline method-indices in method-call-generation
@@ -293,45 +283,49 @@ bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
 }
 
 bool X86PasmVisitor::visit(VariableDeclNode & variableDef) {
-    *curOut << "// variable " << variableDef.name << "\n";
-    LOCAL(
-        instanceVarOffset(curSuper, &variableDef),
-        OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
-    );
-    LABEL(instanceVar(curSuper, &variableDef));
-    LONG("0"); // TODO: size_of variable
-    return true;
-}
-
-bool X86PasmVisitor::visit(CStringConstAssignNode & constDef) {
-    *curOut << "\n// string " << constDef.name << "\n";
-    LOCAL(
-        constStringOffset(&constDef),
-        CLASS_OFFSET(constString(&constDef))
-    );
-    LABEL(constString(&constDef));
-    ASCIZ(constDef.value);
-    return true;
-}
-
-bool X86PasmVisitor::visit(IntConstAssignNode & constDef) {
-    *curOut << "\n// int " << constDef.name << "\n";
-    LOCAL(
-        constInt(&constDef),
-        constDef.value
-    );
-    return true;
+    switch (variableDef.scope) {
+        case scope_class:
+            if (!variableDef.initializer) {
+                return false;
+            }
+            if (ConstIntExprNode *cInt = variableDef.initializer->isConstInt()) {
+                *curOut << "\n// int " << variableDef.name << "\n";
+                LOCAL(
+                    constInt(&variableDef),
+                    cInt->value
+                );
+                return true;
+            } else if (ConstCStringExprNode *cCString = variableDef.initializer->isConstCString()) {
+                *curOut << "\n// string " << variableDef.name << "\n";
+                LOCAL(
+                    constStringOffset(&variableDef),
+                    CLASS_OFFSET(constString(&variableDef))
+                );
+                LABEL(constString(&variableDef));
+                ASCIZ(cCString->value);
+                return true;
+            } else {
+                return false;
+            }
+            
+        case scope_instance:
+            *curOut << "// variable " << variableDef.name << "\n";
+            LOCAL(
+                instanceVarOffset(curSuper, &variableDef),
+                OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
+            );
+            LABEL(instanceVar(curSuper, &variableDef));
+            LONG("0"); // TODO: size_of variable
+            return true;
+        case scope_method:
+            return true;
+        case scope_block:
+            return true;
+    }
+    return false;
 }
 
 bool X86PasmVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
     *curOut << pasmInstruction.pasm << "\n";
-    return true;
-}
-
-bool X86PasmVisitor::visit(CStringRefNode & pasmInstruction) {
-    return true;
-}
-
-bool X86PasmVisitor::visit(IntRefNode & pasmInstruction) {
     return true;
 }

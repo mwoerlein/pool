@@ -34,10 +34,6 @@ bool ResolveVisitor::visit(TranslationUnitNode & translationUnit) {
     return true;
 }
 
-bool ResolveVisitor::visit(NamespaceDeclNode & namespaceDef) {
-    return true;
-}
-
 bool ResolveVisitor::visit(UseStatementNode & useStmt) {
     ClassDeclNode *classDef = loader.getClass(useStmt.name);
     if (classDef) {
@@ -153,37 +149,5 @@ bool ResolveVisitor::visit(ClassDeclNode & classDef) {
             return false;
         }
     }
-    return true;
-}
-
-bool ResolveVisitor::visit(MethodRefNode & methodRef) {
-    return true;
-}
-
-bool ResolveVisitor::visit(MethodDeclNode & methodDef) {
-    return true;
-}
-
-bool ResolveVisitor::visit(VariableDeclNode & variableDef) {
-    return true;
-}
-
-bool ResolveVisitor::visit(CStringConstAssignNode & constDef) {
-    return true;
-}
-
-bool ResolveVisitor::visit(IntConstAssignNode & constDef) {
-    return true;
-}
-
-bool ResolveVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
-    return true;
-}
-
-bool ResolveVisitor::visit(CStringRefNode & pasmInstruction) {
-    return true;
-}
-
-bool ResolveVisitor::visit(IntRefNode & pasmInstruction) {
     return true;
 }

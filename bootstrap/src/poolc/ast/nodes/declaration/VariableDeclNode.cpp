@@ -1,10 +1,12 @@
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
 // public
-VariableDeclNode::VariableDeclNode(Environment &env, MemoryInfo &mi)
-        :Object(env, mi), name(env.create<String, const char *>("UNKNOWN")) {}
+VariableDeclNode::VariableDeclNode(Environment &env, MemoryInfo &mi, TypeRefNode &type, String &name)
+        :Object(env, mi), type(type), name(name), initializer(0), scope(scope_block), global(false) {}
 VariableDeclNode::~VariableDeclNode() {
+    type.destroy();
     name.destroy();
+    if (initializer) { initializer->destroy(); }
 }
 
 bool VariableDeclNode::accept(Visitor & visitor) {

@@ -16,8 +16,7 @@ class ClassDeclNode: public Node {
     
     NodeList<TypeRefNode> &extends;
     NodeList<VariableDeclNode> &variables;
-    NodeList<CStringConstAssignNode> &consts;
-    NodeList<IntConstAssignNode> &intConsts;
+    NodeList<VariableDeclNode> &consts;
     NodeList<MethodDeclNode> &methods;
     
     NodeMap<ClassDeclNode> &supers;

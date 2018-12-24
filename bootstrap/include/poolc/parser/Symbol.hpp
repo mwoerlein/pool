@@ -13,9 +13,7 @@
 #include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
-#include "poolc/ast/nodes/instruction/CStringConstAssignNode.hpp"
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
-#include "poolc/ast/nodes/instruction/IntConstAssignNode.hpp"
 
 #include "poolc/ast/nodes/expression/AssignmentExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
