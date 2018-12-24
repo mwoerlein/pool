@@ -12,6 +12,7 @@ class UseStatementNode: public Node {
     virtual ~UseStatementNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_REFERENCE_USESTATEMENTNODE_HPP_LOCK

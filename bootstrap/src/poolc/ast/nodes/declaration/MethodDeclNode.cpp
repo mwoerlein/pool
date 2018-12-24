@@ -5,7 +5,7 @@
 // public
 MethodDeclNode::MethodDeclNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
-         name(env.create<String>()),
+         name(env.create<String, const char *>("UNKNOWN")),
          body(env.create<NodeList<InstructionNode>>()),
          kind(normal), scope(scope_instance),
          parent(0), index(-1) {
@@ -17,4 +17,8 @@ MethodDeclNode::~MethodDeclNode() {
 
 bool MethodDeclNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
+}
+
+void MethodDeclNode::printDebugName(OStream & stream) {
+    stream << "method-decl-<" << name << ">";
 }

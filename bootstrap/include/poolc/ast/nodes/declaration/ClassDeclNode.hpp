@@ -27,6 +27,7 @@ class ClassDeclNode: public Node {
     virtual ~ClassDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_DECLARATION_CLASSDECLNODE_HPP_LOCK

@@ -11,6 +11,7 @@ class VariableDeclNode: public Node {
     virtual ~VariableDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_DECLARATION_VARIABLEDECLNODE_HPP_LOCK

@@ -11,6 +11,7 @@ class InlinePasmInstructionNode: public InstructionNode {
     virtual ~InlinePasmInstructionNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_INSTRUCTION_INLINEPASMINSTRUCTIONNODE_HPP_LOCK

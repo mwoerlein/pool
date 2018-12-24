@@ -13,6 +13,7 @@ class MethodRefNode: public Node {
     virtual ~MethodRefNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_REFERENCE_METHODREFNODE_HPP_LOCK

@@ -10,3 +10,7 @@ InlinePasmInstructionNode::~InlinePasmInstructionNode() {
 bool InlinePasmInstructionNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
 }
+
+void InlinePasmInstructionNode::printDebugName(OStream & stream) {
+    stream << "inline-pasm";
+}

@@ -19,6 +19,10 @@ class Node: virtual public Object {
     virtual ~Node();
     
     virtual bool accept(Visitor & visitor) = 0;
+    
+    virtual void printDebugName(OStream & stream) = 0;
+    virtual void printDebugInfo(OStream & stream);
+    virtual OStream & operator >>(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODE_HPP_LOCK

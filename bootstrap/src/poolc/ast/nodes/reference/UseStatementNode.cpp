@@ -13,3 +13,7 @@ UseStatementNode::~UseStatementNode() {
 bool UseStatementNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
 }
+
+void UseStatementNode::printDebugName(OStream & stream) {
+    stream << "use-stmt-<" << name << ">";
+}

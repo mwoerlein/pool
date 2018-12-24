@@ -12,3 +12,7 @@ MethodRefNode::~MethodRefNode() {
 bool MethodRefNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
 }
+
+void MethodRefNode::printDebugName(OStream & stream) {
+    stream << "method-ref-<" << methodDef.name << ">";
+}

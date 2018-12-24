@@ -12,6 +12,7 @@ class CStringConstAssignNode: public Node {
     virtual ~CStringConstAssignNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_INSTRUCTION_CSTRINGCONSTASSIGNNODE_HPP_LOCK

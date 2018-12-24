@@ -20,6 +20,7 @@ class TranslationUnitNode: public Node, private HashMap<String, ClassDeclNode> {
     virtual ~TranslationUnitNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
     
     virtual ClassDeclNode * getClass(String & alias);
     virtual void registerClass(String & alias, ClassDeclNode & classDef);

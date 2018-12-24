@@ -12,3 +12,7 @@ ClassRefNode::~ClassRefNode() {
 bool ClassRefNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
 }
+
+void ClassRefNode::printDebugName(OStream & stream) {
+    stream << "class-ref-<" << name << ">";
+}

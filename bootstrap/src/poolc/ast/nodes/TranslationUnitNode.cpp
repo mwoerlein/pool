@@ -8,7 +8,7 @@
 TranslationUnitNode::TranslationUnitNode(Environment &env, MemoryInfo &mi, StorageElement &element)
         :HashMap(env, mi), Object(env, mi),
          element(element),
-         name(env.create<String>()),
+         name(env.create<String, const char *>("UNKNOWN")),
          uses(env.create<NodeList<UseStatementNode>>()),
          classes(env.create<NodeList<ClassDeclNode>>()),
          ns(0) {
@@ -31,4 +31,8 @@ ClassDeclNode * TranslationUnitNode::getClass(String & alias) {
 
 void TranslationUnitNode::registerClass(String & alias, ClassDeclNode & classDef) {
     HashMap::set(alias, classDef);
+}
+
+void TranslationUnitNode::printDebugName(OStream & stream) {
+    stream << "unit-<" << name << ">";
 }

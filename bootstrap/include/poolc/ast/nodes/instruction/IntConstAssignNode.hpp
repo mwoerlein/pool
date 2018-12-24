@@ -13,6 +13,7 @@ class IntConstAssignNode: public Node {
     virtual ~IntConstAssignNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_INSTRUCTION_INTCONSTASSIGNNODE_HPP_LOCK

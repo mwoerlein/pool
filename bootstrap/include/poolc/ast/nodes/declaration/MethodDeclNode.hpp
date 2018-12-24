@@ -21,6 +21,7 @@ class MethodDeclNode: public Node {
     virtual ~MethodDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_DECLARATION_METHODDECLNODE_HPP_LOCK

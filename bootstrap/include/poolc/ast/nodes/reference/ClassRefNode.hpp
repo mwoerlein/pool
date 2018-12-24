@@ -12,6 +12,7 @@ class ClassRefNode: public Node {
     virtual ~ClassRefNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK

@@ -10,3 +10,7 @@ NamespaceDeclNode::~NamespaceDeclNode() {
 bool NamespaceDeclNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
 }
+
+void NamespaceDeclNode::printDebugName(OStream & stream) {
+    stream << "namespace-decl-<" << name << ">";
+}

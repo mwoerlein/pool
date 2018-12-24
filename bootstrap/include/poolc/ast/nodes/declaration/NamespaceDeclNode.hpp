@@ -11,6 +11,7 @@ class NamespaceDeclNode: public Node {
     virtual ~NamespaceDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_NODES_DECLARATION_NAMESPACEDECLNODE_HPP_LOCK

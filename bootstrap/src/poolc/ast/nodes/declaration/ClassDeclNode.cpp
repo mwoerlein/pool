@@ -13,7 +13,7 @@
 // public
 ClassDeclNode::ClassDeclNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
-         name(env.create<String>()),
+         name(env.create<String, const char *>("UNKNOWN")),
          fullQualifiedName(env.create<FullQualifiedName>()),
          globalPrefix(env.create<String>()),
          localPrefix(env.create<String>()),
@@ -45,4 +45,8 @@ ClassDeclNode::~ClassDeclNode() {
 
 bool ClassDeclNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
+}
+
+void ClassDeclNode::printDebugName(OStream & stream) {
+    stream << "class-decl-<" << name << ">";
 }
