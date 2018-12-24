@@ -26,6 +26,7 @@ class ThisExprNode;
 class VariableExprNode;
 
 class InlinePasmInstructionNode;
+class VariableInitInstNode;
 
 class Visitor: virtual public Object, virtual public LoggerAware {
     public:
@@ -45,6 +46,7 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     virtual bool visit(UseStatementNode & useStmt);
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction);
+    virtual bool visit(VariableInitInstNode & variableInit);
     
     virtual bool visit(AssignmentExprNode & assignment);
     virtual bool visit(ConstCStringExprNode & constCString);

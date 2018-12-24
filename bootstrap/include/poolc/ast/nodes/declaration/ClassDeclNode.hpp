@@ -16,7 +16,7 @@ class ClassDeclNode: public Node {
     
     NodeList<TypeRefNode> &extends;
     NodeList<VariableDeclNode> &variables;
-    NodeList<VariableDeclNode> &consts;
+    NodeList<VariableInitInstNode> &consts;
     NodeList<MethodDeclNode> &methods;
     
     NodeMap<ClassDeclNode> &supers;

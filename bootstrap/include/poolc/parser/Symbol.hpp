@@ -14,6 +14,7 @@
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
+#include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
 
 #include "poolc/ast/nodes/expression/AssignmentExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"

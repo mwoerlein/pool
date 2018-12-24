@@ -1,9 +1,12 @@
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
-#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
-#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
+
+#include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
+
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
+#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
 
 #include "sys/collection/LinkedList.hpp"
 #include "sys/collection/HashMap.hpp"
@@ -18,7 +21,7 @@ ClassDeclNode::ClassDeclNode(Environment &env, MemoryInfo &mi)
          unit(0),
          extends(env.create<NodeList<TypeRefNode>>()),
          variables(env.create<NodeList<VariableDeclNode>>()),
-         consts(env.create<NodeList<VariableDeclNode>>()),
+         consts(env.create<NodeList<VariableInitInstNode>>()),
          methods(env.create<NodeList<MethodDeclNode>>()),
          supers(env.create<NodeMap<ClassDeclNode>>()),
          methodRefs(env.create<NodeMap<MethodRefNode>>()) {

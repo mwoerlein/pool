@@ -13,6 +13,7 @@
 #include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
 
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
+#include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
 
 #include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/reference/MethodRefNode.hpp"
@@ -285,17 +286,37 @@ bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
 bool X86PasmVisitor::visit(VariableDeclNode & variableDef) {
     switch (variableDef.scope) {
         case scope_class:
-            if (!variableDef.initializer) {
-                return false;
-            }
-            if (ConstIntExprNode *cInt = variableDef.initializer->isConstInt()) {
+            return true;
+        case scope_instance:
+            *curOut << "// variable " << variableDef.name << "\n";
+            LOCAL(
+                instanceVarOffset(curSuper, &variableDef),
+                OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
+            );
+            LABEL(instanceVar(curSuper, &variableDef));
+            LONG("0"); // TODO: size_of variable
+            return true;
+        case scope_method:
+            return true;
+        case scope_block:
+            return true;
+    }
+    return false;
+}
+
+bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
+    switch (variableInit.scope) {
+        case scope_class:
+            if (ConstIntExprNode *cInt = variableInit.initializer.isConstInt()) {
+                VariableDeclNode &variableDef = *variableInit.variables.first();
                 *curOut << "\n// int " << variableDef.name << "\n";
                 LOCAL(
                     constInt(&variableDef),
                     cInt->value
                 );
                 return true;
-            } else if (ConstCStringExprNode *cCString = variableDef.initializer->isConstCString()) {
+            } else if (ConstCStringExprNode *cCString = variableInit.initializer.isConstCString()) {
+                VariableDeclNode &variableDef = *variableInit.variables.first();
                 *curOut << "\n// string " << variableDef.name << "\n";
                 LOCAL(
                     constStringOffset(&variableDef),
@@ -309,13 +330,6 @@ bool X86PasmVisitor::visit(VariableDeclNode & variableDef) {
             }
             
         case scope_instance:
-            *curOut << "// variable " << variableDef.name << "\n";
-            LOCAL(
-                instanceVarOffset(curSuper, &variableDef),
-                OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
-            );
-            LABEL(instanceVar(curSuper, &variableDef));
-            LONG("0"); // TODO: size_of variable
             return true;
         case scope_method:
             return true;

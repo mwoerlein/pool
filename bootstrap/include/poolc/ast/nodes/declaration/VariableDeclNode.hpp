@@ -10,7 +10,6 @@ class VariableDeclNode: public Node {
     public:
     String & name;
     TypeRefNode & type;
-    ExpressionNode * initializer;
     scope_t scope;
     bool global;
     
