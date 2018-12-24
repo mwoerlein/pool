@@ -19,6 +19,11 @@
     IntConstAssignNode *u_const_int_decl;
     CStringConstAssignNode *u_const_cstring_decl;
     
+    ExpressionNode *u_expression;
+    MutableCollection<ExpressionNode> *u_expression_list;
+    MethodCallExprNode *u_method_call;
+    VariableExprNode *u_variable;
+    
     TypeRefNode *u_type;
     MutableCollection<TypeRefNode> *u_type_list;
 }
@@ -65,6 +70,12 @@
 %type <u_instruction> inline_pasm_inst
 %type <u_const_int_decl> const_int_decl
 %type <u_const_cstring_decl> const_cstring_decl
+
+%type <u_expression> expression
+%type <u_expression_list> expression_list
+%type <u_expression_list> expression_list_empty
+%type <u_method_call> method_call_expr
+%type <u_variable> variable_expr
 
 %type <u_type> type
 %type <u_type_list> type_list
@@ -433,66 +444,108 @@ method_decl:
 expression:
     NUMBER
     {
-        driver.debug() << "-- NUMBER ("<<(int)$1<<")\n";
+        $$ = &driver.env().create<ConstIntExprNode, int>($1);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
     }
 |   STRING
     {
-        driver.debug() << "-- STRING ("<<*$1<<")\n";
+        $$ = &driver.env().create<ConstCStringExprNode, String&>(*$1);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
     }
 |   THIS
     {
-        driver.debug() << "-- THIS\n";
+        $$ = &driver.env().create<ThisExprNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
     }
 |   variable_expr
     {
-        driver.debug() << "-- expression (1)\n";
-    }
-|   assignment_expr
-    {
-        driver.debug() << "-- expression (2)\n";
+        $$ = $1;
     }
 |   method_call_expr
     {
-        driver.debug() << "-- expression (3)\n";
+        $$ = $1;
+    }
+|   variable_expr EQUAL expression
+    {
+        $$ = &driver.env().create<AssignmentExprNode, VariableExprNode&, ExpressionNode&>(*$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 |   '(' expression ')'
     {
-        driver.debug() << "-- expression (4)\n";
+        $$ = $2;
     }
 ;
 
 expression_list:
     expression
+    {
+        $$ = &driver.env().create<LinkedList<ExpressionNode>>();
+        if ($1) { $$->add(*$1); }
+    }
 |   expression_list ',' expression
+    {
+        $$ = $1;
+        if ($3) { $$->add(*$3); }
+    }
 ;
 
 expression_list_empty:
     // empty
+    {
+        $$ = &driver.env().create<LinkedList<ExpressionNode>>();
+    }
 |   expression_list
 ;
 
 variable_expr:
     ID
     {
-        driver.debug() << "-- variable_expr (1)\n";
+        $$ = &driver.env().create<VariableExprNode, String&>(*$1);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
     }
 |   expression DOT ID
     {
-        driver.debug() << "-- variable_expr (2)\n";
-    }
-;
-
-assignment_expr:
-    variable_expr EQUAL expression
-    {
-        driver.debug() << "-- assignment_expr (1)\n";
+        $$ = &driver.env().create<VariableExprNode, ExpressionNode&, String&>(*$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 ;
 
 method_call_expr:
     expression DOT ID '(' expression_list_empty ')'
     {
-        driver.debug() << "-- method_call_expr (1)\n";
+        $$ = &driver.env().create<MethodCallExprNode, ExpressionNode&, String&>(*$1, *$3);
+        // TODO: #3 handle parameter
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @6.last_line;
+        $$->last_column = @6.last_column;
+        
+        $5->destroy();
     }
 ;
 
@@ -501,8 +554,7 @@ method_call_expr:
 instruction:
     expression ';'
     {
-        driver.debug() << "-- instruction (1)\n";
-        $$ = 0;
+        $$ = $1;
     }
 |   variable_initializer_inst ';'
     {

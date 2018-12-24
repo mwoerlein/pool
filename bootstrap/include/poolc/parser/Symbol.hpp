@@ -17,6 +17,13 @@
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
 #include "poolc/ast/nodes/instruction/IntConstAssignNode.hpp"
 
+#include "poolc/ast/nodes/expression/AssignmentExprNode.hpp"
+#include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
+#include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
+#include "poolc/ast/nodes/expression/MethodCallExprNode.hpp"
+#include "poolc/ast/nodes/expression/ThisExprNode.hpp"
+#include "poolc/ast/nodes/expression/VariableExprNode.hpp"
+
 #include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/reference/CStringRefNode.hpp"
 #include "poolc/ast/nodes/reference/IntRefNode.hpp"
