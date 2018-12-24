@@ -16,16 +16,16 @@ class ResolveVisitor: public Visitor {
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
-    virtual bool visit(NamespaceDefNode & namespaceDef) override;
+    virtual bool visit(NamespaceDeclNode & namespaceDef) override;
     virtual bool visit(UseStatementNode & useStmt) override;
-    virtual bool visit(ClassDefNode & classDef) override;
+    virtual bool visit(ClassDeclNode & classDef) override;
     
     virtual bool visit(ClassRefNode & classRef) override;
-    virtual bool visit(CStringConstDefNode & constDef) override;
-    virtual bool visit(IntConstDefNode & constDef) override;
-    virtual bool visit(VariableDefNode & variableDef) override;
+    virtual bool visit(CStringConstAssignNode & constDef) override;
+    virtual bool visit(IntConstAssignNode & constDef) override;
+    virtual bool visit(VariableDeclNode & variableDef) override;
     virtual bool visit(MethodRefNode & methodRef) override;
-    virtual bool visit(MethodDefNode & methodDef) override;
+    virtual bool visit(MethodDeclNode & methodDef) override;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) override;
 };

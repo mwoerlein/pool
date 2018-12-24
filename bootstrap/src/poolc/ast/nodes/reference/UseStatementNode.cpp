@@ -1,4 +1,4 @@
-#include "poolc/ast/nodes/UseStatementNode.hpp"
+#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
 
 // public
 UseStatementNode::UseStatementNode(Environment &env, MemoryInfo &mi)

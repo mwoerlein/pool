@@ -4,7 +4,7 @@
 #include "sys/Object.hpp"
 #include "sys/stream/IStream.hpp"
 
-#include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
 class ParseBuffer: virtual public Object {
     private:

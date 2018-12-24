@@ -81,7 +81,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                 String &name = it.next();
                 logger.note() << "compile " << name << "\n";
                 
-                ClassDefNode * classDef = loader.getClass(name);
+                ClassDeclNode * classDef = loader.getClass(name);
                 if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 if (classDef) {
                     classDef->accept(dump);

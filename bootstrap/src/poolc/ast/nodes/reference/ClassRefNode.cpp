@@ -1,6 +1,6 @@
-#include "poolc/ast/nodes/ClassRefNode.hpp"
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 
-#include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
 // public
 ClassRefNode::ClassRefNode(Environment &env, MemoryInfo &mi)

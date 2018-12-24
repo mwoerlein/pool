@@ -6,16 +6,16 @@
 
 class TranslationUnitNode;
 
-class NamespaceDefNode;
+class NamespaceDeclNode;
 class UseStatementNode;
-class ClassDefNode;
+class ClassDeclNode;
 
 class ClassRefNode;
-class CStringConstDefNode;
-class IntConstDefNode;
-class MethodDefNode;
+class CStringConstAssignNode;
+class IntConstAssignNode;
+class MethodDeclNode;
 class MethodRefNode;
-class VariableDefNode;
+class VariableDeclNode;
 
 class InlinePasmInstructionNode;
 
@@ -25,16 +25,16 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     
     virtual bool visit(TranslationUnitNode & translationUnit) = 0;
 
-    virtual bool visit(NamespaceDefNode & namespaceDef) = 0;
+    virtual bool visit(NamespaceDeclNode & namespaceDef) = 0;
     virtual bool visit(UseStatementNode & useStmt) = 0;
-    virtual bool visit(ClassDefNode & classDef) = 0;
+    virtual bool visit(ClassDeclNode & classDef) = 0;
     
     virtual bool visit(ClassRefNode & classRef) = 0;
-    virtual bool visit(CStringConstDefNode & constDef) = 0;
-    virtual bool visit(IntConstDefNode & constDef) = 0;
-    virtual bool visit(VariableDefNode & variableDef) = 0;
+    virtual bool visit(CStringConstAssignNode & constDef) = 0;
+    virtual bool visit(IntConstAssignNode & constDef) = 0;
+    virtual bool visit(VariableDeclNode & variableDef) = 0;
     virtual bool visit(MethodRefNode & methodRef) = 0;
-    virtual bool visit(MethodDefNode & methodDef) = 0;
+    virtual bool visit(MethodDeclNode & methodDef) = 0;
     
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) = 0;
 };

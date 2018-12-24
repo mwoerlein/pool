@@ -4,6 +4,8 @@
 #include "sys/Object.hpp"
 
 #include "poolc/ast/Visitor.hpp"
+#include "sys/String.hpp"
+#include "poolc/parser/token/FullQualifiedName.hpp"
 
 enum scope_t { scope_class, scope_instance };
 

@@ -1,27 +1,26 @@
-#ifndef POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
-#define POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
+#ifndef POOLC_AST_NODES_DECLARATION_METHODDECLNODE_HPP_LOCK
+#define POOLC_AST_NODES_DECLARATION_METHODDECLNODE_HPP_LOCK
 
 #include "poolc/ast/Node.hpp"
 
-#include "sys/String.hpp"
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/nodes/InstructionNode.hpp"
 
 enum method_kind { abstract, naked, normal };
 
-class MethodDefNode: public Node {
+class MethodDeclNode: public Node {
     public:
     String & name;
     enum method_kind kind;
     scope_t scope;
     NodeList<InstructionNode> &body;
-    ClassDefNode *parent;
+    ClassDeclNode *parent;
     int index;
     
-    MethodDefNode(Environment &env, MemoryInfo &mi);
-    virtual ~MethodDefNode();
+    MethodDeclNode(Environment &env, MemoryInfo &mi);
+    virtual ~MethodDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
 };
 
-#endif //POOLC_AST_NODES_METHODDEFNODE_HPP_LOCK
+#endif //POOLC_AST_NODES_DECLARATION_METHODDECLNODE_HPP_LOCK

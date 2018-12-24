@@ -21,11 +21,11 @@ void ClassLoader::setLogger(Logger &logger) {
     resolve.setLogger(logger);
 }
 
-void ClassLoader::registerClass(ClassDefNode & classDef) {
+void ClassLoader::registerClass(ClassDeclNode & classDef) {
     HashMap::set(classDef.fullQualifiedName, classDef);
 }
 
-ClassDefNode * ClassLoader::getClass(String & fullQualifiedName) {
+ClassDeclNode * ClassLoader::getClass(String & fullQualifiedName) {
     if (!HashMap::has(fullQualifiedName)) {
         StorageElement *e = ClassPathStorage::getElement(fullQualifiedName);
         if (!e) {

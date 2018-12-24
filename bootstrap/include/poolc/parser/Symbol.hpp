@@ -7,14 +7,14 @@
 #include "sys/collection/HashMap.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/nodes/NamespaceDefNode.hpp"
-#include "poolc/ast/nodes/UseStatementNode.hpp"
-#include "poolc/ast/nodes/ClassDefNode.hpp"
-#include "poolc/ast/nodes/ClassRefNode.hpp"
-#include "poolc/ast/nodes/MethodDefNode.hpp"
-#include "poolc/ast/nodes/VariableDefNode.hpp"
-#include "poolc/ast/nodes/IntConstDefNode.hpp"
-#include "poolc/ast/nodes/CStringConstDefNode.hpp"
+#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
+#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
+#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
+#include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
+#include "poolc/ast/nodes/instruction/IntConstAssignNode.hpp"
+#include "poolc/ast/nodes/instruction/CStringConstAssignNode.hpp"
 
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
 

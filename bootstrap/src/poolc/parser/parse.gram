@@ -5,13 +5,13 @@
     long u_number;
     String *u_string;
     MutableCollection<String> *u_string_list;
-    MutableCollection<VariableDefNode> *u_variable_decl_list;
-    ClassDefNode *u_class_decl;
-    MethodDefNode *u_method_decl;
-    VariableDefNode *u_variable_decl;
-    IntConstDefNode *u_const_int_decl;
-    CStringConstDefNode *u_const_cstring_decl;
-    NamespaceDefNode *u_namespace_decl;
+    MutableCollection<VariableDeclNode> *u_variable_decl_list;
+    ClassDeclNode *u_class_decl;
+    MethodDeclNode *u_method_decl;
+    VariableDeclNode *u_variable_decl;
+    IntConstAssignNode *u_const_int_decl;
+    CStringConstAssignNode *u_const_cstring_decl;
+    NamespaceDeclNode *u_namespace_decl;
     UseStatementNode *u_use_stmt;
     InstructionNode *u_instruction;
     TranslationUnitNode *u_unit;
@@ -87,7 +87,7 @@ translation_unit:
 namespace_decl:
     NAMESPACE type ';'
     {
-        $$ = &driver.env().create<NamespaceDefNode>();
+        $$ = &driver.env().create<NamespaceDeclNode>();
         $$->name = *$2;
         $2->destroy();
         
@@ -198,7 +198,7 @@ type_list_empty:
 variable_decl:
     type ID
     {
-        $$ = &driver.env().create<VariableDefNode>();
+        $$ = &driver.env().create<VariableDeclNode>();
         $$->name = *$2;
         $1->destroy();
         $2->destroy();
@@ -213,7 +213,7 @@ variable_decl:
 variable_decl_list:
     variable_decl
     {
-        $$ = &driver.env().create<LinkedList<VariableDefNode>>();
+        $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
         $$->add(*$1);
     }
 |   variable_decl_list ',' variable_decl
@@ -226,7 +226,7 @@ variable_decl_list:
 variable_decl_list_empty:
     //empty
     {
-        $$ = &driver.env().create<LinkedList<VariableDefNode>>();
+        $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
     }
 |   variable_decl_list
 ;
@@ -234,7 +234,7 @@ variable_decl_list_empty:
 const_int_decl:
     variable_decl COLON_EQUAL NUMBER
     {
-        $$ = &driver.env().create<IntConstDefNode>();
+        $$ = &driver.env().create<IntConstAssignNode>();
         $$->name = $1->name;
         $$->value = $3;
         $1->destroy();
@@ -246,7 +246,7 @@ const_int_decl:
     }
 |   GLOBAL variable_decl COLON_EQUAL NUMBER
     {
-        $$ = &driver.env().create<IntConstDefNode>();
+        $$ = &driver.env().create<IntConstAssignNode>();
         $$->name = $2->name;
         $$->value = $4;
         $$->global = true;
@@ -262,7 +262,7 @@ const_int_decl:
 const_cstring_decl:
     variable_decl COLON_EQUAL STRING
     {
-        $$ = &driver.env().create<CStringConstDefNode>();
+        $$ = &driver.env().create<CStringConstAssignNode>();
         $$->name = $1->name;
         $$->value = *$3;
         $1->destroy();
@@ -278,7 +278,7 @@ const_cstring_decl:
 class_body_empty:
     // empty
     {
-        $$ = &driver.env().create<ClassDefNode>();
+        $$ = &driver.env().create<ClassDeclNode>();
     }
 |   class_body_empty method_decl
     {
@@ -354,7 +354,7 @@ method_decl:
     }
 |   ABSTRACT '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' ';'
     {
-        $$ = &driver.env().create<MethodDefNode>();
+        $$ = &driver.env().create<MethodDeclNode>();
         $$->name = *$5;
         $$->kind = abstract;
         
@@ -372,7 +372,7 @@ method_decl:
 method_body_empty:
     // empty
     {
-        $$ = &driver.env().create<MethodDefNode>();
+        $$ = &driver.env().create<MethodDeclNode>();
     }
 |   method_body_empty instruction
     {

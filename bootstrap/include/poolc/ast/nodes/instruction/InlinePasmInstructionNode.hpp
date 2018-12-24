@@ -3,8 +3,6 @@
 
 #include "poolc/ast/nodes/InstructionNode.hpp"
 
-#include "sys/String.hpp"
-
 class InlinePasmInstructionNode: public InstructionNode {
     public:
     String & pasm;

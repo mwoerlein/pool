@@ -1,20 +1,20 @@
-#include "poolc/ast/nodes/MethodDefNode.hpp"
+#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
 
-#include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
 // public
-MethodDefNode::MethodDefNode(Environment &env, MemoryInfo &mi)
+MethodDeclNode::MethodDeclNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
          name(env.create<String>()),
          body(env.create<NodeList<InstructionNode>>()),
          kind(normal), scope(scope_instance),
          parent(0), index(-1) {
 }
-MethodDefNode::~MethodDefNode() {
+MethodDeclNode::~MethodDeclNode() {
     name.destroy();
     body.destroyAll();
 }
 
-bool MethodDefNode::accept(Visitor & visitor) {
+bool MethodDeclNode::accept(Visitor & visitor) {
     return visitor.visit(*this);
 }

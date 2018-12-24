@@ -1,14 +1,12 @@
-#ifndef POOLC_AST_NODES_CLASSREFNODE_HPP_LOCK
-#define POOLC_AST_NODES_CLASSREFNODE_HPP_LOCK
+#ifndef POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK
+#define POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK
 
 #include "poolc/ast/Node.hpp"
-
-#include "poolc/parser/token/FullQualifiedName.hpp"
 
 class ClassRefNode: public Node {
     public:
     FullQualifiedName & name;
-    ClassDefNode *classDef;
+    ClassDeclNode *classDef;
     
     ClassRefNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassRefNode();
@@ -16,4 +14,4 @@ class ClassRefNode: public Node {
     virtual bool accept(Visitor & visitor) override;
 };
 
-#endif //POOLC_AST_NODES_CLASSREFNODE_HPP_LOCK
+#endif //POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK

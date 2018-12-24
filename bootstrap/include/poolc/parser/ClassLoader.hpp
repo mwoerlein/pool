@@ -7,10 +7,10 @@
 #include "sys/String.hpp"
 #include "sys/log/LoggerAware.hpp"
 #include "poolc/parser/PoolParser.hpp"
-#include "poolc/ast/nodes/ClassDefNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
 class ResolveVisitor;
-class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private HashMap<String, ClassDefNode> {
+class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private HashMap<String, ClassDeclNode> {
     private:
     PoolParser & parser;
     ResolveVisitor & resolve;
@@ -21,8 +21,8 @@ class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private 
     
     virtual void setLogger(Logger &logger) override;
     
-    virtual ClassDefNode * getClass(String & fullQualifiedName);
-    virtual void registerClass(ClassDefNode & classDef);
+    virtual ClassDeclNode * getClass(String & fullQualifiedName);
+    virtual void registerClass(ClassDeclNode & classDef);
 };
 
 #endif //POOLC_PARSER_CLASSLOADER_HPP_LOCK

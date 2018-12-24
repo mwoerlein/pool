@@ -1,12 +1,12 @@
 #include "poolc/ast/visitors/ResolveVisitor.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/nodes/NamespaceDefNode.hpp"
-#include "poolc/ast/nodes/UseStatementNode.hpp"
-#include "poolc/ast/nodes/ClassDefNode.hpp"
-#include "poolc/ast/nodes/ClassRefNode.hpp"
-#include "poolc/ast/nodes/MethodDefNode.hpp"
-#include "poolc/ast/nodes/MethodRefNode.hpp"
+#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
+#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
+#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
+#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
 
 // public
 ResolveVisitor::ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader)
@@ -31,12 +31,12 @@ bool ResolveVisitor::visit(TranslationUnitNode & translationUnit) {
     return true;
 }
 
-bool ResolveVisitor::visit(NamespaceDefNode & namespaceDef) {
+bool ResolveVisitor::visit(NamespaceDeclNode & namespaceDef) {
     return true;
 }
 
 bool ResolveVisitor::visit(UseStatementNode & useStmt) {
-    ClassDefNode *classDef = loader.getClass(useStmt.name);
+    ClassDeclNode *classDef = loader.getClass(useStmt.name);
     if (classDef) {
         curUnit->registerClass(useStmt.alias, *classDef);
     }
@@ -45,7 +45,7 @@ bool ResolveVisitor::visit(UseStatementNode & useStmt) {
 
 bool ResolveVisitor::visit(ClassRefNode & classRef) {
     if (!classRef.classDef) {
-        ClassDefNode * classDef = 0;
+        ClassDeclNode * classDef = 0;
         if (classRef.name.isFullQualified()) {
             classRef.classDef = loader.getClass(classRef.name);
         } else {
@@ -64,7 +64,7 @@ bool ResolveVisitor::visit(ClassRefNode & classRef) {
     return classRef.classDef;
 }
 
-bool ResolveVisitor::visit(ClassDefNode & classDef) {
+bool ResolveVisitor::visit(ClassDeclNode & classDef) {
     if (!classDef.supers.isEmpty()) {
         info() << classDef.name << ": already resolved" << "\n";
     }
@@ -89,9 +89,9 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
     while (it.hasNext()) {
         ClassRefNode & extend = it.next();
         extend.accept(*this);
-        Iterator<ClassDefNode> &sit = extend.classDef->supers.values();
+        Iterator<ClassDeclNode> &sit = extend.classDef->supers.values();
         while (sit.hasNext()) {
-            ClassDefNode & super = sit.next();
+            ClassDeclNode & super = sit.next();
             classDef.supers.set(super.fullQualifiedName, super);
         }
         sit.destroy();
@@ -99,7 +99,7 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
         Iterator<MethodRefNode> &mit = extend.classDef->methodRefs.values();
         while (mit.hasNext()) {
             MethodRefNode &superRef = mit.next();
-            MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(superRef.methodDef);
+            MethodRefNode &ref = env().create<MethodRefNode, MethodDeclNode&>(superRef.methodDef);
             MethodRefNode &old = classDef.methodRefs.set(superRef.methodDef.name, ref);
             if (&old) { old.destroy(); }
             ref.parent = &classDef;
@@ -110,17 +110,17 @@ bool ResolveVisitor::visit(ClassDefNode & classDef) {
     
     classDef.supers.set(classDef.fullQualifiedName, classDef);
     {
-        Iterator<MethodDefNode> &mit = classDef.methods.iterator();
+        Iterator<MethodDeclNode> &mit = classDef.methods.iterator();
         int index = 0;
         while (mit.hasNext()) {
-            MethodDefNode &methodDef = mit.next();
+            MethodDeclNode &methodDef = mit.next();
             methodDef.parent = &classDef;
             methodDef.index = index++;
             switch (methodDef.kind) {
                 case naked:
                     continue;
             }
-            MethodRefNode &ref = env().create<MethodRefNode, MethodDefNode&>(methodDef);
+            MethodRefNode &ref = env().create<MethodRefNode, MethodDeclNode&>(methodDef);
             MethodRefNode &old = classDef.methodRefs.set(methodDef.name, ref);
             if (&old) { old.destroy(); }
             ref.parent = &classDef;
@@ -153,19 +153,19 @@ bool ResolveVisitor::visit(MethodRefNode & methodRef) {
     return true;
 }
 
-bool ResolveVisitor::visit(MethodDefNode & methodDef) {
+bool ResolveVisitor::visit(MethodDeclNode & methodDef) {
     return true;
 }
 
-bool ResolveVisitor::visit(VariableDefNode & variableDef) {
+bool ResolveVisitor::visit(VariableDeclNode & variableDef) {
     return true;
 }
 
-bool ResolveVisitor::visit(CStringConstDefNode & constDef) {
+bool ResolveVisitor::visit(CStringConstAssignNode & constDef) {
     return true;
 }
 
-bool ResolveVisitor::visit(IntConstDefNode & constDef) {
+bool ResolveVisitor::visit(IntConstAssignNode & constDef) {
     return true;
 }
 

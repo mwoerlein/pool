@@ -3,15 +3,15 @@
 #include "poolc/storage/Types.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/nodes/NamespaceDefNode.hpp"
-#include "poolc/ast/nodes/UseStatementNode.hpp"
-#include "poolc/ast/nodes/ClassDefNode.hpp"
-#include "poolc/ast/nodes/ClassRefNode.hpp"
-#include "poolc/ast/nodes/MethodDefNode.hpp"
-#include "poolc/ast/nodes/MethodRefNode.hpp"
-#include "poolc/ast/nodes/VariableDefNode.hpp"
-#include "poolc/ast/nodes/CStringConstDefNode.hpp"
-#include "poolc/ast/nodes/IntConstDefNode.hpp"
+#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
+#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
+#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
+#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
+#include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
+#include "poolc/ast/nodes/instruction/CStringConstAssignNode.hpp"
+#include "poolc/ast/nodes/instruction/IntConstAssignNode.hpp"
 #include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
 
 #define localClsPrefix(cls) (cls)->localPrefix
@@ -66,7 +66,7 @@ bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
     return true;
 }
 
-bool X86PasmVisitor::visit(NamespaceDefNode & namespaceDef) {
+bool X86PasmVisitor::visit(NamespaceDeclNode & namespaceDef) {
     return true;
 }
 
@@ -74,7 +74,7 @@ bool X86PasmVisitor::visit(UseStatementNode & useStmt) {
     return true;
 }
 
-bool X86PasmVisitor::visit(ClassDefNode & classDef) {
+bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     curClass = &classDef;
     curOut = &ps.writeElement(curClass->fullQualifiedName, mime);
     if (!curOut) {
@@ -92,7 +92,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
         *curOut << "version = " << e.getStringProperty("meta.version") << "\n";
     }
     if (e.hasStringProperty("pool.bootstrap")) {
-        MethodDefNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
+        MethodDeclNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
         if (bs.scope != scope_class || bs.kind != normal) {
             error() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessible via pool-ABI.\n";
             return false;
@@ -127,7 +127,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     *curOut << "\n// class tab\n";
     LABEL(classTabs());
     {
-        Iterator<ClassDefNode> &it = curClass->supers.iterator();
+        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
             LOCAL(
@@ -152,7 +152,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     *curOut << "\n// method tabs\n";
     LABEL(methodTabs());
     {
-        Iterator<ClassDefNode> &it = curClass->supers.iterator();
+        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
             LABEL(methodTab(curSuper));
@@ -165,9 +165,9 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     *curOut << "\n// methods tab\n";
     LABEL(methodDeclTab());
     {
-        Iterator<MethodDefNode> &it = curClass->methods.iterator();
+        Iterator<MethodDeclNode> &it = curClass->methods.iterator();
         while (it.hasNext()) {
-            MethodDefNode &methodDef = it.next();
+            MethodDeclNode &methodDef = it.next();
             switch (methodDef.kind) {
                 case abstract:
                 case naked:
@@ -189,7 +189,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     curClass->consts.acceptAll(*this);
     curClass->intConsts.acceptAll(*this);
     {
-        Iterator<ClassDefNode> &it = curClass->supers.iterator();
+        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
             *curOut << "\n// class-name " << curSuper->name << "\n";
@@ -210,7 +210,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     LONG("0"); // @meminfo
 
     {
-        Iterator<ClassDefNode> &it = curClass->supers.iterator();
+        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
             LABEL(instanceHandle(curSuper));
@@ -218,9 +218,9 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
             LONG("0"); // @inst
             LONG("0"); // vtab-offset
             
-            Iterator<ClassDefNode> &sit = curSuper->supers.iterator();
+            Iterator<ClassDeclNode> &sit = curSuper->supers.iterator();
             while (sit.hasNext()) {
-                ClassDefNode * ssuper = &sit.next();
+                ClassDeclNode * ssuper = &sit.next();
                 if (curSuper->equals(*curClass)) {
                     LOCAL(
                         instanceHandleVarsOffset(ssuper),
@@ -236,7 +236,7 @@ bool X86PasmVisitor::visit(ClassDefNode & classDef) {
     }
     
     {
-        Iterator<ClassDefNode> &it = curClass->supers.iterator();
+        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
             LABEL(instanceVars(curSuper));
@@ -263,7 +263,7 @@ bool X86PasmVisitor::visit(ClassRefNode & classRef) {
 }
 
 bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
-    MethodDefNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
+    MethodDeclNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
 // TODO #3: inline method-indices in method-call-generation
     LOCAL(methodRefOffset(curSuper, &methodDef), 8 * methodRef.index);
     LONG(4 * methodDef.index);
@@ -271,7 +271,7 @@ bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
+bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
     *curOut << "\n// method " << methodDef.name << "\n";
     
     switch (methodDef.kind) {
@@ -292,7 +292,7 @@ bool X86PasmVisitor::visit(MethodDefNode & methodDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
+bool X86PasmVisitor::visit(VariableDeclNode & variableDef) {
     *curOut << "// variable " << variableDef.name << "\n";
     LOCAL(
         instanceVarOffset(curSuper, &variableDef),
@@ -303,7 +303,7 @@ bool X86PasmVisitor::visit(VariableDefNode & variableDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
+bool X86PasmVisitor::visit(CStringConstAssignNode & constDef) {
     *curOut << "\n// string " << constDef.name << "\n";
     LOCAL(
         constStringOffset(&constDef),
@@ -314,7 +314,7 @@ bool X86PasmVisitor::visit(CStringConstDefNode & constDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(IntConstDefNode & constDef) {
+bool X86PasmVisitor::visit(IntConstAssignNode & constDef) {
     *curOut << "\n// int " << constDef.name << "\n";
     LOCAL(
         constInt(&constDef),
