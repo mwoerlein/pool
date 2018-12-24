@@ -1,15 +1,16 @@
 #ifndef POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK
 #define POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK
 
-#include "poolc/ast/Node.hpp"
+#include "poolc/ast/nodes/reference/TypeRefNode.hpp"
 
-class ClassRefNode: public Node {
+class ClassRefNode: public TypeRefNode {
     public:
     FullQualifiedName & name;
     ClassDeclNode *classDef;
     
     ClassRefNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassRefNode();
+    virtual ClassRefNode * isClass() override;
     
     virtual bool accept(Visitor & visitor) override;
     virtual void printDebugName(OStream & stream) override;

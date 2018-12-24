@@ -1,12 +1,15 @@
 #include "poolc/ast/visitors/ResolveVisitor.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
-#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
+
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
-#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
+#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
+
+#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/reference/MethodRefNode.hpp"
+#include "poolc/ast/nodes/reference/TypeRefNode.hpp"
+#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
 
 // public
 ResolveVisitor::ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader)
@@ -85,18 +88,22 @@ bool ResolveVisitor::visit(ClassDeclNode & classDef) {
         (classDef.localPrefix << '_').printuint(classDef.fullQualifiedName.hash(), 16, 8);
     }
     
-    Iterator<ClassRefNode> &it = classDef.extends.iterator();
+    Iterator<TypeRefNode> &it = classDef.extends.iterator();
     while (it.hasNext()) {
-        ClassRefNode & extend = it.next();
-        extend.accept(*this);
-        Iterator<ClassDeclNode> &sit = extend.classDef->supers.values();
+        TypeRefNode & type = it.next();
+        ClassRefNode *extend = type.isClass();
+        if (!extend) {
+            error() << curUnit->name << ": invalid extend type '" << type << "'\n";
+        }
+        extend->accept(*this);
+        Iterator<ClassDeclNode> &sit = extend->classDef->supers.values();
         while (sit.hasNext()) {
             ClassDeclNode & super = sit.next();
             classDef.supers.set(super.fullQualifiedName, super);
         }
         sit.destroy();
         
-        Iterator<MethodRefNode> &mit = extend.classDef->methodRefs.values();
+        Iterator<MethodRefNode> &mit = extend->classDef->methodRefs.values();
         while (mit.hasNext()) {
             MethodRefNode &superRef = mit.next();
             MethodRefNode &ref = env().create<MethodRefNode, MethodDeclNode&>(superRef.methodDef);
@@ -170,5 +177,13 @@ bool ResolveVisitor::visit(IntConstAssignNode & constDef) {
 }
 
 bool ResolveVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
+    return true;
+}
+
+bool ResolveVisitor::visit(CStringRefNode & pasmInstruction) {
+    return true;
+}
+
+bool ResolveVisitor::visit(IntRefNode & pasmInstruction) {
     return true;
 }

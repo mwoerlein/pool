@@ -4,23 +4,29 @@
 {
     long u_number;
     String *u_string;
-    MutableCollection<String> *u_string_list;
-    MutableCollection<VariableDeclNode> *u_variable_decl_list;
+    
+    TranslationUnitNode *u_unit;
+    NamespaceDeclNode *u_namespace_decl;
+    UseStatementNode *u_use_stmt;
+    
     ClassDeclNode *u_class_decl;
     MethodDeclNode *u_method_decl;
     VariableDeclNode *u_variable_decl;
+    MutableCollection<VariableDeclNode> *u_variable_decl_list;
+    
+    InstructionNode *u_instruction;
+    MutableCollection<InstructionNode> *u_instruction_list;
     IntConstAssignNode *u_const_int_decl;
     CStringConstAssignNode *u_const_cstring_decl;
-    NamespaceDeclNode *u_namespace_decl;
-    UseStatementNode *u_use_stmt;
-    InstructionNode *u_instruction;
-    TranslationUnitNode *u_unit;
+    
+    TypeRefNode *u_type;
+    MutableCollection<TypeRefNode> *u_type_list;
 }
 %lsp-needed
 
 %token COLON_EQUAL
-%right DOT
 %right EQUAL
+%left DOT
 
 %token ABSTRACT
 %token AS
@@ -32,6 +38,9 @@
 %token THIS
 %token USE
 
+%token CSTRING
+%token INT
+
 %token NAKED
 %token PASM
 
@@ -40,28 +49,27 @@
 %token <u_string> FQN
 %token <u_number> NUMBER
 
-%type <u_string> type
-%type <u_string_list> type_list
-%type <u_string_list> type_list_empty
-
-%type <u_variable_decl> variable_decl
-%type <u_variable_decl_list> variable_decl_list
-%type <u_variable_decl_list> variable_decl_list_empty
-%type <u_const_int_decl> const_int_decl
-%type <u_const_cstring_decl> const_cstring_decl
-
-%type <u_method_decl> method_decl
-%type <u_method_decl> method_body_empty
-
-%type <u_class_decl> class_decl
-%type <u_class_decl> class_body_empty
-
 %type <u_unit> translation_unit
 %type <u_namespace_decl> namespace_decl
 %type <u_use_stmt> use_stmt
 
+%type <u_class_decl> class_decl
+%type <u_class_decl> class_body_empty
+%type <u_method_decl> method_decl
+%type <u_variable_decl> variable_decl
+%type <u_variable_decl_list> variable_decl_list
+%type <u_variable_decl_list> variable_decl_list_empty
+
 %type <u_instruction> instruction
+%type <u_instruction_list> instruction_list_empty
 %type <u_instruction> inline_pasm_inst
+%type <u_const_int_decl> const_int_decl
+%type <u_const_cstring_decl> const_cstring_decl
+
+%type <u_type> type
+%type <u_type_list> type_list
+%type <u_type_list> type_list_empty
+
 
 //=
 %%
@@ -85,16 +93,29 @@ translation_unit:
 ;
 
 namespace_decl:
-    NAMESPACE type ';'
+    NAMESPACE ID ';'
     {
         $$ = &driver.env().create<NamespaceDeclNode>();
         $$->name = *$2;
-        $2->destroy();
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @3.last_line;
         $$->last_column = @3.last_column;
+        
+        $2->destroy();
+    }
+|   NAMESPACE FQN ';'
+    {
+        $$ = &driver.env().create<NamespaceDeclNode>();
+        $$->name = *$2;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+        
+        $2->destroy();
     }
 ;
 
@@ -131,147 +152,27 @@ class_decl:
     {
         $$ = $4;
         $$->name = *$2;
-        $2->destroy();
-        
-        $4->first_line = @3.first_line;
-        $4->first_column = @3.first_column;
-        $4->last_line = @5.last_line;
-        $4->last_column = @5.last_column;
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @5.last_line;
         $$->last_column = @5.last_column;
+        
+        $2->destroy();
     }
 |   CLASS ID EXTENDS type_list '{' class_body_empty '}'
     {
         $$ = $6;
         $$->name = *$2;
-        $2->destroy();
-        Iterator<String> &it = $4->iterator();
-        while (it.hasNext()) {
-            ClassRefNode &ref = driver.env().create<ClassRefNode>();
-            ref.name = it.next();
-            $$->extends.add(ref);
-        }
-        it.destroy();
-        $4->destroy();
-        
-        $6->first_line = @5.first_line;
-        $6->first_column = @5.first_column;
-        $6->last_line = @7.last_line;
-        $6->last_column = @7.last_column;
+        $$->extends.addAll(*$4);
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @7.last_line;
         $$->last_column = @7.last_column;
-    }
-;
-
-type:
-    ID
-|   FQN
-;
-
-type_list:
-    type
-    {
-        $$ = &driver.env().create<LinkedList<String>>();
-        $$->add(*$1);
-    }
-|   type_list ',' type
-    {
-        $$ = $1;
-        $$->add(*$3);
-    }
-;
-
-type_list_empty:
-    //empty
-    {
-        $$ = &driver.env().create<LinkedList<String>>();
-    }
-|   type_list
-;
-
-variable_decl:
-    type ID
-    {
-        $$ = &driver.env().create<VariableDeclNode>();
-        $$->name = *$2;
-        $1->destroy();
+        
         $2->destroy();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @2.last_line;
-        $$->last_column = @2.last_column;
-    }
-;
-
-variable_decl_list:
-    variable_decl
-    {
-        $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
-        $$->add(*$1);
-    }
-|   variable_decl_list ',' variable_decl
-    {
-        $$ = $1;
-        $$->add(*$3);
-    }
-;
-
-variable_decl_list_empty:
-    //empty
-    {
-        $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
-    }
-|   variable_decl_list
-;
-
-const_int_decl:
-    variable_decl COLON_EQUAL NUMBER
-    {
-        $$ = &driver.env().create<IntConstAssignNode>();
-        $$->name = $1->name;
-        $$->value = $3;
-        $1->destroy();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @3.last_line;
-        $$->last_column = @3.last_column;
-    }
-|   GLOBAL variable_decl COLON_EQUAL NUMBER
-    {
-        $$ = &driver.env().create<IntConstAssignNode>();
-        $$->name = $2->name;
-        $$->value = $4;
-        $$->global = true;
-        $2->destroy();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @4.last_line;
-        $$->last_column = @4.last_column;
-    }
-;
-
-const_cstring_decl:
-    variable_decl COLON_EQUAL STRING
-    {
-        $$ = &driver.env().create<CStringConstAssignNode>();
-        $$->name = $1->name;
-        $$->value = *$3;
-        $1->destroy();
-        $3->destroy();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @3.last_line;
-        $$->last_column = @3.last_column;
+        $4->destroy();
     }
 ;
 
@@ -303,54 +204,208 @@ class_body_empty:
 |   class_body_empty error ';'
 ;
 
-method_decl:
-    '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' method_body_empty '}'
+type:
+    ID
     {
-        $$ = $9;
-        $$->name = *$4;
+        ClassRefNode & ref = driver.env().create<ClassRefNode>();
+        ref.name = *$1;
+        $$ = &ref;
         
-        $9->first_line = @8.first_line;
-        $9->first_column = @8.first_column;
-        $9->last_line = @10.last_line;
-        $9->last_column = @10.last_column;
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+        
+        $1->destroy();
+    }
+|   FQN
+    {
+        ClassRefNode & ref = driver.env().create<ClassRefNode>();
+        ref.name = *$1;
+        $$ = &ref;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+        
+        $1->destroy();
+    }
+|   INT
+    {
+        $$ = &driver.env().create<IntRefNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   CSTRING
+    {
+        $$ = &driver.env().create<CStringRefNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+;
+
+type_list:
+    type
+    {
+        $$ = &driver.env().create<LinkedList<TypeRefNode>>();
+        $$->add(*$1);
+    }
+|   type_list ',' type
+    {
+        $$ = $1;
+        $$->add(*$3);
+    }
+;
+
+type_list_empty:
+    //empty
+    {
+        $$ = &driver.env().create<LinkedList<TypeRefNode>>();
+    }
+|   type_list
+;
+
+variable_decl:
+    type ID
+    {
+        $$ = &driver.env().create<VariableDeclNode>();
+        $$->name = *$2;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+        
+        $1->destroy();
+        $2->destroy();
+    }
+;
+
+variable_decl_list:
+    variable_decl
+    {
+        $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
+        $$->add(*$1);
+    }
+|   variable_decl_list ',' variable_decl
+    {
+        $$ = $1;
+        $$->add(*$3);
+    }
+;
+
+variable_decl_list_empty:
+    //empty
+    {
+        $$ = &driver.env().create<LinkedList<VariableDeclNode>>();
+    }
+|   variable_decl_list
+;
+
+const_int_decl:
+    variable_decl COLON_EQUAL NUMBER
+    {
+        $$ = &driver.env().create<IntConstAssignNode>();
+        $$->name = $1->name;
+        $$->value = $3;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+        
+        $1->destroy();
+    }
+|   GLOBAL variable_decl COLON_EQUAL NUMBER
+    {
+        $$ = &driver.env().create<IntConstAssignNode>();
+        $$->name = $2->name;
+        $$->value = $4;
+        $$->global = true;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @4.last_line;
+        $$->last_column = @4.last_column;
+        
+        $2->destroy();
+    }
+;
+
+const_cstring_decl:
+    variable_decl COLON_EQUAL STRING
+    {
+        $$ = &driver.env().create<CStringConstAssignNode>();
+        $$->name = $1->name;
+        $$->value = *$3;
+        $1->destroy();
+        $3->destroy();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+;
+
+method_decl:
+    '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_list_empty '}'
+    {
+        $$ = &driver.env().create<MethodDeclNode>();
+        $$->name = *$4;
+        $$->body.addAll(*$9);
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @10.last_line;
         $$->last_column = @10.last_column;
-    }
-|   GLOBAL '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' method_body_empty '}'
-    {
-        $$ = $10;
-        $$->name = *$5;
-        $$->scope = scope_class;
         
-        $10->first_line = @9.first_line;
-        $10->first_column = @9.first_column;
-        $10->last_line = @11.last_line;
-        $10->last_column = @11.last_column;
+        $2->destroy();
+        $4->destroy();
+        $6->destroy();
+        $9->destroy();
+    }
+|   GLOBAL '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_list_empty '}'
+    {
+        $$ = &driver.env().create<MethodDeclNode>();
+        $$->name = *$5;
+        $$->body.addAll(*$10);
+        $$->scope = scope_class;
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @11.last_line;
         $$->last_column = @11.last_column;
+        
+        $3->destroy();
+        $5->destroy();
+        $7->destroy();
+        $10->destroy();
     }
-|   NAKED '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' method_body_empty '}'
+|   NAKED '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_list_empty '}'
     {
-        $$ = $10;
+        $$ = &driver.env().create<MethodDeclNode>();
         $$->name = *$5;
+        $$->body.addAll(*$10);
         $$->kind = naked;
         $$->scope = scope_class;
         
-        $10->first_line = @9.first_line;
-        $10->first_column = @9.first_column;
-        $10->last_line = @11.last_line;
-        $10->last_column = @11.last_column;
-        
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @11.last_line;
         $$->last_column = @11.last_column;
+        
+        $3->destroy();
+        $5->destroy();
+        $7->destroy();
+        $10->destroy();
     }
 |   ABSTRACT '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' ';'
     {
@@ -362,23 +417,15 @@ method_decl:
         $$->first_column = @1.first_column;
         $$->last_line = @9.last_line;
         $$->last_column = @9.last_column;
+        
+        $3->destroy();
+        $5->destroy();
+        $7->destroy();
     }
 |   '<' error '}'
 |   GLOBAL '<' error '}'
 |   NAKED '<' error '}'
 |   ABSTRACT '<' error ';'
-;
-
-method_body_empty:
-    // empty
-    {
-        $$ = &driver.env().create<MethodDeclNode>();
-    }
-|   method_body_empty instruction
-    {
-        $$ = $1;
-        if ($2) { $1->body.add(*$2); }
-    }
 ;
 
 
@@ -482,7 +529,14 @@ instruction:
 
 instruction_list_empty:
     //empty
+    {
+        $$ = &driver.env().create<LinkedList<InstructionNode>>();
+    }
 |   instruction_list_empty instruction
+    {
+        $$ = $1;
+        if ($2) { $$->add(*$2); }
+    }
 ;
 
 return_inst:

@@ -7,7 +7,7 @@ POOLBCLIBS = linux.a poolc.a sys.a
 all: clean $(BINDIR)/poolbc 
 
 clean:
-	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR)
+	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc
 
 $(BINDIR)/poolbc: $(SRCDIR)/commands/poolbc.cpp $(POOLBCLIBS:%=$(LIBDIR)/%) $(BINDIR)
 	@echo "build poolbc"

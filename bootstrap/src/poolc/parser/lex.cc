@@ -17,6 +17,9 @@ int Parser::makeReturn()    { return RETURN; }
 int Parser::makeThis()      { return THIS; }
 int Parser::makeUse()       { return USE; }
 
+int Parser::makeCString()   { return CSTRING; }
+int Parser::makeInt()       { return INT; }
+
 int Parser::makeNaked()     { return NAKED; }
 int Parser::makePasm()      { return PASM; }
 

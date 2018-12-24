@@ -38,6 +38,9 @@ class Parser: public ParserBase
         int makeThis();
         int makeUse();
         
+        int makeCString();
+        int makeInt();
+        
         int makeNaked();
         int makePasm();
         

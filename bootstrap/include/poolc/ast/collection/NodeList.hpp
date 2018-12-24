@@ -24,6 +24,14 @@ template <class Obj> class NodeList: public LinkedList<Obj> {
         it.destroy();
         this->destroy();
     }
+    
+    virtual void addAll(Iterable<Obj> & col) {
+        Iterator<Obj> &it = col.iterator();
+        while (it.hasNext()) {
+            LinkedList<Obj>::add(it.next());
+        }
+        it.destroy();
+    }
 };
 
 #endif //POOLC_AST_COLLECTION_NODELIST_HPP_LOCK

@@ -327,3 +327,11 @@ bool X86PasmVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
     *curOut << pasmInstruction.pasm << "\n";
     return true;
 }
+
+bool X86PasmVisitor::visit(CStringRefNode & pasmInstruction) {
+    return true;
+}
+
+bool X86PasmVisitor::visit(IntRefNode & pasmInstruction) {
+    return true;
+}

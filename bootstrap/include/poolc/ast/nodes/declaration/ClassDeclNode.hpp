@@ -14,7 +14,7 @@ class ClassDeclNode: public Node {
     String & localPrefix;
     TranslationUnitNode * unit;
     
-    NodeList<ClassRefNode> &extends;
+    NodeList<TypeRefNode> &extends;
     NodeList<VariableDeclNode> &variables;
     NodeList<CStringConstAssignNode> &consts;
     NodeList<IntConstAssignNode> &intConsts;

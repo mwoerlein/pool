@@ -174,6 +174,9 @@ int PoolParser::lex()
         "this"          { setLocation(); return parser->makeThis(); }
         "use"           { setLocation(); return parser->makeUse(); }
         
+        "cstring"       { setLocation(); return parser->makeCString(); }
+        "int"           { setLocation(); return parser->makeInt(); }
+        
         "__naked__"     { setLocation(); return parser->makeNaked(); }
         "__pasm__"      { setLocation(); return parser->makePasm(); }
         

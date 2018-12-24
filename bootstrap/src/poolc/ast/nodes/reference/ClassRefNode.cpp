@@ -14,5 +14,7 @@ bool ClassRefNode::accept(Visitor & visitor) {
 }
 
 void ClassRefNode::printDebugName(OStream & stream) {
-    stream << "class-ref-<" << name << ">";
+    stream << "type-<" << name << ">";
 }
+
+ClassRefNode * ClassRefNode::isClass() { return this; }

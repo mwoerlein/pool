@@ -21,17 +21,19 @@ class X86PasmVisitor: public Visitor {
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
-    virtual bool visit(NamespaceDeclNode & namespaceDef) override;
-    virtual bool visit(UseStatementNode & useStmt) override;
     virtual bool visit(ClassDeclNode & classDef) override;
+    virtual bool visit(MethodDeclNode & methodDef) override;
+    virtual bool visit(NamespaceDeclNode & namespaceDef) override;
+    virtual bool visit(VariableDeclNode & variableDef) override;
     
     virtual bool visit(ClassRefNode & classRef) override;
+    virtual bool visit(CStringRefNode & type) override;
+    virtual bool visit(IntRefNode & type) override;
+    virtual bool visit(MethodRefNode & methodRef) override;
+    virtual bool visit(UseStatementNode & useStmt) override;
+    
     virtual bool visit(CStringConstAssignNode & constDef) override;
     virtual bool visit(IntConstAssignNode & constDef) override;
-    virtual bool visit(VariableDeclNode & variableDef) override;
-    virtual bool visit(MethodRefNode & methodRef) override;
-    virtual bool visit(MethodDeclNode & methodDef) override;
-    
     virtual bool visit(InlinePasmInstructionNode & pasmInstruction) override;
 };
 

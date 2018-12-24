@@ -18,7 +18,7 @@ ClassDeclNode::ClassDeclNode(Environment &env, MemoryInfo &mi)
          globalPrefix(env.create<String>()),
          localPrefix(env.create<String>()),
          unit(0),
-         extends(env.create<NodeList<ClassRefNode>>()),
+         extends(env.create<NodeList<TypeRefNode>>()),
          variables(env.create<NodeList<VariableDeclNode>>()),
          consts(env.create<NodeList<CStringConstAssignNode>>()),
          intConsts(env.create<NodeList<IntConstAssignNode>>()),
