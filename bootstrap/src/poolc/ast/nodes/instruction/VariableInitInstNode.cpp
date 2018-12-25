@@ -4,13 +4,13 @@
 VariableInitInstNode::VariableInitInstNode(Environment &env, MemoryInfo &mi, VariableDeclNode & var, ExpressionNode & initializer)
         :Object(env, mi),
          variables(env.create<NodeList<VariableDeclNode>>()),
-         initializer(initializer), scope(scope_block), final(false) {
+         initializer(initializer), scope(scope_block), final(false), global(false) {
     variables.add(var);
 }
 VariableInitInstNode::VariableInitInstNode(Environment &env, MemoryInfo &mi, MutableCollection<VariableDeclNode> & vars, MethodCallExprNode & initializer)
         :Object(env, mi),
          variables(env.create<NodeList<VariableDeclNode>>()),
-         initializer(initializer), scope(scope_block), final(false) {
+         initializer(initializer), scope(scope_block), final(false), global(false) {
     variables.addAll(vars);
 }
 VariableInitInstNode::~VariableInitInstNode() {

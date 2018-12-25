@@ -3,6 +3,7 @@
 
 #include "sys/collection/PropertyContainer.hpp"
 #include "sys/stream/IStream.hpp"
+#include "sys/stream/OStream.hpp"
 
 class StorageElement: public PropertyContainer {
     public:
@@ -10,6 +11,7 @@ class StorageElement: public PropertyContainer {
     virtual ~StorageElement() {}
     
     virtual IStream & getContent() = 0;
+    virtual void dumpHeaders(OStream &out) = 0;
 };
 
 #endif //POOLC_STORAGE_STORAGEELEMENT_HPP_LOCK

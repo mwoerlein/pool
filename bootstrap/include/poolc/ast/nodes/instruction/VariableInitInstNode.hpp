@@ -14,6 +14,7 @@ class VariableInitInstNode: public Node {
     ExpressionNode & initializer;
     scope_t scope;
     bool final;
+    bool global;
     
     VariableInitInstNode(Environment &env, MemoryInfo &mi, VariableDeclNode & var, ExpressionNode & initializer);
     VariableInitInstNode(Environment &env, MemoryInfo &mi, MutableCollection<VariableDeclNode> & vars, MethodCallExprNode & initializer);

@@ -53,19 +53,16 @@
 #define OFFSET(start, end) "(" << end << " - " << start << ")"
 #define CLASS_OFFSET(end) "(" << end << " - " << classDesc() << ")"
 #define INSTANCE_OFFSET(end) "(" << end << " - " << instanceStart() << ")"
-#define LABEL(l) *curOut << l << ":\n";
-#define LONG(l) *curOut << "    .long " << l << "\n";
-#define ASCIZ(str) {(str).escapeToStream(*curOut << "    .asciz "); *curOut << "\n";}
-#define LOCAL(l,v) *curOut << l << " := " << v << "\n";
+#define LABEL(l) elem() << l << ":\n";
+#define LONG(l) elem() << "    .long " << l << "\n";
+#define ASCIZ(str) {(str).escapeToStream(elem() << "    .asciz "); elem() << "\n";}
+#define LOCAL(l,v) elem() << l << " := " << v << "\n";
 
 // public
 X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps)
-        :Object(env, mi), LoggerAware(env, mi), ps(ps),
-         mime(env.create<String, const char*>(MIMETYPE_PASM)),
-         curOut(0), curClass(0), curSuper(0) {}
-X86PasmVisitor::~X86PasmVisitor() {
-    mime.destroy();
-}
+        :Writer(env, mi, ps, MIMETYPE_PASM), Object(env, mi), LoggerAware(env, mi),
+         curClass(0), curSuper(0) {}
+X86PasmVisitor::~X86PasmVisitor() {}
 
 bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
     translationUnit.classes.acceptAll(*this);
@@ -74,20 +71,19 @@ bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
 
 bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     curClass = &classDef;
-    curOut = &ps.writeElement(curClass->fullQualifiedName, mime);
-    if (!curOut) {
+    if (!startElement(curClass->fullQualifiedName)) {
         return false;
     }
     
     StorageElement &e = curClass->unit->element;
     
-    *curOut << "/*[meta]\n";
-    *curOut << "mimetype = " << MIMETYPE_PASM << "\n";
-    *curOut << "description = class \"" << curClass->fullQualifiedName << "\"\n";
-    *curOut << "[pool]\n";
-    *curOut << "class = true\n";
+    elem() << "/*[meta]\n";
+    elem() << "mimetype = " << MIMETYPE_PASM << "\n";
+    elem() << "description = class \"" << curClass->fullQualifiedName << "\"\n";
+    elem() << "[pool]\n";
+    elem() << "class = true\n";
     if (e.hasStringProperty("meta.version")) {
-        *curOut << "version = " << e.getStringProperty("meta.version") << "\n";
+        elem() << "version = " << e.getStringProperty("meta.version") << "\n";
     }
     if (e.hasStringProperty("pool.bootstrap")) {
         MethodDeclNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
@@ -95,20 +91,20 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
             error() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessible via pool-ABI.\n";
             return false;
         }
-        *curOut << "bootstrapOffset = " << methodDeclOffset(&bs) << "\n";
+        elem() << "bootstrapOffset = " << methodDeclOffset(&bs) << "\n";
     }
-    *curOut << "[pool_source]\n";
-    *curOut << "unit = " << curClass->unit->name << "\n";
+    elem() << "[pool_source]\n";
+    elem() << "unit = " << curClass->unit->name << "\n";
     if (e.hasStringProperty("meta.version")) {
-        *curOut << "version = " << e.getStringProperty("meta.version") << "\n";
+        elem() << "version = " << e.getStringProperty("meta.version") << "\n";
     }
     if (e.hasStringProperty("meta.author")) {
-        *curOut << "author = " << e.getStringProperty("meta.author") << "\n";
+        elem() << "author = " << e.getStringProperty("meta.author") << "\n";
     }
-    *curOut << "*/\n";
+    elem() << "*/\n";
     
     // header
-    *curOut << "// class " << curClass->name << "\n";
+    elem() << "// class " << curClass->name << "\n";
     LABEL(classDesc());
     LONG("0x15AC1A55");
     LONG("0");
@@ -122,7 +118,7 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
 
     // dependent classes
-    *curOut << "\n// class tab\n";
+    elem() << "\n// class tab\n";
     LABEL(classTabs());
     {
         Iterator<ClassDeclNode> &it = curClass->supers.iterator();
@@ -140,14 +136,14 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
         }
         it.destroy();
     }
-    *curOut << "// class tab end\n";
+    elem() << "// class tab end\n";
     LONG("0");
     LONG("0");
     LONG("0");
     LONG("0");
 
     // vtabs
-    *curOut << "\n// method tabs\n";
+    elem() << "\n// method tabs\n";
     LABEL(methodTabs());
     {
         Iterator<ClassDeclNode> &it = curClass->supers.iterator();
@@ -160,7 +156,7 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     }
     
     // methods tab
-    *curOut << "\n// methods tab\n";
+    elem() << "\n// methods tab\n";
     LABEL(methodDeclTab());
     {
         Iterator<MethodDeclNode> &it = curClass->methods.iterator();
@@ -183,13 +179,13 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     }
     
     // constants
-    *curOut << "\n// constants";
+    elem() << "\n// constants";
     curClass->consts.acceptAll(*this);
     {
         Iterator<ClassDeclNode> &it = curClass->supers.iterator();
         while (it.hasNext()) {
             curSuper = &it.next();
-            *curOut << "\n// class-name " << curSuper->name << "\n";
+            elem() << "\n// class-name " << curSuper->name << "\n";
             LOCAL(
                 classNameOffset(curSuper),
                 CLASS_OFFSET(className(curSuper))
@@ -201,7 +197,7 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     }
     
     // instance template and variables
-    *curOut << "\n// instance template\n";
+    elem() << "\n// instance template\n";
     LABEL(instanceStart());
     LONG("0"); // @class-desc
     LONG("0"); // @meminfo
@@ -245,11 +241,10 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     LABEL(instanceEnd());
     
     // methods
-    *curOut << "\n// method definitions";
+    elem() << "\n// method definitions";
     curClass->methods.acceptAll(*this);
     
-    curOut->destroy();
-    curOut = 0;
+    finalizeElement();
     
     return true;
 }
@@ -264,7 +259,7 @@ bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
 }
 
 bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
-    *curOut << "\n// method " << methodDef.name << "\n";
+    elem() << "\n// method " << methodDef.name << "\n";
     
     switch (methodDef.kind) {
         case abstract:
@@ -274,12 +269,12 @@ bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
             break;
         default:
             LABEL(methodDecl(&methodDef));
-            *curOut << "    pushl %ebp; movl %esp, %ebp\n";
-            *curOut << "    \n";
+            elem() << "    pushl %ebp; movl %esp, %ebp\n";
+            elem() << "    \n";
             methodDef.body.accept(*this);
-            *curOut << "    \n";
-            *curOut << "    leave\n";
-            *curOut << "    ret\n";
+            elem() << "    \n";
+            elem() << "    leave\n";
+            elem() << "    ret\n";
     }
     return true;
 }
@@ -289,7 +284,7 @@ bool X86PasmVisitor::visit(VariableDeclNode & variableDef) {
         case scope_class:
             return true;
         case scope_instance:
-            *curOut << "// variable " << variableDef.name << "\n";
+            elem() << "// variable " << variableDef.name << "\n";
             LOCAL(
                 instanceVarOffset(curSuper, &variableDef),
                 OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
@@ -310,7 +305,7 @@ bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
         case scope_class:
             if (ConstIntExprNode *cInt = variableInit.initializer.isConstInt()) {
                 VariableDeclNode &variableDef = *variableInit.variables.first();
-                *curOut << "\n// int " << variableDef.name << "\n";
+                elem() << "\n// int " << variableDef.name << "\n";
                 LOCAL(
                     constInt(&variableDef),
                     cInt->value
@@ -318,7 +313,7 @@ bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
                 return true;
             } else if (ConstCStringExprNode *cCString = variableInit.initializer.isConstCString()) {
                 VariableDeclNode &variableDef = *variableInit.variables.first();
-                *curOut << "\n// string " << variableDef.name << "\n";
+                elem() << "\n// string " << variableDef.name << "\n";
                 LOCAL(
                     constStringOffset(&variableDef),
                     CLASS_OFFSET(constString(&variableDef))
@@ -346,6 +341,6 @@ bool X86PasmVisitor::visit(BlockInstNode & block) {
 }
 
 bool X86PasmVisitor::visit(InlinePasmInstNode & pasmInstruction) {
-    *curOut << pasmInstruction.pasm << "\n";
+    elem() << pasmInstruction.pasm << "\n";
     return true;
 }

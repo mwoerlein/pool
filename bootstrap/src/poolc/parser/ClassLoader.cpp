@@ -2,12 +2,14 @@
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
 #include "poolc/ast/visitors/ResolveVisitor.hpp"
+#include "poolc/ast/visitors/PrettyPrinter.hpp"
 
 // public
 ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi)
         :ClassPathStorage(env, mi), LoggerAware(env, mi), HashMap(env, mi), Object(env, mi),
          parser(env.create<PoolParser>()),
-         resolve(env.create<ResolveVisitor, ClassLoader &>(*this)) {
+         resolve(env.create<ResolveVisitor, ClassLoader &>(*this)),
+         pretty(0) {
 }
 
 ClassLoader::~ClassLoader() {
@@ -19,6 +21,10 @@ void ClassLoader::setLogger(Logger &logger) {
     LoggerAware::setLogger(logger);
     parser.setLogger(logger);
     resolve.setLogger(logger);
+}
+
+void ClassLoader::setPrettyPrint(PrettyPrinter &pretty) {
+    this->pretty = &pretty;
 }
 
 void ClassLoader::registerClass(ClassDeclNode & classDef) {
@@ -41,7 +47,7 @@ ClassDeclNode * ClassLoader::getClass(String & fullQualifiedName) {
         if (!unit) {
             return 0;
         }
-        
+        if (pretty) { unit->accept(*pretty); }
         unit->accept(resolve);
     }
     

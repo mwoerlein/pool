@@ -225,6 +225,7 @@ class_body_empty:
         $$ = $1;
         if ($3) { 
             $3->scope = scope_class;
+            $3->global = true;
             
             $3->first_line = @2.first_line;
             $3->first_column = @2.first_column;

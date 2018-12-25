@@ -10,16 +10,19 @@
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
 class ResolveVisitor;
+class PrettyPrinter;
 class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private HashMap<String, ClassDeclNode> {
     private:
     PoolParser & parser;
     ResolveVisitor & resolve;
+    PrettyPrinter * pretty;
     
     public:
     ClassLoader(Environment &env, MemoryInfo &mi);
     virtual ~ClassLoader();
     
     virtual void setLogger(Logger &logger) override;
+    virtual void setPrettyPrint(PrettyPrinter &pretty);
     
     virtual ClassDeclNode * getClass(String & fullQualifiedName);
     virtual void registerClass(ClassDeclNode & classDef);

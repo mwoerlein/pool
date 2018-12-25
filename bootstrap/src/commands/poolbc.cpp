@@ -4,6 +4,7 @@
 
 #include "sys/log/Logger.hpp"
 #include "poolc/parser/ClassLoader.hpp"
+#include "poolc/ast/visitors/PrettyPrinter.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
 static const char PROGRAM[] = "poolbc";
@@ -12,7 +13,7 @@ static const char USAGE[] =
 R"(Pool Bootstrap Compiler.
 
     Usage:
-      poolbc [options] -o <dir> -c <dir> [-c <dir>]... <fqn>...
+      poolbc [options] -o <dir> [-p <dir>] -c <dir> [-c <dir>]... <fqn>...
 
     Options:
       -h --help                     Show this screen.
@@ -22,6 +23,7 @@ R"(Pool Bootstrap Compiler.
       --warning                     Set warning.
       --error                       Set error.
       -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
+      -p <dir> --prettyprint <dir>  Dump classes into <dir>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
 )";
 
@@ -33,6 +35,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         registerOptionAlias("verbose", "v");
         registerOptionAlias("debug", "d");
         registerOptionAlias("output", "o");
+        registerOptionAlias("prettyprint", "p");
         registerOptionAlias("classpath", "c");
         
         registerOptionSet("classpath");
@@ -61,6 +64,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         if (hasProperty("warning")) ll = log_warn; 
         if (hasProperty("error")) ll = log_error; 
         Logger &logger = env().create<Logger, log_level>(ll);
+        
         ClassLoader &loader = env().create<ClassLoader>();
         loader.setLogger(logger);
         {
@@ -69,6 +73,13 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                 loader.addStore(env().create<DirectoryPoolStorage, String&>(it.next()));
             }
             it.destroy();
+        }
+        PrettyPrinter *pretty = 0;
+        if (hasStringProperty("prettyprint")) {
+            DirectoryPoolStorage &prettyPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("prettyprint"));
+            pretty = &env().create<PrettyPrinter, PoolStorage &>(prettyPS);
+            pretty->setLogger(logger);
+            loader.setPrettyPrint(*pretty);
         }
         
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
@@ -92,7 +103,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         }
         
         dump.destroy();
-        outPS.destroy();
+        if (pretty) { pretty->destroy(); }
         loader.destroy();
         logger.destroy();
         

@@ -17,6 +17,7 @@ class LoggerAware: virtual public Object {
     inline OStream &crit()  { return logger->crit();  }
     inline OStream &error() { return logger->error(); }
     inline OStream &warn()  { return logger->warn();  }
+    inline OStream &note()  { return logger->note();  }
     inline OStream &info()  { return logger->info();  }
     inline OStream &debug() { return logger->debug(); }
     

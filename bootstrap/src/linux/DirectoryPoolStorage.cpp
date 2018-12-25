@@ -16,11 +16,15 @@ class StdFileIOStream2: public SeekableIOStream {
     size_t _length;
     
     public:
-    StdFileIOStream2(Environment &env, MemoryInfo &mi, std::FILE *file, size_t offset = 0)
+    StdFileIOStream2(Environment &env, MemoryInfo &mi, std::FILE *file, size_t offset = 0, size_t length = -1)
         : Object(env, mi), file(file), _offset(offset) {
-        std::fseek(file, 0, SEEK_END); // seek to end of file
-        _length = std::ftell(file); // get current file pointer
-        std::fseek(file, offset, SEEK_SET); // seek back to beginning
+        if (length == -1) {
+            std::fseek(file, 0, SEEK_END); // seek to end of file
+            _length = std::ftell(file); // get current file pointer
+            std::fseek(file, offset, SEEK_SET); // seek back to beginning
+        } else {
+            _length = _offset + length;
+        }
     }
     virtual ~StdFileIOStream2() { std::fclose(file); }
     
@@ -35,13 +39,10 @@ class StdFileIOStream2: public SeekableIOStream {
         return *this;
     }
     virtual bool isEmpty() override {
-        int last = std::fgetc(file);
-        bool ret = last == EOF;
-        std::ungetc(last, file);
-        return ret;
+        return std::ftell(file) >= _length;
     }
     virtual size_t length() override {
-        return _length;
+        return _length - _offset;
     }
     virtual size_t pos() override { return std::ftell(file) - _offset; }
     virtual void seek(size_t pos) override { std::fseek(file, pos + _offset, SEEK_SET); }
@@ -66,6 +67,19 @@ class StdFileElement: public StorageElement {
             return *(IStream*)0;
         }
         return env().create<StdFileIOStream2, std::FILE *, size_t>(file, (_offset == -1) ? 0 : _offset);
+    }
+    
+    virtual void dumpHeaders(OStream &out) {
+        if (_offset == -1) {
+            return;
+        }
+        FILE * file = std::fopen(filename, "r+");
+        if (!file) {
+            return;
+        }
+        IStream &in = env().create<StdFileIOStream2, std::FILE *, size_t, size_t>(file, 0, _offset);
+        out << in;
+        in.destroy();
     }
 };
 

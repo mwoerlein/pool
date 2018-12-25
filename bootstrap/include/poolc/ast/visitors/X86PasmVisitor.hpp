@@ -1,17 +1,10 @@
 #ifndef POOLC_AST_VISITORS_X86PASMVISITOR_HPP_LOCK
 #define POOLC_AST_VISITORS_X86PASMVISITOR_HPP_LOCK
 
-#include "poolc/ast/Visitor.hpp"
+#include "poolc/ast/visitors/Writer.hpp"
 
-#include "sys/String.hpp"
-#include "sys/stream/OStream.hpp"
-#include "poolc/storage/PoolStorage.hpp"
-
-class X86PasmVisitor: public Visitor {
+class X86PasmVisitor: public Writer {
     private:
-    String & mime;
-    PoolStorage & ps;
-    OStream * curOut;
     ClassDeclNode * curClass;
     ClassDeclNode * curSuper;
     
