@@ -25,20 +25,20 @@ class PrettyPrinter: public Writer {
     virtual bool visit(ClassRefNode & classRef);
     virtual bool visit(CStringRefNode & type);
     virtual bool visit(IntRefNode & type);
-//    virtual bool visit(MethodRefNode & methodRef);
     virtual bool visit(UseStatementNode & useStmt);
     
-//    virtual bool visit(BlockInstNode & block);
-//    virtual bool visit(InlinePasmInstNode & pasmInstruction);
-//    virtual bool visit(ReturnInstNode & returnInst);
+    virtual bool visit(BlockInstNode & block);
+    virtual bool visit(ExpressionInstNode & exprInst);
+    virtual bool visit(InlinePasmInstNode & pasmInst);
+    virtual bool visit(ReturnInstNode & returnInst);
     virtual bool visit(VariableInitInstNode & variableInit);
     
-//    virtual bool visit(AssignmentExprNode & assignment);
+    virtual bool visit(AssignmentExprNode & assignment);
     virtual bool visit(ConstCStringExprNode & constCString);
     virtual bool visit(ConstIntExprNode & constInt);
-//    virtual bool visit(MethodCallExprNode & methodCall);
-//    virtual bool visit(ThisExprNode & constThis);
-//    virtual bool visit(VariableExprNode & variable);
+    virtual bool visit(MethodCallExprNode & methodCall);
+    virtual bool visit(ThisExprNode & constThis);
+    virtual bool visit(VariableExprNode & variable);
 };
 
 #endif //POOLC_AST_VISITORS_PRETTYPRINTER_HPP_LOCK

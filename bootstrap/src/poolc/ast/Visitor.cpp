@@ -17,6 +17,7 @@ bool Visitor::visit(MethodRefNode & methodRef) { return false; }
 bool Visitor::visit(UseStatementNode & useStmt) { return false; }
 
 bool Visitor::visit(BlockInstNode & block) { return false; }
+bool Visitor::visit(ExpressionInstNode & block) { return false; }
 bool Visitor::visit(InlinePasmInstNode & pasmInstruction) { return false; }
 bool Visitor::visit(ReturnInstNode & returnInst) { return false; }
 bool Visitor::visit(VariableInitInstNode & variableInit) { return false; }

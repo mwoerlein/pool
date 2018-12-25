@@ -1,14 +1,14 @@
 #ifndef POOLC_AST_NODES_INSTRUCTION_VARIABLEINITINSTNODE_HPP_LOCK
 #define POOLC_AST_NODES_INSTRUCTION_VARIABLEINITINSTNODE_HPP_LOCK
 
-#include "poolc/ast/Node.hpp"
+#include "poolc/ast/nodes/InstructionNode.hpp"
 
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 #include "poolc/ast/nodes/expression/MethodCallExprNode.hpp"
 
-class VariableInitInstNode: public Node {
+class VariableInitInstNode: public InstructionNode {
     public:
     NodeList<VariableDeclNode> &variables;
     ExpressionNode & initializer;

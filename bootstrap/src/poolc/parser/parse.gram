@@ -516,9 +516,35 @@ method_call_expr:
 // INSTRUCTIONS
 instruction:
     expression ';'
+    {
+        $$ = &driver.env().create<ExpressionInstNode, ExpressionNode&>(*$1);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
 |   variable_initializer_inst ';'
+    {
+        $$ = $1;
+        
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
 |   return_inst ';'
+    {
+        $$ = $1;
+        
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
 |   inline_pasm_inst ';'
+    {
+        $$ = $1;
+        
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
 |   '{' instruction_block '}'
     {
         $$ = $2;

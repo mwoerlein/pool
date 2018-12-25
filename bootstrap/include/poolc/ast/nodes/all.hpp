@@ -13,6 +13,7 @@
 #include "poolc/ast/nodes/expression/VariableExprNode.hpp"
 
 #include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
+#include "poolc/ast/nodes/instruction/ExpressionInstNode.hpp"
 #include "poolc/ast/nodes/instruction/InlinePasmInstNode.hpp"
 #include "poolc/ast/nodes/instruction/ReturnInstNode.hpp"
 #include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"

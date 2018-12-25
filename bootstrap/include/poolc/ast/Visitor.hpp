@@ -26,6 +26,7 @@ class ThisExprNode;
 class VariableExprNode;
 
 class BlockInstNode;
+class ExpressionInstNode;
 class InlinePasmInstNode;
 class ReturnInstNode;
 class VariableInitInstNode;
@@ -48,7 +49,8 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     virtual bool visit(UseStatementNode & useStmt);
     
     virtual bool visit(BlockInstNode & block);
-    virtual bool visit(InlinePasmInstNode & pasmInstruction);
+    virtual bool visit(ExpressionInstNode & exprInst);
+    virtual bool visit(InlinePasmInstNode & pasmInst);
     virtual bool visit(ReturnInstNode & returnInst);
     virtual bool visit(VariableInitInstNode & variableInit);
     

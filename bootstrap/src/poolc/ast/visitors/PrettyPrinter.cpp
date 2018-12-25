@@ -106,6 +106,7 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
             break;
         default:
             startBlock(&line);
+            methodDef.body.instructions.acceptAll(*this);
             endBlock();
     }
     indent() << "\n";
@@ -139,12 +140,78 @@ bool PrettyPrinter::visit(VariableDeclNode & variableDef) {
     line << " " << variableDef.name << ";\n";
 }
 
+bool PrettyPrinter::visit(BlockInstNode & block) {
+    startBlock();
+    block.instructions.acceptAll(*this);
+    endBlock();
+}
+
+bool PrettyPrinter::visit(ExpressionInstNode & exprInst) {
+    OStream & line = indent();
+    exprInst.expression.accept(*this);
+    line << ";\n";
+}
+
+bool PrettyPrinter::visit(InlinePasmInstNode & pasmInst) {
+    indent() << "__pasm__(<\"\n";
+    elem() << pasmInst.pasm << "\n";
+    indent() << "\">);\n";
+}
+
+bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
+    if (returnInst.values.isEmpty()) {
+        indent() << "return;";
+        return true;
+    }
+    bool tuple = returnInst.values.size() > 1;
+    
+    OStream & line = indent() << "return ";
+    if (tuple) { line << "<"; }
+    {
+        Iterator<ExpressionNode> &it = returnInst.values.iterator();
+        while (it.hasNext()) {
+            it.next().accept(*this);
+            if (it.hasNext()) { line << ", "; }
+        }
+        it.destroy();
+    }
+    if (tuple) { line << ">"; }
+    line << ";\n";
+}
+
+bool PrettyPrinter::visit(AssignmentExprNode & assignment) {
+    elem() << "(";
+    assignment.variable.accept(*this);
+    elem() << " = ";
+    assignment.value.accept(*this);
+    elem() << ")";
+}
+bool PrettyPrinter::visit(ConstCStringExprNode & constCString) {
+    constCString.value.escapeToStream(elem());
+}
+bool PrettyPrinter::visit(ConstIntExprNode & constInt) {
+    elem() << constInt.value;
+}
+bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
+    methodCall.context.accept(*this);
+    elem() << "." << methodCall.name << "(";
+    // TODO: #3 handle parameters
+    elem() << ")";
+}
+bool PrettyPrinter::visit(ThisExprNode & constThis) {
+    elem() << "this";
+}
+bool PrettyPrinter::visit(VariableExprNode & variable) {
+    if (variable.context) {
+        variable.context->accept(*this);
+        elem() << ".";
+    }
+    elem() << variable.name;
+}
+
 bool PrettyPrinter::visit(ClassRefNode & classRef) { elem() << classRef.name; }
 bool PrettyPrinter::visit(CStringRefNode & type) { elem() << "cstring"; }
 bool PrettyPrinter::visit(IntRefNode & type) { elem() << "int"; }
-
-bool PrettyPrinter::visit(ConstCStringExprNode & constCString) { constCString.value.escapeToStream(elem()); }
-bool PrettyPrinter::visit(ConstIntExprNode & constInt) { elem() << constInt.value; }
 
 // private
 OStream & PrettyPrinter::indent() {

@@ -1,9 +1,9 @@
 #ifndef POOLC_AST_NODES_EXPRESSIONNODE_HPP_LOCK
 #define POOLC_AST_NODES_EXPRESSIONNODE_HPP_LOCK
 
-#include "poolc/ast/nodes/InstructionNode.hpp"
+#include "poolc/ast/Node.hpp"
 
-class ExpressionNode: public InstructionNode {
+class ExpressionNode: public Node {
     public:
     virtual ~ExpressionNode();
     
