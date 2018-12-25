@@ -15,7 +15,7 @@
     MutableCollection<VariableDeclNode> *u_variable_decl_list;
     
     InstructionNode *u_instruction;
-    MutableCollection<InstructionNode> *u_instruction_list;
+    BlockInstNode *u_block;
     VariableInitInstNode *u_variable_init;
     
     ExpressionNode *u_expression;
@@ -65,8 +65,9 @@
 %type <u_variable_decl_list> variable_decl_list_empty
 
 %type <u_instruction> instruction
-%type <u_instruction_list> instruction_list_empty
 %type <u_instruction> inline_pasm_inst
+%type <u_instruction> return_inst
+%type <u_block> instruction_block
 %type <u_variable_init> variable_initializer_inst
 
 %type <u_expression> expression
@@ -338,11 +339,10 @@ variable_decl_list_empty:
 ;
 
 method_decl:
-    '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_list_empty '}'
+    '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
-        $$ = &driver.env().create<MethodDeclNode>();
-        $$->name = *$4;
-        $$->body.addAll(*$9);
+        // TODO: #3 handle parameter and return types
+        $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&>(*$4, *$9);
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
@@ -350,15 +350,12 @@ method_decl:
         $$->last_column = @10.last_column;
         
         $2->destroy();
-        $4->destroy();
         $6->destroy();
-        $9->destroy();
     }
-|   GLOBAL '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_list_empty '}'
+|   GLOBAL '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
-        $$ = &driver.env().create<MethodDeclNode>();
-        $$->name = *$5;
-        $$->body.addAll(*$10);
+        // TODO: #3 handle parameter and return types
+        $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&>(*$5, *$10);
         $$->scope = scope_class;
         
         $$->first_line = @1.first_line;
@@ -367,15 +364,12 @@ method_decl:
         $$->last_column = @11.last_column;
         
         $3->destroy();
-        $5->destroy();
         $7->destroy();
-        $10->destroy();
     }
-|   NAKED '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_list_empty '}'
+|   NAKED '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
-        $$ = &driver.env().create<MethodDeclNode>();
-        $$->name = *$5;
-        $$->body.addAll(*$10);
+        // TODO: #3 handle parameter and return types
+        $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&>(*$5, *$10);
         $$->kind = naked;
         $$->scope = scope_class;
         
@@ -385,14 +379,12 @@ method_decl:
         $$->last_column = @11.last_column;
         
         $3->destroy();
-        $5->destroy();
         $7->destroy();
-        $10->destroy();
     }
 |   ABSTRACT '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' ';'
     {
-        $$ = &driver.env().create<MethodDeclNode>();
-        $$->name = *$5;
+        // TODO: #3 handle parameter and return types
+        $$ = &driver.env().create<MethodDeclNode, String&>(*$5);
         $$->kind = abstract;
         
         $$->first_line = @1.first_line;
@@ -401,7 +393,6 @@ method_decl:
         $$->last_column = @9.last_column;
         
         $3->destroy();
-        $5->destroy();
         $7->destroy();
     }
 |   '<' error '}'
@@ -526,56 +517,104 @@ instruction:
     expression ';'
 |   variable_initializer_inst ';'
 |   return_inst ';'
-    {
-        driver.debug() << "-- instruction (4)\n";
-        $$ = 0;
-    }
 |   inline_pasm_inst ';'
-|   '{' instruction_list_empty '}'
+|   '{' instruction_block '}'
     {
-        driver.debug() << "-- instruction (6)\n";
-        $$ = 0;
+        $$ = $2;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 |   error ';'
 ;
 
-instruction_list_empty:
+instruction_block:
     //empty
     {
-        $$ = &driver.env().create<LinkedList<InstructionNode>>();
+        $$ = &driver.env().create<BlockInstNode>();
     }
-|   instruction_list_empty instruction
+|   instruction_block instruction
     {
         $$ = $1;
-        if ($2) { $$->add(*$2); }
+        if ($2) { $$->instructions.add(*$2); }
     }
 ;
 
 return_inst:
     RETURN '<' expression_list_empty '>'
+    {
+        $$ = &driver.env().create<ReturnInstNode, MutableCollection<ExpressionNode>&>(*$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @4.last_line;
+        $$->last_column = @4.last_column;
+        
+        $3->destroy();
+    }
 |   RETURN expression
+    {
+        $$ = &driver.env().create<ReturnInstNode, ExpressionNode&>(*$2);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
 |   RETURN
+    {
+        $$ = &driver.env().create<ReturnInstNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
 ;
 
 variable_initializer_inst:
     variable_decl EQUAL expression
     {
         $$ = &driver.env().create<VariableInitInstNode, VariableDeclNode &, ExpressionNode &>(*$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 |   variable_decl COLON_EQUAL expression
     {
         $$ = &driver.env().create<VariableInitInstNode, VariableDeclNode &, ExpressionNode &>(*$1, *$3);
         $$->final = true;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 |   '<' variable_decl_list '>' EQUAL method_call_expr
     {
         $$ = &driver.env().create<VariableInitInstNode, MutableCollection<VariableDeclNode> &, MethodCallExprNode &>(*$2, *$5);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @5.last_line;
+        $$->last_column = @5.last_column;
+        
         $2->destroy();
     }
 |   '<' variable_decl_list '>' COLON_EQUAL method_call_expr
     {
         $$ = &driver.env().create<VariableInitInstNode, MutableCollection<VariableDeclNode> &, MethodCallExprNode &>(*$2, *$5);
         $$->final = true;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @5.last_line;
+        $$->last_column = @5.last_column;
+        
         $2->destroy();
     }
 ;
@@ -583,15 +622,16 @@ variable_initializer_inst:
 inline_pasm_inst:
     PASM '(' STRING ')'
     {
-        InlinePasmInstructionNode &node = driver.env().create<InlinePasmInstructionNode>();
+        InlinePasmInstNode &node = driver.env().create<InlinePasmInstNode>();
         node.pasm = *$3;
-        $3->destroy();
         $$ = &node;
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @4.last_line;
         $$->last_column = @4.last_column;
+        
+        $3->destroy();
     }
 ;
 

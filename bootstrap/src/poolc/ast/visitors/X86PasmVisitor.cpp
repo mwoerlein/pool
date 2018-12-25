@@ -12,7 +12,8 @@
 #include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
 
-#include "poolc/ast/nodes/instruction/InlinePasmInstructionNode.hpp"
+#include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
+#include "poolc/ast/nodes/instruction/InlinePasmInstNode.hpp"
 #include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
 
 #include "poolc/ast/nodes/reference/ClassRefNode.hpp"
@@ -269,13 +270,13 @@ bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
         case abstract:
             break;
         case naked:
-            methodDef.body.acceptAll(*this);
+            methodDef.body.accept(*this);
             break;
         default:
             LABEL(methodDecl(&methodDef));
             *curOut << "    pushl %ebp; movl %esp, %ebp\n";
             *curOut << "    \n";
-            methodDef.body.acceptAll(*this);
+            methodDef.body.accept(*this);
             *curOut << "    \n";
             *curOut << "    leave\n";
             *curOut << "    ret\n";
@@ -339,7 +340,12 @@ bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
     return false;
 }
 
-bool X86PasmVisitor::visit(InlinePasmInstructionNode & pasmInstruction) {
+bool X86PasmVisitor::visit(BlockInstNode & block) {
+    block.instructions.acceptAll(*this);
+    return true;
+}
+
+bool X86PasmVisitor::visit(InlinePasmInstNode & pasmInstruction) {
     *curOut << pasmInstruction.pasm << "\n";
     return true;
 }

@@ -27,7 +27,8 @@ class X86PasmVisitor: public Visitor {
     
     virtual bool visit(MethodRefNode & methodRef) override;
     
-    virtual bool visit(InlinePasmInstructionNode & pasmInstruction) override;
+    virtual bool visit(BlockInstNode & block) override;
+    virtual bool visit(InlinePasmInstNode & pasmInstruction) override;
     virtual bool visit(VariableInitInstNode & variableInit) override;
 };
 

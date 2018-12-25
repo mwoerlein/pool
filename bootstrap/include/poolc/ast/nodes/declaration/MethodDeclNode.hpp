@@ -11,13 +11,14 @@ enum method_kind { abstract, naked, normal };
 class MethodDeclNode: public Node {
     public:
     String & name;
+    BlockInstNode &body;
     enum method_kind kind;
     scope_t scope;
-    NodeList<InstructionNode> &body;
     ClassDeclNode *parent;
     int index;
     
-    MethodDeclNode(Environment &env, MemoryInfo &mi);
+    MethodDeclNode(Environment &env, MemoryInfo &mi, String &name);
+    MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, BlockInstNode &body);
     virtual ~MethodDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
