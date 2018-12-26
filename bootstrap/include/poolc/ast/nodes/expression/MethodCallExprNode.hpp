@@ -3,13 +3,15 @@
 
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 
+#include "poolc/ast/collection/NodeList.hpp"
+
 class MethodCallExprNode: public ExpressionNode {
     public:
     String &name;
     ExpressionNode &context;
-    // TODO: #3 handle parameter
+    NodeList<ExpressionNode> &parameters;
     
-    MethodCallExprNode(Environment &env, MemoryInfo &mi, ExpressionNode &context, String &name);
+    MethodCallExprNode(Environment &env, MemoryInfo &mi, ExpressionNode &context, String &name, MutableCollection<ExpressionNode> &params);
     virtual ~MethodCallExprNode();
     virtual MethodCallExprNode * isMethodCall() override;
     

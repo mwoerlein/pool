@@ -96,9 +96,25 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
             }
     }
     line << "<";
-    // TODO: #3 handle return types
+    {
+        Iterator<TypeRefNode> &it = methodDef.returnTypes.iterator();
+        while (it.hasNext()) {
+            it.next().accept(*this);
+            if (it.hasNext()) { line << ", "; }
+        }
+        it.destroy();
+    }
     line << "> " << methodDef.name << "(";
-    // TODO: #3 handle parameters
+    {
+        Iterator<VariableDeclNode> &it = methodDef.parameters.iterator();
+        while (it.hasNext()) {
+            VariableDeclNode & var = it.next();
+            var.type.accept(*this);
+            line << " " << var.name;
+            if (it.hasNext()) { line << ", "; }
+        }
+        it.destroy();
+    }
     line << ")";
     switch (methodDef.kind) {
         case abstract:
@@ -195,7 +211,14 @@ bool PrettyPrinter::visit(ConstIntExprNode & constInt) {
 bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
     methodCall.context.accept(*this);
     elem() << "." << methodCall.name << "(";
-    // TODO: #3 handle parameters
+    {
+        Iterator<ExpressionNode> &it = methodCall.parameters.iterator();
+        while (it.hasNext()) {
+            it.next().accept(*this);
+            if (it.hasNext()) { elem() << ", "; }
+        }
+        it.destroy();
+    }
     elem() << ")";
 }
 bool PrettyPrinter::visit(ThisExprNode & constThis) {

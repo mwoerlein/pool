@@ -12,13 +12,16 @@ class MethodDeclNode: public Node {
     public:
     String & name;
     BlockInstNode &body;
+    NodeList<TypeRefNode> &returnTypes;
+    NodeList<VariableDeclNode> &parameters;
+    
     enum method_kind kind;
     scope_t scope;
     ClassDeclNode *parent;
     int index;
     
-    MethodDeclNode(Environment &env, MemoryInfo &mi, String &name);
-    MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, BlockInstNode &body);
+    MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, MutableCollection<TypeRefNode> &rets, MutableCollection<VariableDeclNode> &params);
+    MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, BlockInstNode &body, MutableCollection<TypeRefNode> &rets, MutableCollection<VariableDeclNode> &params);
     virtual ~MethodDeclNode();
     
     virtual bool accept(Visitor & visitor) override;
