@@ -5,17 +5,22 @@ version = 0.1.0
 */
 namespace my::core;
 
+
 class Class extends Object {
-    // TODO: remove with working ClassHeader "struct"
-    int ch_inst_handle := 0x4;
-    int ch_name := 0x8;
     
+    // constants
+    // TODO: remove with working ClassHeader "struct"
+    int ch_inst_handle := 4;
+    int ch_name := 8;
+    
+    // variables
     // TODO: replace int with working ClassHeader "struct"
     int desc;
     
+    // methods
     // TODO: replace int with working ClassHeader "struct"
     <int> getDesc() {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax                     // @this (Type Class)
             movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
             addl 4(%eax), %ebx                      // @this.vars(Class)
@@ -27,7 +32,7 @@ class Class extends Object {
     // TODO: move to constructor?
     // TODO: replace int with working ClassHeader "struct"
     <> setDesc(int desc) {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax                     // @this (Type Class)
             movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
             addl 4(%eax), %ebx                      // @this.vars(Class)
@@ -40,7 +45,7 @@ class Class extends Object {
     
     // TODO: replace cstring with working String class
     <cstring> getName() {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax                     // @this (Type Class)
             movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
             addl 4(%eax), %ebx                      // @this.vars(Class)
@@ -49,4 +54,5 @@ class Class extends Object {
             movl %eax, 16(%ebp)                     // return cstring-ref
         ">);
     }
+    
 }

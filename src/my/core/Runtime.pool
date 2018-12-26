@@ -8,7 +8,10 @@ bootstrap2 = my::core::Runtime:bootstrap(int, int)
 */
 namespace my::core;
 
+
 class Runtime extends Object {
+    
+    // constants
     // streams
     global int out := 0;
     global int err := 1;
@@ -37,26 +40,28 @@ class Runtime extends Object {
     int sps_err := 1;
     
     // TODO: remove with working ClassHeader "struct"
-    int ch_inst_handle := 0x4;
-    int ch_cts := 0xc;
-    int ch_mt := 0x14;
-    int ch_tpl := 0x18;
-    int ch_tpl_size := 0x1c;
-    int ch_tpl_obj_handle := 0x20;
-    int ch_tpl_cls_handle := 0x24;
+    int ch_inst_handle := 4;
+    int ch_cts := 12;
+    int ch_mt := 20;
+    int ch_tpl := 24;
+    int ch_tpl_size := 28;
+    int ch_tpl_obj_handle := 32;
+    int ch_tpl_cls_handle := 36;
     
     // TODO: remove with working ClassTab "struct"
-    int cts_cdo := 0x0;
-    int cts_vto := 0x8;
-    int cts_ho := 0xc;
-    int cts_size := 0x10;
+    int cts_cdo := 0;
+    int cts_vto := 8;
+    int cts_ho := 12;
+    int cts_size := 16;
     
+    // variables
     // TODO: remove after real pool implementation exists
     int syscall_runtime;
     int syscall_entry;
     
+    // methods
     global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
-        __pasm__ (<"
+        __pasm__(<"
 // TODO #3: inline method-indices in method-call-generation
         _my_core_Class_m_setDesc := 48
             subl 12, %esp
@@ -140,7 +145,7 @@ class Runtime extends Object {
     }
     
     <> initSysCall(int syscall_runtime, int syscall_entry) {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -154,7 +159,7 @@ class Runtime extends Object {
     // TODO: replace int with working ClassHeader "struct"
     // TODO: replace cstring with working String class
     <int> getClassDesc(cstring name) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -174,7 +179,7 @@ class Runtime extends Object {
     
     // TODO: replace int with working MemInfo "struct"
     <int> allocate(int size) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -194,7 +199,7 @@ class Runtime extends Object {
     
     // TODO: replace int with working MemInfo "struct"
     <> free(int info) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -212,7 +217,7 @@ class Runtime extends Object {
     }
     
     <> printChar(int c, int stream) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -231,7 +236,7 @@ class Runtime extends Object {
     }
     
     <> printString(cstring s, int stream) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -250,7 +255,7 @@ class Runtime extends Object {
     }
     
     <> printInt(int i, int stream) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -269,7 +274,7 @@ class Runtime extends Object {
     }
     
     <> printHex(int i, int stream) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
             
             movl 12(%ebp), %eax                             // @this (Type Runtime)
@@ -289,7 +294,7 @@ class Runtime extends Object {
     
     // TODO: use generic method instead of plain Object?
     <> destroyInstance(Object any) {
-        __pasm__ (<"
+        __pasm__(<"
             movl 16(%ebp), %eax       // @obj (Type ANY)
             movl 4(%eax), %eax        // @obj
             movl 12(%ebp), %ebx       // @this (Type Runtime)
@@ -302,7 +307,7 @@ class Runtime extends Object {
     
     // TODO: use generic method or special cast syntax instead of plain Object?
     <Object> cast(cstring name, Object any) {
-        __pasm__ (<"
+        __pasm__(<"
             pushl %ecx
             pushl %esi
         _crma_start:
@@ -337,7 +342,7 @@ class Runtime extends Object {
     }
     
     <> createAndRunThread(cstring name) {
-        __pasm__ (<"
+        __pasm__(<"
 // TODO #3: inline method-indices in method-call-generation
         _my_core_Thread_m_run := 40
             pushl %ecx
@@ -346,7 +351,7 @@ class Runtime extends Object {
             movl 12(%ebp), %esi // @this (Type Runtime)
         ">);
         // createInstance
-        __pasm__ (<"
+        __pasm__(<"
             subl 4, %esp        // return value of createInstance
             pushl 16(%ebp)      // param @classname
             pushl %esi; pushl _my_core_Runtime_m_createInstance; call (%esi)
@@ -355,7 +360,7 @@ class Runtime extends Object {
             addl 0, %ecx; jz _mcrmcart_return // break if not instantiated
         ">);
         // cast to Thread
-        __pasm__ (<"
+        __pasm__(<"
             movl 8(%ebp), %eax  // @class-desc "Runtime"
             addl _my_core_Runtime_coso_mThread, %eax
             subl 4, %esp        // return value of as
@@ -368,19 +373,19 @@ class Runtime extends Object {
             movl %eax, %ecx
         ">);
         // run thread
-        __pasm__ (<"
+        __pasm__(<"
             pushl %ecx; pushl _my_core_Thread_m_run; call (%ecx)
             addl 8, %esp
         ">);
         // cleanup
-        __pasm__ (<"
+        __pasm__(<"
         _mcrmcart_cleanup:
             pushl %ecx
             pushl %esi; pushl _my_core_Runtime_m_destroyInstance; call (%esi)
         	addl 12, %esp
         ">);
         // return
-        __pasm__ (<"
+        __pasm__(<"
         _mcrmcart_return:
             popl %esi
             popl %ecx
@@ -389,14 +394,14 @@ class Runtime extends Object {
     
     // TODO: use generic method or special new syntax instead of plain Object?
     <Object> createInstance(cstring name) {
-        __pasm__ (<"
+        __pasm__(<"
             pushad
         _crmci_start:
             movl 0, 20(%ebp)    // default handle: NULL
             movl 12(%ebp), %esi // @this (Type Runtime)
         ">);
         // getClassDesc
-        __pasm__ (<"
+        __pasm__(<"
             subl 4, %esp    // return value of getClassDesc
             pushl 16(%ebp)  // param @classname
             pushl %esi; pushl _my_core_Runtime_m_getClassDesc; call (%esi)
@@ -405,12 +410,12 @@ class Runtime extends Object {
             addl 0, %edx; jz _crmci_return  // return NULL if class not exists
         ">);
         // if (!Class instance exist)
-        __pasm__ (<"
+        __pasm__(<"
             cmpl 0, _my_core_Runtime_coi_ch_inst_handle(%edx)
             jnz _crmci_instantiate  // class already initialized
         ">);
         // create Class instance
-        __pasm__ (<"
+        __pasm__(<"
             movl 8(%ebp), %eax      // @class-desc "Runtime"
             addl _my_core_Runtime_coso_mClass, %eax
             subl 4, %esp    // return value of createInstance
@@ -421,14 +426,14 @@ class Runtime extends Object {
             addl 0, %eax; jz _crmci_return  // return NULL if class could not be initialized
         ">);
         // setDescriptor
-        __pasm__ (<"
+        __pasm__(<"
             pushl %edx      // @class-desc
             pushl %eax; pushl _my_core_Class_m_setDesc; call (%eax)
         	addl 12, %esp
         ">);
         // endif
         // allocate memory for instance
-        __pasm__ (<"
+        __pasm__(<"
         _crmci_instantiate:
             subl 4, %esp    // return value of allocate
             pushl _my_core_Runtime_coi_ch_tpl_size(%edx) // instance size
@@ -438,7 +443,7 @@ class Runtime extends Object {
             addl 0, %eax; jz _crmci_return
         ">);
         // call _crh_instantiate AND return correct handle
-        __pasm__ (<"
+        __pasm__(<"
             pushl %esi      // @Runtime for later setRt
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
             addl _cr_mo_call_entry, %ebx
@@ -453,7 +458,7 @@ class Runtime extends Object {
     }
     
     __naked__ <> _crh_instantiate() {
-        __pasm__ (<"
+        __pasm__(<"
         _crh_instantiate:       // %eax: @object-meminfo %ebx: @_call_entry %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
             movl (%eax), %edi   // @object
             movl %edx, %esi
@@ -485,7 +490,7 @@ class Runtime extends Object {
     }
     
     __naked__ <> _call_entry() {
-        __pasm__ (<"
+        __pasm__(<"
         _cr_mo_call_entry := (_call_entry - _my_core_Runtime)
         _call_entry:
             pushl %ecx
@@ -508,4 +513,5 @@ class Runtime extends Object {
             jmp %ebx            // goto method
         ">);
     }
+    
 }

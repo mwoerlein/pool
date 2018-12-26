@@ -9,16 +9,18 @@ use my::core::Thread as myThread;
 use my::core::Runtime;
 
 class B extends myThread, my::A {
-// TODO #3: implicitly clone constants of my::core::Runtime if used
+    
+    // constants
+    // TODO #3: implicitly clone constants of my::core::Runtime if used
     // streams
     int out := 0;
     int err := 1;
-    
     // TODO: remove after implicit string handling
     cstring doit := "OMG! Compiling still work's! ";
     
+    // methods
     <> run() {
-        __pasm__ (<"
+        __pasm__(<"
 // TODO #3: inline method-indices in method-call-generation
 //*/
         _my_core_Runtime_m_getClassDesc := 56
@@ -77,7 +79,7 @@ class B extends myThread, my::A {
     }
     
     <> doIt(A a) {
-        __pasm__ (<"
+        __pasm__(<"
             pushl %ecx
             pushl %edx
             
@@ -160,7 +162,7 @@ class B extends myThread, my::A {
     }
     
     <> testAllocate(int size) {
-        __pasm__ (<"
+        __pasm__(<"
             pushl %ecx
             pushl %edx
             pushl %esi
@@ -213,7 +215,7 @@ class B extends myThread, my::A {
     }
     
     <int> getRow() {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax             // @this (Type B)
             movl _my_B_hvo_my_A(%eax), %ebx // inst vars offset (A)
             addl 4(%eax), %ebx              // @this.vars(A)
@@ -223,4 +225,5 @@ class B extends myThread, my::A {
             movl %eax, 16(%ebp)             // return row*2
         ">);
     }
+    
 }

@@ -9,23 +9,27 @@ use my::core::Object;
 use my::core::Runtime;
 
 class A extends Object {
-// TODO #3: implicitly clone constants of my::core::Runtime if used
+    
+    // constants
+    // TODO #3: implicitly clone constants of my::core::Runtime if used
     // streams
     int out := 0;
     int err := 1;
-    
     // TODO: remove after implicit string handling
     cstring test := " Test\n";
     
+    // variables
     int column;
     int row;
     
+    // methods
     // TODO: move to constructor
     <> init(int column, int row) {
+/*
         this.column = column;   // assignment
         this.row = row;         // assignment
-/*        
-        __pasm__ (<"
+*/        
+        __pasm__(<"
             movl 12(%ebp), %eax             // @this (Type A)
             movl _my_A_hvo_my_A(%eax), %ebx // inst vars offset (A)
             addl 4(%eax), %ebx              // @this.vars(A)
@@ -35,13 +39,13 @@ class A extends Object {
             movl 20(%ebp), %eax             // param column
             movl %eax, _my_A_i_column(%ebx) // set this.column
         ">);
-*/
     }
     
     <int> getRow() {
-        return this.row;
 /*
-        __pasm__ (<"
+        return this.row;
+*/
+        __pasm__(<"
             movl 12(%ebp), %eax             // @this (Type A)
             movl _my_A_hvo_my_A(%eax), %ebx // inst vars offset (A)
             addl 4(%eax), %ebx              // @this.vars(A)
@@ -49,13 +53,13 @@ class A extends Object {
             movl _my_A_i_row(%ebx), %eax    // row
             movl %eax, 16(%ebp)             // return row
         ">);
-*/
     }
     
     <int, int> getRowAndColumn() {
-        return <this.row, this.column>;
 /*
-        __pasm__ (<"
+        return <this.row, this.column>;
+*/
+        __pasm__(<"
             movl 12(%ebp), %eax             // @this (Type A)
             movl _my_A_hvo_my_A(%eax), %ebx // inst vars offset (A)
             addl 4(%eax), %ebx              // @this.vars(A)
@@ -65,10 +69,10 @@ class A extends Object {
             movl _my_A_i_column(%ebx), %eax // column
             movl %eax, 16(%ebp)             // return column
         ">);
-*/
     }
     
     <> test(int row) {
+/*
         // TODO use Runtime::out, if supported
         int _out := 0;              // fixed variable
         Runtime rt := this.rt();    // fixed variable
@@ -91,8 +95,8 @@ class A extends Object {
             rt.printInt(_out, _col);
             rt.printString(_out, " Test\n");
         }
-/*
-        __pasm__ (<"
+*/
+        __pasm__(<"
 // TODO #3: inline method-indices in method-call-generation
         _my_core_Class_m_getName := 56
         _my_core_Runtime_m_getClassDesc := 56
@@ -120,12 +124,12 @@ class A extends Object {
             pushl %ecx; pushl _my_A_m_getClass; call (%ecx)
         	addl 8, %esp
             popl %eax       // Class instance ("A"|"B") (Type Class)
-/ *
+/*
             subl 4, %esp    // return value of getClass
             pushl %eax; pushl _my_core_Class_m_getClass; call (%eax)
         	addl 8, %esp
             popl %eax       // Class instance "Class" (Type Class)
-* /
+*/
             subl 4, %esp    // return value of getName
             pushl %eax; pushl _my_core_Class_m_getName; call (%eax)
         	addl 8, %esp
@@ -184,6 +188,6 @@ class A extends Object {
             popl %edx
             popl %ecx
         ">);
-*/
     }
+    
 }

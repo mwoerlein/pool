@@ -5,14 +5,19 @@ version = 0.1.0
 */
 namespace my::core;
 
+
 class Object {
-    // TODO: remove with working ClassHeader "struct"
-    int ch_inst_handle := 0x4;
     
+    // constants
+    // TODO: remove with working ClassHeader "struct"
+    int ch_inst_handle := 4;
+    
+    // variables
     Runtime runtime;
     
+    // methods
     <Class> getClass() {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax    // @this (Type Object)
             movl 4(%eax), %eax     // @this
             movl (%eax), %eax      // @class desc
@@ -22,7 +27,7 @@ class Object {
     }
     
     <int> hash() {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax    // @this (Type Object)
             movl 4(%eax), %eax     // @this
             movl %eax, 16(%ebp)    // return @this as hash
@@ -31,7 +36,7 @@ class Object {
     
     // TODO: use generic method instead of plain Object?
     <bool> equals(Object any) {
-        __pasm__ (<"
+        __pasm__(<"
             movl 0, 20(%ebp)       // default return: false
             movl 12(%ebp), %eax    // @this (Type Object)
             movl 4(%eax), %eax     // @this
@@ -45,7 +50,7 @@ class Object {
     }
     
     <Runtime> rt() {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax                         // @this (Type Object)
             movl _my_core_Object_hvo_my_core_Object(%eax), %ebx   // inst vars offset (Object)
             addl 4(%eax), %ebx                          // @this.vars(Object)
@@ -56,7 +61,7 @@ class Object {
     
     // TODO: move to constructor?
     <> setRt(Runtime rt) {
-        __pasm__ (<"
+        __pasm__(<"
             movl 12(%ebp), %eax                         // @this (Type Object)
             movl _my_core_Object_hvo_my_core_Object(%eax), %ebx   // inst vars offset (Object)
             addl 4(%eax), %ebx                          // @this.vars(Object)
@@ -64,4 +69,5 @@ class Object {
             movl %eax, _my_core_Object_i_runtime(%ebx)       // store @runtime (Type Runtime)
         ">);
     }
+    
 }
