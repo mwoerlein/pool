@@ -11,51 +11,53 @@
 #include "poolc/ast/nodes/reference/TypeRefNode.hpp"
 #include "poolc/ast/nodes/reference/UseStatementNode.hpp"
 
+#include "poolc/ast/scopes/UnitScope.hpp"
+#include "poolc/ast/scopes/ClassScope.hpp"
+
 // public
 ResolveVisitor::ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader)
-        :Object(env, mi), LoggerAware(env, mi), loader(loader), curUnit(0) {}
+        :Object(env, mi), LoggerAware(env, mi), loader(loader), curScope(0) {}
 ResolveVisitor::~ResolveVisitor() {}
 
 
 bool ResolveVisitor::visit(TranslationUnitNode & translationUnit) {
-    TranslationUnitNode *tmpUnit = curUnit;
-    curUnit = &translationUnit;
+    Scope *tmpScope = curScope;
+    translationUnit.scope = curScope = &env().create<UnitScope, TranslationUnitNode &>(translationUnit);
     
-    if (!curUnit->ns) {
-        error() << curUnit->name << ": " << "missing namespace" << "\n";
-        curUnit = tmpUnit;
+    if (!translationUnit.ns) {
+        error() << translationUnit.name << ": " << "missing namespace" << "\n";
+        curScope = tmpScope;
         return false;
     }
-    curUnit->ns->accept(*this);
-    curUnit->uses.acceptAll(*this);
-    curUnit->classes.acceptAll(*this);
+    translationUnit.ns->accept(*this);
+    translationUnit.uses.acceptAll(*this);
+    translationUnit.classes.acceptAll(*this);
     
-    curUnit = tmpUnit;
+    curScope = tmpScope;
     return true;
 }
 
 bool ResolveVisitor::visit(UseStatementNode & useStmt) {
     ClassDeclNode *classDef = loader.getClass(useStmt.name);
     if (classDef) {
-        curUnit->registerClass(useStmt.alias, *classDef);
+        curScope->registerClass(*classDef, useStmt.alias);
     }
     return classDef;
 }
 
 bool ResolveVisitor::visit(ClassRefNode & classRef) {
     if (!classRef.classDef) {
-        ClassDeclNode * classDef = 0;
         if (classRef.name.isFullQualified()) {
             classRef.classDef = loader.getClass(classRef.name);
         } else {
-            classRef.classDef = curUnit->getClass(classRef.name);
+            classRef.classDef = curScope->getClass(classRef.name);
             if (!classRef.classDef) {
                 String & fqn = env().create<String>();
-                fqn << curUnit->ns->name << "::" << classRef.name;
+                fqn << curScope->getUnitNode()->ns->name << "::" << classRef.name;
                 classRef.classDef = loader.getClass(fqn);
                 fqn.destroy();
                 if (classRef.classDef) {
-                    curUnit->registerClass(classRef.classDef->name, *classRef.classDef);
+                    curScope->registerClass(*classRef.classDef, classRef.classDef->name);
                 }
             }
         }
@@ -67,7 +69,10 @@ bool ResolveVisitor::visit(ClassDeclNode & classDef) {
     if (!classDef.supers.isEmpty()) {
         info() << classDef.name << ": already resolved" << "\n";
     }
+    Scope *tmpScope = curScope;
+    classDef.scope = curScope = &env().create<ClassScope, ClassDeclNode &, UnitScope &>(classDef, *tmpScope->isUnit());
     
+    TranslationUnitNode * curUnit = curScope->getUnitNode();
     classDef.fullQualifiedName << curUnit->ns->name << "::" << classDef.name;
     if (classDef.fullQualifiedName != curUnit->name) {
         error() << curUnit->name << ": class name '" << classDef.fullQualifiedName << "' does not match compilation unit\n";
@@ -146,8 +151,10 @@ bool ResolveVisitor::visit(ClassDeclNode & classDef) {
         if (!&bsRef) {
             warn() << curUnit->name << ": ignore missing bootstrap method '" << bsName << "'\n";
             curUnit->element.unsetProperty("pool.bootstrap");
+            curScope = tmpScope;
             return false;
         }
     }
+    curScope = tmpScope;
     return true;
 }

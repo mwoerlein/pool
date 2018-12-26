@@ -7,7 +7,7 @@
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/storage/StorageElement.hpp"
 
-class TranslationUnitNode: public Node, private HashMap<String, ClassDeclNode> {
+class TranslationUnitNode: public Node {
     public:
     StorageElement &element;
     String &name;
@@ -21,9 +21,6 @@ class TranslationUnitNode: public Node, private HashMap<String, ClassDeclNode> {
     
     virtual bool accept(Visitor & visitor) override;
     virtual void printDebugName(OStream & stream) override;
-    
-    virtual ClassDeclNode * getClass(String & alias);
-    virtual void registerClass(String & alias, ClassDeclNode & classDef);
 };
 
 #endif //POOLC_AST_NODES_TRANSLATIONUNITNODE_HPP_LOCK

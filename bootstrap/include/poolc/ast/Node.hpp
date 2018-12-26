@@ -9,12 +9,15 @@
 
 enum scope_t { scope_class, scope_instance, scope_method, scope_block };
 
+class Scope;
 class Node: virtual public Object {
     public:
     int first_line;
     int first_column;
     int last_line;
     int last_column;
+    
+    Scope * scope;
     
     virtual ~Node();
     

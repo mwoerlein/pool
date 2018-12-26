@@ -3,12 +3,13 @@
 
 #include "poolc/ast/Visitor.hpp"
 
+#include "poolc/ast/Scope.hpp"
 #include "poolc/parser/ClassLoader.hpp"
 
 class ResolveVisitor: public Visitor {
     private:
+    Scope * curScope;
     ClassLoader & loader;
-    TranslationUnitNode * curUnit;
     
     public:
     ResolveVisitor(Environment &env, MemoryInfo &mi, ClassLoader & loader);
