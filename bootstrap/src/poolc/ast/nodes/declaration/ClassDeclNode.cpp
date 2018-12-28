@@ -6,7 +6,6 @@
 #include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
 
 #include "poolc/ast/nodes/reference/ClassRefNode.hpp"
-#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
 
 #include "sys/collection/LinkedList.hpp"
 #include "sys/collection/HashMap.hpp"
@@ -18,13 +17,11 @@ ClassDeclNode::ClassDeclNode(Environment &env, MemoryInfo &mi)
          fullQualifiedName(env.create<FullQualifiedName>()),
          globalPrefix(env.create<String>()),
          localPrefix(env.create<String>()),
-         unit(0),
+         instanceScope(0),
          extends(env.create<NodeList<TypeRefNode>>()),
          variables(env.create<NodeList<VariableDeclNode>>()),
          consts(env.create<NodeList<VariableInitInstNode>>()),
-         methods(env.create<NodeList<MethodDeclNode>>()),
-         supers(env.create<NodeMap<ClassDeclNode>>()),
-         methodRefs(env.create<NodeMap<MethodRefNode>>()) {
+         methods(env.create<NodeList<MethodDeclNode>>()) {
 }
 ClassDeclNode::~ClassDeclNode() {
     name.destroy();
@@ -36,10 +33,6 @@ ClassDeclNode::~ClassDeclNode() {
     variables.destroyAll();
     consts.destroyAll();
     methods.destroyAll();
-    
-    // factory owns all classes 
-    supers.destroy();
-    methodRefs.destroyAll();
 }
 
 bool ClassDeclNode::accept(Visitor & visitor) {

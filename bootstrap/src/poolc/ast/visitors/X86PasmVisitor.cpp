@@ -2,23 +2,14 @@
 
 #include "poolc/storage/Types.hpp"
 
-#include "poolc/ast/nodes/TranslationUnitNode.hpp"
+#include "poolc/ast/nodes/all.hpp"
 
-#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
-#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
-#include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
-#include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
-
-#include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
-#include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
-
-#include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
-#include "poolc/ast/nodes/instruction/InlinePasmInstNode.hpp"
-#include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
-
-#include "poolc/ast/nodes/reference/ClassRefNode.hpp"
-#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
-#include "poolc/ast/nodes/reference/UseStatementNode.hpp"
+#include "poolc/ast/scopes/UnitScope.hpp"
+#include "poolc/ast/scopes/ClassScope.hpp"
+#include "poolc/ast/scopes/InstanceScope.hpp"
+#include "poolc/ast/scopes/MethodScope.hpp"
+#include "poolc/ast/scopes/BlockScope.hpp"
+#include "poolc/ast/scopes/VariableScope.hpp"
 
 #define localClsPrefix(cls) (cls)->localPrefix
 // TODO: #3 replace with localClsPrefix after inline pasm is replaced with method-code generation
@@ -34,8 +25,8 @@
 #define constString(c) localClsPrefix(curClass) << "_cos_" << (c)->name
 #define constStringOffset(c) manualClsPrefix(curClass) << "_coso_" << (c)->name
 #define methodDeclTab() localClsPrefix(curClass) << "_mdt"
-#define methodDecl(m) localClsPrefix((m)->parent) << "_md_" << (m)->name
-#define methodDeclOffset(m) manualClsPrefix((m)->parent) << "_mdo_" << (m)->name
+#define methodDecl(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name
+#define methodDeclOffset(m) manualClsPrefix((m)->scope->getClassDeclNode()) << "_mdo_" << (m)->name
 #define methodTabs() localClsPrefix(curClass) << "_mts"
 #define methodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
 #define methodRef(cls, m) localClsPrefix(curClass) << "_mtm" << localClsPrefix(cls) << "_" << (m)->name
@@ -75,7 +66,10 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
         return false;
     }
     
-    StorageElement &e = curClass->unit->element;
+    ClassScope *classScope = curClass->scope->isClass();
+    InstanceScope *instanceScope = curClass->instanceScope;
+    TranslationUnitNode *unit = classScope->getUnitNode();
+    StorageElement &e = unit->element;
     
     elem() << "/*[meta]\n";
     elem() << "mimetype = " << MIMETYPE_PASM << "\n";
@@ -86,15 +80,15 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
         elem() << "version = " << e.getStringProperty("meta.version") << "\n";
     }
     if (e.hasStringProperty("pool.bootstrap")) {
-        MethodDeclNode &bs = curClass->methodRefs.get(e.getStringProperty("pool.bootstrap")).methodDef;
-        if (bs.scope != scope_class || bs.kind != normal) {
-            error() << curClass->fullQualifiedName << ": bootstrap method has to be in class scope and accessible via pool-ABI.\n";
+        MethodDeclNode *bs = classScope->getMethod(e.getStringProperty("pool.bootstrap"))->getMethodDeclNode();
+        if (!bs || bs->kind != normal) {
+            error() << curClass->fullQualifiedName << ": bootstrap method has to be iaccessible via pool-ABI.\n";
             return false;
         }
-        elem() << "bootstrapOffset = " << methodDeclOffset(&bs) << "\n";
+        elem() << "bootstrapOffset = " << methodDeclOffset(bs) << "\n";
     }
     elem() << "[pool_source]\n";
-    elem() << "unit = " << curClass->unit->name << "\n";
+    elem() << "unit = " << unit->name << "\n";
     if (e.hasStringProperty("meta.version")) {
         elem() << "version = " << e.getStringProperty("meta.version") << "\n";
     }
@@ -114,25 +108,25 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     LONG(CLASS_OFFSET(methodDeclTab()));  // methods tab offset
     LONG(CLASS_OFFSET(instanceStart()));  // instance template offset
     LONG(INSTANCE_OFFSET(instanceEnd())); // instance size
-    LONG(INSTANCE_OFFSET(instanceHandle(curClass->supers.first()))); // Object handle offset in instance
+    LONG(INSTANCE_OFFSET(instanceHandle(classScope->firstSuper()->getClassDeclNode()))); // Object handle offset in instance
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
 
     // dependent classes
     elem() << "\n// class tab\n";
     LABEL(classTabs());
     {
-        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
+        Iterator<ClassScope> &it = classScope->supers();
         while (it.hasNext()) {
-            curSuper = &it.next();
+            ClassDeclNode *superDecl = it.next().getClassDeclNode();
             LOCAL(
-                classTabOffset(curSuper),
-                CLASS_OFFSET(classTab(curSuper))
+                classTabOffset(superDecl),
+                CLASS_OFFSET(classTab(superDecl))
             );
-            LABEL(classTab(curSuper));
+            LABEL(classTab(superDecl));
             LONG("0"); // @class-desc filled on class loading
-            LONG(classNameOffset(curSuper));
-            LONG(CLASS_OFFSET(methodTab(curSuper))); //  vtab offset in description
-            LONG(INSTANCE_OFFSET(instanceHandle(curSuper))); // handle offset in instance
+            LONG(classNameOffset(superDecl));
+            LONG(CLASS_OFFSET(methodTab(superDecl))); //  vtab offset in description
+            LONG(INSTANCE_OFFSET(instanceHandle(superDecl))); // handle offset in instance
         }
         it.destroy();
     }
@@ -146,11 +140,40 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     elem() << "\n// method tabs\n";
     LABEL(methodTabs());
     {
-        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
+        Iterator<ClassScope> &it = classScope->supers();
         while (it.hasNext()) {
-            curSuper = &it.next();
-            LABEL(methodTab(curSuper));
-            curSuper->methodRefs.acceptAll(*this);
+            ClassScope &superClassScope = it.next();
+            ClassDeclNode *superClassDecl = superClassScope.getClassDeclNode();
+            InstanceScope *superInstanceScope = superClassDecl->instanceScope;
+            
+            LABEL(methodTab(superClassDecl));
+            {
+                Iterator<MethodScope> &mit = superInstanceScope->methods();
+                while (mit.hasNext()) {
+                    MethodScope & superMethodScope = mit.next();
+                    MethodDeclNode * methodDecl = instanceScope->getMethod(superMethodScope)->getMethodDeclNode();
+                    if (methodDecl->kind == naked) { continue; }
+                    // TODO #3: inline method-indices in method-call-generation
+                    LOCAL(methodRefOffset(superClassDecl, methodDecl), 8 * superMethodScope.index);
+                    LONG(4 * methodDecl->index);
+                    LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
+                }
+                mit.destroy();
+            }
+            {
+                Iterator<MethodScope> &mit = superClassScope.methods();
+                while (mit.hasNext()) {
+                    MethodScope & superMethodScope = mit.next();
+                    MethodDeclNode * methodDecl = classScope->getMethod(superMethodScope)->getMethodDeclNode();
+                    if (methodDecl->kind == naked) { continue; }
+                    // TODO #3: inline method-indices in method-call-generation
+                    LOCAL(methodRefOffset(superClassDecl, methodDecl), 8 * superMethodScope.index);
+                    LONG(4 * methodDecl->index);
+                    LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
+                }
+                mit.destroy();
+            }
+            
         }
         it.destroy();
     }
@@ -161,18 +184,18 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     {
         Iterator<MethodDeclNode> &it = curClass->methods.iterator();
         while (it.hasNext()) {
-            MethodDeclNode &methodDef = it.next();
-            switch (methodDef.kind) {
+            MethodDeclNode &method = it.next();
+            switch (method.kind) {
                 case abstract:
                 case naked:
                     LONG("0");
                     break;
                 default:
                     LOCAL(
-                        methodDeclOffset(&methodDef),
-                        CLASS_OFFSET(methodDecl(&methodDef))
+                        methodDeclOffset(&method),
+                        CLASS_OFFSET(methodDecl(&method))
                     );
-                    LONG(methodDeclOffset(&methodDef));
+                    LONG(methodDeclOffset(&method));
             }
         }
         it.destroy();
@@ -182,16 +205,17 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     elem() << "\n// constants";
     curClass->consts.acceptAll(*this);
     {
-        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
+        Iterator<ClassScope> &it = classScope->supers();
         while (it.hasNext()) {
-            curSuper = &it.next();
-            elem() << "\n// class-name " << curSuper->name << "\n";
+            ClassScope &superClassScope = it.next();
+            ClassDeclNode *superClassDecl = superClassScope.getClassDeclNode();
+            elem() << "\n// class-name " << superClassDecl->name << "\n";
             LOCAL(
-                classNameOffset(curSuper),
-                CLASS_OFFSET(className(curSuper))
+                classNameOffset(superClassDecl),
+                CLASS_OFFSET(className(superClassDecl))
             );
-            LABEL(className(curSuper));
-            ASCIZ(curSuper->fullQualifiedName);
+            LABEL(className(superClassDecl));
+            ASCIZ(superClassDecl->fullQualifiedName);
         }
         it.destroy();
     }
@@ -203,25 +227,27 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     LONG("0"); // @meminfo
 
     {
-        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
+        Iterator<ClassScope> &it = classScope->supers();
         while (it.hasNext()) {
-            curSuper = &it.next();
-            LABEL(instanceHandle(curSuper));
+            ClassScope &superClassScope = it.next();
+            ClassDeclNode *superClassDecl = superClassScope.getClassDeclNode();
+            LABEL(instanceHandle(superClassDecl));
             LONG("0"); // _call_entry
             LONG("0"); // @inst
             LONG("0"); // vtab-offset
             
-            Iterator<ClassDeclNode> &sit = curSuper->supers.iterator();
+            Iterator<ClassScope> &sit = superClassScope.supers();
             while (sit.hasNext()) {
-                ClassDeclNode * ssuper = &sit.next();
-                if (curSuper->equals(*curClass)) {
+                ClassScope &ssuperClassScope = sit.next();
+                ClassDeclNode *ssuperClassDecl = ssuperClassScope.getClassDeclNode();
+                if (&superClassScope == classScope) {
                     LOCAL(
-                        instanceHandleVarsOffset(ssuper),
-                        OFFSET(instanceHandle(curSuper), instanceHandleVars(ssuper))
+                        instanceHandleVarsOffset(ssuperClassDecl),
+                        OFFSET(instanceHandle(superClassDecl), instanceHandleVars(ssuperClassDecl))
                     );
-                    LABEL(instanceHandleVars(ssuper));
+                    LABEL(instanceHandleVars(ssuperClassDecl));
                 }
-                LONG(INSTANCE_OFFSET(instanceVars(ssuper))); // @Super-Obj-Vars
+                LONG(INSTANCE_OFFSET(instanceVars(ssuperClassDecl))); // @Super-Obj-Vars
             }
             sit.destroy();
         }
@@ -229,11 +255,12 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     }
     
     {
-        Iterator<ClassDeclNode> &it = curClass->supers.iterator();
+        Iterator<ClassScope> &it = classScope->supers();
         while (it.hasNext()) {
-            curSuper = &it.next();
-            LABEL(instanceVars(curSuper));
-            curSuper->variables.acceptAll(*this);
+            ClassScope &superClassScope = it.next();
+            ClassDeclNode *superClassDecl = superClassScope.getClassDeclNode();
+            LABEL(instanceVars(superClassDecl));
+            superClassDecl->variables.acceptAll(*this);
         }
         it.destroy();
     }
@@ -246,15 +273,6 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     
     finalizeElement();
     
-    return true;
-}
-
-bool X86PasmVisitor::visit(MethodRefNode & methodRef) {
-    MethodDeclNode & methodDef = curClass->methodRefs.get(methodRef.methodDef.name).methodDef;
-// TODO #3: inline method-indices in method-call-generation
-    LOCAL(methodRefOffset(curSuper, &methodDef), 8 * methodRef.index);
-    LONG(4 * methodDef.index);
-    LONG(classTabOffset(methodDef.parent));
     return true;
 }
 
@@ -279,58 +297,52 @@ bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(VariableDeclNode & variableDef) {
-    switch (variableDef.scope) {
-        case scope_class:
-            return true;
-        case scope_instance:
-            elem() << "// variable " << variableDef.name << "\n";
-            LOCAL(
-                instanceVarOffset(curSuper, &variableDef),
-                OFFSET(instanceVars(curSuper), instanceVar(curSuper, &variableDef))
-            );
-            LABEL(instanceVar(curSuper, &variableDef));
-            LONG("0"); // TODO: size_of variable
-            return true;
-        case scope_method:
-            return true;
-        case scope_block:
-            return true;
+bool X86PasmVisitor::visit(VariableDeclNode & variableDecl) {
+    if (!variableDecl.scope) {
+        warn() << "unresolved " << variableDecl << "\n";
+        return false;
+    }
+    if (InstanceScope *scope = variableDecl.scope->parent->isInstance()) {
+        ClassDeclNode *superClassDecl = scope->getClassDeclNode();
+        elem() << "// variable " << variableDecl.name << "\n";
+        LOCAL(
+            instanceVarOffset(superClassDecl, &variableDecl),
+            OFFSET(instanceVars(superClassDecl), instanceVar(superClassDecl, &variableDecl))
+        );
+        LABEL(instanceVar(superClassDecl, &variableDecl));
+        LONG("0"); // TODO: size_of variable
+        return true;
     }
     return false;
 }
 
 bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
-    switch (variableInit.scope) {
-        case scope_class:
-            if (ConstIntExprNode *cInt = variableInit.initializer.isConstInt()) {
-                VariableDeclNode &variableDef = *variableInit.variables.first();
-                elem() << "\n// int " << variableDef.name << "\n";
-                LOCAL(
-                    constInt(&variableDef),
-                    cInt->value
-                );
-                return true;
-            } else if (ConstCStringExprNode *cCString = variableInit.initializer.isConstCString()) {
-                VariableDeclNode &variableDef = *variableInit.variables.first();
-                elem() << "\n// string " << variableDef.name << "\n";
-                LOCAL(
-                    constStringOffset(&variableDef),
-                    CLASS_OFFSET(constString(&variableDef))
-                );
-                LABEL(constString(&variableDef));
-                ASCIZ(cCString->value);
-                return true;
-            } else {
-                return false;
-            }
-            
-        case scope_instance:
+    if (!variableInit.scope) {
+        warn() << "unresolved " << variableInit << "\n";
+        return false;
+    }
+    if (ClassScope *scope = variableInit.scope->isClass()) {
+        if (ConstIntExprNode *cInt = variableInit.initializer.isConstInt()) {
+            VariableDeclNode &variableDecl = *variableInit.variables.first();
+            elem() << "\n// int " << variableDecl.name << "\n";
+            LOCAL(
+                constInt(&variableDecl),
+                cInt->value
+            );
             return true;
-        case scope_method:
+        } else if (ConstCStringExprNode *cCString = variableInit.initializer.isConstCString()) {
+            VariableDeclNode &variableDecl = *variableInit.variables.first();
+            elem() << "\n// string " << variableDecl.name << "\n";
+            LOCAL(
+                constStringOffset(&variableDecl),
+                CLASS_OFFSET(constString(&variableDecl))
+            );
+            LABEL(constString(&variableDecl));
+            ASCIZ(cCString->value);
             return true;
-        case scope_block:
-            return true;
+        } else {
+            return false;
+        }
     }
     return false;
 }

@@ -3,6 +3,8 @@
 
 #include "sys/collection/LinkedList.hpp"
 
+#include "poolc/ast/Visitor.hpp"
+
 template <class Obj> class NodeList: public LinkedList<Obj> {
     public:
     NodeList(Environment &env, MemoryInfo &mi = *notAnInfo): LinkedList<Obj>(env, mi), Object(env, mi) {}

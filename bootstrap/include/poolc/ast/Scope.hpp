@@ -6,22 +6,23 @@
 #include "sys/String.hpp"
 #include "sys/collection/HashMap.hpp"
 
-#include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
-#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
-#include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
-#include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
+class TranslationUnitNode;
+class ClassDeclNode;
+class MethodDeclNode;
+class VariableDeclNode;
+class BlockInstNode;
 
 class UnitScope;
 class ClassScope;
 class InstanceScope;
 class MethodScope;
 class BlockScope;
+class VariableScope;
 class Scope: virtual public Object {
     protected:
-    HashMap<String, ClassDeclNode> &classes;
-    HashMap<String, MethodDeclNode> &methods;
-    HashMap<String, VariableDeclNode> &variables;
+    HashMap<String, ClassScope> &_classes;
+    HashMap<String, MethodScope> &_methods;
+    HashMap<String, VariableScope> &_variables;
     
     public:
     Scope * parent;
@@ -34,20 +35,28 @@ class Scope: virtual public Object {
     virtual InstanceScope * isInstance();
     virtual MethodScope * isMethod();
     virtual BlockScope * isBlock();
+    virtual VariableScope * isVariable();
     
-    virtual bool registerClass(ClassDeclNode & classDecl, String & alias);
-    virtual ClassDeclNode * getClass(String & name);
+    virtual ClassScope * registerClass(ClassDeclNode & classDecl, String & alias);
+    virtual ClassScope * registerClass(ClassScope & classScope);
+    virtual ClassScope * registerClass(ClassScope & classScope, String & alias);
+    virtual ClassScope * getClass(String & name);
+    inline Iterator<ClassScope> &classes() { return _classes.values(); }
     
-    virtual bool registerMethod(MethodDeclNode & methodDecl);
-    virtual MethodDeclNode * getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/);
+    virtual MethodScope * registerMethod(MethodDeclNode & methodDecl);
+    virtual MethodScope * getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/);
+    virtual MethodScope * getMethod(MethodScope & scope);
+    inline Iterator<MethodScope> &methods() { return _methods.values(); }
     
-    virtual bool registerVariable(VariableDeclNode & variableDecl);
-    virtual VariableDeclNode * getVariable(String & name);
+    virtual VariableScope * registerVariable(VariableDeclNode & variableDecl);
+    virtual VariableScope * getVariable(String & name);
+    inline Iterator<VariableScope> &variables() { return _variables.values(); }
 
     virtual TranslationUnitNode * getUnitNode();
     virtual ClassDeclNode * getClassDeclNode();
     virtual MethodDeclNode * getMethodDeclNode();
     virtual BlockInstNode * getBlockInstNode();
+    virtual VariableDeclNode * getVariableDeclNode();
 };
 
 #endif //POOLC_AST_SCOPE_HPP_LOCK

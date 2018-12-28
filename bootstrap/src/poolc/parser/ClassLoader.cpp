@@ -49,6 +49,10 @@ ClassDeclNode * ClassLoader::getClass(String & fullQualifiedName) {
         }
         if (pretty) { unit->accept(*pretty); }
         unit->accept(resolve);
+        if (!HashMap::has(fullQualifiedName)) {
+            error() << "class '" << fullQualifiedName << "' not declared!\n";
+            return 0;
+        }
     }
     
     return &HashMap::get(fullQualifiedName);

@@ -5,6 +5,7 @@
 
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/collection/NodeMap.hpp"
+#include "poolc/ast/scopes/InstanceScope.hpp"
 
 class ClassDeclNode: public Node {
     public:
@@ -12,15 +13,12 @@ class ClassDeclNode: public Node {
     FullQualifiedName & fullQualifiedName;
     String & globalPrefix;
     String & localPrefix;
-    TranslationUnitNode * unit;
+    InstanceScope * instanceScope;
     
     NodeList<TypeRefNode> &extends;
     NodeList<VariableDeclNode> &variables;
     NodeList<VariableInitInstNode> &consts;
     NodeList<MethodDeclNode> &methods;
-    
-    NodeMap<ClassDeclNode> &supers;
-    NodeMap<MethodRefNode> &methodRefs;
     
     ClassDeclNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassDeclNode();

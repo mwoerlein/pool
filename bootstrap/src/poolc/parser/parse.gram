@@ -200,7 +200,6 @@ class_body_empty:
     {
         $$ = $1;
         if ($2) {
-            $2->scope = scope_instance;
             
             $2->last_line = @3.last_line;
             $2->last_column = @3.last_column;
@@ -212,7 +211,6 @@ class_body_empty:
     {
         $$ = $1;
         if ($2) { 
-            $2->scope = scope_class;
             
             $2->last_line = @3.last_line;
             $2->last_column = @3.last_column;
@@ -224,7 +222,6 @@ class_body_empty:
     {
         $$ = $1;
         if ($3) { 
-            $3->scope = scope_class;
             $3->global = true;
             
             $3->first_line = @2.first_line;
@@ -355,7 +352,7 @@ method_decl:
 |   GLOBAL '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$10, *$3, *$7);
-        $$->scope = scope_class;
+        $$->global = true;
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
@@ -368,8 +365,8 @@ method_decl:
 |   NAKED '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$10, *$3, *$7);
+        $$->global = true;
         $$->kind = naked;
-        $$->scope = scope_class;
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;

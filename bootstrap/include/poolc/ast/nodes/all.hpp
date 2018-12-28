@@ -21,5 +21,4 @@
 #include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/reference/CStringRefNode.hpp"
 #include "poolc/ast/nodes/reference/IntRefNode.hpp"
-#include "poolc/ast/nodes/reference/MethodRefNode.hpp"
 #include "poolc/ast/nodes/reference/UseStatementNode.hpp"

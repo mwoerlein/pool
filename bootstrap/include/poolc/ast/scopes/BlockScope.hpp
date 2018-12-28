@@ -4,14 +4,13 @@
 #include "poolc/ast/Scope.hpp"
 
 #include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
-#include "poolc/ast/scopes/MethodScope.hpp"
 
 class BlockScope: public Scope {
     private:
     BlockInstNode & block;
     
     public:
-    BlockScope(Environment &env, MemoryInfo &mi, BlockInstNode & block, MethodScope & parent);
+    BlockScope(Environment &env, MemoryInfo &mi, Scope & parent, BlockInstNode & block);
     virtual ~BlockScope();
     virtual BlockScope * isBlock() override;
     virtual BlockInstNode * getBlockInstNode() override;

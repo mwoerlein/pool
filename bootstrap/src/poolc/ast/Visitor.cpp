@@ -13,7 +13,6 @@ bool Visitor::visit(VariableDeclNode & variableDef) { return false; }
 bool Visitor::visit(ClassRefNode & classRef) { return false; }
 bool Visitor::visit(CStringRefNode & type) { return false; }
 bool Visitor::visit(IntRefNode & type) { return false; }
-bool Visitor::visit(MethodRefNode & methodRef) { return false; }
 bool Visitor::visit(UseStatementNode & useStmt) { return false; }
 
 bool Visitor::visit(BlockInstNode & block) { return false; }

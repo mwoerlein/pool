@@ -3,10 +3,13 @@
 
 #include "poolc/ast/Node.hpp"
 
+#include "poolc/ast/scopes/ClassScope.hpp"
+
 class UseStatementNode: public Node {
     public:
     String & alias;
     FullQualifiedName & name;
+    ClassScope *resolvedType;
     
     UseStatementNode(Environment &env, MemoryInfo &mi);
     virtual ~UseStatementNode();

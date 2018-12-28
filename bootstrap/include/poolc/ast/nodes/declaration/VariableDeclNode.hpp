@@ -10,7 +10,6 @@ class VariableDeclNode: public Node {
     public:
     String & name;
     TypeRefNode & type;
-    scope_t scope;
     bool global;
     
     VariableDeclNode(Environment &env, MemoryInfo &mi, TypeRefNode & type, String &name);

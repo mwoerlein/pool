@@ -2,7 +2,7 @@
 
 // public
 VariableDeclNode::VariableDeclNode(Environment &env, MemoryInfo &mi, TypeRefNode &type, String &name)
-        :Object(env, mi), type(type), name(name), scope(scope_block), global(false) {}
+        :Object(env, mi), type(type), name(name), global(false) {}
 VariableDeclNode::~VariableDeclNode() {
     type.destroy();
     name.destroy();

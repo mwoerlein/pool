@@ -12,7 +12,6 @@ class VariableInitInstNode: public InstructionNode {
     public:
     NodeList<VariableDeclNode> &variables;
     ExpressionNode & initializer;
-    scope_t scope;
     bool final;
     bool global;
     

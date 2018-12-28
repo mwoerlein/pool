@@ -54,7 +54,7 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
     };
 
     MemoryInfo * bucketsInfo;
-    _Element *first, *last, **buckets;
+    _Element *_first, *_last, **buckets;
     int _size;
     int bucketsCount;
     int initialBucketsCount;
@@ -70,7 +70,7 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
         for (int i = 0; i < bucketsCount; i++) {
             buckets[i] = 0;
         }
-        for (_Element * cur = first; cur; cur = cur->orderedNext) {
+        for (_Element * cur = _first; cur; cur = cur->orderedNext) {
             int bucketNumber = getBucketNumber(*cur->key);
             cur->bucketNext = buckets[bucketNumber];
             buckets[bucketNumber] = cur;
@@ -78,7 +78,7 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
     }
     
     void destroyAllElements() {
-        _Element * cur = first;
+        _Element * cur = _first;
         while (cur) {
             _Element * kill = cur;
             cur = cur->orderedNext;
@@ -106,7 +106,7 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
             Object(env, mi), bucketsCount(bucketsCount), initialBucketsCount(bucketsCount),
             bucketsInfo(&env.getAllocator().allocate(bucketsCount * sizeof(_Element*))),
             buckets((_Element**) bucketsInfo->buf),
-            first(0), last(0), _size(0) {
+            _first(0), _last(0), _size(0) {
         rehash();
     }
     virtual ~HashMap() {
@@ -116,7 +116,7 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
     
     virtual void clear() override {
         destroyAllElements();
-        last = first = 0;
+        _last = _first = 0;
         _size = 0;
         // shrink, if required
         if (bucketsCount != initialBucketsCount) {
@@ -146,11 +146,11 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
         
         _Element *newElem = &Object::env().create<_Element, Key*, Value*>(&k, &v);
         if (_size) {
-            newElem->orderedPrev = last;
-            last->orderedNext = newElem;
-            last = newElem;
+            newElem->orderedPrev = _last;
+            _last->orderedNext = newElem;
+            _last = newElem;
         } else {
-            first = last = newElem;
+            _first = _last = newElem;
         }
         newElem->bucketNext = buckets[bucketNumber];
         buckets[bucketNumber] = newElem;
@@ -184,12 +184,12 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
             if (e->orderedPrev) {
                 e->orderedPrev->orderedNext = e->orderedNext;
             } else { // first element
-                first = e->orderedNext;
+                _first = e->orderedNext;
             }
             if (e->orderedNext) {
                 e->orderedNext->orderedPrev = e->orderedPrev;
             } else { // last element
-                last = e->orderedPrev;
+                _last = e->orderedPrev;
             }
             e->orderedPrev = e->orderedNext = 0; 
             e->destroy();
@@ -221,7 +221,7 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
     }
     
     virtual bool contains(Value & v) override {
-        for (_Element *e = first; e; e = e->orderedNext) {
+        for (_Element *e = _first; e; e = e->orderedNext) {
             if (e->value->equals(v)) {
                 return true;
             }
@@ -230,12 +230,15 @@ template <class Key, class Value> class HashMap: public MutableMap<Key,Value> {
     }
     
     virtual Iterator<Key> & keys() override {
-        return Object::env().create<_KeyIterator, _Element*>(first);
+        return Object::env().create<_KeyIterator, _Element*>(_first);
     }
     
     virtual Iterator<Value> & values() override {
-        return Object::env().create<_ValueIterator, _Element*>(first);
+        return Object::env().create<_ValueIterator, _Element*>(_first);
     }
+    
+    virtual Value * first() { return _first ? _first->value : 0; }
+    virtual Value * last() { return _last ? _last->value : 0; }
     
     virtual void dumpBuckets(OStream &out) {
         for (int i = 0; i < bucketsCount; i++) {

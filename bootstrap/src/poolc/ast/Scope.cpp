@@ -1,17 +1,30 @@
 #include "poolc/ast/Scope.hpp"
 
+#include "poolc/ast/nodes/TranslationUnitNode.hpp"
+#include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
+#include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
+#include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
+#include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
+
+#include "poolc/ast/scopes/UnitScope.hpp"
+#include "poolc/ast/scopes/ClassScope.hpp"
+#include "poolc/ast/scopes/InstanceScope.hpp"
+#include "poolc/ast/scopes/MethodScope.hpp"
+#include "poolc/ast/scopes/BlockScope.hpp"
+#include "poolc/ast/scopes/VariableScope.hpp"
+
 // public
 Scope::Scope(Environment &env, MemoryInfo &mi, Scope *parent)
         :Object(env, mi),
-         classes(env.create<HashMap<String, ClassDeclNode>>()),
-         methods(env.create<HashMap<String, MethodDeclNode>>()),
-         variables(env.create<HashMap<String, VariableDeclNode>>()),
+         _classes(env.create<HashMap<String, ClassScope>>()),
+         _methods(env.create<HashMap<String, MethodScope>>()),
+         _variables(env.create<HashMap<String, VariableScope>>()),
          parent(parent) {
 }
 Scope::~Scope() {
-    classes.destroy();
-    methods.destroy();
-    variables.destroy();
+    _classes.destroy();
+    _methods.destroy();
+    _variables.destroy();
 }
 
 UnitScope * Scope::isUnit() { return 0; }
@@ -19,20 +32,34 @@ ClassScope * Scope::isClass() { return 0; }
 InstanceScope * Scope::isInstance() { return 0; }
 MethodScope * Scope::isMethod() { return 0; }
 BlockScope * Scope::isBlock() { return 0; }
+VariableScope * Scope::isVariable() { return 0; }
 
 TranslationUnitNode * Scope::getUnitNode() { return parent ? parent->getUnitNode() : 0; }
 ClassDeclNode * Scope::getClassDeclNode() { return parent ? parent->getClassDeclNode() : 0; }
 MethodDeclNode * Scope::getMethodDeclNode() { return parent ? parent->getMethodDeclNode() : 0; }
 BlockInstNode * Scope::getBlockInstNode() { return parent ? parent->getBlockInstNode() : 0; }
+VariableDeclNode * Scope::getVariableDeclNode() { return parent ? parent->getVariableDeclNode() : 0; }
 
 
-bool Scope::registerClass(ClassDeclNode & classDecl, String & alias) {
-    classes.set(alias, classDecl);
-    return true;
+ClassScope * Scope::registerClass(ClassDeclNode & classDecl, String & alias) {
+    ClassScope &scope = env().create<ClassScope, Scope &, ClassDeclNode &>(*this, classDecl);
+    ClassScope *old = &_classes.set(alias, scope);
+    if (old) { old->destroy(); }
+    return &scope;
 }
-ClassDeclNode * Scope::getClass(String & name) {
-    if (ClassDeclNode *decl = &classes.get(name)) {
-        return decl;
+ClassScope * Scope::registerClass(ClassScope & scope) {
+    ClassScope *old = &_classes.set(scope.getClassDeclNode()->name, scope);
+    if (old) { old->destroy(); }
+    return &scope;
+}
+ClassScope * Scope::registerClass(ClassScope & scope, String & alias) {
+    ClassScope *old = &_classes.set(alias, scope);
+    if (old) { old->destroy(); }
+    return &scope;
+}
+ClassScope * Scope::getClass(String & name) {
+    if (ClassScope *scope = &_classes.get(name)) {
+        return scope;
     }
     if (parent) {
         return parent->getClass(name);
@@ -40,15 +67,28 @@ ClassDeclNode * Scope::getClass(String & name) {
     return 0;
 }
 
-bool Scope::registerMethod(MethodDeclNode & methodDecl) {
+MethodScope * Scope::registerMethod(MethodDeclNode & methodDecl) {
+    MethodScope &scope = env().create<MethodScope, Scope &, MethodDeclNode &>(*this, methodDecl);
     // TODO: #7 generate method id from name and parameter types
-    methods.set(methodDecl.name, methodDecl);
-    return true;
+    MethodScope *old = &_methods.set(methodDecl.name, scope);
+    if (old) { old->destroy(); }
+    return &scope;
 }
-MethodDeclNode * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/) {
+MethodScope * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/) {
     // TODO: #7 generate method id from name and parameter types
-    if (MethodDeclNode *decl = &methods.get(name)) {
-        return decl;
+    if (MethodScope *scope = &_methods.get(name)) {
+        return scope;
+    }
+    if (parent) {
+        return parent->getMethod(name);
+    }
+    return 0;
+}
+MethodScope * Scope::getMethod(MethodScope & scope) {
+    // TODO: #7 generate method id from name and parameter types
+    String &name = scope.getMethodDeclNode()->name;
+    if (MethodScope *scope = &_methods.get(name)) {
+        return scope;
     }
     if (parent) {
         return parent->getMethod(name);
@@ -56,13 +96,15 @@ MethodDeclNode * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode
     return 0;
 }
 
-bool Scope::registerVariable(VariableDeclNode & variableDecl) {
-    variables.set(variableDecl.name, variableDecl);
-    return true;
+VariableScope * Scope::registerVariable(VariableDeclNode & variableDecl) {
+    VariableScope &scope = env().create<VariableScope, Scope &, VariableDeclNode &>(*this, variableDecl);
+    VariableScope *old = &_variables.set(variableDecl.name, scope);
+    if (old) { old->destroy(); }
+    return &scope;
 }
-VariableDeclNode * Scope::getVariable(String & name) {
-    if (VariableDeclNode *decl = &variables.get(name)) {
-        return decl;
+VariableScope * Scope::getVariable(String & name) {
+    if (VariableScope *scope = &_variables.get(name)) {
+        return scope;
     }
     if (parent) {
         return parent->getVariable(name);

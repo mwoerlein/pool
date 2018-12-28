@@ -1,7 +1,7 @@
 #include "poolc/ast/scopes/BlockScope.hpp"
 
 // public
-BlockScope::BlockScope(Environment &env, MemoryInfo &mi, BlockInstNode & block, MethodScope & parent)
+BlockScope::BlockScope(Environment &env, MemoryInfo &mi, Scope & parent, BlockInstNode & block)
         :Scope(env, mi, &parent), Object(env, mi),
          block(block) {
 }

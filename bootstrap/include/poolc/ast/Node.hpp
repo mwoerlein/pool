@@ -17,7 +17,7 @@ class Node: virtual public Object {
     int last_line;
     int last_column;
     
-    Scope * scope;
+    Scope * scope = 0;
     
     virtual ~Node();
     

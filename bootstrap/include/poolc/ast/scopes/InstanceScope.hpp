@@ -4,14 +4,13 @@
 #include "poolc/ast/Scope.hpp"
 
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
-#include "poolc/ast/scopes/ClassScope.hpp"
 
 class InstanceScope: public Scope {
     private:
     ClassDeclNode & classDecl;
     
     public:
-    InstanceScope(Environment &env, MemoryInfo &mi, ClassDeclNode & classDecl, ClassScope & parent);
+    InstanceScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl);
     virtual ~InstanceScope();
     virtual InstanceScope * isInstance() override;
     virtual ClassDeclNode * getClassDeclNode() override;

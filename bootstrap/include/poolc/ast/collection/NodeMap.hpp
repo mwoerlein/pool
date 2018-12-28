@@ -1,8 +1,9 @@
 #ifndef POOLC_AST_COLLECTION_NODEMAP_HPP_LOCK
 #define POOLC_AST_COLLECTION_NODEMAP_HPP_LOCK
 
-#include "sys/String.hpp"
 #include "sys/collection/HashMap.hpp"
+
+#include "poolc/ast/Visitor.hpp"
 
 template <class Obj> class NodeMap: public HashMap<String, Obj> {
     public:

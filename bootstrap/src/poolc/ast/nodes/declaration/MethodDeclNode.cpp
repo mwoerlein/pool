@@ -12,8 +12,8 @@ MethodDeclNode::MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, M
          body(env.create<BlockInstNode>()),
          returnTypes(env.create<NodeList<TypeRefNode>>()),
          parameters(env.create<NodeList<VariableDeclNode>>()),
-         kind(normal), scope(scope_instance),
-         parent(0), index(-1) {
+         kind(normal), global(false),
+         index(-1) {
     returnTypes.addAll(rets);
     parameters.addAll(params);
 }
@@ -23,8 +23,8 @@ MethodDeclNode::MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, B
          body(body),
          returnTypes(env.create<NodeList<TypeRefNode>>()),
          parameters(env.create<NodeList<VariableDeclNode>>()),
-         kind(normal), scope(scope_instance),
-         parent(0), index(-1) {
+         kind(normal), global(false),
+         index(-1) {
     returnTypes.addAll(rets);
     parameters.addAll(params);
 }

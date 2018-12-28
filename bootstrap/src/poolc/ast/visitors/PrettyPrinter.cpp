@@ -91,7 +91,7 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
             line << "__naked__ ";
             break;
         default:
-            if (methodDef.scope == scope_class) {
+            if (methodDef.global) {
                 line << "global ";
             }
     }

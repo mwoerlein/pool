@@ -4,14 +4,15 @@
 #include "poolc/ast/Scope.hpp"
 
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
-#include "poolc/ast/scopes/InstanceScope.hpp"
 
 class MethodScope: public Scope {
     private:
     MethodDeclNode & methodDecl;
     
     public:
-    MethodScope(Environment &env, MemoryInfo &mi, MethodDeclNode & methodDecl, InstanceScope & parent);
+    int index;
+    
+    MethodScope(Environment &env, MemoryInfo &mi, Scope & parent, MethodDeclNode & methodDecl);
     virtual ~MethodScope();
     virtual MethodScope * isMethod() override;
     virtual MethodDeclNode * getMethodDeclNode() override;

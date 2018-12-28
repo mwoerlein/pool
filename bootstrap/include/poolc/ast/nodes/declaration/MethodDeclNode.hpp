@@ -16,8 +16,7 @@ class MethodDeclNode: public Node {
     NodeList<VariableDeclNode> &parameters;
     
     enum method_kind kind;
-    scope_t scope;
-    ClassDeclNode *parent;
+    bool global;
     int index;
     
     MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, MutableCollection<TypeRefNode> &rets, MutableCollection<VariableDeclNode> &params);

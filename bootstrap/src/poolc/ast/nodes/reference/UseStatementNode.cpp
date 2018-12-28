@@ -4,7 +4,7 @@
 UseStatementNode::UseStatementNode(Environment &env, MemoryInfo &mi)
         :Object(env, mi),
          name(env.create<FullQualifiedName>()),
-         alias(env.create<String>()) {}
+         alias(env.create<String>()), resolvedType(0) {}
 UseStatementNode::~UseStatementNode() {
     name.destroy();
     alias.destroy();

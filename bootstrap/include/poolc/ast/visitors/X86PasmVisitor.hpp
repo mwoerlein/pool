@@ -18,8 +18,6 @@ class X86PasmVisitor: public Writer {
     virtual bool visit(MethodDeclNode & methodDef) override;
     virtual bool visit(VariableDeclNode & variableDef) override;
     
-    virtual bool visit(MethodRefNode & methodRef) override;
-    
     virtual bool visit(BlockInstNode & block) override;
     virtual bool visit(InlinePasmInstNode & pasmInstruction) override;
     virtual bool visit(VariableInitInstNode & variableInit) override;
