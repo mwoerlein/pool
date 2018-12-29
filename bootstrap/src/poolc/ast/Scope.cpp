@@ -74,6 +74,12 @@ MethodScope * Scope::registerMethod(MethodDeclNode & methodDecl) {
     if (old) { old->destroy(); }
     return &scope;
 }
+MethodScope * Scope::registerMethod(MethodScope & scope) {
+    // TODO: #7 generate method id from name and parameter types
+    MethodScope *old = &_methods.set(scope.getMethodDeclNode()->name, scope);
+    if (old) { old->destroy(); }
+    return &scope;
+}
 MethodScope * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/) {
     // TODO: #7 generate method id from name and parameter types
     if (MethodScope *scope = &_methods.get(name)) {

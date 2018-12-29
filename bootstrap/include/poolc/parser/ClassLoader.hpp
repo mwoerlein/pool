@@ -9,12 +9,12 @@
 #include "poolc/parser/PoolParser.hpp"
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
-class ResolveVisitor;
+class ClassResolver;
 class PrettyPrinter;
 class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private HashMap<String, ClassDeclNode> {
     private:
     PoolParser & parser;
-    ResolveVisitor & resolve;
+    ClassResolver & resolve;
     PrettyPrinter * pretty;
     
     public:

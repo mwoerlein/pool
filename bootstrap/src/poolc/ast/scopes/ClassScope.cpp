@@ -4,7 +4,7 @@
 ClassScope::ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl)
         :Scope(env, mi, &parent), Object(env, mi),
          _supers(env.create<HashMap<String, ClassScope>>()),
-         classDecl(classDecl) {
+         classDecl(classDecl), methodsRegistered(false) {
 }
 ClassScope::~ClassScope() {
     _supers.destroy();
@@ -14,4 +14,7 @@ ClassDeclNode * ClassScope::getClassDeclNode() { return &classDecl; }
     
 void ClassScope::addSuper(ClassScope &super) {
     _supers.set(super.getClassDeclNode()->fullQualifiedName, super);
+}
+bool ClassScope::hasSuper(ClassScope &super) {
+    return _supers.has(super.getClassDeclNode()->fullQualifiedName);
 }

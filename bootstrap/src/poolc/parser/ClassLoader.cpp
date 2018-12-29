@@ -1,14 +1,14 @@
 #include "poolc/parser/ClassLoader.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/ast/visitors/ResolveVisitor.hpp"
+#include "poolc/ast/visitors/ClassResolver.hpp"
 #include "poolc/ast/visitors/PrettyPrinter.hpp"
 
 // public
 ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi)
         :ClassPathStorage(env, mi), LoggerAware(env, mi), HashMap(env, mi), Object(env, mi),
          parser(env.create<PoolParser>()),
-         resolve(env.create<ResolveVisitor, ClassLoader &>(*this)),
+         resolve(env.create<ClassResolver, ClassLoader &>(*this)),
          pretty(0) {
 }
 

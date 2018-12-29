@@ -44,6 +44,7 @@ class Scope: virtual public Object {
     inline Iterator<ClassScope> &classes() { return _classes.values(); }
     
     virtual MethodScope * registerMethod(MethodDeclNode & methodDecl);
+    virtual MethodScope * registerMethod(MethodScope & scope);
     virtual MethodScope * getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/);
     virtual MethodScope * getMethod(MethodScope & scope);
     inline Iterator<MethodScope> &methods() { return _methods.values(); }

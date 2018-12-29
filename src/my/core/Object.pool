@@ -35,7 +35,8 @@ class Object {
     }
     
     // TODO: use generic method instead of plain Object?
-    <bool> equals(Object any) {
+    // TODO: #4 use bool instead of int
+    <int> equals(Object any) {
         __pasm__(<"
             movl 0, 20(%ebp)       // default return: false
             movl 12(%ebp), %eax    // @this (Type Object)

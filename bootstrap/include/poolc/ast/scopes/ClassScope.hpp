@@ -12,6 +12,7 @@ class ClassScope: public Scope {
     HashMap<String, ClassScope> &_supers;
     
     public:
+    bool methodsRegistered;
     
     ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl);
     virtual ~ClassScope();
@@ -19,6 +20,7 @@ class ClassScope: public Scope {
     virtual ClassDeclNode * getClassDeclNode() override;
     
     virtual void addSuper(ClassScope &super);
+    virtual bool hasSuper(ClassScope &super);
     inline ClassScope * firstSuper() { return _supers.first(); }
     inline Iterator<ClassScope> & supers() { return _supers.iterator(); }
 };

@@ -5,6 +5,7 @@
 #include "sys/log/Logger.hpp"
 #include "poolc/parser/ClassLoader.hpp"
 #include "poolc/ast/visitors/PrettyPrinter.hpp"
+#include "poolc/ast/visitors/MethodResolver.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
 static const char PROGRAM[] = "poolbc";
@@ -85,6 +86,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
         Visitor &dump = env().create<X86PasmVisitor, PoolStorage &>(outPS);
         dump.setLogger(logger);
+        Visitor &resolveMethods = env().create<MethodResolver>();
+        resolveMethods.setLogger(logger);
         
         {
             Iterator<String> &it = arguments();
@@ -95,6 +98,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                 ClassDeclNode * classDef = loader.getClass(name);
                 if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 if (classDef) {
+                    classDef->accept(resolveMethods);
                     classDef->accept(dump);
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
