@@ -2,7 +2,7 @@
 
 // public
 ClassScope::ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl)
-        :Scope(env, mi, &parent), Object(env, mi),
+        :Scope(env, mi, &parent), Type(env, mi), Object(env, mi),
          _supers(env.create<HashMap<String, ClassScope>>()),
          classDecl(classDecl), methodsRegistered(false) {
 }

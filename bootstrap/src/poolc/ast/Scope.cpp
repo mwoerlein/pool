@@ -5,6 +5,7 @@
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 #include "poolc/ast/nodes/instruction/BlockInstNode.hpp"
+#include "poolc/ast/nodes/expression/MethodCallExprNode.hpp"
 
 #include "poolc/ast/scopes/UnitScope.hpp"
 #include "poolc/ast/scopes/ClassScope.hpp"
@@ -101,11 +102,27 @@ MethodScope * Scope::getMethod(MethodScope & scope) {
     }
     return 0;
 }
+MethodScope * Scope::getMethod(MethodCallExprNode & methodCall) {
+    // TODO: #7 generate method id from name and parameter types
+    String &name = methodCall.name;
+    if (MethodScope *scope = &_methods.get(name)) {
+        return scope;
+    }
+    if (parent) {
+        return parent->getMethod(name);
+    }
+    return 0;
+}
 
 VariableScope * Scope::registerVariable(VariableDeclNode & variableDecl) {
     VariableScope &scope = env().create<VariableScope, Scope &, VariableDeclNode &>(*this, variableDecl);
     VariableScope *old = &_variables.set(variableDecl.name, scope);
     if (old) { old->destroy(); }
+    return &scope;
+}
+VariableScope * Scope::registerVariable(VariableScope & scope) {
+    VariableScope *old = &_variables.set(scope.getVariableDeclNode()->name, scope);
+    if (old && old->parent == this) { old->destroy(); }
     return &scope;
 }
 VariableScope * Scope::getVariable(String & name) {

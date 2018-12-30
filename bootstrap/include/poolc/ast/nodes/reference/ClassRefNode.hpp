@@ -3,12 +3,9 @@
 
 #include "poolc/ast/nodes/reference/TypeRefNode.hpp"
 
-#include "poolc/ast/scopes/ClassScope.hpp"
-
 class ClassRefNode: public TypeRefNode {
     public:
     FullQualifiedName & name;
-    ClassScope *resolvedType;
     
     ClassRefNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassRefNode();

@@ -1,35 +1,24 @@
-#ifndef POOLC_AST_VISITORS_CLASSRESOLVER_HPP_LOCK
-#define POOLC_AST_VISITORS_CLASSRESOLVER_HPP_LOCK
+#ifndef POOLC_AST_VISITORS_TYPERESOLVER_HPP_LOCK
+#define POOLC_AST_VISITORS_TYPERESOLVER_HPP_LOCK
 
 #include "poolc/ast/Visitor.hpp"
 
 #include "poolc/ast/Scope.hpp"
-#include "poolc/parser/ClassLoader.hpp"
-#include "poolc/ast/scopes/IntType.hpp"
-#include "poolc/ast/scopes/CStringType.hpp"
 
-class ClassResolver: public Visitor {
-    private:
-    Scope * curScope;
-    ClassLoader & loader;
-    IntType & intType;
-    CStringType & cStringType;
-    
+class TypeResolver: public Visitor {
     public:
-    ClassResolver(Environment &env, MemoryInfo &mi, ClassLoader & loader);
-    virtual ~ClassResolver();
+    TypeResolver(Environment &env, MemoryInfo &mi);
+    virtual ~TypeResolver();
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
     virtual bool visit(ClassDeclNode & classDecl) override;
     virtual bool visit(MethodDeclNode & methodDecl) override;
-    virtual bool visit(NamespaceDeclNode & namespaceDecl) override;
     virtual bool visit(VariableDeclNode & variableDecl) override;
     
     virtual bool visit(ClassRefNode & classRef) override;
     virtual bool visit(CStringRefNode & type) override;
     virtual bool visit(IntRefNode & type) override;
-    virtual bool visit(UseStatementNode & useStmt) override;
     
     virtual bool visit(BlockInstNode & block) override;
     virtual bool visit(ExpressionInstNode & exprInst) override;
@@ -43,8 +32,6 @@ class ClassResolver: public Visitor {
     virtual bool visit(MethodCallExprNode & methodCall) override;
     virtual bool visit(ThisExprNode & constThis) override;
     virtual bool visit(VariableExprNode & variable) override;
-    
-    virtual bool registerSupers(ClassDeclNode & classDecl);
 };
 
-#endif //POOLC_AST_VISITORS_CLASSRESOLVER_HPP_LOCK
+#endif //POOLC_AST_VISITORS_TYPERESOLVER_HPP_LOCK

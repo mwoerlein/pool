@@ -11,8 +11,14 @@
 
 // public
 ClassResolver::ClassResolver(Environment &env, MemoryInfo &mi, ClassLoader & loader)
-        :Object(env, mi), LoggerAware(env, mi), loader(loader), curScope(0) {}
-ClassResolver::~ClassResolver() {}
+        :Object(env, mi), LoggerAware(env, mi),
+         intType(env.create<IntType>()),
+         cStringType(env.create<CStringType>()),
+         loader(loader), curScope(0) {}
+ClassResolver::~ClassResolver() {
+    intType.destroy();
+    cStringType.destroy();
+}
 
 
 bool ClassResolver::visit(TranslationUnitNode & translationUnit) {
@@ -117,12 +123,12 @@ bool ClassResolver::visit(ClassRefNode & classRef) {
 }
 
 bool ClassResolver::visit(CStringRefNode & type) {
-    // TODO: #3 add and init? type.resolvedType
+    type.resolvedType = &cStringType;
     return true;
 }
 
 bool ClassResolver::visit(IntRefNode & type) {
-    // TODO: #3 add and init? type.resolvedType
+    type.resolvedType = &intType;
     return true;
 }
 
@@ -166,9 +172,15 @@ bool ClassResolver::visit(AssignmentExprNode & assignment) {
     return true;
 }
 
-bool ClassResolver::visit(ConstCStringExprNode & constCString) { return true; }
+bool ClassResolver::visit(ConstCStringExprNode & constCString) {
+    constCString.resolvedType = &cStringType;
+    return true;
+}
 
-bool ClassResolver::visit(ConstIntExprNode & constInt) { return true; }
+bool ClassResolver::visit(ConstIntExprNode & constInt) {
+    constInt.resolvedType = &intType;
+    return true;
+}
 
 bool ClassResolver::visit(MethodCallExprNode & methodCall) {
     methodCall.context.accept(*this);
@@ -191,10 +203,9 @@ bool ClassResolver::registerSupers(ClassDeclNode & classDecl) {
     Iterator<TypeRefNode> &it = classDecl.extends.iterator();
     while (it.hasNext()) {
         TypeRefNode & type = it.next();
-        if (ClassRefNode *extend = type.isClass()) {
-            ClassScope *extendClassScope = extend->resolvedType;
+        if (ClassScope *extendClassScope = type.resolvedType->isClass()) {
             if (!extendClassScope->hasSuper(*extendClassScope)) {
-                error() << classDecl.fullQualifiedName << ": cyclic class hierarchy detected! (unfinished " << *extend <<")\n";
+                error() << classDecl.fullQualifiedName << ": cyclic class hierarchy detected! (unfinished " << type << ")\n";
             }
             Iterator<ClassScope> &sit = extendClassScope->supers();
             while (sit.hasNext()) {

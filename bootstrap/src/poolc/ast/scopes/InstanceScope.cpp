@@ -2,7 +2,7 @@
 
 // public
 InstanceScope::InstanceScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl)
-        :Scope(env, mi, &parent), Object(env, mi),
+        :Scope(env, mi, &parent), Type(env, mi), Object(env, mi),
          classDecl(classDecl) {
 }
 InstanceScope::~InstanceScope() {}

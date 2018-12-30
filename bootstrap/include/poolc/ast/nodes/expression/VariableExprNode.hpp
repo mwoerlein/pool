@@ -2,11 +2,13 @@
 #define POOLC_AST_NODES_EXPRESSION_VARIABLEEXPRNODE_HPP_LOCK
 
 #include "poolc/ast/nodes/ExpressionNode.hpp"
+#include "poolc/ast/scopes/VariableScope.hpp"
 
 class VariableExprNode: public ExpressionNode {
     public:
     String &name;
     ExpressionNode *context;
+    VariableScope *resolvedVariable;
     
     VariableExprNode(Environment &env, MemoryInfo &mi, String &name);
     VariableExprNode(Environment &env, MemoryInfo &mi, ExpressionNode &context, String &name);

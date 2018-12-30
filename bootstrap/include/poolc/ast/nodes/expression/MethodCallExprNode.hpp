@@ -4,12 +4,14 @@
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 
 #include "poolc/ast/collection/NodeList.hpp"
+#include "poolc/ast/scopes/MethodScope.hpp"
 
 class MethodCallExprNode: public ExpressionNode {
     public:
     String &name;
     ExpressionNode &context;
     NodeList<ExpressionNode> &parameters;
+    MethodScope *resolvedMethod;
     
     MethodCallExprNode(Environment &env, MemoryInfo &mi, ExpressionNode &context, String &name, MutableCollection<ExpressionNode> &params);
     virtual ~MethodCallExprNode();

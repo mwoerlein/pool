@@ -11,6 +11,7 @@ class VariableDeclNode: public Node {
     String & name;
     TypeRefNode & type;
     bool global;
+    Type * resolvedType = 0;
     
     VariableDeclNode(Environment &env, MemoryInfo &mi, TypeRefNode & type, String &name);
     virtual ~VariableDeclNode();

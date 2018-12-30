@@ -2,7 +2,7 @@
 
 // public
 MethodCallExprNode::MethodCallExprNode(Environment &env, MemoryInfo &mi, ExpressionNode &context, String &name, MutableCollection<ExpressionNode> &params)
-        :Object(env, mi), context(context), name(name), parameters(env.create<NodeList<ExpressionNode>>()) {
+        :Object(env, mi), context(context), name(name), parameters(env.create<NodeList<ExpressionNode>>()), resolvedMethod(0) {
     parameters.addAll(params);
 }
 MethodCallExprNode::~MethodCallExprNode() {

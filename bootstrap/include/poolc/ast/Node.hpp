@@ -7,8 +7,6 @@
 #include "sys/String.hpp"
 #include "poolc/parser/token/FullQualifiedName.hpp"
 
-enum scope_t { scope_class, scope_instance, scope_method, scope_block };
-
 class Scope;
 class Node: virtual public Object {
     public:

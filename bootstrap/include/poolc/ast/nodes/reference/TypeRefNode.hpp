@@ -3,8 +3,11 @@
 
 #include "poolc/ast/Node.hpp"
 
+#include "poolc/ast/Type.hpp"
+
 class TypeRefNode: public Node {
     public:
+    Type * resolvedType = 0;
     virtual ~TypeRefNode();
     
     virtual ClassRefNode * isClass();

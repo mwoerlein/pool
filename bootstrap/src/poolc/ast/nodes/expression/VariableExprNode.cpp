@@ -2,9 +2,9 @@
 
 // public
 VariableExprNode::VariableExprNode(Environment &env, MemoryInfo &mi, String &name)
-        :Object(env, mi), context(0), name(name) {}
+        :Object(env, mi), context(0), name(name), resolvedVariable(0) {}
 VariableExprNode::VariableExprNode(Environment &env, MemoryInfo &mi, ExpressionNode &context, String &name)
-        :Object(env, mi), context(&context), name(name) {}
+        :Object(env, mi), context(&context), name(name), resolvedVariable(0) {}
 VariableExprNode::~VariableExprNode() {
     if (context) { context->destroy(); }
     name.destroy();

@@ -2,10 +2,11 @@
 #define POOLC_AST_SCOPES_INSTANCESCOPE_HPP_LOCK
 
 #include "poolc/ast/Scope.hpp"
+#include "poolc/ast/Type.hpp"
 
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
-class InstanceScope: public Scope {
+class InstanceScope: public Scope, public Type {
     private:
     ClassDeclNode & classDecl;
     

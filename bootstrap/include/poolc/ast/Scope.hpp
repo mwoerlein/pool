@@ -11,6 +11,7 @@ class ClassDeclNode;
 class MethodDeclNode;
 class VariableDeclNode;
 class BlockInstNode;
+class MethodCallExprNode;
 
 class UnitScope;
 class ClassScope;
@@ -47,9 +48,11 @@ class Scope: virtual public Object {
     virtual MethodScope * registerMethod(MethodScope & scope);
     virtual MethodScope * getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/);
     virtual MethodScope * getMethod(MethodScope & scope);
+    virtual MethodScope * getMethod(MethodCallExprNode & methodCall);
     inline Iterator<MethodScope> &methods() { return _methods.values(); }
     
     virtual VariableScope * registerVariable(VariableDeclNode & variableDecl);
+    virtual VariableScope * registerVariable(VariableScope & scope);
     virtual VariableScope * getVariable(String & name);
     inline Iterator<VariableScope> &variables() { return _variables.values(); }
 

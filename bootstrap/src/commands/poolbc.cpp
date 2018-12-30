@@ -6,6 +6,7 @@
 #include "poolc/parser/ClassLoader.hpp"
 #include "poolc/ast/visitors/PrettyPrinter.hpp"
 #include "poolc/ast/visitors/MethodResolver.hpp"
+#include "poolc/ast/visitors/TypeResolver.hpp"
 #include "poolc/ast/visitors/X86PasmVisitor.hpp"
 
 static const char PROGRAM[] = "poolbc";
@@ -83,11 +84,13 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             loader.setPrettyPrint(*pretty);
         }
         
+        Visitor &resolveMethods = env().create<MethodResolver>();
+        resolveMethods.setLogger(logger);
+        Visitor &resolveTypes = env().create<TypeResolver>();
+        resolveTypes.setLogger(logger);
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
         Visitor &dump = env().create<X86PasmVisitor, PoolStorage &>(outPS);
         dump.setLogger(logger);
-        Visitor &resolveMethods = env().create<MethodResolver>();
-        resolveMethods.setLogger(logger);
         
         {
             Iterator<String> &it = arguments();
@@ -99,6 +102,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                 if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 if (classDef) {
                     classDef->accept(resolveMethods);
+                    classDef->accept(resolveTypes);
                     classDef->accept(dump);
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
@@ -107,6 +111,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         }
         
         dump.destroy();
+        resolveTypes.destroy();
+        resolveMethods.destroy();
         if (pretty) { pretty->destroy(); }
         loader.destroy();
         logger.destroy();

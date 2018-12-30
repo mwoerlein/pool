@@ -38,10 +38,12 @@ bool MethodResolver::visit(ClassDeclNode & classDecl) {
     registerMethods(classDecl);
     classScope->methodsRegistered = true;
     
-    classDecl.methods.acceptAll(*this);
     classDecl.consts.acceptAll(*this);
     curScope = classDecl.instanceScope;
     classDecl.variables.acceptAll(*this);
+    
+    curScope = classScope;
+    classDecl.methods.acceptAll(*this);
     
     TranslationUnitNode * curUnit = curScope->getUnitNode();
     if (curUnit->element.hasStringProperty("pool.bootstrap")) {
@@ -79,7 +81,7 @@ bool MethodResolver::visit(VariableDeclNode & variableDecl) {
 
 bool MethodResolver::visit(ClassRefNode & classRef) {
     classRef.scope = curScope;
-    classRef.resolvedType->getClassDeclNode()->accept(*this);
+    classRef.resolvedType->isClass()->getClassDeclNode()->accept(*this);
     return true;
 }
 
@@ -174,9 +176,7 @@ bool MethodResolver::registerMethods(ClassDeclNode & classDecl) {
     Iterator<TypeRefNode> &it = classDecl.extends.iterator();
     while (it.hasNext()) {
         TypeRefNode & type = it.next();
-        if (ClassRefNode *extend = type.isClass()) {
-            
-            ClassScope *extendClassScope = extend->resolvedType;
+        if (ClassScope *extendClassScope = type.resolvedType->isClass()) {
             InstanceScope *extendInstanceScope = extendClassScope->getClassDeclNode()->instanceScope;
             
             {
@@ -194,6 +194,20 @@ bool MethodResolver::registerMethods(ClassDeclNode & classDecl) {
                     classScope->registerMethod(*methodDecl);
                 }
                 mit.destroy();
+            }
+            {
+                Iterator<VariableScope> &vit = extendInstanceScope->variables();
+                while (vit.hasNext()) {
+                    instanceScope->registerVariable(vit.next());
+                }
+                vit.destroy();
+            }
+            {
+                Iterator<VariableScope> &vit = extendClassScope->variables();
+                while (vit.hasNext()) {
+                    classScope->registerVariable(vit.next());
+                }
+                vit.destroy();
             }
         } else {
             error() << classDecl.fullQualifiedName << ": invalid extend type '" << type << "'\n";

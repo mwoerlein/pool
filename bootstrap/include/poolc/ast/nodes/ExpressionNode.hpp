@@ -3,8 +3,11 @@
 
 #include "poolc/ast/Node.hpp"
 
+#include "poolc/ast/Type.hpp"
+
 class ExpressionNode: public Node {
     public:
+    Type * resolvedType = 0;
     virtual ~ExpressionNode();
     
     virtual AssignmentExprNode * isAssignment();

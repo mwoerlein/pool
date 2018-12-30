@@ -4,7 +4,7 @@
 
 // public
 ClassRefNode::ClassRefNode(Environment &env, MemoryInfo &mi)
-        :Object(env, mi), name(env.create<FullQualifiedName>()), resolvedType(0) {}
+        :Object(env, mi), name(env.create<FullQualifiedName>()) {}
 ClassRefNode::~ClassRefNode() {
     name.destroy();
 }
