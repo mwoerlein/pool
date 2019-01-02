@@ -224,9 +224,9 @@ class Runtime extends Object {
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
             
-            pushl 20(%ebp)  // param c
+            pushl 16(%ebp)  // param c
             pushl _my_core_Runtime_coi_spk_char // kind
-            pushl 16(%ebp)  // param stream
+            pushl 20(%ebp)  // param stream
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
@@ -243,9 +243,9 @@ class Runtime extends Object {
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
             
-            pushl 20(%ebp)    // param s
+            pushl 16(%ebp)    // param s
             pushl _my_core_Runtime_coi_spk_string // kind
-            pushl 16(%ebp)    // param stream
+            pushl 20(%ebp)    // param stream
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
@@ -262,9 +262,9 @@ class Runtime extends Object {
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
             
-            pushl 20(%ebp)  // param i
+            pushl 16(%ebp)  // param i
             pushl _my_core_Runtime_coi_spk_int  // kind
-            pushl 16(%ebp)  // param stream
+            pushl 20(%ebp)  // param stream
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
@@ -281,9 +281,9 @@ class Runtime extends Object {
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
             
-            pushl 20(%ebp)  // param i
+            pushl 16(%ebp)  // param i
             pushl _my_core_Runtime_coi_spk_hex  // kind
-            pushl 16(%ebp)  // param stream
+            pushl 20(%ebp)  // param stream
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
@@ -315,13 +315,13 @@ class Runtime extends Object {
             movl 12(%ebp), %esi // @this (Type Runtime)
             
             subl 4, %esp        // return value of getClassDesc
-            pushl 20(%ebp)      // param @classname
+            pushl 16(%ebp)      // param @classname
             pushl %esi; pushl _my_core_Runtime_m_getClassDesc; call (%esi)
         	addl 12, %esp
             popl %ecx           // @class-desc
             addl 0, %ecx; jz _crma_return   // return NULL if class not exists
            
-            movl 16(%ebp), %eax // @obj (Type ANY)
+            movl 20(%ebp), %eax // @obj (Type ANY)
             movl 4(%eax), %ebx  // @obj
             movl (%ebx), %eax   // @obj-class desc
             addl _my_core_Runtime_coi_ch_cts(%eax), %eax // @obj-class vtabs entry
@@ -364,8 +364,8 @@ class Runtime extends Object {
             movl 8(%ebp), %eax  // @class-desc "Runtime"
             addl _my_core_Runtime_coso_mThread, %eax
             subl 4, %esp        // return value of as
-            pushl %eax
             pushl %ecx
+            pushl %eax
             pushl %esi; pushl _my_core_Runtime_m_cast; call (%esi)
             addl 16, %esp
             popl %eax;          // @instance (type "Thread")
