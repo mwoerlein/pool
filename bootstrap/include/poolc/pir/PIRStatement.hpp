@@ -3,6 +3,7 @@
 
 #include "sys/Object.hpp"
 
+class PIRAsm;
 class PIRAssign;
 class PIRCall;
 class PIRGet;
@@ -14,6 +15,7 @@ class PIRStatement: virtual public Object {
     PIRStatement(Environment &env, MemoryInfo &mi);
     virtual ~PIRStatement();
 
+    virtual PIRAsm *isAsm();
     virtual PIRAssign *isAssign();
     virtual PIRCall *isCall();
     virtual PIRGet *isGet();

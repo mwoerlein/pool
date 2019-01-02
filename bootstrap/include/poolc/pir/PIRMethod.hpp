@@ -57,10 +57,10 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     void init(MethodScope &scope);
     
     inline bool hasThis() { return _this; }
-    inline int paramCount(int idx) { return _params.size(); }
-    inline int retCount(int idx) { return _rets.size(); }
-    inline int spillCount(int idx) { return _spills.size(); }
-    inline int tempCount(int idx) { return _temps.size(); }
+    inline int paramCount() { return _params.size(); }
+    inline int retCount() { return _rets.size(); }
+    inline int spillCount() { return _spills.size(); }
+    inline int tempCount() { return _temps.size(); }
     
     inline PIRLocation *getThis() { return _this; }
     inline PIRLocation *getParam(int idx) { return _params.at(idx); }
@@ -84,12 +84,13 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     }
     PIRLocation &spillTemp(int idx);
     
-    void addMove(PIRLocation &src, PIRLocation &dest);
+    void addAsm(String &pasm);
     void addAssign(PIRValue &value, PIRLocation &dest);
-    void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);
-    void addSet(PIRLocation &context, VariableScope &var, PIRLocation &src);
     void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
+    void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);
+    void addMove(PIRLocation &src, PIRLocation &dest);
     void addReturn();
+    void addSet(PIRLocation &context, VariableScope &var, PIRLocation &src);
 };
 
 #endif //POOLC_PIR_PIRMETHOD_HPP_LOCK

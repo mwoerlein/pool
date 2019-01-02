@@ -4,6 +4,7 @@
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
+#include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
 #include "poolc/pir/statement/PIRGet.hpp"
@@ -109,13 +110,8 @@ PIRLocation &PIRMethod::spillTemp(int idx) {
     return spill;
 }
 
-void PIRMethod::addMove(PIRLocation &src, PIRLocation &dest) {
-    // TODO: handle type conversion?
-    if (&src.type != &dest.type) {
-        error() << "incompatible types for move: " << src << " <-> " << dest << "\n";
-        return;
-    }
-    _statements.add(env().create<PIRMove, PIRLocation&, PIRLocation&>(src, dest));
+void PIRMethod::addAsm(String & pasm) {
+    _statements.add(env().create<PIRAsm, String&>(pasm));
 }
 
 void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {
@@ -136,36 +132,6 @@ void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {
         }
     }
     _statements.add(env().create<PIRAssign, PIRValue&, PIRLocation&>(value, dest));
-}
-
-void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest) {
-    VariableDeclNode &decl = *var.getVariableDeclNode();
-    // TODO: handle type conversion?
-    if (var.getClassDeclNode()->instanceScope != &context.type) {
-        error() << "invalid context " << context << " for variable " << decl << "\n";
-        return;
-    }
-    // TODO: handle type conversion?
-    if (decl.resolvedType != &dest.type) {
-        error() << "incompatible destination " << dest << " for variable " << decl << "\n";
-        return;
-    }
-    _statements.add(env().create<PIRGet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, dest));
-}
-
-void PIRMethod::addSet(PIRLocation &context, VariableScope &var, PIRLocation &src) {
-    VariableDeclNode &decl = *var.getVariableDeclNode();
-    // TODO: handle type conversion?
-    if (var.getClassDeclNode()->instanceScope != &context.type) {
-        error() << "invalid context " << context << " for variable " << decl << "\n";
-        return;
-    }
-    // TODO: handle type conversion?
-    if (decl.resolvedType != &src.type) {
-        error() << "incompatible source " << src << " for variable " << decl << " " << decl.resolvedType << "\n";
-        return;
-    }
-    _statements.add(env().create<PIRSet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, src));
 }
 
 void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
@@ -216,8 +182,47 @@ void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PI
     _statements.add(env().create<PIRCall, PIRLocation &, MethodScope &, Collection<PIRLocation> &, Collection<PIRLocation> &>(context, method, params, rets));
 }
 
+void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest) {
+    VariableDeclNode &decl = *var.getVariableDeclNode();
+    // TODO: handle type conversion?
+    if (var.getClassDeclNode()->instanceScope != &context.type) {
+        error() << "invalid context " << context << " for variable " << decl << "\n";
+        return;
+    }
+    // TODO: handle type conversion?
+    if (decl.resolvedType != &dest.type) {
+        error() << "incompatible destination " << dest << " for variable " << decl << "\n";
+        return;
+    }
+    _statements.add(env().create<PIRGet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, dest));
+}
+
+void PIRMethod::addMove(PIRLocation &src, PIRLocation &dest) {
+    // TODO: handle type conversion?
+    if (&src.type != &dest.type) {
+        error() << "incompatible types for move: " << src << " <-> " << dest << "\n";
+        return;
+    }
+    _statements.add(env().create<PIRMove, PIRLocation&, PIRLocation&>(src, dest));
+}
+
 void PIRMethod::addReturn() {
     _statements.add(env().create<PIRReturn>());
+}
+
+void PIRMethod::addSet(PIRLocation &context, VariableScope &var, PIRLocation &src) {
+    VariableDeclNode &decl = *var.getVariableDeclNode();
+    // TODO: handle type conversion?
+    if (var.getClassDeclNode()->instanceScope != &context.type) {
+        error() << "invalid context " << context << " for variable " << decl << "\n";
+        return;
+    }
+    // TODO: handle type conversion?
+    if (decl.resolvedType != &src.type) {
+        error() << "incompatible source " << src << " for variable " << decl << " " << decl.resolvedType << "\n";
+        return;
+    }
+    _statements.add(env().create<PIRSet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, src));
 }
 
 // private    

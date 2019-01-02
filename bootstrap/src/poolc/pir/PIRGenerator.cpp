@@ -68,7 +68,7 @@ bool PIRGenerator::visit(ExpressionInstNode & expressionInst) {
 }
 
 bool PIRGenerator::visit(InlinePasmInstNode & pasmInstruction) {
-    // TODO: #3 add inline asm to PIR 
+    curMethod->addAsm(pasmInstruction.pasm);
     return true;
 }
 
