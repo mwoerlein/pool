@@ -176,7 +176,7 @@ bool PrettyPrinter::visit(InlinePasmInstNode & pasmInst) {
 
 bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
     if (returnInst.values.isEmpty()) {
-        indent() << "return;";
+        indent() << "return;\n";
         return true;
     }
     bool tuple = returnInst.values.size() > 1;
