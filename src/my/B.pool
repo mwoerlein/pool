@@ -20,6 +20,15 @@ class B extends myThread, my::A {
     
     // methods
     <> run() {
+    /*
+        Runtime rt := this.rt();    // fixed variable
+        init(2, 20);
+        A a := rt.createInstance("my::A")
+        a.init(5, 2);
+        doIt(a);
+        rt.destroyInstance(a);
+        return;
+    */
         __pasm__(<"
 // TODO #3: inline method-indices in method-call-generation
 //*/
@@ -79,6 +88,20 @@ class B extends myThread, my::A {
     }
     
     <> doIt(A a) {
+    /*
+        Runtime rt := this.rt();    // fixed variable
+        rt.printChar('@', 1);
+        rt.printString("OMG!!! ", 0);
+        rt.printInt(this.equals(this), 0);
+        rt.printChar(' ', 0);
+        rt.printInt(this.equals(a), 0);
+        this.testAllocate(0x1234);
+        rt.printChar('@', 1);
+        rt.printChar('\n', 0);
+        this.test(this.getRow());
+        a.test(a.getRow());
+        return;
+    */
         __pasm__(<"
             pushl %ecx
             pushl %edx
@@ -162,6 +185,18 @@ class B extends myThread, my::A {
     }
     
     <> testAllocate(int size) {
+    /*
+        Runtime rt := this.rt();    // fixed variable
+        int mem := rt.allocate(size);
+        rt.printChar(' ', 0);
+        rt.printHex(mem, 0);
+        rt.printChar(' ', 0);
+        rt.printHex(mem.buffer, 0);
+        rt.printChar(' ', 0);
+        rt.printHex(mem.size, 0);
+        rt.free(mem);
+        return;
+    */
         __pasm__(<"
             pushl %ecx
             pushl %edx
@@ -215,6 +250,9 @@ class B extends myThread, my::A {
     }
     
     <int> getRow() {
+    /*
+        return 2*row;
+    */
         __pasm__(<"
             movl 12(%ebp), %eax             // @this (Type B)
             movl _my_B_hvo_my_A(%eax), %ebx // inst vars offset (A)

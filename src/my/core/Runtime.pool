@@ -145,15 +145,8 @@ class Runtime extends Object {
     }
     
     <> initSysCall(int syscall_runtime, int syscall_entry) {
-        __pasm__(<"
-            movl 12(%ebp), %eax                             // @this (Type Runtime)
-            movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
-            addl 4(%eax), %ebx                              // @this.vars(Runtime)
-            movl 16(%ebp), %eax                             // arg @syscall-runtime
-            movl %eax, _my_core_Runtime_i_syscall_runtime(%ebx)  // store @syscall-runtime
-            movl 20(%ebp), %eax                             // arg @syscall-entry
-            movl %eax, _my_core_Runtime_i_syscall_entry(%ebx)    // store @syscall-entry
-        ">);
+        this.syscall_runtime = syscall_runtime;
+        this.syscall_entry = syscall_entry;
     }
     
     // TODO: replace int with working ClassHeader "struct"

@@ -51,24 +51,13 @@ class Object {
     }
     
     <Runtime> rt() {
-        __pasm__(<"
-            movl 12(%ebp), %eax                         // @this (Type Object)
-            movl _my_core_Object_hvo_my_core_Object(%eax), %ebx   // inst vars offset (Object)
-            addl 4(%eax), %ebx                          // @this.vars(Object)
-            movl _my_core_Object_i_runtime(%ebx), %eax       // load @runtime (Type Runtime)
-            movl %eax, 16(%ebp)                         // return @runtime (Type Runtime)
-        ">);
+        return runtime;
     }
     
     // TODO: move to constructor?
     <> setRt(Runtime rt) {
-        __pasm__(<"
-            movl 12(%ebp), %eax                         // @this (Type Object)
-            movl _my_core_Object_hvo_my_core_Object(%eax), %ebx   // inst vars offset (Object)
-            addl 4(%eax), %ebx                          // @this.vars(Object)
-            movl 16(%ebp), %eax                         // arg @runtime (Type Runtime)
-            movl %eax, _my_core_Object_i_runtime(%ebx)       // store @runtime (Type Runtime)
-        ">);
+        runtime = rt;
+        return;
     }
     
 }
