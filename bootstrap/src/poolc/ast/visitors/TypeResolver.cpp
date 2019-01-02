@@ -31,18 +31,39 @@ bool TypeResolver::visit(ClassDeclNode & classDecl) {
         crit() << classDecl.name << ": methods/variables must be registered before type checking/resolution!\n";
         return false;
     }
-    
-    classDecl.methods.acceptAll(*this);
+    if (classScope->typesResolved) {
+        // skip already resolved class
+        return true;
+    }
+    classScope->typesResolved = true;
     classDecl.consts.acceptAll(*this);
+    classDecl.variables.acceptAll(*this);
+    classDecl.methods.acceptAll(*this);
     return true;
 }
 
 bool TypeResolver::visit(MethodDeclNode & methodDecl) {
+    {
+        Iterator<TypeRefNode> &it = methodDecl.returnTypes.iterator();
+        int idx = 0;
+        while (it.hasNext()) {
+            TypeRefNode &ref = it.next();
+            ref.accept(*this);
+            if (ClassScope * classScope = ref.resolvedType->isClass()) {
+                methodDecl.resolvedReturns.add(*classScope->getClassDeclNode()->instanceScope);
+            } else {
+                methodDecl.resolvedReturns.add(*ref.resolvedType);
+            }
+        }
+        it.destroy();
+    }
+    methodDecl.parameters.acceptAll(*this);
     methodDecl.body.accept(*this);
     return true;
 }
 
 bool TypeResolver::visit(VariableDeclNode & variableDecl) {
+    variableDecl.type.accept(*this);
     variableDecl.resolvedType = variableDecl.type.resolvedType;
     if (ClassScope * classScope = variableDecl.resolvedType->isClass()) {
         variableDecl.resolvedType = classScope->getClassDeclNode()->instanceScope;
@@ -51,6 +72,10 @@ bool TypeResolver::visit(VariableDeclNode & variableDecl) {
 }
 
 bool TypeResolver::visit(ClassRefNode & classRef) {
+    ClassScope *scope = classRef.resolvedType->isClass();
+    if (scope && !scope->typesResolved) {
+        scope->getClassDeclNode()->accept(*this);
+    }
     return true;
 }
 
@@ -110,8 +135,8 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
     methodCall.parameters.acceptAll(*this);
     if (InstanceScope * contextInstanceScope = methodCall.context.resolvedType->isInstance()) {
         if (MethodScope *calledMethodScope = contextInstanceScope->getMethod(methodCall)) {
+            methodCall.resolvedMethod = calledMethodScope;
             // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
-            // TODO: set methodCall.resolvedType according to calledMethod.returnTypes
         } else {
             error() << methodCall.scope->getClassDeclNode()->name 
                 << ": unknown method '" << methodCall.name << "' in class '"
@@ -144,7 +169,15 @@ bool TypeResolver::visit(VariableExprNode & variable) {
         }
     }
     if (variable.resolvedVariable = contextScope->getVariable(variable.name)) {
-        variable.resolvedType = variable.resolvedVariable->getVariableDeclNode()->resolvedType;
+        VariableDeclNode &decl = *variable.resolvedVariable->getVariableDeclNode();
+        variable.resolvedType = decl.resolvedType;
+        
+        // convert implicit "this" to explicit "this"
+        if (!variable.context && decl.scope->parent->isInstance()) {
+            variable.context = &env().create<ThisExprNode>();
+            variable.context->scope = variable.scope;
+            variable.context->accept(*this);
+        }
     } else {
         variable.printDebugInfo(error() << variable.scope->getClassDeclNode()->fullQualifiedName); 
         error() << ": unknown variable '" << variable.name << "'\n";

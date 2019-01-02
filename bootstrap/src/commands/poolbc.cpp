@@ -7,7 +7,7 @@
 #include "poolc/ast/visitors/PrettyPrinter.hpp"
 #include "poolc/ast/visitors/MethodResolver.hpp"
 #include "poolc/ast/visitors/TypeResolver.hpp"
-#include "poolc/ast/visitors/X86PasmVisitor.hpp"
+#include "poolc/backend/x86/X86Writer.hpp"
 
 static const char PROGRAM[] = "poolbc";
 static const char VERSION[] = "0.1.0";
@@ -89,7 +89,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         Visitor &resolveTypes = env().create<TypeResolver>();
         resolveTypes.setLogger(logger);
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
-        Visitor &dump = env().create<X86PasmVisitor, PoolStorage &>(outPS);
+        Visitor &dump = env().create<X86Writer, PoolStorage &>(outPS);
         dump.setLogger(logger);
         
         {

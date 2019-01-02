@@ -3,6 +3,7 @@
 
 #include "poolc/ast/Node.hpp"
 
+#include "poolc/ast/Type.hpp"
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/nodes/InstructionNode.hpp"
 
@@ -14,6 +15,8 @@ class MethodDeclNode: public Node {
     BlockInstNode &body;
     NodeList<TypeRefNode> &returnTypes;
     NodeList<VariableDeclNode> &parameters;
+    
+    LinkedList<Type> &resolvedReturns;
     
     enum method_kind kind;
     bool global;

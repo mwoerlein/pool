@@ -1,4 +1,4 @@
-#include "poolc/ast/visitors/X86PasmVisitor.hpp"
+#include "poolc/backend/x86/X86Writer.hpp"
 
 #include "poolc/storage/Types.hpp"
 
@@ -50,17 +50,17 @@
 #define LOCAL(l,v) elem() << l << " := " << v << "\n";
 
 // public
-X86PasmVisitor::X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps)
+X86Writer::X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps)
         :Writer(env, mi, ps, MIMETYPE_PASM), Object(env, mi), LoggerAware(env, mi),
          curClass(0), curSuper(0) {}
-X86PasmVisitor::~X86PasmVisitor() {}
+X86Writer::~X86Writer() {}
 
-bool X86PasmVisitor::visit(TranslationUnitNode & translationUnit) {
+bool X86Writer::visit(TranslationUnitNode & translationUnit) {
     translationUnit.classes.acceptAll(*this);
     return true;
 }
 
-bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
+bool X86Writer::visit(ClassDeclNode & classDef) {
     curClass = &classDef;
     if (!startElement(curClass->fullQualifiedName)) {
         return false;
@@ -276,7 +276,7 @@ bool X86PasmVisitor::visit(ClassDeclNode & classDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
+bool X86Writer::visit(MethodDeclNode & methodDef) {
     elem() << "\n// method " << methodDef.name << "\n";
     
     switch (methodDef.kind) {
@@ -297,7 +297,7 @@ bool X86PasmVisitor::visit(MethodDeclNode & methodDef) {
     return true;
 }
 
-bool X86PasmVisitor::visit(VariableDeclNode & variableDecl) {
+bool X86Writer::visit(VariableDeclNode & variableDecl) {
     if (!variableDecl.scope) {
         warn() << "unresolved " << variableDecl << "\n";
         return false;
@@ -316,7 +316,7 @@ bool X86PasmVisitor::visit(VariableDeclNode & variableDecl) {
     return false;
 }
 
-bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
+bool X86Writer::visit(VariableInitInstNode & variableInit) {
     if (!variableInit.scope) {
         warn() << "unresolved " << variableInit << "\n";
         return false;
@@ -347,12 +347,12 @@ bool X86PasmVisitor::visit(VariableInitInstNode & variableInit) {
     return false;
 }
 
-bool X86PasmVisitor::visit(BlockInstNode & block) {
+bool X86Writer::visit(BlockInstNode & block) {
     block.instructions.acceptAll(*this);
     return true;
 }
 
-bool X86PasmVisitor::visit(InlinePasmInstNode & pasmInstruction) {
+bool X86Writer::visit(InlinePasmInstNode & pasmInstruction) {
     elem() << pasmInstruction.pasm << "\n";
     return true;
 }

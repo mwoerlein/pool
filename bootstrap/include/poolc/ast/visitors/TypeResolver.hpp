@@ -3,8 +3,6 @@
 
 #include "poolc/ast/Visitor.hpp"
 
-#include "poolc/ast/Scope.hpp"
-
 class TypeResolver: public Visitor {
     public:
     TypeResolver(Environment &env, MemoryInfo &mi);

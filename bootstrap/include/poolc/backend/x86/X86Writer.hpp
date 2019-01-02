@@ -1,16 +1,16 @@
-#ifndef POOLC_AST_VISITORS_X86PASMVISITOR_HPP_LOCK
-#define POOLC_AST_VISITORS_X86PASMVISITOR_HPP_LOCK
+#ifndef POOLC_BACKEND_X86_X86WRITER_HPP_LOCK
+#define POOLC_BACKEND_X86_X86WRITER_HPP_LOCK
 
 #include "poolc/ast/visitors/Writer.hpp"
 
-class X86PasmVisitor: public Writer {
+class X86Writer: public Writer {
     private:
     ClassDeclNode * curClass;
     ClassDeclNode * curSuper;
     
     public:
-    X86PasmVisitor(Environment &env, MemoryInfo &mi, PoolStorage &ps);
-    virtual ~X86PasmVisitor();
+    X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps);
+    virtual ~X86Writer();
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
@@ -23,4 +23,4 @@ class X86PasmVisitor: public Writer {
     virtual bool visit(VariableInitInstNode & variableInit) override;
 };
 
-#endif //POOLC_AST_VISITORS_X86PASMVISITOR_HPP_LOCK
+#endif //POOLC_BACKEND_X86_X86WRITER_HPP_LOCK

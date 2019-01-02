@@ -12,6 +12,7 @@ MethodDeclNode::MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, M
          body(env.create<BlockInstNode>()),
          returnTypes(env.create<NodeList<TypeRefNode>>()),
          parameters(env.create<NodeList<VariableDeclNode>>()),
+         resolvedReturns(env.create<LinkedList<Type>>()),
          kind(normal), global(false),
          index(-1) {
     returnTypes.addAll(rets);
@@ -23,6 +24,7 @@ MethodDeclNode::MethodDeclNode(Environment &env, MemoryInfo &mi, String &name, B
          body(body),
          returnTypes(env.create<NodeList<TypeRefNode>>()),
          parameters(env.create<NodeList<VariableDeclNode>>()),
+         resolvedReturns(env.create<LinkedList<Type>>()),
          kind(normal), global(false),
          index(-1) {
     returnTypes.addAll(rets);
@@ -33,6 +35,7 @@ MethodDeclNode::~MethodDeclNode() {
     body.destroy();
     returnTypes.destroyAll();
     parameters.destroyAll();
+    resolvedReturns.destroy();
 }
 
 bool MethodDeclNode::accept(Visitor & visitor) {

@@ -6,6 +6,7 @@
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/ast/collection/NodeMap.hpp"
 #include "poolc/ast/scopes/InstanceScope.hpp"
+#include "poolc/ast/scopes/VariableScope.hpp"
 
 class ClassDeclNode: public Node {
     public:
@@ -22,6 +23,9 @@ class ClassDeclNode: public Node {
     
     ClassDeclNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassDeclNode();
+    
+    // TODO: #3 extract string constants as AST transformation, if constant access is supported in PIR
+    virtual VariableScope *registerConstantCString(ConstCStringExprNode &value);
     
     virtual bool accept(Visitor & visitor) override;
     virtual void printDebugName(OStream & stream) override;

@@ -4,7 +4,7 @@
 ClassScope::ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl)
         :Scope(env, mi, &parent), Type(env, mi), Object(env, mi),
          _supers(env.create<HashMap<String, ClassScope>>()),
-         classDecl(classDecl), methodsRegistered(false) {
+         classDecl(classDecl), methodsRegistered(false), typesResolved(false) {
 }
 ClassScope::~ClassScope() {
     _supers.destroy();

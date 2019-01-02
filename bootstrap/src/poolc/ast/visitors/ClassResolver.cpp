@@ -69,9 +69,9 @@ bool ClassResolver::visit(ClassDeclNode & classDecl) {
     classDecl.extends.acceptAll(*this);
     registerSupers(classDecl);
     
-    classDecl.methods.acceptAll(*this);
     classDecl.consts.acceptAll(*this);
     classDecl.variables.acceptAll(*this);
+    classDecl.methods.acceptAll(*this);
 
     curScope = tmpScope;
     return true;

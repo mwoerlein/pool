@@ -112,6 +112,12 @@ template <class Obj> class LinkedList: public MutableCollection<Obj> {
     
     virtual Obj * first() { return _first ? _first->val : 0; }
     virtual Obj * last() { return _last ? _last->val : 0; }
+    virtual Obj * at(int idx) {
+        if (idx < 0 || idx >= _size) { return 0; }
+        _Element *e = _first;
+        while (e && idx--) { e = e->next; }
+        return e ? e->val : 0;
+    }
 };
 
 #endif //COLLECTION_LINKEDLIST_HPP_LOCK

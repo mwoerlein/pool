@@ -14,6 +14,7 @@ class ClassScope: public Scope, public Type {
     
     public:
     bool methodsRegistered;
+    bool typesResolved;
     
     ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl);
     virtual ~ClassScope();
