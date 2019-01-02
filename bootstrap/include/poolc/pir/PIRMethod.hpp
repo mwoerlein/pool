@@ -55,6 +55,7 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     virtual ~PIRMethod();
     
     void init(MethodScope &scope);
+    inline MethodScope &scope() { return *_scope; }
     
     inline bool hasThis() { return _this; }
     inline int paramCount() { return _params.size(); }

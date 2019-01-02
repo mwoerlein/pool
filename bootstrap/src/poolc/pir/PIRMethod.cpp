@@ -89,10 +89,9 @@ void PIRMethod::init(MethodScope &scope) {
     }
     
     {
-        Iterator<TypeRefNode> &it = decl.returnTypes.iterator();
+        Iterator<Type> &it = decl.resolvedReturns.iterator();
         while (it.hasNext()) {
-            TypeRefNode &type = it.next();
-            newLocation(loc_ret, *type.resolvedType);
+            newLocation(loc_ret, it.next());
         }
         it.destroy();
     }

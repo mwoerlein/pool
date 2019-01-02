@@ -32,6 +32,8 @@
 #define methodRef(cls, m) localClsPrefix(curClass) << "_mtm" << localClsPrefix(cls) << "_" << (m)->name
 #define methodRefOffset(cls, m) manualClsPrefix(cls) << "_m_" << (m)->name
 
+#define methodDeclReturn(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name << "_return"
+
 #define instanceStart() localClsPrefix(curClass) << "_tpl"
 #define instanceEnd() localClsPrefix(curClass) << "_tpl_end"
 #define instanceHandle(cls) localClsPrefix(curClass) << "_tpl_h" << localClsPrefix(cls)
@@ -52,7 +54,7 @@
 // public
 X86Writer::X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps)
         :Writer(env, mi, ps, MIMETYPE_PASM), Object(env, mi), LoggerAware(env, mi),
-         curClass(0), curSuper(0) {}
+         curClass(0), curSuper(0), curMethod(0) {}
 X86Writer::~X86Writer() {}
 
 bool X86Writer::visit(TranslationUnitNode & translationUnit) {
@@ -277,23 +279,43 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
 }
 
 bool X86Writer::visit(MethodDeclNode & methodDef) {
+    MethodScope *scope = methodDef.scope->isMethod();
+    curMethod = scope->pir;
     elem() << "\n// method " << methodDef.name << "\n";
     
     switch (methodDef.kind) {
         case abstract:
             break;
         case naked:
-            methodDef.body.accept(*this);
+            {
+                Iterator<PIRStatement> &it = curMethod->statements();
+                while (it.hasNext()) {
+                    write(it.next());
+                }
+                it.destroy();
+            }
             break;
         default:
             LABEL(methodDecl(&methodDef));
-            elem() << "    pushl %ebp; movl %esp, %ebp\n";
-            elem() << "    \n";
-            methodDef.body.accept(*this);
-            elem() << "    \n";
-            elem() << "    leave\n";
-            elem() << "    ret\n";
+            code() << "pushl %ebp; movl %esp, %ebp\n";
+            int localVariables = curMethod->tempCount() + curMethod->spillCount();
+            if (localVariables) {
+                code() << "subl " << (4*localVariables) << ", %esp\n";
+            }
+//            code() << "pushad\n";
+            {
+                Iterator<PIRStatement> &it = curMethod->statements();
+                while (it.hasNext()) {
+                    write(it.next());
+                }
+                it.destroy();
+            }
+            LABEL(methodDeclReturn(&methodDef));
+//            code() << "popad\n";
+            code() << "leave\n";
+            code() << "ret\n";
     }
+    curMethod = 0;
     return true;
 }
 
@@ -347,12 +369,124 @@ bool X86Writer::visit(VariableInitInstNode & variableInit) {
     return false;
 }
 
-bool X86Writer::visit(BlockInstNode & block) {
-    block.instructions.acceptAll(*this);
-    return true;
+void X86Writer::write(PIRStatement &stmt) {
+    if (PIRAsm *asmStmt = stmt.isAsm()) { write(*asmStmt); }
+    else if (PIRAssign *assignStmt = stmt.isAssign()) { write(*assignStmt); }
+    else if (PIRCall *callStmt = stmt.isCall()) { write(*callStmt); }
+    else if (PIRGet *getStmt = stmt.isGet()) { write(*getStmt); }
+    else if (PIRMove *moveStmt = stmt.isMove()) { write(*moveStmt); }
+    else if (PIRReturn *returnStmt = stmt.isReturn()) { write(*returnStmt); }
+    else if (PIRSet *setStmt = stmt.isSet()) { write(*setStmt); }
+    else {
+        error() << "unexpected PIR statement " << stmt << "\n";
+    }
 }
 
-bool X86Writer::visit(InlinePasmInstNode & pasmInstruction) {
-    elem() << pasmInstruction.pasm << "\n";
-    return true;
+void X86Writer::write(PIRAsm &asmStmt) {
+    elem() << asmStmt.pasm << "\n";
+}
+
+void X86Writer::write(PIRAssign &assignStmt) {
+    if (PIRInt *intValue = assignStmt.val.isInt()) {
+        code() << "movl " << intValue->value << ", ";
+    } else if (PIRString *stringValue = assignStmt.val.isString()) {
+        VariableDeclNode *decl = stringValue->constant.getVariableDeclNode();
+        code() << "movl 8(%ebp), %eax\n";
+        code() << "addl " << constStringOffset(decl) << ", %eax\n";
+        code() << "movl %eax, ";
+    } else { // isNull
+        code() << "movl 0, ";
+    }
+    write(assignStmt.dest);
+    elem() << "\n";
+}
+
+void X86Writer::write(PIRCall &callStmt) {
+    int retCount = callStmt.rets.size();
+    int paramCount = callStmt.params.size();
+    if (retCount) {
+        code() << "subl " << (4*retCount) << ", %esp\n";
+    }
+    {
+        Iterator<PIRLocation> &it = callStmt.params.iterator();
+        pushAllReverse(it);
+        it.destroy();
+    }
+    code() << "movl "; write(callStmt.context); elem() << ", %eax\n";
+    code() << "pushl %eax; pushl " << (8*callStmt.method.index) << "; call (%eax)\n";
+    code() << "addl " << (8 + 4*paramCount) << ", %esp\n";
+    if (retCount) {
+        Iterator<PIRLocation> &it = callStmt.rets.iterator();
+        while (it.hasNext()) {
+            code() << "popl "; write(it.next()); elem() << "\n";
+        }
+        it.destroy();
+    }
+}
+            
+void X86Writer::write(PIRGet &getStmt) {
+    VariableDeclNode *decl = getStmt.variable.getVariableDeclNode();
+    ClassDeclNode *declClass = getStmt.variable.getClassDeclNode();
+     
+    code() << "movl "; write(getStmt.context); elem() << ", %eax\n";
+    code() << "movl " << instanceHandleVarsOffset(declClass)<< "(%eax), %ebx\n";
+    code() << "addl 4(%eax), %ebx\n";
+    code() << "movl " << instanceVarOffset(declClass, decl) << "(%ebx), %eax\n";
+    code() << "movl %eax, "; write(getStmt.dest); elem() << "\n";
+}
+
+void X86Writer::write(PIRMove &moveStmt) {
+    code() << "movl "; write(moveStmt.src); elem() << ", %eax\n";
+    code() << "movl %eax, "; write(moveStmt.dest); elem() << "\n";
+}
+
+void X86Writer::write(PIRReturn &returnStmt) {
+    code() << "jmp " << methodDeclReturn(curMethod->scope().getMethodDeclNode())<<"\n";
+}
+
+void X86Writer::write(PIRSet &setStmt) {
+    VariableDeclNode *decl = setStmt.variable.getVariableDeclNode();
+    ClassDeclNode *declClass = setStmt.variable.getClassDeclNode();
+     
+    code() << "movl "; write(setStmt.context); elem() << ", %eax\n";
+    code() << "movl " << instanceHandleVarsOffset(declClass)<< "(%eax), %ebx\n";
+    code() << "addl 4(%eax), %ebx\n";
+    code() << "movl "; write(setStmt.src); elem() << ", %eax\n";
+    code() << "movl %eax, " << instanceVarOffset(declClass, decl) << "(%ebx)\n";
+}
+
+void X86Writer::write(PIRLocation &location) {
+    int offset = 0;
+    switch (location.kind) {
+        case loc_param:
+            offset = 16 + 4*location.idx;
+            break;
+        case loc_ret:
+            offset = 16 + 4*curMethod->paramCount() + 4*location.idx;
+            break;
+        case loc_spill:
+            offset = -4 - 4*curMethod->tempCount() - 4*location.idx;
+            break;
+        case loc_temp:
+            offset = -4 - 4*location.idx;
+            break;
+        case loc_this:
+            offset = 12;
+            break;
+    }
+    elem() << offset << "(%ebp)";
+}
+
+// private
+OStream & X86Writer::code() {
+    return elem() << "    ";
+}
+    
+void X86Writer::pushAllReverse(Iterator<PIRLocation> &it) {
+    if (!it.hasNext()) {
+        return;
+    }
+    PIRLocation &loc = it.next();
+    pushAllReverse(it);
+    code() << "pushl "; write(loc); elem() << "\n";
 }

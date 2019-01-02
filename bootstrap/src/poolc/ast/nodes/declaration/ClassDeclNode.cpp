@@ -45,7 +45,7 @@ VariableScope *ClassDeclNode::registerConstantCString(ConstCStringExprNode &valu
     String &constName = env().create<String>();
     
     // TODO: handle hash collision
-    constName << value.value.hash();
+    constName << "_" << value.value.hash();
     VariableScope *ret = classScope->getVariable(constName);
     if (ret) {
         constName.destroy();
