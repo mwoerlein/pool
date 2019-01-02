@@ -5,11 +5,14 @@
 
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
+class PIRLocation;
 class VariableScope: public Scope {
     private:
     VariableDeclNode & variableDecl;
     
     public:
+    PIRLocation *pir;
+    
     VariableScope(Environment &env, MemoryInfo &mi, Scope & parent, VariableDeclNode & variableDecl);
     virtual ~VariableScope();
     virtual VariableScope * isVariable() override;

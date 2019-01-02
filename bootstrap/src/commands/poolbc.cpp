@@ -4,6 +4,7 @@
 
 #include "sys/log/Logger.hpp"
 #include "poolc/parser/ClassLoader.hpp"
+#include "poolc/pir/PIRGenerator.hpp"
 #include "poolc/ast/visitors/PrettyPrinter.hpp"
 #include "poolc/ast/visitors/MethodResolver.hpp"
 #include "poolc/ast/visitors/TypeResolver.hpp"
@@ -88,6 +89,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         resolveMethods.setLogger(logger);
         Visitor &resolveTypes = env().create<TypeResolver>();
         resolveTypes.setLogger(logger);
+        Visitor &generatePIR = env().create<PIRGenerator>();
+        generatePIR.setLogger(logger);
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
         Visitor &dump = env().create<X86Writer, PoolStorage &>(outPS);
         dump.setLogger(logger);
@@ -103,6 +106,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                 if (classDef) {
                     classDef->accept(resolveMethods);
                     classDef->accept(resolveTypes);
+                    classDef->accept(generatePIR);
                     classDef->accept(dump);
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
@@ -111,6 +115,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         }
         
         dump.destroy();
+        generatePIR.destroy();
         resolveTypes.destroy();
         resolveMethods.destroy();
         if (pretty) { pretty->destroy(); }

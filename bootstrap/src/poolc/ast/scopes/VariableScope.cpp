@@ -2,7 +2,7 @@
 
 // public
 VariableScope::VariableScope(Environment &env, MemoryInfo &mi, Scope & parent, VariableDeclNode & variableDecl)
-        :Scope(env, mi, &parent), Object(env, mi),
+        :Scope(env, mi, &parent), Object(env, mi), pir(0),
          variableDecl(variableDecl) {
 }
 VariableScope::~VariableScope() {}

@@ -5,12 +5,14 @@
 
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
 
+class PIRMethod;
 class MethodScope: public Scope {
     private:
     MethodDeclNode & methodDecl;
     
     public:
     int index;
+    PIRMethod *pir;
     
     MethodScope(Environment &env, MemoryInfo &mi, Scope & parent, MethodDeclNode & methodDecl);
     virtual ~MethodScope();
