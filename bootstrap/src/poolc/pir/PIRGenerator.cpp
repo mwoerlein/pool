@@ -144,6 +144,11 @@ bool PIRGenerator::visit(AssignmentExprNode & assignment) {
             curMethod->addSet(*ctx, *assignment.variable.resolvedVariable, src);
             lastLocations.clear();
             lastLocations.add(src);
+        } else if (lastValue) {
+            PIRLocation &tmp = curMethod->newTemp(*assignment.resolvedType);
+            curMethod->addAssign(*lastValue, tmp);
+            curMethod->addSet(*ctx, *assignment.variable.resolvedVariable, tmp);
+            lastValue = 0;
         } else {
             crit() << "unexpected value " << assignment.value << " in " << assignment << "\n";
             return false;

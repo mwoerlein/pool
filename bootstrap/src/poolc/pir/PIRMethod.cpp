@@ -4,6 +4,9 @@
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
+#include "poolc/ast/scopes/ClassScope.hpp"
+#include "poolc/ast/scopes/InstanceScope.hpp"
+
 #include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
@@ -151,8 +154,9 @@ void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PI
             VariableDeclNode &vDecl = declIt.next();
             PIRLocation &loc = locIt.next();
             // TODO: handle type conversion?
-            if (vDecl.type.resolvedType != &loc.type) {
+            if (vDecl.resolvedType != &loc.type) {
                 error() << "incompatible parameter " << loc << " for method " << decl << "\n";
+                error() << *vDecl.resolvedType << " <-> " << loc.type << "\n";
                 return;
             }
         }
@@ -183,8 +187,12 @@ void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PI
 
 void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest) {
     VariableDeclNode &decl = *var.getVariableDeclNode();
-    // TODO: handle type conversion?
-    if (var.getClassDeclNode()->instanceScope != &context.type) {
+    if (InstanceScope *contextScope = context.type.isInstance()) {
+        if (!contextScope->getClassDeclNode()->scope->isClass()->hasSuper(*var.getClassDeclNode()->scope->isClass())) {
+            error() << "incompatible context " << context << " for variable " << decl << "\n";
+            return;
+        }
+    } else {
         error() << "invalid context " << context << " for variable " << decl << "\n";
         return;
     }
@@ -211,8 +219,12 @@ void PIRMethod::addReturn() {
 
 void PIRMethod::addSet(PIRLocation &context, VariableScope &var, PIRLocation &src) {
     VariableDeclNode &decl = *var.getVariableDeclNode();
-    // TODO: handle type conversion?
-    if (var.getClassDeclNode()->instanceScope != &context.type) {
+    if (InstanceScope *contextScope = context.type.isInstance()) {
+        if (!contextScope->getClassDeclNode()->scope->isClass()->hasSuper(*var.getClassDeclNode()->scope->isClass())) {
+            error() << "incompatible context " << context << " for variable " << decl << "\n";
+            return;
+        }
+    } else {
         error() << "invalid context " << context << " for variable " << decl << "\n";
         return;
     }

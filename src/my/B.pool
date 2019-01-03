@@ -201,22 +201,9 @@ class B extends myThread, my::A {
         return;
     }
     
-    // TODO #3: allow access of super variables
     <int> getRow() {
-/*/
         return row;
 //        return 2*row;
-/*/
-        __pasm__(<"
-            movl 12(%ebp), %eax             // @this (Type B)
-            movl _my_B_hvo_my_A(%eax), %ebx // inst vars offset (A)
-            addl 4(%eax), %ebx              // @this.vars(A)
-            
-            movl _my_A_i_row(%ebx), %eax    // row
-            addl %eax, %eax                 // *2
-            movl %eax, 16(%ebp)             // return row*2
-        ">);
-//*/
     }
     
 }
