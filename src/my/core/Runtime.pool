@@ -62,7 +62,6 @@ class Runtime extends Object {
     // methods
     global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
         __pasm__(<"
-// TODO #3: inline method-indices in method-call-generation
         _my_core_Class_m_setDesc := 48
             subl 12, %esp
             pushad
@@ -336,7 +335,6 @@ class Runtime extends Object {
     
     <> createAndRunThread(cstring name) {
         __pasm__(<"
-// TODO #3: inline method-indices in method-call-generation
         _my_core_Thread_m_run := 40
             pushl %ecx
             pushl %esi

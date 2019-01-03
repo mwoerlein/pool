@@ -35,7 +35,7 @@ class Object {
     }
     
     // TODO: use generic method instead of plain Object?
-    // TODO: #4 use bool instead of int
+    // TODO #4: use bool instead of int
     <int> equals(Object any) {
         __pasm__(<"
             movl 0, 20(%ebp)       // default return: false
@@ -54,7 +54,7 @@ class Object {
         return runtime;
     }
     
-    // TODO: move to constructor?
+    // TODO #7: move to constructor?
     <> setRt(Runtime rt) {
         runtime = rt;
         return;

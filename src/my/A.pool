@@ -15,7 +15,7 @@ class A extends Object {
     int row;
     
     // methods
-    // TODO: move to constructor
+    // TODO #7: move to constructor
     <> init(int row, int column) {
         this.row = row;         // assignment
         this.column = column;   // assignment
@@ -31,7 +31,7 @@ class A extends Object {
     }
     
     <> test(int row) {
-        // TODO: #3 use constant Runtime.out
+        // TODO #12: use constant Runtime.out
         int _out := 0;              // fixed variable
         Runtime rt := this.rt();    // fixed variable
         my::core::Class c = this.getClass();  // modifiable variable
@@ -49,7 +49,7 @@ class A extends Object {
             rt.printChar(' ', _out);
             rt.printInt(_col, _out);
         }
-        // TODO: #3 use constant Runtime.err
+        // TODO #12: use constant Runtime.err
         rt.printString(" compile test\n", 1);
         return;
     }

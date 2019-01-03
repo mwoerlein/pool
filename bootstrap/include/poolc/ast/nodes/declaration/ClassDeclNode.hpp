@@ -24,7 +24,7 @@ class ClassDeclNode: public Node {
     ClassDeclNode(Environment &env, MemoryInfo &mi);
     virtual ~ClassDeclNode();
     
-    // TODO: #3 extract string constants as AST transformation, if constant access is supported in PIR
+    // TODO #12: extract string constants as AST transformation, if string pool access is supported in PIR
     virtual VariableScope *registerConstantCString(ConstCStringExprNode &value);
     
     virtual bool accept(Visitor & visitor) override;

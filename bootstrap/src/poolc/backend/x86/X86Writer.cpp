@@ -12,7 +12,7 @@
 #include "poolc/ast/scopes/VariableScope.hpp"
 
 #define localClsPrefix(cls) (cls)->localPrefix
-// TODO: #3 replace with localClsPrefix after inline pasm is replaced with method-code generation
+// TODO: replace with localClsPrefix after all inline pasm method calls are replaced pool method calls
 #define manualClsPrefix(cls) (cls)->globalPrefix
 
 #define classDesc() manualClsPrefix(curClass)
@@ -155,7 +155,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                     MethodScope & superMethodScope = mit.next();
                     MethodDeclNode * methodDecl = instanceScope->getMethod(superMethodScope)->getMethodDeclNode();
                     if (methodDecl->kind == naked) { continue; }
-                    // TODO #3: inline method-indices in method-call-generation
+                    // TODO: remove label after all inline pasm method calls are replaced with pool method calls
                     LOCAL(methodRefOffset(superClassDecl, methodDecl), 8 * superMethodScope.index);
                     LONG(4 * methodDecl->index);
                     LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
@@ -168,7 +168,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                     MethodScope & superMethodScope = mit.next();
                     MethodDeclNode * methodDecl = classScope->getMethod(superMethodScope)->getMethodDeclNode();
                     if (methodDecl->kind == naked) { continue; }
-                    // TODO #3: inline method-indices in method-call-generation
+                    // TODO: remove label after all inline pasm method calls are replaced with pool method calls
                     LOCAL(methodRefOffset(superClassDecl, methodDecl), 8 * superMethodScope.index);
                     LONG(4 * methodDecl->index);
                     LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));

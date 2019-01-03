@@ -11,39 +11,31 @@ use my::core::Runtime;
 class B extends myThread, my::A {
     
     // constants
-    // TODO #3: implicitly clone constants of my::core::Runtime if used
+    // TODO #12: implicitly clone constants of my::core::Runtime if used
     // streams
     int out := 0;
     int err := 1;
-    // TODO: remove after implicit string handling
+    // TODO: inline into method doIt, if possible
     cstring doit := "OMG! Compiling still work's! ";
     
     // methods
+    // TODO #13: convert PASM to Pool
     <> run() {
-    /*
+/*/
         Runtime rt := this.rt();    // fixed variable
-        init(2, 20);
-        A a := rt.createInstance("my::A")
+        this.init(2, 20);
+        my::core::Object o := rt.createInstance("my::A");
+        A a ::= o;
+//        A a := rt.createInstance("my::A");
         a.init(5, 2);
         doIt(a);
-        rt.destroyInstance(a);
+        rt.destroyInstance(o);
         return;
-    */
+/*/
         __pasm__(<"
-// TODO #3: inline method-indices in method-call-generation
-//*/
-        _my_core_Runtime_m_getClassDesc := 48
-        _my_core_Runtime_m_allocate := 56
-        _my_core_Runtime_m_free := 64
-        _my_core_Runtime_m_printChar := 72
-        _my_core_Runtime_m_printString := 80
-        _my_core_Runtime_m_printInt := 88
-        _my_core_Runtime_m_printHex := 96
         _my_core_Runtime_m_destroyInstance := 104
         _my_core_Runtime_m_cast := 112
-        _my_core_Runtime_m_createAndRunThread := 120
         _my_core_Runtime_m_createInstance := 128
-//*/
             pushl %ecx
             pushl %edx
             pushl %edi
@@ -85,24 +77,32 @@ class B extends myThread, my::A {
             popl %edx
             popl %ecx
         ">);
+//*/
     }
     
+    // TODO #13: convert PASM to Pool
     <> doIt(A a) {
-    /*
+/*/
         Runtime rt := this.rt();    // fixed variable
+        Object ob ::= this;
+        Object oa ::= a;
         rt.printChar('@', 1);
-        rt.printString("OMG!!! ", 0);
-        rt.printInt(this.equals(this), 0);
+        rt.printString(doit, 0);
+        rt.printInt(this.equals(ob), 0);
         rt.printChar(' ', 0);
-        rt.printInt(this.equals(a), 0);
+        rt.printInt(this.equals(oa), 0);
         this.testAllocate(0x1234);
         rt.printChar('@', 1);
         rt.printChar('\n', 0);
         this.test(this.getRow());
         a.test(a.getRow());
         return;
-    */
+/*/
         __pasm__(<"
+        _my_core_Runtime_m_printChar := 72
+        _my_core_Runtime_m_printString := 80
+        _my_core_Runtime_m_printInt := 88
+        _my_core_Runtime_m_printHex := 96
             pushl %ecx
             pushl %edx
             
@@ -182,77 +182,31 @@ class B extends myThread, my::A {
             popl %edx
             popl %ecx
         ">);
+//*/
     }
     
     <> testAllocate(int size) {
-    /*
         Runtime rt := this.rt();    // fixed variable
+        // TODO: replace int with working MemInfo "struct"
         int mem := rt.allocate(size);
         rt.printChar(' ', 0);
         rt.printHex(mem, 0);
         rt.printChar(' ', 0);
-        rt.printHex(mem.buffer, 0);
+        rt.printHex(0xdead, 0);
+//        rt.printHex(mem.buffer, 0);
         rt.printChar(' ', 0);
-        rt.printHex(mem.size, 0);
+        rt.printHex(0xc0de, 0);
+//        rt.printHex(mem.size, 0);
         rt.free(mem);
         return;
-    */
-        __pasm__(<"
-            pushl %ecx
-            pushl %edx
-            pushl %esi
-            
-            movl 12(%ebp), %ecx // @this (Type B)
-            
-            subl 4, %esp        // return value of rt
-            pushl %ecx; pushl _my_B_m_rt; call (%ecx)
-        	addl 8, %esp
-            popl %edx           // Runtime(Type Runtime)
-            
-            subl 4, %esp    // return value of allocate
-            pushl 16(%ebp)  // param size
-            pushl %edx; pushl _my_core_Runtime_m_allocate; call (%edx)
-        	addl 12, %esp
-            popl %esi
-            
-            pushl _my_B_coi_out; pushl 0x20 // ' '
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_B_coi_out; pushl %esi
-            pushl %edx; pushl _my_core_Runtime_m_printHex; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_B_coi_out; pushl 0x20 // ' '
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_B_coi_out; pushl (%esi)
-            pushl %edx; pushl _my_core_Runtime_m_printHex; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_B_coi_out; pushl 0x20 // ' '
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_B_coi_out; pushl 4(%esi) 
-            pushl %edx; pushl _my_core_Runtime_m_printHex; call (%edx)
-            addl 16, %esp
-            
-            pushl %esi 
-            pushl %edx; pushl _my_core_Runtime_m_free; call (%edx)
-            addl 12, %esp
-        	
-            popl %esi
-            popl %edx
-            popl %ecx
-        ">);
     }
     
+    // TODO #3: allow access of super variables
     <int> getRow() {
-    /*
-        return 2*row;
-    */
+/*/
+        return row;
+//        return 2*row;
+/*/
         __pasm__(<"
             movl 12(%ebp), %eax             // @this (Type B)
             movl _my_B_hvo_my_A(%eax), %ebx // inst vars offset (A)
@@ -262,6 +216,7 @@ class B extends myThread, my::A {
             addl %eax, %eax                 // *2
             movl %eax, 16(%ebp)             // return row*2
         ">);
+//*/
     }
     
 }

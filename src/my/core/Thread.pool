@@ -6,7 +6,7 @@ version = 0.1.0
 namespace my::core;
 
 
-// TODO convert to interface 
+// TODO: convert to interface 
 class Thread extends Object {
     
     // methods

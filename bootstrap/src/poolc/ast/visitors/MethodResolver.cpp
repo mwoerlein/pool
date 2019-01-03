@@ -47,7 +47,7 @@ bool MethodResolver::visit(ClassDeclNode & classDecl) {
     
     TranslationUnitNode * curUnit = curScope->getUnitNode();
     if (curUnit->element.hasStringProperty("pool.bootstrap")) {
-        // TODO: #7 configure bootstrap with name and parameter types to generate method id
+        // TODO #7: configure bootstrap with name and parameter types to generate method id
         String & bsName = curUnit->element.getStringProperty("pool.bootstrap");
         MethodScope * bsScope = classScope->getMethod(bsName);
         if (!bsScope) {
@@ -87,13 +87,11 @@ bool MethodResolver::visit(ClassRefNode & classRef) {
 
 bool MethodResolver::visit(CStringRefNode & type) {
     type.scope = curScope;
-    // TODO: #3 init type.resolvedType?
     return true;
 }
 
 bool MethodResolver::visit(IntRefNode & type) {
     type.scope = curScope;
-    // TODO: #3 init type.resolvedType?
     return true;
 }
 

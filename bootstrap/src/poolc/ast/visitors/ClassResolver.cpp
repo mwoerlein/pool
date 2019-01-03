@@ -80,7 +80,6 @@ bool ClassResolver::visit(ClassDeclNode & classDecl) {
 bool ClassResolver::visit(MethodDeclNode & methodDecl) {
     methodDecl.returnTypes.acceptAll(*this);
     methodDecl.parameters.acceptAll(*this);
-    // TODO: #3 resolve classes in instructions/expressions
     methodDecl.body.accept(*this);
     return true;
 }

@@ -70,19 +70,19 @@ ClassScope * Scope::getClass(String & name) {
 
 MethodScope * Scope::registerMethod(MethodDeclNode & methodDecl) {
     MethodScope &scope = env().create<MethodScope, Scope &, MethodDeclNode &>(*this, methodDecl);
-    // TODO: #7 generate method id from name and parameter types
+    // TODO #7: generate method id from name and parameter types
     MethodScope *old = &_methods.set(methodDecl.name, scope);
     if (old) { old->destroy(); }
     return &scope;
 }
 MethodScope * Scope::registerMethod(MethodScope & scope) {
-    // TODO: #7 generate method id from name and parameter types
+    // TODO #7: generate method id from name and parameter types
     MethodScope *old = &_methods.set(scope.getMethodDeclNode()->name, scope);
     if (old) { old->destroy(); }
     return &scope;
 }
 MethodScope * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/) {
-    // TODO: #7 generate method id from name and parameter types
+    // TODO #7: generate method id from name and parameter types
     if (MethodScope *scope = &_methods.get(name)) {
         return scope;
     }
@@ -92,7 +92,7 @@ MethodScope * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode> &
     return 0;
 }
 MethodScope * Scope::getMethod(MethodScope & scope) {
-    // TODO: #7 generate method id from name and parameter types
+    // TODO #7: generate method id from name and parameter types
     String &name = scope.getMethodDeclNode()->name;
     if (MethodScope *scope = &_methods.get(name)) {
         return scope;
@@ -103,7 +103,7 @@ MethodScope * Scope::getMethod(MethodScope & scope) {
     return 0;
 }
 MethodScope * Scope::getMethod(MethodCallExprNode & methodCall) {
-    // TODO: #7 generate method id from name and parameter types
+    // TODO #7: generate method id from name and parameter types
     String &name = methodCall.name;
     if (MethodScope *scope = &_methods.get(name)) {
         return scope;
