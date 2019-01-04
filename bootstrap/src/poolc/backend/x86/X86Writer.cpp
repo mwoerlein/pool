@@ -191,11 +191,14 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                     LONG("0");
                     break;
                 default:
-                    LOCAL(
-                        methodDeclOffset(&method),
-                        CLASS_OFFSET(methodDecl(&method))
-                    );
-                    LONG(methodDeclOffset(&method));
+                    if (method.scope->parent->isClass()) {
+                        // generate offset constant for global methods; used in bootstrapOffset header
+                        LOCAL(
+                            methodDeclOffset(&method),
+                            CLASS_OFFSET(methodDecl(&method))
+                        );
+                    }
+                    LONG(CLASS_OFFSET(methodDecl(&method)));
             }
         }
         it.destroy();
