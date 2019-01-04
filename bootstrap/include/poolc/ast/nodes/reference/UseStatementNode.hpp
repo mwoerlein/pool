@@ -5,7 +5,7 @@
 
 #include "poolc/ast/scopes/ClassScope.hpp"
 
-class UseStatementNode: public Node {
+class UseStatementNode: virtual public Node {
     public:
     String & alias;
     FullQualifiedName & name;

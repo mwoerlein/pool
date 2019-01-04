@@ -1,9 +1,10 @@
 #ifndef POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK
 #define POOLC_AST_NODES_REFERENCE_CLASSREFNODE_HPP_LOCK
 
+#include "poolc/ast/nodes/ExpressionNode.hpp"
 #include "poolc/ast/nodes/reference/TypeRefNode.hpp"
 
-class ClassRefNode: public TypeRefNode {
+class ClassRefNode: public TypeRefNode, public ExpressionNode {
     public:
     FullQualifiedName & name;
     

@@ -17,6 +17,7 @@ class Runtime extends Object {
     global int err := 1;
     
     // TODO: remove after implicit string handling
+    cstring newline := "\n";
     cstring mClass := "my::core::Class";
     cstring mThread := "my::core::Thread";
     

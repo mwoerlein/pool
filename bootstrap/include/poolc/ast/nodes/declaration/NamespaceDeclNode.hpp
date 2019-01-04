@@ -3,7 +3,7 @@
 
 #include "poolc/ast/Node.hpp"
 
-class NamespaceDeclNode: public Node {
+class NamespaceDeclNode: virtual public Node {
     public:
     FullQualifiedName & name;
     

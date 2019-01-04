@@ -31,8 +31,8 @@ class A extends Object {
     }
     
     <> test(int row) {
-        // TODO #12: use constant Runtime.out
-        int _out := 0;              // fixed variable
+        int _out := Runtime:out;              // fixed variable
+        int _err := my::core::Runtime:err;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
         my::core::Class c = this.getClass();  // modifiable variable
         c = c.getClass();           // assignment
@@ -49,8 +49,8 @@ class A extends Object {
             rt.printChar(' ', _out);
             rt.printInt(_col, _out);
         }
-        // TODO #12: use constant Runtime.err
-        rt.printString(" compile test\n", 1);
+        rt.printString(" compile test", _err);
+        rt.printString(Runtime:newline, Runtime:out);
         return;
     }
     

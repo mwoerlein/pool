@@ -8,7 +8,7 @@
 #include "poolc/ast/scopes/InstanceScope.hpp"
 #include "poolc/ast/scopes/VariableScope.hpp"
 
-class ClassDeclNode: public Node {
+class ClassDeclNode: virtual public Node {
     public:
     String & name;
     FullQualifiedName & fullQualifiedName;

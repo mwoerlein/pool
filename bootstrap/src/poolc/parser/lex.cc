@@ -3,6 +3,7 @@
 
 #include "poolc/parser/PoolParser.hpp"
 
+int Parser::makeColon()      { return COLON; }
 int Parser::makeColonEqual() { return COLON_EQUAL; }
 int Parser::makeDot()        { return DOT; }
 int Parser::makeEqual()      { return EQUAL; }

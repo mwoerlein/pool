@@ -10,6 +10,7 @@
 #include "poolc/parser/token/FullQualifiedName.hpp"
 
 class Scope;
+class Type;
 class Node: virtual public Object {
     public:
     int first_line;
@@ -18,6 +19,7 @@ class Node: virtual public Object {
     int last_column;
     
     Scope * scope = 0;
+    Type * resolvedType = 0;
     
     virtual ~Node();
     

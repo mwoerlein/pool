@@ -7,7 +7,7 @@
 #include "poolc/ast/collection/NodeList.hpp"
 #include "poolc/storage/StorageElement.hpp"
 
-class TranslationUnitNode: public Node {
+class TranslationUnitNode: virtual public Node {
     public:
     StorageElement &element;
     String &name;

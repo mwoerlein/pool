@@ -6,12 +6,11 @@
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 #include "poolc/ast/nodes/reference/TypeRefNode.hpp"
 
-class VariableDeclNode: public Node {
+class VariableDeclNode: virtual public Node {
     public:
     String & name;
     TypeRefNode & type;
     bool global;
-    Type * resolvedType = 0;
     
     VariableDeclNode(Environment &env, MemoryInfo &mi, TypeRefNode & type, String &name);
     virtual ~VariableDeclNode();

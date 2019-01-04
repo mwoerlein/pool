@@ -5,9 +5,8 @@
 
 #include "poolc/ast/Type.hpp"
 
-class TypeRefNode: public Node {
+class TypeRefNode: virtual public Node {
     public:
-    Type * resolvedType = 0;
     virtual ~TypeRefNode();
     
     virtual ClassRefNode * isClass();

@@ -111,6 +111,9 @@ bool TypeResolver::visit(VariableInitInstNode & variableInit) {
     variableInit.variables.acceptAll(*this);
     variableInit.initializer.accept(*this);
     // TODO: compare initializer.resolvedType with variables.resolvedType
+    if (variableInit.final) {
+        variableInit.variables.first()->scope->isVariable()->finalInitializer = &variableInit.initializer;
+    }
     return true;
 }
 
@@ -162,6 +165,8 @@ bool TypeResolver::visit(VariableExprNode & variable) {
         variable.context->accept(*this);
         if (InstanceScope * contextInstanceScope = variable.context->resolvedType->isInstance()) {
             contextScope = contextInstanceScope;
+        } else if (ClassScope * contextClassScope = variable.context->resolvedType->isClass()) {
+            contextScope = contextClassScope;
         } else {
             // TODO: handle global variable/constant access
             error() << variable.scope->getClassDeclNode()->name << ": invalid variable access context type '" << variable.context->resolvedType << "'\n";

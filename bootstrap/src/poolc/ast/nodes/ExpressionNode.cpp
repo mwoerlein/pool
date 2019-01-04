@@ -9,3 +9,4 @@ ConstIntExprNode * ExpressionNode::isConstInt() { return 0; }
 MethodCallExprNode * ExpressionNode::isMethodCall() { return 0; }
 ThisExprNode * ExpressionNode::isThis() { return 0; }
 VariableExprNode * ExpressionNode::isVariable() { return 0; }
+ClassRefNode * ExpressionNode::isClass() { return 0; }

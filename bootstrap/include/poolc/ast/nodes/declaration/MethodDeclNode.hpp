@@ -9,7 +9,7 @@
 
 enum method_kind { abstract, naked, normal };
 
-class MethodDeclNode: public Node {
+class MethodDeclNode: virtual public Node {
     public:
     String & name;
     BlockInstNode &body;

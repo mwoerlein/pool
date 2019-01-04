@@ -3,7 +3,7 @@
 
 #include "poolc/ast/Node.hpp"
 
-class InstructionNode: public Node {
+class InstructionNode: virtual public Node {
     public:
     virtual ~InstructionNode();
 };

@@ -84,17 +84,18 @@ class B extends myThread, my::A {
     // TODO #13: convert PASM to Pool
     <> doIt(A a) {
 /*/
+        int out := Runtime:out;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
         Object ob ::= this;
         Object oa ::= a;
-        rt.printChar('@', 1);
-        rt.printString(doit, 0);
-        rt.printInt(this.equals(ob), 0);
-        rt.printChar(' ', 0);
-        rt.printInt(this.equals(oa), 0);
+        rt.printChar('@', Runtime::err);
+        rt.printString(doit, out);
+        rt.printInt(this.equals(ob), out);
+        rt.printChar(' ', out);
+        rt.printInt(this.equals(oa), out);
         this.testAllocate(0x1234);
-        rt.printChar('@', 1);
-        rt.printChar('\n', 0);
+        rt.printChar('@', Runtime::err);
+        rt.printChar('\n', out);
         this.test(this.getRow());
         a.test(a.getRow());
         return;
@@ -187,17 +188,18 @@ class B extends myThread, my::A {
     }
     
     <> testAllocate(int size) {
+        int out := Runtime:out;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
         // TODO: replace int with working MemInfo "struct"
         int mem := rt.allocate(size);
-        rt.printChar(' ', 0);
-        rt.printHex(mem, 0);
-        rt.printChar(' ', 0);
-        rt.printHex(0xdead, 0);
-//        rt.printHex(mem.buffer, 0);
-        rt.printChar(' ', 0);
-        rt.printHex(0xc0de, 0);
-//        rt.printHex(mem.size, 0);
+        rt.printChar(' ', out);
+        rt.printHex(mem, out);
+        rt.printChar(' ', out);
+        rt.printHex(0xdead, out);
+//        rt.printHex(mem.buffer, out);
+        rt.printChar(' ', out);
+        rt.printHex(0xc0de, out);
+//        rt.printHex(mem.size, out);
         rt.free(mem);
         return;
     }

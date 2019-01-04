@@ -233,6 +233,16 @@ bool PIRGenerator::visit(ThisExprNode & constThis) {
 }
 
 bool PIRGenerator::visit(VariableExprNode & variable) {
+    if (ExpressionNode *initializer = variable.resolvedVariable->finalInitializer) {
+        if (variable.resolvedVariable->parent->isClass()) {
+            if (ConstCStringExprNode *cCString = initializer->isConstCString()) {
+                return visit(*cCString);
+            }
+            if (ConstIntExprNode *cInt = initializer->isConstInt()) {
+                return visit(*cInt);
+            }
+        }
+    }
     if (variable.context) {
         variable.context->accept(*this);
         if (lastLocations.size() == 1) {

@@ -101,7 +101,7 @@ void PIRMethod::init(MethodScope &scope) {
 }
 
 PIRString &PIRMethod::getConstString(ConstCStringExprNode &value) {
-    return env().create<PIRString, String&>(*value.stringId);
+    return env().create<PIRString, String&>(_scope->getClass()->stringId(value.value));
 }
 
 PIRLocation &PIRMethod::spillTemp(int idx) {

@@ -11,6 +11,7 @@ class VariableScope: public Scope {
     VariableDeclNode & variableDecl;
     
     public:
+    ExpressionNode *finalInitializer;
     PIRLocation *pir;
     
     VariableScope(Environment &env, MemoryInfo &mi, Scope & parent, VariableDeclNode & variableDecl);
