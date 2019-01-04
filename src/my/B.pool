@@ -11,10 +11,6 @@ use my::core::Runtime;
 class B extends myThread, my::A {
     
     // constants
-    // TODO #12: implicitly clone constants of my::core::Runtime if used
-    // streams
-    int out := 0;
-    int err := 1;
     // TODO: inline into method doIt, if possible
     cstring doit := "OMG! Compiling still work's! ";
     cstring mA := "my::A";
@@ -101,6 +97,8 @@ class B extends myThread, my::A {
         return;
 /*/
         __pasm__(<"
+        _my_core_Runtime_coi_out := 0
+        _my_core_Runtime_coi_err := 1
         _my_core_Runtime_m_printChar := 72
         _my_core_Runtime_m_printString := 80
         _my_core_Runtime_m_printInt := 88
@@ -115,13 +113,13 @@ class B extends myThread, my::A {
         	addl 8, %esp
             popl %edx           // Runtime(Type Runtime)
             
-            pushl _my_B_coi_err; pushl 0x40 // '@'
+            pushl _my_core_Runtime_coi_err; pushl 0x40 // '@'
             pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
             movl 8(%ebp), %eax         // @class-desc "B"
             addl _my_B_coso_doit, %eax // "DoIt "
-            pushl _my_B_coi_out; pushl %eax
+            pushl _my_core_Runtime_coi_out; pushl %eax
             pushl %edx; pushl _my_core_Runtime_m_printString; call (%edx)
             addl 16, %esp
             
@@ -131,11 +129,11 @@ class B extends myThread, my::A {
             addl 12, %esp
             popl %eax
             
-            pushl _my_B_coi_out; pushl %eax
+            pushl _my_core_Runtime_coi_out; pushl %eax
             pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
             addl 16, %esp
             
-            pushl _my_B_coi_out; pushl 0x20 // ' '
+            pushl _my_core_Runtime_coi_out; pushl 0x20 // ' '
             pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
@@ -145,7 +143,7 @@ class B extends myThread, my::A {
             addl 12, %esp
             popl %eax
             
-            pushl _my_B_coi_out; pushl %eax
+            pushl _my_core_Runtime_coi_out; pushl %eax
             pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
             addl 16, %esp
             
@@ -153,11 +151,11 @@ class B extends myThread, my::A {
             pushl %ecx; pushl _my_B_m_testAllocate; call (%ecx)
         	addl 12, %esp
             
-            pushl _my_B_coi_err; pushl 0x40 // '@'
+            pushl _my_core_Runtime_coi_err; pushl 0x40 // '@'
             pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
-            pushl _my_B_coi_out; pushl 0xa // '/n'
+            pushl _my_core_Runtime_coi_out; pushl 0xa // '/n'
             pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
             addl 16, %esp
             
@@ -188,7 +186,7 @@ class B extends myThread, my::A {
     }
     
     <> testAllocate(int size) {
-        int out := Runtime:out;    // fixed variable
+        int out := Runtime:out;     // fixed variable
         Runtime rt := this.rt();    // fixed variable
         // TODO: replace int with working MemInfo "struct"
         int mem := rt.allocate(size);

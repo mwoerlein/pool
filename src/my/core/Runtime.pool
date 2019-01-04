@@ -13,8 +13,8 @@ class Runtime extends Object {
     
     // constants
     // streams
-    global int out := 0;
-    global int err := 1;
+    int out := 0;
+    int err := 1;
     
     // TODO: remove after implicit string handling
     cstring newline := "\n";
@@ -151,6 +151,7 @@ class Runtime extends Object {
     
     // TODO: replace int with working ClassHeader "struct"
     // TODO: replace cstring with working String class
+    // TODO #5: convert PASM to Pool
     <int> getClassDesc(cstring name) {
         __pasm__(<"
             pushad
@@ -171,6 +172,7 @@ class Runtime extends Object {
     }
     
     // TODO: replace int with working MemInfo "struct"
+    // TODO #5: convert PASM to Pool
     <int> allocate(int size) {
         __pasm__(<"
             pushad
@@ -191,6 +193,7 @@ class Runtime extends Object {
     }
     
     // TODO: replace int with working MemInfo "struct"
+    // TODO #5: convert PASM to Pool
     <> free(int info) {
         __pasm__(<"
             pushad
@@ -209,6 +212,7 @@ class Runtime extends Object {
         ">);
     }
     
+    // TODO #5: convert PASM to Pool
     <> printChar(int c, int stream) {
         __pasm__(<"
             pushad
@@ -228,6 +232,7 @@ class Runtime extends Object {
         ">);
     }
     
+    // TODO #5: convert PASM to Pool
     <> printString(cstring s, int stream) {
         __pasm__(<"
             pushad
@@ -247,6 +252,7 @@ class Runtime extends Object {
         ">);
     }
     
+    // TODO #5: convert PASM to Pool
     <> printInt(int i, int stream) {
         __pasm__(<"
             pushad
@@ -266,6 +272,7 @@ class Runtime extends Object {
         ">);
     }
     
+    // TODO #5: convert PASM to Pool
     <> printHex(int i, int stream) {
         __pasm__(<"
             pushad

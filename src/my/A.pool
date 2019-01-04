@@ -10,6 +10,9 @@ use my::core::Runtime;
 
 class A extends Object {
     
+    // constants
+    int cafe := 0xcafe;
+    
     // variables
     int column;
     int row;
@@ -31,25 +34,29 @@ class A extends Object {
     }
     
     <> test(int row) {
-        int _out := Runtime:out;              // fixed variable
-        int _err := my::core::Runtime:err;    // fixed variable
-        Runtime rt := this.rt();    // fixed variable
-        my::core::Class c = this.getClass();  // modifiable variable
-        c = c.getClass();           // assignment
-        rt.printString(c.getName(), _out);
-        rt.printChar(' ', _out);
-        rt.printInt(this.column, _out);
-        rt.printChar(' ', _out);
-        rt.printInt(row, _out);
-        rt.printChar(' ', _out);
+        int out := Runtime:out;             // fixed variable
+        int err := my::core::Runtime:err;   // fixed variable
+        Runtime rt := this.rt();            // fixed variable
+        my::core::Class c = this.getClass();// modifiable variable
+//        c = c.getClass();                   // assignment
+//        rt.printString(c.CLASSNAME, out);   // static constant access "my::core::Class"
+//        rt.printChar(' ', out);
+        rt.printString(c.getName(), out);
+        rt.printChar(' ', out);
+        rt.printInt(this.column, out);
+        rt.printChar(' ', out);
+        rt.printInt(row, out);
+        rt.printChar(' ', out);
+        rt.printHex(cafe, err);
+        rt.printChar(' ', out);
         <int _row2, int _col2> := this.getRowAndColumn();   // fixed variables
         {
             <int _row, int _col> = this.getRowAndColumn();  // modifiable variables
-            rt.printInt(_row, _out);
-            rt.printChar(' ', _out);
-            rt.printInt(_col, _out);
+            rt.printInt(_row, out);
+            rt.printChar(' ', out);
+            rt.printInt(_col, out);
         }
-        rt.printString(" compile test", _err);
+        rt.printString(" compile test", err);
         rt.printString(Runtime:newline, Runtime:out);
         return;
     }
