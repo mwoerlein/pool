@@ -62,11 +62,16 @@ class Runtime extends Object {
     
     // methods
     global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
+        // TODO: replace int with working ClassHeader "struct"
+        int cdClass = -4;
+        int cClass = -8;
+        // TODO #13/#14: use correct temporal variables
+        //Class cClass = null;
+        //int cdRuntime = 0;
+        //Class cRuntime = null; 
+        //Runtime rt = 0;
         __pasm__(<"
         _my_core_Class_m_setDesc := 48
-            subl 12, %esp
-            pushad
-            
             movl 0x0, 24(%ebp)  // default result: NULL
             movl 8(%ebp), %eax  // @class-desc "Runtime"
             addl _my_core_Runtime_coso_mClass, %eax
@@ -76,9 +81,9 @@ class Runtime extends Object {
             pushl _my_core_Runtime_coi_SysCall_find_class
             pushl %esp; pushl 16(%ebp); call 20(%ebp)
             addl 16, %esp
-            popl -12(%ebp)      // store @class desc
+            popl -4(%ebp)       // store @class desc
             
-            movl -12(%ebp), %edx
+            movl -4(%ebp), %edx
             pushl 0     // info
             pushl _my_core_Runtime_coi_ch_tpl_size(%edx) // instance size
             pushl _my_core_Runtime_coi_SysCall_allocate
@@ -87,13 +92,13 @@ class Runtime extends Object {
             popl %eax   // return info
             addl 0, %eax; jz _bs_return // return NULL on allocate error
             
-            movl -12(%ebp), %edx    // @class-desc "Class"
+            movl -4(%ebp), %edx     // @class-desc "Class"
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
             addl _cr_mo_call_entry, %ebx
             call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
         	movl %edi, -8(%ebp)     // store @Class (Type Object)
         	
-            pushl -12(%ebp)
+            pushl -4(%ebp)
             pushl %esi; pushl _my_core_Class_m_setDesc; call (%esi)
         	addl 12, %esp
         	
@@ -140,7 +145,6 @@ class Runtime extends Object {
         	
             movl %esi, 24(%ebp) // store @runtime (Type Runtime) as result
         _bs_return:
-            popad
         ">);
     }
     
@@ -154,8 +158,6 @@ class Runtime extends Object {
     // TODO #5: convert PASM to Pool
     <int> getClassDesc(cstring name) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -166,8 +168,6 @@ class Runtime extends Object {
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 16, %esp
             popl 20(%ebp)   // return @class desc
-            
-            popad
         ">);
     }
     
@@ -175,8 +175,6 @@ class Runtime extends Object {
     // TODO #5: convert PASM to Pool
     <int> allocate(int size) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -187,8 +185,6 @@ class Runtime extends Object {
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 16, %esp
             popl 20(%ebp)   // return info
-            
-            popad
         ">);
     }
     
@@ -196,8 +192,6 @@ class Runtime extends Object {
     // TODO #5: convert PASM to Pool
     <> free(int info) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -207,16 +201,12 @@ class Runtime extends Object {
             pushl _my_core_Runtime_coi_SysCall_free
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 20, %esp
-            
-            popad
         ">);
     }
     
     // TODO #5: convert PASM to Pool
     <> printChar(int c, int stream) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -227,16 +217,12 @@ class Runtime extends Object {
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
-            
-            popad
         ">);
     }
     
     // TODO #5: convert PASM to Pool
     <> printString(cstring s, int stream) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -247,16 +233,12 @@ class Runtime extends Object {
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
-            
-            popad
         ">);
     }
     
     // TODO #5: convert PASM to Pool
     <> printInt(int i, int stream) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -267,16 +249,12 @@ class Runtime extends Object {
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
-            
-            popad
         ">);
     }
     
     // TODO #5: convert PASM to Pool
     <> printHex(int i, int stream) {
         __pasm__(<"
-            pushad
-            
             movl 12(%ebp), %eax                             // @this (Type Runtime)
             movl _my_core_Runtime_hvo_my_core_Runtime(%eax), %ebx     // inst vars offset (Runtime)
             addl 4(%eax), %ebx                              // @this.vars(Runtime)
@@ -287,8 +265,6 @@ class Runtime extends Object {
             pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl _my_core_Runtime_i_syscall_runtime(%ebx); call _my_core_Runtime_i_syscall_entry(%ebx)
             addl 24, %esp
-            
-            popad
         ">);
     }
     
@@ -308,8 +284,6 @@ class Runtime extends Object {
     // TODO: use generic method or special cast syntax instead of plain Object?
     <Object> cast(cstring name, Object any) {
         __pasm__(<"
-            pushl %ecx
-            pushl %esi
         _crma_start:
             movl 0, 24(%ebp)    // not-found default handle: NULL
             movl 12(%ebp), %esi // @this (Type Runtime)
@@ -336,16 +310,12 @@ class Runtime extends Object {
             addl _my_core_Runtime_coi_cts_ho(%eax), %ebx
             movl %ebx, 24(%ebp) // return correct handle
         _crma_return:
-            popl %esi
-            popl %ecx
         ">);
     }
     
     <> createAndRunThread(cstring name) {
         __pasm__(<"
         _my_core_Thread_m_run := 40
-            pushl %ecx
-            pushl %esi
         _mcrmcart_start:
             movl 12(%ebp), %esi // @this (Type Runtime)
         ">);
@@ -386,15 +356,12 @@ class Runtime extends Object {
         // return
         __pasm__(<"
         _mcrmcart_return:
-            popl %esi
-            popl %ecx
         ">);
     }
     
     // TODO: use generic method or special new syntax instead of plain Object?
     <Object> createInstance(cstring name) {
         __pasm__(<"
-            pushad
         _crmci_start:
             movl 0, 20(%ebp)    // default handle: NULL
             movl 12(%ebp), %esi // @this (Type Runtime)
@@ -452,7 +419,6 @@ class Runtime extends Object {
             pushl %edi; pushl _my_core_Object_m_setRt; call (%edi)
         	addl 12, %esp
         _crmci_return:
-            popad
         ">);
     }
     

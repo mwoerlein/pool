@@ -300,7 +300,8 @@ bool X86Writer::visit(MethodDeclNode & methodDef) {
             if (localVariables) {
                 code() << "subl " << (4*localVariables) << ", %esp\n";
             }
-//            code() << "pushad\n";
+            // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
+            code() << "pushad\n";
             {
                 Iterator<PIRStatement> &it = curMethod->statements();
                 while (it.hasNext()) {
@@ -309,7 +310,8 @@ bool X86Writer::visit(MethodDeclNode & methodDef) {
                 it.destroy();
             }
             LABEL(methodDeclReturn(&methodDef));
-//            code() << "popad\n";
+            // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
+            code() << "popad\n";
             code() << "leave\n";
             code() << "ret\n";
     }
