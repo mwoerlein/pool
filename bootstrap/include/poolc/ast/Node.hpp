@@ -1,6 +1,8 @@
 #ifndef POOLC_AST_NODE_HPP_LOCK
 #define POOLC_AST_NODE_HPP_LOCK
 
+#define CLASSNAME_ID "CLASSNAME"
+
 #include "sys/Object.hpp"
 
 #include "poolc/ast/Visitor.hpp"

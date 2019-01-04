@@ -38,6 +38,13 @@ class Scope: virtual public Object {
     virtual BlockScope * isBlock();
     virtual VariableScope * isVariable();
     
+    virtual UnitScope * getUnit();
+    virtual ClassScope * getClass();
+    virtual InstanceScope * getInstance();
+    virtual MethodScope * getMethod();
+    virtual BlockScope * getBlock();
+    virtual VariableScope * getVariable();
+    
     virtual ClassScope * registerClass(ClassDeclNode & classDecl, String & alias);
     virtual ClassScope * registerClass(ClassScope & classScope);
     virtual ClassScope * registerClass(ClassScope & classScope, String & alias);

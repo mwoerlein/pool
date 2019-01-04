@@ -8,4 +8,5 @@ MethodScope::MethodScope(Environment &env, MemoryInfo &mi, Scope & parent, Metho
 }
 MethodScope::~MethodScope() {}
 MethodScope * MethodScope::isMethod() { return this; }
+MethodScope * MethodScope::getMethod() { return this; }
 MethodDeclNode * MethodScope::getMethodDeclNode() { return &methodDecl; }

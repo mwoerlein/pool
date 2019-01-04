@@ -7,4 +7,5 @@ InstanceScope::InstanceScope(Environment &env, MemoryInfo &mi, Scope & parent, C
 }
 InstanceScope::~InstanceScope() {}
 InstanceScope * InstanceScope::isInstance() { return this; }
+InstanceScope * InstanceScope::getInstance() { return this; }
 ClassDeclNode * InstanceScope::getClassDeclNode() { return &classDecl; }

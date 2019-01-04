@@ -7,4 +7,5 @@ VariableScope::VariableScope(Environment &env, MemoryInfo &mi, Scope & parent, V
 }
 VariableScope::~VariableScope() {}
 VariableScope * VariableScope::isVariable() { return this; }
+VariableScope * VariableScope::getVariable() { return this; }
 VariableDeclNode * VariableScope::getVariableDeclNode() { return &variableDecl; }

@@ -7,4 +7,5 @@ BlockScope::BlockScope(Environment &env, MemoryInfo &mi, Scope & parent, BlockIn
 }
 BlockScope::~BlockScope() {}
 BlockScope * BlockScope::isBlock() { return this; }
+BlockScope * BlockScope::getBlock() { return this; }
 BlockInstNode * BlockScope::getBlockInstNode() { return &block; }

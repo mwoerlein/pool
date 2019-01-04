@@ -14,6 +14,7 @@ class InstanceScope: public Scope, public Type {
     InstanceScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl);
     virtual ~InstanceScope();
     virtual InstanceScope * isInstance() override;
+    virtual InstanceScope * getInstance() override;
     virtual ClassDeclNode * getClassDeclNode() override;
 };
 

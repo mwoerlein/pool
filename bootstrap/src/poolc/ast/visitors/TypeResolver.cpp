@@ -50,7 +50,7 @@ bool TypeResolver::visit(MethodDeclNode & methodDecl) {
             TypeRefNode &ref = it.next();
             ref.accept(*this);
             if (ClassScope * classScope = ref.resolvedType->isClass()) {
-                methodDecl.resolvedReturns.add(*classScope->getClassDeclNode()->instanceScope);
+                methodDecl.resolvedReturns.add(*classScope->getInstance());
             } else {
                 methodDecl.resolvedReturns.add(*ref.resolvedType);
             }
@@ -66,7 +66,7 @@ bool TypeResolver::visit(VariableDeclNode & variableDecl) {
     variableDecl.type.accept(*this);
     variableDecl.resolvedType = variableDecl.type.resolvedType;
     if (ClassScope * classScope = variableDecl.resolvedType->isClass()) {
-        variableDecl.resolvedType = classScope->getClassDeclNode()->instanceScope;
+        variableDecl.resolvedType = classScope->getInstance();
     }
     return true;
 }
@@ -152,7 +152,7 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
 }
 
 bool TypeResolver::visit(ThisExprNode & constThis) {
-    constThis.resolvedType = constThis.scope->getClassDeclNode()->instanceScope;
+    constThis.resolvedType = constThis.scope->getInstance();
     return true;
 }
 

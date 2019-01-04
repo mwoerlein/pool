@@ -19,11 +19,9 @@
 #define classTabs() localClsPrefix(curClass) << "_cts"
 #define classTab(cls) localClsPrefix(curClass) << "_ct" << localClsPrefix(cls)
 #define classTabOffset(cls) localClsPrefix(curClass) << "_cto" << localClsPrefix(cls)
-#define className(cls) localClsPrefix(curClass) << "_cn" << localClsPrefix(cls)
-#define classNameOffset(cls) manualClsPrefix(curClass) << "_cno" << manualClsPrefix(cls)
 #define constInt(c) manualClsPrefix(curClass) << "_coi_" << (c)->name
-#define constString(c) localClsPrefix(curClass) << "_cos_" << (c)->name
-#define constStringOffset(c) manualClsPrefix(curClass) << "_coso_" << (c)->name
+#define constString(id) localClsPrefix(curClass) << "_cos_" << id
+#define constStringOffset(id) manualClsPrefix(curClass) << "_coso_" << id
 #define methodDeclTab() localClsPrefix(curClass) << "_mdt"
 #define methodDecl(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name
 #define methodDeclOffset(m) manualClsPrefix((m)->scope->getClassDeclNode()) << "_mdo_" << (m)->name
@@ -84,7 +82,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     if (e.hasStringProperty("pool.bootstrap")) {
         MethodDeclNode *bs = classScope->getMethod(e.getStringProperty("pool.bootstrap"))->getMethodDeclNode();
         if (!bs || bs->kind != normal) {
-            error() << curClass->fullQualifiedName << ": bootstrap method has to be iaccessible via pool-ABI.\n";
+            error() << curClass->fullQualifiedName << ": bootstrap method has to be accessible via pool-ABI.\n";
             return false;
         }
         elem() << "bootstrapOffset = " << methodDeclOffset(bs) << "\n";
@@ -104,7 +102,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     LABEL(classDesc());
     LONG("0x15AC1A55");
     LONG("0");
-    LONG(classNameOffset(curClass));
+    LONG(constStringOffset(classScope->stringId(curClass->fullQualifiedName)));
     LONG(CLASS_OFFSET(classTabs()));      // class tabs offset
     LONG(CLASS_OFFSET(methodTabs()));     // method tabs offset
     LONG(CLASS_OFFSET(methodDeclTab()));  // methods tab offset
@@ -126,7 +124,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
             );
             LABEL(classTab(superDecl));
             LONG("0"); // @class-desc filled on class loading
-            LONG(classNameOffset(superDecl));
+            LONG(constStringOffset(classScope->stringId(superDecl->fullQualifiedName)));
             LONG(CLASS_OFFSET(methodTab(superDecl))); //  vtab offset in description
             LONG(INSTANCE_OFFSET(instanceHandle(superDecl))); // handle offset in instance
         }
@@ -207,17 +205,17 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     elem() << "\n// constants";
     curClass->consts.acceptAll(*this);
     {
-        Iterator<ClassScope> &it = classScope->supers();
+        Iterator<String> &it = classScope->strings();
         while (it.hasNext()) {
-            ClassScope &superClassScope = it.next();
-            ClassDeclNode *superClassDecl = superClassScope.getClassDeclNode();
-            elem() << "\n// class-name " << superClassDecl->name << "\n";
+            String &string = it.next();
+            String &id = classScope->stringId(string);
+            elem() << "\n// string " << id << "\n";
             LOCAL(
-                classNameOffset(superClassDecl),
-                CLASS_OFFSET(className(superClassDecl))
+                constStringOffset(id),
+                CLASS_OFFSET(constString(id))
             );
-            LABEL(className(superClassDecl));
-            ASCIZ(superClassDecl->fullQualifiedName);
+            LABEL(constString(id));
+            ASCIZ(string);
         }
         it.destroy();
     }
@@ -352,16 +350,6 @@ bool X86Writer::visit(VariableInitInstNode & variableInit) {
                 cInt->value
             );
             return true;
-        } else if (ConstCStringExprNode *cCString = variableInit.initializer.isConstCString()) {
-            VariableDeclNode &variableDecl = *variableInit.variables.first();
-            elem() << "\n// string " << variableDecl.name << "\n";
-            LOCAL(
-                constStringOffset(&variableDecl),
-                CLASS_OFFSET(constString(&variableDecl))
-            );
-            LABEL(constString(&variableDecl));
-            ASCIZ(cCString->value);
-            return true;
         } else {
             return false;
         }
@@ -390,9 +378,8 @@ void X86Writer::write(PIRAssign &assignStmt) {
     if (PIRInt *intValue = assignStmt.val.isInt()) {
         code() << "movl " << intValue->value << ", ";
     } else if (PIRString *stringValue = assignStmt.val.isString()) {
-        VariableDeclNode *decl = stringValue->constant.getVariableDeclNode();
         code() << "movl 8(%ebp), %eax\n";
-        code() << "addl " << constStringOffset(decl) << ", %eax\n";
+        code() << "addl " << constStringOffset(stringValue->id) << ", %eax\n";
         code() << "movl %eax, ";
     } else { // isNull
         code() << "movl 0, ";

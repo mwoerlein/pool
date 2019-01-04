@@ -6,6 +6,7 @@
 class ConstCStringExprNode: public ExpressionNode {
     public:
     String &value;
+    String *stringId;
     
     ConstCStringExprNode(Environment &env, MemoryInfo &mi, String &value);
     virtual ~ConstCStringExprNode();

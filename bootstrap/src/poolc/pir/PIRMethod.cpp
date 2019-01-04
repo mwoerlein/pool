@@ -75,7 +75,7 @@ void PIRMethod::init(MethodScope &scope) {
     MethodDeclNode &decl = *scope.getMethodDeclNode();
     
     if (!decl.global) {
-        Type &thisType = *scope.getClassDeclNode()->instanceScope;
+        Type &thisType = *scope.getInstance();
         this->_this = &env().create<PIRLocation, Type &, location_kind, int>(thisType, loc_this, 0);
         this->_thisTemp = newLocation(loc_temp, thisType);
         addMove(*this->_this, *this->_thisTemp);
@@ -101,8 +101,7 @@ void PIRMethod::init(MethodScope &scope) {
 }
 
 PIRString &PIRMethod::getConstString(ConstCStringExprNode &value) {
-    VariableScope *cstring = _scope->getClassDeclNode()->registerConstantCString(value);
-    return env().create<PIRString, VariableScope&>(*cstring);
+    return env().create<PIRString, String&>(*value.stringId);
 }
 
 PIRLocation &PIRMethod::spillTemp(int idx) {
@@ -139,7 +138,7 @@ void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {
 void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
     MethodDeclNode &decl = *method.getMethodDeclNode();
     // TODO: handle type conversion?
-    if (method.getClassDeclNode()->instanceScope != &context.type) {
+    if (method.getInstance() != &context.type) {
         error() << "invalid context " << context << " of method " << decl << "\n";
         return;
     }
@@ -188,7 +187,7 @@ void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PI
 void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest) {
     VariableDeclNode &decl = *var.getVariableDeclNode();
     if (InstanceScope *contextScope = context.type.isInstance()) {
-        if (!contextScope->getClassDeclNode()->scope->isClass()->hasSuper(*var.getClassDeclNode()->scope->isClass())) {
+        if (!contextScope->getClass()->hasSuper(*var.getClass())) {
             error() << "incompatible context " << context << " for variable " << decl << "\n";
             return;
         }
@@ -220,7 +219,7 @@ void PIRMethod::addReturn() {
 void PIRMethod::addSet(PIRLocation &context, VariableScope &var, PIRLocation &src) {
     VariableDeclNode &decl = *var.getVariableDeclNode();
     if (InstanceScope *contextScope = context.type.isInstance()) {
-        if (!contextScope->getClassDeclNode()->scope->isClass()->hasSuper(*var.getClassDeclNode()->scope->isClass())) {
+        if (!contextScope->getClass()->hasSuper(*var.getClass())) {
             error() << "incompatible context " << context << " for variable " << decl << "\n";
             return;
         }

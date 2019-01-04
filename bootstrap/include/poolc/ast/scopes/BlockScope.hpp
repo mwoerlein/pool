@@ -13,6 +13,7 @@ class BlockScope: public Scope {
     BlockScope(Environment &env, MemoryInfo &mi, Scope & parent, BlockInstNode & block);
     virtual ~BlockScope();
     virtual BlockScope * isBlock() override;
+    virtual BlockScope * getBlock() override;
     virtual BlockInstNode * getBlockInstNode() override;
 };
 

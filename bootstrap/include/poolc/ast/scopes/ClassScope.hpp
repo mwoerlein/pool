@@ -11,6 +11,7 @@ class ClassScope: public Scope, public Type {
     private:
     ClassDeclNode & classDecl;
     HashMap<String, ClassScope> &_supers;
+    HashMap<String, String> &_strings;
     
     public:
     bool methodsRegistered;
@@ -19,12 +20,17 @@ class ClassScope: public Scope, public Type {
     ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl);
     virtual ~ClassScope();
     virtual ClassScope * isClass() override;
+    virtual ClassScope * getClass() override;
+    virtual InstanceScope * getInstance() override;
     virtual ClassDeclNode * getClassDeclNode() override;
     
     virtual void addSuper(ClassScope &super);
     virtual bool hasSuper(ClassScope &super);
     inline ClassScope * firstSuper() { return _supers.first(); }
     inline Iterator<ClassScope> & supers() { return _supers.iterator(); }
+    
+    virtual String & stringId(String &string, String *id = 0);
+    virtual Iterator<String> & strings();
 };
 
 #endif //POOLC_AST_SCOPES_CLASSSCOPE_HPP_LOCK

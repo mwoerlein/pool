@@ -7,4 +7,5 @@ UnitScope::UnitScope(Environment &env, MemoryInfo &mi, TranslationUnitNode & uni
 }
 UnitScope::~UnitScope() {}
 UnitScope * UnitScope::isUnit() { return this; }
+UnitScope * UnitScope::getUnit() { return this; }
 TranslationUnitNode * UnitScope::getUnitNode() { return &unit; }

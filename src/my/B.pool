@@ -17,6 +17,7 @@ class B extends myThread, my::A {
     int err := 1;
     // TODO: inline into method doIt, if possible
     cstring doit := "OMG! Compiling still work's! ";
+    cstring mA := "my::A";
     
     // methods
     // TODO #13: convert PASM to Pool
@@ -53,7 +54,7 @@ class B extends myThread, my::A {
         	addl 16, %esp
         	
             movl 8(%ebp), %eax          // @class-desc "B"
-            addl _my_B_cno_my_A, %eax   // "/my/A"
+            addl _my_B_coso_mA, %eax   // "my::A"
             subl 4, %esp    // return value of createInstance
             pushl %eax
             pushl %edi; pushl _my_core_Runtime_m_createInstance; call (%edi)

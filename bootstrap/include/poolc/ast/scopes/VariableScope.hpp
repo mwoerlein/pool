@@ -16,6 +16,7 @@ class VariableScope: public Scope {
     VariableScope(Environment &env, MemoryInfo &mi, Scope & parent, VariableDeclNode & variableDecl);
     virtual ~VariableScope();
     virtual VariableScope * isVariable() override;
+    virtual VariableScope * getVariable() override;
     virtual VariableDeclNode * getVariableDeclNode() override;
 };
 

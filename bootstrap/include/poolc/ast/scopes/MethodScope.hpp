@@ -17,6 +17,7 @@ class MethodScope: public Scope {
     MethodScope(Environment &env, MemoryInfo &mi, Scope & parent, MethodDeclNode & methodDecl);
     virtual ~MethodScope();
     virtual MethodScope * isMethod() override;
+    virtual MethodScope * getMethod() override;
     virtual MethodDeclNode * getMethodDeclNode() override;
 };
 

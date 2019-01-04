@@ -125,7 +125,11 @@ bool MethodResolver::visit(ReturnInstNode & returnInst) {
 bool MethodResolver::visit(VariableInitInstNode & variableInit) {
     variableInit.scope = curScope;
     variableInit.variables.acceptAll(*this);
+    if (variableInit.variables.size() == 1) {
+        curScope = variableInit.variables.first()->scope;
+    }
     variableInit.initializer.accept(*this);
+    curScope = variableInit.scope;
     return true;
 }
 
@@ -138,6 +142,12 @@ bool MethodResolver::visit(AssignmentExprNode & assignment) {
 
 bool MethodResolver::visit(ConstCStringExprNode & constCString) {
     constCString.scope = curScope;
+    String *id = 0;
+    if (VariableScope *scope = curScope->isVariable()) {
+        id = &scope->getVariableDeclNode()->name;
+        constCString.scope = curScope->parent;
+    }
+    constCString.stringId = &curScope->getClass()->stringId(constCString.value, id);
     return true;
 }
 
@@ -175,7 +185,7 @@ bool MethodResolver::registerMethods(ClassDeclNode & classDecl) {
     while (it.hasNext()) {
         TypeRefNode & type = it.next();
         if (ClassScope *extendClassScope = type.resolvedType->isClass()) {
-            InstanceScope *extendInstanceScope = extendClassScope->getClassDeclNode()->instanceScope;
+            InstanceScope *extendInstanceScope = extendClassScope->getInstance();
             
             {
                 Iterator<MethodScope> &mit = extendInstanceScope->methods();

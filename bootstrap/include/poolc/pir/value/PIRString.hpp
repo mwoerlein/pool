@@ -3,12 +3,12 @@
 
 #include "poolc/pir/PIRValue.hpp"
 
-#include "poolc/ast/scopes/VariableScope.hpp"
+#include "sys/String.hpp"
 
 class PIRString: public PIRValue {
     public:
-    VariableScope &constant;
-    PIRString(Environment &env, MemoryInfo &mi, VariableScope &constant);
+    String &id;
+    PIRString(Environment &env, MemoryInfo &mi, String &id);
     virtual ~PIRString();
     virtual PIRString *isString() override;
     

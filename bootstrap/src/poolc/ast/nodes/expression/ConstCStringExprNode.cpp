@@ -2,7 +2,7 @@
 
 // public
 ConstCStringExprNode::ConstCStringExprNode(Environment &env, MemoryInfo &mi, String & value)
-        :Object(env, mi), value(value) {}
+        :Object(env, mi), value(value), stringId(0) {}
 ConstCStringExprNode::~ConstCStringExprNode() {
     value.destroy();
 }
@@ -15,5 +15,8 @@ bool ConstCStringExprNode::accept(Visitor & visitor) {
 void ConstCStringExprNode::printDebugName(OStream & stream) {
     stream << "const-<";
     value.escapeToStream(stream);
+    if (stringId) {
+        stream << "/" << *stringId;
+    }
     stream << ">";
 }

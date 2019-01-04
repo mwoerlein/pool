@@ -40,31 +40,13 @@ ClassDeclNode::~ClassDeclNode() {
     methods.destroyAll();
 }
 
-VariableScope *ClassDeclNode::registerConstantCString(ConstCStringExprNode &value) {
-    ClassScope *classScope = this->scope->isClass();
-    String &constName = env().create<String>();
-    
-    // TODO: handle hash collision
-    constName << "_" << value.value.hash();
-    VariableScope *ret = classScope->getVariable(constName);
-    if (ret) {
-        constName.destroy();
-        return ret;
-    }
-    
+VariableInitInstNode &ClassDeclNode::addStringConstant(String &name, String &value) {
     TypeRefNode &ref = env().create<CStringRefNode>();
-    VariableDeclNode &decl = env().create<VariableDeclNode, TypeRefNode&, String&>(ref, constName);
-    ConstCStringExprNode &cstring = env().create<ConstCStringExprNode, String&>(value.value);
+    VariableDeclNode &decl = env().create<VariableDeclNode, TypeRefNode&, String&>(ref, name);
+    ConstCStringExprNode &cstring = env().create<ConstCStringExprNode, String&>(value);
     VariableInitInstNode &init = env().create<VariableInitInstNode, VariableDeclNode &, ExpressionNode &>(decl, cstring);
-    classScope->getClassDeclNode()->consts.add(init);
-    
-    init.scope = cstring.scope = ref.scope = classScope;
-    cstring.resolvedType = ref.resolvedType = value.resolvedType;
-    
-    VariableScope *variableScope = classScope->registerVariable(decl);
-    decl.scope = variableScope;
-    decl.resolvedType = value.resolvedType;
-    return variableScope;
+    consts.add(init);
+    return init;
 }
 
 bool ClassDeclNode::accept(Visitor & visitor) {

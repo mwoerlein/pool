@@ -35,6 +35,13 @@ MethodScope * Scope::isMethod() { return 0; }
 BlockScope * Scope::isBlock() { return 0; }
 VariableScope * Scope::isVariable() { return 0; }
 
+UnitScope * Scope::getUnit() { return parent ? parent->getUnit() : 0; }
+ClassScope * Scope::getClass() { return parent ? parent->getClass() : 0; }
+InstanceScope * Scope::getInstance() { return parent ? parent->getInstance() : 0; }
+MethodScope * Scope::getMethod() { return parent ? parent->getMethod() : 0; }
+BlockScope * Scope::getBlock() { return parent ? parent->getBlock() : 0; }
+VariableScope * Scope::getVariable() { return parent ? parent->getVariable() : 0; }
+
 TranslationUnitNode * Scope::getUnitNode() { return parent ? parent->getUnitNode() : 0; }
 ClassDeclNode * Scope::getClassDeclNode() { return parent ? parent->getClassDeclNode() : 0; }
 MethodDeclNode * Scope::getMethodDeclNode() { return parent ? parent->getMethodDeclNode() : 0; }

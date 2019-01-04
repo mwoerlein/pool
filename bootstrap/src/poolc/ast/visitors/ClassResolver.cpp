@@ -50,6 +50,7 @@ bool ClassResolver::visit(ClassDeclNode & classDecl) {
         error() << curUnit->name << ": class name '" << classDecl.fullQualifiedName << "' does not match compilation unit\n";
         return false;
     }
+    classDecl.addStringConstant(env().create<String, const char*>(CLASSNAME_ID), classDecl.fullQualifiedName);
     
     classDecl.scope = curScope->registerClass(classDecl, classDecl.name);
     classDecl.instanceScope = &env().create<InstanceScope, Scope &, ClassDeclNode &>(*classDecl.scope, classDecl);

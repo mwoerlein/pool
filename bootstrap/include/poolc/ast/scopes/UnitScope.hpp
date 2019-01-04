@@ -13,6 +13,7 @@ class UnitScope: public Scope {
     UnitScope(Environment &env, MemoryInfo &mi, TranslationUnitNode & unit);
     virtual ~UnitScope();
     virtual UnitScope * isUnit() override;
+    virtual UnitScope * getUnit() override;
     virtual TranslationUnitNode * getUnitNode() override;
 };
 
