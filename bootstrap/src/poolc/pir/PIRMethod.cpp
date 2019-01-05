@@ -274,5 +274,6 @@ bool PIRMethod::isAssignable(Type &src, Type &dest) {
     InstanceScope *destInstance = dest.isInstance();
     if (!destAll && !destInstance && !destAny) { return false; }
     
-    return srcAll || (srcInstance && !destAll) || (srcAny && destAny); 
+    // TODO: handle type conversion?
+    return srcAll || destAny;
 }
