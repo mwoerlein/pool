@@ -38,14 +38,16 @@ class Class extends Object {
     
     // TODO: replace cstring with working String class
     <cstring> getName() {
+        // TODO: replace int with working ClassHeader "struct"
+        int desc = 0;       // -8(%ebp)
+        cstring name = "";  // -12(%ebp)
+        desc = this.desc;
         __pasm__(<"
-            movl 12(%ebp), %eax                     // @this (Type Class)
-            movl _my_core_Class_hvo_my_core_Class(%eax), %ebx // inst vars offset (Class)
-            addl 4(%eax), %ebx                      // @this.vars(Class)
-            movl _my_core_Class_i_desc(%ebx), %eax       // @class desc
-            addl _my_core_Class_coi_ch_name(%eax), %eax  // load reference to cstring
-            movl %eax, 16(%ebp)                     // return cstring-ref
+            movl -8(%ebp), %eax     // var <desc>
+            addl _my_core_Class_coi_ch_name(%eax), %eax
+            movl %eax, -12(%ebp)    // var <name>
         ">);
+        return name;
     }
     
 }
