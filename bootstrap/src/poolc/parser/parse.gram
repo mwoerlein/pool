@@ -41,6 +41,7 @@
 %token EXTENDS
 %token GLOBAL
 %token NAMESPACE
+%token T_NULL
 %token RETURN
 %token THIS
 %token USE
@@ -430,6 +431,15 @@ expression:
 |   THIS
     {
         $$ = &driver.env().create<ThisExprNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   T_NULL
+    {
+        $$ = &driver.env().create<NullExprNode>();
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;

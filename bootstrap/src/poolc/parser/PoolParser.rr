@@ -172,6 +172,7 @@ int PoolParser::lex()
         "extends"       { setLocation(); return parser->makeExtends(); }
         "global"        { setLocation(); return parser->makeGlobal(); }
         "namespace"     { setLocation(); return parser->makeNamespace(); }
+        "null"          { setLocation(); return parser->makeNull(); }
         "return"        { setLocation(); return parser->makeReturn(); }
         "this"          { setLocation(); return parser->makeThis(); }
         "use"           { setLocation(); return parser->makeUse(); }

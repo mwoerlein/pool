@@ -192,6 +192,11 @@ bool ClassResolver::visit(MethodCallExprNode & methodCall) {
     return true;
 }
 
+bool ClassResolver::visit(NullExprNode & constNull) {
+    constNull.resolvedType = &allType;
+    return true;
+}
+
 bool ClassResolver::visit(ThisExprNode & constThis) { return true; }
 
 bool ClassResolver::visit(VariableExprNode & variable) {

@@ -25,5 +25,6 @@ bool Visitor::visit(AssignmentExprNode & assignment) { return false; }
 bool Visitor::visit(ConstCStringExprNode & constCString) { return false; }
 bool Visitor::visit(ConstIntExprNode & constInt) { return false; }
 bool Visitor::visit(MethodCallExprNode & methodCall) { return false; }
+bool Visitor::visit(NullExprNode & constNull) { return false; }
 bool Visitor::visit(ThisExprNode & constThis) { return false; }
 bool Visitor::visit(VariableExprNode & variable) { return false; }

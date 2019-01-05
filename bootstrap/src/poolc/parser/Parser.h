@@ -36,6 +36,7 @@ class Parser: public ParserBase
         int makeExtends();
         int makeGlobal();
         int makeNamespace();
+        int makeNull();
         int makeReturn();
         int makeThis();
         int makeUse();

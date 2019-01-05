@@ -37,6 +37,7 @@ class PrettyPrinter: public Writer {
     virtual bool visit(ConstCStringExprNode & constCString);
     virtual bool visit(ConstIntExprNode & constInt);
     virtual bool visit(MethodCallExprNode & methodCall);
+    virtual bool visit(NullExprNode & constNull) override;
     virtual bool visit(ThisExprNode & constThis);
     virtual bool visit(VariableExprNode & variable);
 };

@@ -9,6 +9,7 @@
 #include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
 #include "poolc/ast/nodes/expression/MethodCallExprNode.hpp"
+#include "poolc/ast/nodes/expression/NullExprNode.hpp"
 #include "poolc/ast/nodes/expression/ThisExprNode.hpp"
 #include "poolc/ast/nodes/expression/VariableExprNode.hpp"
 

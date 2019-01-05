@@ -11,6 +11,7 @@ class ExpressionNode: virtual public Node {
     virtual ConstCStringExprNode * isConstCString();
     virtual ConstIntExprNode * isConstInt();
     virtual MethodCallExprNode * isMethodCall();
+    virtual NullExprNode * isNull();
     virtual ThisExprNode * isThis();
     virtual VariableExprNode * isVariable();
     virtual ClassRefNode * isClass();

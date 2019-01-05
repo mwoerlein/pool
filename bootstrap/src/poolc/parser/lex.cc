@@ -15,6 +15,7 @@ int Parser::makeClass()     { return CLASS; }
 int Parser::makeExtends()   { return EXTENDS; }
 int Parser::makeGlobal()    { return GLOBAL; }
 int Parser::makeNamespace() { return NAMESPACE; }
+int Parser::makeNull()      { return T_NULL; }
 int Parser::makeReturn()    { return RETURN; }
 int Parser::makeThis()      { return THIS; }
 int Parser::makeUse()       { return USE; }

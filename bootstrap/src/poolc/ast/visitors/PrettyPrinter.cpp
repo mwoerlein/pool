@@ -221,13 +221,20 @@ bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
     }
     elem() << ")";
 }
+bool PrettyPrinter::visit(NullExprNode & constNull) {
+    elem() << "null";
+}
 bool PrettyPrinter::visit(ThisExprNode & constThis) {
     elem() << "this";
 }
 bool PrettyPrinter::visit(VariableExprNode & variable) {
     if (variable.context) {
         variable.context->accept(*this);
-        elem() << ".";
+        if (variable.context->resolvedType && variable.context->resolvedType->isClass()) {
+            elem() << ":";
+        } else {
+            elem() << ".";
+        }
     }
     elem() << variable.name;
 }

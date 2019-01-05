@@ -163,6 +163,11 @@ bool MethodResolver::visit(MethodCallExprNode & methodCall) {
     return true;
 }
 
+bool MethodResolver::visit(NullExprNode & constNull) {
+    constNull.scope = curScope;
+    return true;
+}
+
 bool MethodResolver::visit(ThisExprNode & constThis) {
     constThis.scope = curScope;
     return true;

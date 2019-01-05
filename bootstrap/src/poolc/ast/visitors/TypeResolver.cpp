@@ -154,6 +154,10 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
     return true;
 }
 
+bool TypeResolver::visit(NullExprNode & constNull) {
+    return true;
+}
+
 bool TypeResolver::visit(ThisExprNode & constThis) {
     constThis.resolvedType = constThis.scope->getInstance();
     return true;

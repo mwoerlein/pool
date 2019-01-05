@@ -81,6 +81,11 @@ bool PIRGenerator::visit(ReturnInstNode & returnInst) {
         if (lastLocations.size() == 1) {
             curMethod->addMove(curMethod->asTemp(*lastLocations.first()), *curMethod->getRet(idx++));
             lastLocations.clear();
+        } else if (lastValue) {
+            PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
+            curMethod->addAssign(*lastValue, tmp);
+            curMethod->addMove(tmp, *curMethod->getRet(idx++));
+            lastValue = 0;
         } else {
             crit() << "unexpected value " << ex << " in " << returnInst << "\n";
             return false;
@@ -229,6 +234,11 @@ bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
 
 bool PIRGenerator::visit(ThisExprNode & constThis) {
     lastLocations.add(*curMethod->getThis());
+    return true;
+}
+
+bool PIRGenerator::visit(NullExprNode & constNull) {
+    lastValue = &curMethod->getNull();
     return true;
 }
 

@@ -21,6 +21,7 @@ class AssignmentExprNode;
 class ConstCStringExprNode;
 class ConstIntExprNode;
 class MethodCallExprNode;
+class NullExprNode;
 class ThisExprNode;
 class VariableExprNode;
 
@@ -56,6 +57,7 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     virtual bool visit(ConstCStringExprNode & constCString);
     virtual bool visit(ConstIntExprNode & constInt);
     virtual bool visit(MethodCallExprNode & methodCall);
+    virtual bool visit(NullExprNode & constNull);
     virtual bool visit(ThisExprNode & constThis);
     virtual bool visit(VariableExprNode & variable);
 };

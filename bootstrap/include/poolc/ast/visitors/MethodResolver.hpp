@@ -33,6 +33,7 @@ class MethodResolver: public Visitor {
     virtual bool visit(ConstCStringExprNode & constCString) override;
     virtual bool visit(ConstIntExprNode & constInt) override;
     virtual bool visit(MethodCallExprNode & methodCall) override;
+    virtual bool visit(NullExprNode & constNull) override;
     virtual bool visit(ThisExprNode & constThis) override;
     virtual bool visit(VariableExprNode & variable) override;
     
