@@ -52,17 +52,17 @@ VariableDeclNode * Scope::getVariableDeclNode() { return parent ? parent->getVar
 ClassScope * Scope::registerClass(ClassDeclNode & classDecl, String & alias) {
     ClassScope &scope = env().create<ClassScope, Scope &, ClassDeclNode &>(*this, classDecl);
     ClassScope *old = &_classes.set(alias, scope);
-    if (old) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 ClassScope * Scope::registerClass(ClassScope & scope) {
     ClassScope *old = &_classes.set(scope.getClassDeclNode()->name, scope);
-    if (old) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 ClassScope * Scope::registerClass(ClassScope & scope, String & alias) {
     ClassScope *old = &_classes.set(alias, scope);
-    if (old) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 ClassScope * Scope::getClass(String & name) {
@@ -79,13 +79,13 @@ MethodScope * Scope::registerMethod(MethodDeclNode & methodDecl) {
     MethodScope &scope = env().create<MethodScope, Scope &, MethodDeclNode &>(*this, methodDecl);
     // TODO #7: generate method id from name and parameter types
     MethodScope *old = &_methods.set(methodDecl.name, scope);
-    if (old) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 MethodScope * Scope::registerMethod(MethodScope & scope) {
     // TODO #7: generate method id from name and parameter types
     MethodScope *old = &_methods.set(scope.getMethodDeclNode()->name, scope);
-    if (old) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 MethodScope * Scope::getMethod(String & name/*, MutableCollection<TypeRefNode> & parameters*/) {
@@ -124,12 +124,12 @@ MethodScope * Scope::getMethod(MethodCallExprNode & methodCall) {
 VariableScope * Scope::registerVariable(VariableDeclNode & variableDecl) {
     VariableScope &scope = env().create<VariableScope, Scope &, VariableDeclNode &>(*this, variableDecl);
     VariableScope *old = &_variables.set(variableDecl.name, scope);
-    if (old) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 VariableScope * Scope::registerVariable(VariableScope & scope) {
     VariableScope *old = &_variables.set(scope.getVariableDeclNode()->name, scope);
-    if (old && old->parent == this) { old->destroy(); }
+    if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
 VariableScope * Scope::getVariable(String & name) {
