@@ -7,182 +7,47 @@ namespace my;
 
 use my::core::Thread as myThread;
 use my::core::Runtime;
+use my::core::Object;
 
 class B extends myThread, my::A {
     
-    // constants
-    // TODO: inline into method doIt, if possible
-    cstring doit := "OMG! Compiling still work's! ";
-    cstring mA := "my::A";
-    
     // methods
-    // TODO #13: convert PASM to Pool
     <> run() {
-/*/
         Runtime rt := this.rt();    // fixed variable
-        this.init(2, 20);
-        my::core::Object o := rt.createInstance("my::A");
-        A a ::= o;
-//        A a := rt.createInstance("my::A");
+        this.init(7, 20);
+        A a ::= rt.createInstance("my::A");
         a.init(5, 2);
-        doIt(a);
-        rt.destroyInstance(o);
+        this.doIt(a);
+        // TODO #13: use implicit cast
+        Object _oa ::= a;
+        Object oa := rt.cast("my::core::Object", _oa);
+        rt.destroyInstance(oa);
+//        rt.destroyInstance(a);
         return;
-/*/
-        __pasm__(<"
-        _my_core_Runtime_m_destroyInstance := 104
-        _my_core_Runtime_m_cast := 112
-        _my_core_Runtime_m_createInstance := 128
-            pushl %ecx
-            pushl %edx
-            pushl %edi
-            
-            movl 12(%ebp), %ecx // @this (Type B)
-            
-            subl 4, %esp        // return value of rt
-            pushl %ecx; pushl _my_B_m_rt; call (%ecx)
-        	addl 8, %esp
-            popl %edi           // Runtime(Type Runtime)
-            
-            pushl 20
-            pushl 2
-            pushl %ecx; pushl _my_B_m_init; call (%ecx)
-        	addl 16, %esp
-        	
-            movl 8(%ebp), %eax          // @class-desc "B"
-            addl _my_B_coso_mA, %eax   // "my::A"
-            subl 4, %esp    // return value of createInstance
-            pushl %eax
-            pushl %edi; pushl _my_core_Runtime_m_createInstance; call (%edi)
-        	addl 12, %esp
-            popl %edx; // inst_A (type A)
-            
-            pushl 2
-            pushl 5
-            pushl %edx; pushl _my_A_m_init; call (%edx)
-        	addl 16, %esp
-            
-            pushl %edx    
-            pushl %ecx; pushl _my_B_m_doIt; call (%ecx)
-        	addl 12, %esp
-            
-            pushl %edx
-            pushl %edi; pushl _my_core_Runtime_m_destroyInstance; call (%edi)
-        	addl 12, %esp
-            
-            popl %edi
-            popl %edx
-            popl %ecx
-        ">);
-//*/
     }
     
-    // TODO #13: convert PASM to Pool
     <> doIt(A a) {
-/*/
         int out := Runtime:out;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
-        Object ob ::= this;
-        Object oa ::= a;
-        rt.printChar('@', Runtime::err);
-        rt.printString(doit, out);
+        // TODO #13: use implicit cast
+        Object _oa ::= a;
+        Object oa := rt.cast("my::core::Object", _oa);
+        // TODO #13: use implicit cast
+        Object _ob ::= this;
+        Object ob := rt.cast("my::core::Object", _ob);
+        rt.printChar('@', Runtime:err);
+        rt.printString("OMG!! ", out);
         rt.printInt(this.equals(ob), out);
+//        rt.printInt(this.equals(this), out);
         rt.printChar(' ', out);
         rt.printInt(this.equals(oa), out);
+//        rt.printInt(this.equals(a), out);
         this.testAllocate(0x1234);
-        rt.printChar('@', Runtime::err);
+        rt.printChar('@', Runtime:err);
         rt.printChar('\n', out);
         this.test(this.getRow());
         a.test(a.getRow());
         return;
-/*/
-        __pasm__(<"
-        _my_core_Runtime_coi_out := 0
-        _my_core_Runtime_coi_err := 1
-        _my_core_Runtime_m_printChar := 72
-        _my_core_Runtime_m_printString := 80
-        _my_core_Runtime_m_printInt := 88
-        _my_core_Runtime_m_printHex := 96
-            pushl %ecx
-            pushl %edx
-            
-            movl 12(%ebp), %ecx // @this (Type B)
-            
-            subl 4, %esp        // return value of rt
-            pushl %ecx; pushl _my_B_m_rt; call (%ecx)
-        	addl 8, %esp
-            popl %edx           // Runtime(Type Runtime)
-            
-            pushl _my_core_Runtime_coi_err; pushl 0x40 // '@'
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            movl 8(%ebp), %eax         // @class-desc "B"
-            addl _my_B_coso_doit, %eax // "DoIt "
-            pushl _my_core_Runtime_coi_out; pushl %eax
-            pushl %edx; pushl _my_core_Runtime_m_printString; call (%edx)
-            addl 16, %esp
-            
-            subl 4, %esp    // return value of equals
-            pushl 12(%ebp)  // @this (Type B)
-            pushl %ecx; pushl _my_B_m_equals; call (%ecx)
-            addl 12, %esp
-            popl %eax
-            
-            pushl _my_core_Runtime_coi_out; pushl %eax
-            pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_core_Runtime_coi_out; pushl 0x20 // ' '
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            subl 4, %esp    // return value of equals
-            pushl 16(%ebp)  // param @a (Type A)
-            pushl %ecx; pushl _my_B_m_equals; call (%ecx)
-            addl 12, %esp
-            popl %eax
-            
-            pushl _my_core_Runtime_coi_out; pushl %eax
-            pushl %edx; pushl _my_core_Runtime_m_printInt; call (%edx)
-            addl 16, %esp
-            
-            pushl 0x1234    // size
-            pushl %ecx; pushl _my_B_m_testAllocate; call (%ecx)
-        	addl 12, %esp
-            
-            pushl _my_core_Runtime_coi_err; pushl 0x40 // '@'
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            pushl _my_core_Runtime_coi_out; pushl 0xa // '/n'
-            pushl %edx; pushl _my_core_Runtime_m_printChar; call (%edx)
-            addl 16, %esp
-            
-            subl 4, %esp    // return value of getRow
-            pushl %ecx; pushl _my_B_m_getRow; call (%ecx)
-        	addl 8, %esp
-            popl %eax
-            
-            pushl %eax      // row
-            pushl %ecx; pushl _my_B_m_test; call (%ecx)
-        	addl 12, %esp
-            
-            movl 16(%ebp), %ecx // param @a (Type A)
-        	
-            subl 4, %esp    // return value of getRow
-            pushl %ecx; pushl _my_A_m_getRow; call (%ecx)
-        	addl 8, %esp
-            popl %eax
-            
-            pushl %eax      // row
-            pushl %ecx; pushl _my_A_m_test; call (%ecx)
-        	addl 12, %esp
-        	
-            popl %edx
-            popl %ecx
-        ">);
-//*/
     }
     
     <> testAllocate(int size) {
