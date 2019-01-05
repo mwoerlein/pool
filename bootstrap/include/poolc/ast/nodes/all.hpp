@@ -19,6 +19,8 @@
 #include "poolc/ast/nodes/instruction/ReturnInstNode.hpp"
 #include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
 
+#include "poolc/ast/nodes/reference/AllRefNode.hpp"
+#include "poolc/ast/nodes/reference/AnyRefNode.hpp"
 #include "poolc/ast/nodes/reference/ClassRefNode.hpp"
 #include "poolc/ast/nodes/reference/CStringRefNode.hpp"
 #include "poolc/ast/nodes/reference/IntRefNode.hpp"

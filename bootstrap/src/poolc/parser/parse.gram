@@ -46,6 +46,8 @@
 %token THIS
 %token USE
 
+%token ALL
+%token ANY
 %token CSTRING
 %token INT
 
@@ -245,9 +247,18 @@ type:
     {
         $$ = $1;
     }
-|   INT
+|   ALL
     {
-        $$ = &driver.env().create<IntRefNode>();
+        $$ = &driver.env().create<AllRefNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   ANY
+    {
+        $$ = &driver.env().create<AnyRefNode>();
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
@@ -257,6 +268,15 @@ type:
 |   CSTRING
     {
         $$ = &driver.env().create<CStringRefNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   INT
+    {
+        $$ = &driver.env().create<IntRefNode>();
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;

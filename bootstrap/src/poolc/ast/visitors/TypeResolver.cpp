@@ -79,14 +79,6 @@ bool TypeResolver::visit(ClassRefNode & classRef) {
     return true;
 }
 
-bool TypeResolver::visit(CStringRefNode & type) {
-    return true;
-}
-
-bool TypeResolver::visit(IntRefNode & type) {
-    return true;
-}
-
 bool TypeResolver::visit(BlockInstNode & block) {
     block.instructions.acceptAll(*this);
     return true;
@@ -94,10 +86,6 @@ bool TypeResolver::visit(BlockInstNode & block) {
 
 bool TypeResolver::visit(ExpressionInstNode & expressionInst) {
     expressionInst.expression.accept(*this);
-    return true;
-}
-
-bool TypeResolver::visit(InlinePasmInstNode & pasmInstruction) {
     return true;
 }
 

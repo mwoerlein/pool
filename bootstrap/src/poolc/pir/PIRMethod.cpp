@@ -137,7 +137,6 @@ void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {
 
 void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
     MethodDeclNode &decl = *method.getMethodDeclNode();
-    // TODO: handle type conversion?
     if (method.getInstance() != &context.type) {
         error() << "invalid context " << context << " of method " << decl << "\n";
         return;
@@ -153,7 +152,7 @@ void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PI
             VariableDeclNode &vDecl = declIt.next();
             PIRLocation &loc = locIt.next();
             // TODO: handle type conversion?
-            if (vDecl.resolvedType != &loc.type) {
+            if (!isAssignable(loc.type, *vDecl.resolvedType)) {
                 error() << "incompatible parameter " << loc << " for method " << decl << "\n";
                 error() << *vDecl.resolvedType << " <-> " << loc.type << "\n";
                 return;
@@ -173,7 +172,7 @@ void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PI
             Type &type = typeIt.next();
             PIRLocation &loc = locIt.next();
             // TODO: handle type conversion?
-            if (&type != &loc.type) {
+            if (!isAssignable(type, loc.type)) {
                 error() << "incompatible return " << loc << " for method " << decl << "\n";
                 return;
             }
@@ -196,7 +195,7 @@ void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &de
         return;
     }
     // TODO: handle type conversion?
-    if (decl.resolvedType != &dest.type) {
+    if (!isAssignable(*decl.resolvedType, dest.type)) {
         error() << "incompatible destination " << dest << " for variable " << decl << "\n";
         return;
     }
@@ -206,7 +205,7 @@ void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &de
 void PIRMethod::addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret) {
     if (!reinterpret) {
         // TODO: handle type conversion?
-        if (&src.type != &dest.type) {
+        if (!isAssignable(src.type, dest.type)) {
             error() << "incompatible types for move: " << src << " <-> " << dest << "\n";
             return;
         }
@@ -230,7 +229,7 @@ void PIRMethod::addSet(PIRLocation &context, VariableScope &var, PIRLocation &sr
         return;
     }
     // TODO: handle type conversion?
-    if (decl.resolvedType != &src.type) {
+    if (!isAssignable(src.type, *decl.resolvedType)) {
         error() << "incompatible source " << src << " for variable " << decl << " " << decl.resolvedType << "\n";
         return;
     }
@@ -260,4 +259,20 @@ PIRLocation *PIRMethod::newLocation(location_kind kind, Type &type) {
     PIRLocation &ret = env().create<PIRLocation, Type &, location_kind, int>(type, kind, idx);
     list->add(ret);
     return &ret;
+}
+
+bool PIRMethod::isAssignable(Type &src, Type &dest) {
+    if (&src == &dest) { return true; }
+    
+    AllType *srcAll = src.isAll();
+    AnyType *srcAny = src.isAny();
+    InstanceScope *srcInstance = src.isInstance();
+    if (!srcAll && !srcInstance && !srcAny) { return false; }
+    
+    AllType *destAll = dest.isAll();
+    AnyType *destAny = dest.isAny();
+    InstanceScope *destInstance = dest.isInstance();
+    if (!destAll && !destInstance && !destAny) { return false; }
+    
+    return srcAll || (srcInstance && !destAll) || (srcAny && destAny); 
 }

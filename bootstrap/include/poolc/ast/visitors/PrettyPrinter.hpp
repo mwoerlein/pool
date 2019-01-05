@@ -22,6 +22,8 @@ class PrettyPrinter: public Writer {
     virtual bool visit(NamespaceDeclNode & namespaceDef);
     virtual bool visit(VariableDeclNode & variableDef);
     
+    virtual bool visit(AllRefNode & type) override;
+    virtual bool visit(AnyRefNode & type) override;
     virtual bool visit(ClassRefNode & classRef);
     virtual bool visit(CStringRefNode & type);
     virtual bool visit(IntRefNode & type);

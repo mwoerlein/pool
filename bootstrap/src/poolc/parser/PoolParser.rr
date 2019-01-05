@@ -177,6 +177,8 @@ int PoolParser::lex()
         "this"          { setLocation(); return parser->makeThis(); }
         "use"           { setLocation(); return parser->makeUse(); }
         
+        "__all__"       { setLocation(); return parser->makeAll(); }
+        "__any__"       { setLocation(); return parser->makeAny(); }
         "cstring"       { setLocation(); return parser->makeCString(); }
         "int"           { setLocation(); return parser->makeInt(); }
         

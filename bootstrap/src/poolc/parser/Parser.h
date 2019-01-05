@@ -41,6 +41,8 @@ class Parser: public ParserBase
         int makeThis();
         int makeUse();
         
+        int makeAll();
+        int makeAny();
         int makeCString();
         int makeInt();
         

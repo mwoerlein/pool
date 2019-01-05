@@ -15,12 +15,9 @@ class TypeResolver: public Visitor {
     virtual bool visit(VariableDeclNode & variableDecl) override;
     
     virtual bool visit(ClassRefNode & classRef) override;
-    virtual bool visit(CStringRefNode & type) override;
-    virtual bool visit(IntRefNode & type) override;
     
     virtual bool visit(BlockInstNode & block) override;
     virtual bool visit(ExpressionInstNode & exprInst) override;
-    virtual bool visit(InlinePasmInstNode & pasmInst) override;
     virtual bool visit(ReturnInstNode & returnInst) override;
     virtual bool visit(VariableInitInstNode & variableInit) override;
     

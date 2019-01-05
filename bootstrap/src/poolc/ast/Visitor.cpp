@@ -10,6 +10,8 @@ bool Visitor::visit(MethodDeclNode & methodDef) { return false; }
 bool Visitor::visit(NamespaceDeclNode & namespaceDef) { return false; }
 bool Visitor::visit(VariableDeclNode & variableDef) { return false; }
 
+bool Visitor::visit(AllRefNode & type) { return false; }
+bool Visitor::visit(AnyRefNode & type) { return false; }
 bool Visitor::visit(ClassRefNode & classRef) { return false; }
 bool Visitor::visit(CStringRefNode & type) { return false; }
 bool Visitor::visit(IntRefNode & type) { return false; }

@@ -239,6 +239,8 @@ bool PrettyPrinter::visit(VariableExprNode & variable) {
     elem() << variable.name;
 }
 
+bool PrettyPrinter::visit(AllRefNode & type) { elem() << "__all__"; }
+bool PrettyPrinter::visit(AnyRefNode & type) { elem() << "__any__"; }
 bool PrettyPrinter::visit(ClassRefNode & classRef) { elem() << classRef.name; }
 bool PrettyPrinter::visit(CStringRefNode & type) { elem() << "cstring"; }
 bool PrettyPrinter::visit(IntRefNode & type) { elem() << "int"; }

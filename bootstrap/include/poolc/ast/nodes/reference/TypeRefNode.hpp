@@ -9,9 +9,11 @@ class TypeRefNode: virtual public Node {
     public:
     virtual ~TypeRefNode();
     
+    virtual AllRefNode * isAll();
+    virtual AnyRefNode * isAny();
     virtual ClassRefNode * isClass();
-    virtual IntRefNode * isInt();
     virtual CStringRefNode * isCString();
+    virtual IntRefNode * isInt();
 };
 
 #endif //POOLC_AST_NODES_REFERENCE_TYPEREFNODE_HPP_LOCK

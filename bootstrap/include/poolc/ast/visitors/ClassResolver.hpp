@@ -30,6 +30,8 @@ class ClassResolver: public Visitor {
     virtual bool visit(NamespaceDeclNode & namespaceDecl) override;
     virtual bool visit(VariableDeclNode & variableDecl) override;
     
+    virtual bool visit(AllRefNode & type) override;
+    virtual bool visit(AnyRefNode & type) override;
     virtual bool visit(ClassRefNode & classRef) override;
     virtual bool visit(CStringRefNode & type) override;
     virtual bool visit(IntRefNode & type) override;

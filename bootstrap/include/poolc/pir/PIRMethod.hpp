@@ -49,6 +49,7 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     LinkedList<PIRStatement> &_statements;
     
     PIRLocation *newLocation(location_kind kind, Type &type);
+    bool isAssignable(Type &src, Type &dest);
     
     public:
     PIRMethod(Environment &env, MemoryInfo &mi);

@@ -11,6 +11,8 @@ class MethodDeclNode;
 class NamespaceDeclNode;
 class VariableDeclNode;
 
+class AllRefNode;
+class AnyRefNode;
 class ClassRefNode;
 class CStringRefNode;
 class IntRefNode;
@@ -42,6 +44,8 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     virtual bool visit(NamespaceDeclNode & namespaceDef);
     virtual bool visit(VariableDeclNode & variableDef);
     
+    virtual bool visit(AllRefNode & type);
+    virtual bool visit(AnyRefNode & type);
     virtual bool visit(ClassRefNode & classRef);
     virtual bool visit(CStringRefNode & type);
     virtual bool visit(IntRefNode & type);

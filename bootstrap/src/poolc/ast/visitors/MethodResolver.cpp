@@ -79,6 +79,16 @@ bool MethodResolver::visit(VariableDeclNode & variableDecl) {
     return true;
 }
 
+bool MethodResolver::visit(AllRefNode & type) {
+    type.scope = curScope;
+    return true;
+}
+
+bool MethodResolver::visit(AnyRefNode & type) {
+    type.scope = curScope;
+    return true;
+}
+
 bool MethodResolver::visit(ClassRefNode & classRef) {
     classRef.scope = curScope;
     classRef.resolvedType->isClass()->getClassDeclNode()->accept(*this);

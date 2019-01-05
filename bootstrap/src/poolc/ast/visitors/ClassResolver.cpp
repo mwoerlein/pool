@@ -99,6 +99,16 @@ bool ClassResolver::visit(VariableDeclNode & variableDecl) {
     return true;
 }
 
+bool ClassResolver::visit(AllRefNode & type) {
+    type.resolvedType = &allType;
+    return true;
+}
+
+bool ClassResolver::visit(AnyRefNode & type) {
+    type.resolvedType = &anyType;
+    return true;
+}
+
 bool ClassResolver::visit(ClassRefNode & classRef) {
     if (!classRef.resolvedType) {
         if (classRef.name.isFullQualified()) {
