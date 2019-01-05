@@ -5,6 +5,7 @@
 
 int Parser::makeColon()      { return COLON; }
 int Parser::makeColonEqual() { return COLON_EQUAL; }
+int Parser::makeColonColonEqual() { return COLON_COLON_EQUAL; }
 int Parser::makeDot()        { return DOT; }
 int Parser::makeEqual()      { return EQUAL; }
 

@@ -203,11 +203,13 @@ void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &de
     _statements.add(env().create<PIRGet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, dest));
 }
 
-void PIRMethod::addMove(PIRLocation &src, PIRLocation &dest) {
-    // TODO: handle type conversion?
-    if (&src.type != &dest.type) {
-        error() << "incompatible types for move: " << src << " <-> " << dest << "\n";
-        return;
+void PIRMethod::addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret) {
+    if (!reinterpret) {
+        // TODO: handle type conversion?
+        if (&src.type != &dest.type) {
+            error() << "incompatible types for move: " << src << " <-> " << dest << "\n";
+            return;
+        }
     }
     _statements.add(env().create<PIRMove, PIRLocation&, PIRLocation&>(src, dest));
 }

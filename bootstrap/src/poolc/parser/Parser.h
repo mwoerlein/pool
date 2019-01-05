@@ -26,6 +26,7 @@ class Parser: public ParserBase
         
         int makeColon();
         int makeColonEqual();
+        int makeColonColonEqual();
         int makeDot();
         int makeEqual();
         

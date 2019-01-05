@@ -162,6 +162,7 @@ int PoolParser::lex()
         
         ":"             { setLocation(); return parser->makeColon(); }
         ":="            { setLocation(); return parser->makeColonEqual(); }
+        "::="           { setLocation(); return parser->makeColonColonEqual(); }
         "."             { setLocation(); return parser->makeDot(); }
         "="             { setLocation(); return parser->makeEqual(); }
         

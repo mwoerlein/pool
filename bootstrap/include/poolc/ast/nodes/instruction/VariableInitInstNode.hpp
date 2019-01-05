@@ -14,6 +14,7 @@ class VariableInitInstNode: public InstructionNode {
     ExpressionNode & initializer;
     bool final;
     bool global;
+    bool reinterpret;
     
     VariableInitInstNode(Environment &env, MemoryInfo &mi, VariableDeclNode & var, ExpressionNode & initializer);
     VariableInitInstNode(Environment &env, MemoryInfo &mi, MutableCollection<VariableDeclNode> & vars, MethodCallExprNode & initializer);

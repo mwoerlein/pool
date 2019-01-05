@@ -98,7 +98,7 @@ bool PIRGenerator::visit(VariableInitInstNode & variableInit) {
     if (variableInit.variables.size() == 1) {
         PIRLocation *dest = variableInit.variables.first()->scope->isVariable()->pir;
         if (lastLocations.size() == 1) {
-            curMethod->addMove(curMethod->asTemp(*lastLocations.first()), *dest);
+            curMethod->addMove(curMethod->asTemp(*lastLocations.first()), *dest, variableInit.reinterpret);
             lastLocations.clear();
         } else if (lastValue) {
             curMethod->addAssign(*lastValue, *dest);

@@ -4,7 +4,7 @@
 VariableInitInstNode::VariableInitInstNode(Environment &env, MemoryInfo &mi, VariableDeclNode & var, ExpressionNode & initializer)
         :Object(env, mi),
          variables(env.create<NodeList<VariableDeclNode>>()),
-         initializer(initializer), final(false), global(false) {
+         initializer(initializer), final(false), global(false), reinterpret(false) {
     variables.add(var);
 }
 VariableInitInstNode::VariableInitInstNode(Environment &env, MemoryInfo &mi, MutableCollection<VariableDeclNode> & vars, MethodCallExprNode & initializer)

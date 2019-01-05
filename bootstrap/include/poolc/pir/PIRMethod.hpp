@@ -89,7 +89,7 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     void addAssign(PIRValue &value, PIRLocation &dest);
     void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
     void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);
-    void addMove(PIRLocation &src, PIRLocation &dest);
+    void addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret = false);
     void addReturn();
     void addSet(PIRLocation &context, VariableScope &var, PIRLocation &src);
 };
