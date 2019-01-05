@@ -33,6 +33,18 @@ class A extends Object {
         return <row, column>;
     }
     
+/*
+    A nullTest;
+    <A> testNull(A a) {
+        Runtime rt = null;
+        Object o := null;
+        A a ::= null;
+        rt = null;
+        nullTest = null;
+        a.testNull(null);
+        return null;
+    }
+*/    
     <> test(int row) {
         int out := Runtime:out;             // fixed variable
         int err := my::core::Runtime:err;   // fixed variable

@@ -16,7 +16,6 @@ class Runtime extends Object {
     int out := 0;
     int err := 1;
     
-    // TODO: remove after implicit string handling
     cstring newline := "\n";
     
     // TODO: remove with syscall
@@ -60,93 +59,83 @@ class Runtime extends Object {
     
     // methods
     global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
-        // TODO #13: use null if supported
-        int nil := 0;           //  -4(%ebp)
-        Object oNil ::= nil;    //  -8(%ebp)
-        Class cNil ::= nil;     // -12(%ebp)
-        Runtime rNil ::= nil;   // -16(%ebp)
         // TODO: replace int with working ClassHeader "struct"
-        int cdClass = 0;        // -20(%ebp)
-        int cdRuntime = 0;      // -24(%ebp)
-        Class cClass = cNil;    // -28(%ebp)
-        Class cRuntime = cNil;  // -32(%ebp)
-        Object ocClass = oNil;  // -36(%ebp)
-        Object ocRuntime = oNil;// -40(%ebp)
-        Runtime rt = rNil;      // -44(%ebp)
-        Object ort = oNil;      // -48(%ebp)
-        int icClass = 0;        // -52(%ebp)
-        int irt = 0;            // -56(%ebp)
-        cstring sClass = Class:CLASSNAME;     // -60(%ebp)
-        cstring sRuntime = Runtime:CLASSNAME; // -64(%ebp)
+        int cdClass = 0;        //  -4(%ebp)
+        int cdRuntime = 0;      //  -8(%ebp)
+        Class cClass = null;    // -12(%ebp)
+        Class cRuntime = null;  // -16(%ebp)
+        Runtime rt = null;      // -20(%ebp)
+        int icClass = 0;        // -24(%ebp)
+        int irt = 0;            // -28(%ebp)
+        cstring sClass = Class:CLASSNAME;     // -32(%ebp)
+        cstring sRuntime = Runtime:CLASSNAME; // -36(%ebp)
         
         // create class "Class"
         // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0         // desc
-            pushl -60(%ebp) // var <sClass>
+            pushl -32(%ebp) // var <sClass>
             pushl _my_core_Runtime_coi_SysCall_find_class
             pushl %esp; pushl 16(%ebp); call 20(%ebp)
             addl 16, %esp
-            popl -20(%ebp)  // store @class desc in var <cdClass>
+            popl -4(%ebp)   // store @class desc in var <cdClass>
         ">);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -20(%ebp); je _bs_return_null // return NULL if class not found");
+__pasm__("cmpl 0, -4(%ebp); je _bs_return_null // return NULL if class not found");
         // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0                 // space for meminfo
-            movl -20(%ebp), %edx    // var <cdClass>
+            movl -4(%ebp), %edx     // var <cdClass>
             pushl _my_core_Runtime_coi_ch_tpl_size(%edx) // instance size
             pushl _my_core_Runtime_coi_SysCall_allocate
             pushl %esp; pushl 16(%ebp); call 20(%ebp)
             addl 16, %esp
-            popl -52(%ebp)  // store meminfo in var <icClass>
+            popl -24(%ebp)  // store meminfo in var <icClass>
         ">);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -52(%ebp); je _bs_return_null // return NULL on allocate error");
+__pasm__("cmpl 0, -24(%ebp); je _bs_return_null // return NULL on allocate error");
         // TODO #14: simplify call to naked _crh_instantiate
         __pasm__(<"
-            movl -52(%ebp), %eax    // var <icClass>
+            movl -24(%ebp), %eax    // var <icClass>
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
             addl _cr_mo_call_entry, %ebx
-            movl -20(%ebp), %edx    // var <cdClass>
+            movl -4(%ebp), %edx     // var <cdClass>
             call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        	movl %edi, -36(%ebp)    // store @Class (Type Object) in var <ocClass>
-        	movl %esi, -28(%ebp)    // store @Class (Type Class) in var <cClass>
+        	movl %esi, -12(%ebp)    // store @Class (Type Class) in var <cClass>
         ">);
 
         // create Runtime
         // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0         // desc
-            pushl -64(%ebp) // var <sRuntime>
+            pushl -36(%ebp) // var <sRuntime>
             pushl _my_core_Runtime_coi_SysCall_find_class
             pushl %esp; pushl 16(%ebp); call 20(%ebp)
             addl 16, %esp
-            popl -24(%ebp)  // store @class desc in var <cdRuntime>
+            popl -8(%ebp)   // store @class desc in var <cdRuntime>
         ">);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -24(%ebp); je _bs_return_null // return NULL if class not found");
+__pasm__("cmpl 0, -8(%ebp); je _bs_return_null // return NULL if class not found");
         // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0                 // space for meminfo
-            movl -24(%ebp), %edx    // var <cdRuntime>
+            movl -8(%ebp), %edx     // var <cdRuntime>
             pushl _my_core_Runtime_coi_ch_tpl_size(%edx) // instance size
             pushl _my_core_Runtime_coi_SysCall_allocate
             pushl %esp; pushl 16(%ebp); call 20(%ebp)
             addl 16, %esp
-            popl -56(%ebp)  // store meminfo in var <irt>
+            popl -28(%ebp)  // store meminfo in var <irt>
         ">);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -56(%ebp); je _bs_return_null // return NULL on allocate error");
+__pasm__("cmpl 0, -28(%ebp); je _bs_return_null // return NULL on allocate error");
         // TODO #14: simplify call to naked _crh_instantiate
         __pasm__(<"
-            movl -56(%ebp), %eax    // var <irt>
+            movl -28(%ebp), %eax    // var <irt>
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
             addl _cr_mo_call_entry, %ebx
-            movl -24(%ebp), %edx    // var <cdRuntime>
+            movl -8(%ebp), %edx     // var <cdRuntime>
             call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        	movl %edi, -48(%ebp)    // store @Class (Type Object) in var <ort>
-        	movl %esi, -44(%ebp)    // store @Class (Type Runtime) in var <rt>
+        	movl %esi, -20(%ebp)    // store @Class (Type Runtime) in var <rt>
         ">);
         
         // init class "Class"
@@ -158,16 +147,15 @@ __pasm__("cmpl 0, -56(%ebp); je _bs_return_null // return NULL on allocate error
         rt.initSysCall(syscall_runtime, syscall_entry);
         
         // create and init class "Runtime"
-        Class _cRuntime ::= rt.createInstance(sClass);
-        cRuntime = _cRuntime;
+        cRuntime = rt.createInstance(sClass);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -32(%ebp); je _bs_return_null // return NULL if class could not be initialized");
+__pasm__("cmpl 0, -16(%ebp); je _bs_return_null // return NULL if class could not be initialized");
         cRuntime.setDesc(cdRuntime); 
         return rt;
         
         // TODO #4: use pool guard
 __pasm__("_bs_return_null:");
-        return rNil;
+        return null;
     }
     
     <> initSysCall(int syscall_runtime, int syscall_entry) {
@@ -291,7 +279,7 @@ __pasm__("_bs_return_null:");
     }
     
     // TODO: use generic method instead of plain Object?
-    <> destroyInstance(Object any) {
+    <> destroyInstance(__any__ obj) {
         int instInfo = 0;       // -8(%ebp)
         __pasm__(<"
             movl 16(%ebp), %eax // @obj (Type ANY)
@@ -304,18 +292,15 @@ __pasm__("_bs_return_null:");
     }
     
     // TODO: use generic method or special cast syntax instead of plain Object?
-    <Object> cast(cstring name, Object any) {
-        // TODO #13: use null if supported
-        int nil := 0;           // -8(%ebp)
-        Object oNil ::= nil;    // -12(%ebp)
+    <__all__> cast(cstring name, __any__ obj) {
         // TODO: replace int with working class header "struct"
-        int classDesc = 0;      // -16(%ebp)
-        Object ret = oNil;      // -20(%ebp)
+        int classDesc = 0;      // -8(%ebp)
+        __all__ ret = null;     // -12(%ebp)
         classDesc = this.getClassDesc(name);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -16(%ebp); jz _crma_return_null   // return NULL if class not exists");
+__pasm__("cmpl 0, -8(%ebp); jz _crma_return_null   // return NULL if class not exists");
         __pasm__(<"
-            movl -16(%ebp), %ecx // var <classDesc>
+            movl -8(%ebp), %ecx // var <classDesc>
             movl 20(%ebp), %eax // @obj (Type ANY)
             movl 4(%eax), %ebx  // @obj
             movl (%ebx), %eax   // @obj-class desc
@@ -329,29 +314,24 @@ __pasm__("cmpl 0, -16(%ebp); jz _crma_return_null   // return NULL if class not 
             jmp _crma_loop
         _crma_found:
             addl _my_core_Runtime_coi_cts_ho(%eax), %ebx
-            movl %ebx, -20(%ebp) // var <ret>
+            movl %ebx, -12(%ebp) // var <ret>
         ">);
         return ret;
         // TODO #4: use pool guard
 __pasm__("_crma_return_null:");
-        return oNil;
+        return null;
     }
     
     <> createAndRunThread(cstring name) {
-        // TODO #13: use null if supported
-        int nil := 0;           //  -8(%ebp)
-        Object oNil ::= nil;    // -12(%ebp)
-        Thread tNil ::= nil;    // -16(%ebp)
-        Object instance = oNil; // -20(%ebp)
-        Thread tinstance = tNil;// -24(%ebp)
+        Object instance = null; //  -8(%ebp)
+        Thread tinstance = null;// -12(%ebp)
         
         instance = this.createInstance(name);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -20(%ebp); je _mcrmcart_return    // break if not instantiated");
-        Thread _t ::= this.cast(Thread:CLASSNAME, instance);
-        tinstance = _t;
+__pasm__("cmpl 0, -8(%ebp); je _mcrmcart_return     // break if not instantiated");
+        tinstance = this.cast(Thread:CLASSNAME, instance);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -24(%ebp); je _mcrmcart_cleanup   // destroy instance if not a thread");
+__pasm__("cmpl 0, -12(%ebp); je _mcrmcart_cleanup   // destroy instance if not a thread");
         tinstance.run();
         // TODO #4: use pool guard
 __pasm__("_mcrmcart_cleanup:");
@@ -362,42 +342,37 @@ __pasm__("_mcrmcart_return:");
     }
     
     // TODO: use generic method or special new syntax instead of plain Object?
-    <Object> createInstance(cstring name) {
-        // TODO #13: use null if supported
-        int nil := 0;           //  -8(%ebp)
-        Object oNil ::= nil;    // -12(%ebp)
-        Class cNil ::= nil;     // -16(%ebp)
+    <__all__> createInstance(cstring name) {
         // TODO: replace ints with working class header "struct"
-        int classDesc = 0;      // -20(%ebp)
-        int instHandle = 0;     // -24(%ebp)
-        int tplSize = 0;        // -28(%ebp)
+        int classDesc = 0;      //  -8(%ebp)
+        int instHandle = 0;     // -12(%ebp)
+        int tplSize = 0;        // -16(%ebp)
         // TODO: replace int with working MemInfo "struct"
-        int instInfo = 0;       // -32(%ebp)
-        Class cl = cNil;        // -36(%ebp)
-        Object oinstance = oNil;// -40(%ebp)
-        Object instance = oNil; // -44(%ebp)
+        int instInfo = 0;       // -20(%ebp)
+        Class cl = null;        // -24(%ebp)
+        Object oinstance = null;// -28(%ebp)
+        __all__ instance = null;// -32(%ebp)
         
         // getClassDesc
         classDesc = this.getClassDesc(name);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -20(%ebp); je _crmci_return_null   // return NULL if class not found");
+__pasm__("cmpl 0, -8(%ebp); je _crmci_return_null   // return NULL if class not found");
         
         // TODO: replace ints with working class header "struct"
         __pasm__(<"
-            movl -20(%ebp), %eax    // var <classDesc>
+            movl -8(%ebp), %eax    // var <classDesc>
             movl _my_core_Runtime_coi_ch_inst_handle(%eax), %ebx
-            movl %ebx, -24(%ebp)    // var <instHandle>
+            movl %ebx, -12(%ebp)    // var <instHandle>
             movl _my_core_Runtime_coi_ch_tpl_size(%eax), %ebx
-            movl %ebx, -28(%ebp)    // var <tplSize>
+            movl %ebx, -16(%ebp)    // var <tplSize>
         ">);
         // if (!instHandle)
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -24(%ebp); jnz _crmci_instantiate  // class already initialized");
+__pasm__("cmpl 0, -12(%ebp); jnz _crmci_instantiate  // class already initialized");
         
-        Class _cl ::= this.createInstance(Class:CLASSNAME);
-        cl = _cl;
+        cl = this.createInstance(Class:CLASSNAME);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -36(%ebp); je _crmci_return_null  // return NULL if class could not be initialized");
+__pasm__("cmpl 0, -24(%ebp); je _crmci_return_null  // return NULL if class could not be initialized");
         cl.setDesc(classDesc);
         // endif
         
@@ -406,24 +381,24 @@ __pasm__("_crmci_instantiate:");
         // allocate memory for instance
         instInfo = this.allocate(tplSize);
         // TODO #4: use pool guard
-__pasm__("cmpl 0, -32(%ebp); je _crmci_return_null  // return NULL on allocate error");
+__pasm__("cmpl 0, -20(%ebp); je _crmci_return_null  // return NULL on allocate error");
 
         // TODO #14: simplify call to naked _crh_instantiate
         __pasm__(<"
-            movl -32(%ebp), %eax    // var <instInfo>
+            movl -20(%ebp), %eax    // var <instInfo>
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
             addl _cr_mo_call_entry, %ebx
-            movl -20(%ebp), %edx    // var <class_desc>
+            movl -8(%ebp), %edx    // var <class_desc>
             call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <name>)
-        	movl %edi, -40(%ebp)    // store @Class (Type Object) in var <oinstance>
-        	movl %esi, -44(%ebp)    // store @Class (Type <name>) in var <instance>
+        	movl %edi, -28(%ebp)    // store @Class (Type Object) in var <oinstance>
+        	movl %esi, -32(%ebp)    // store @Class (Type <name>) in var <instance>
         ">);
         oinstance.setRt(this);
         return instance;
         
         // TODO #4: use pool guard
 __pasm__("_crmci_return_null:");
-        return oNil;
+        return null;
     }
     
     __naked__ <> _crh_instantiate() {

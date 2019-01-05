@@ -15,33 +15,21 @@ class B extends myThread, my::A {
     <> run() {
         Runtime rt := this.rt();    // fixed variable
         this.init(7, 20);
-        A a ::= rt.createInstance(A:CLASSNAME);
+        A a := rt.createInstance(A:CLASSNAME);
         a.init(5, 2);
         this.doIt(a);
-        // TODO #13: use implicit cast
-        Object _oa ::= a;
-        Object oa := rt.cast(Object:CLASSNAME, _oa);
-        rt.destroyInstance(oa);
-//        rt.destroyInstance(a);
+        rt.destroyInstance(a);
         return;
     }
     
     <> doIt(A a) {
         int out := Runtime:out;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
-        // TODO #13: use implicit cast
-        Object _oa ::= a;
-        Object oa := rt.cast(Object:CLASSNAME, _oa);
-        // TODO #13: use implicit cast
-        Object _ob ::= this;
-        Object ob := rt.cast(Object:CLASSNAME, _ob);
         rt.printChar('@', Runtime:err);
         rt.printString("OMG!! ", out);
-        rt.printInt(this.equals(ob), out);
-//        rt.printInt(this.equals(this), out);
+        rt.printInt(this.equals(this), out);
         rt.printChar(' ', out);
-        rt.printInt(this.equals(oa), out);
-//        rt.printInt(this.equals(a), out);
+        rt.printInt(this.equals(a), out);
         this.testAllocate(0x1234);
         rt.printChar('@', Runtime:err);
         rt.printChar('\n', out);
