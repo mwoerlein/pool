@@ -305,18 +305,17 @@ __pasm__("_bs_return_null:");
     
     // TODO: use generic method or special cast syntax instead of plain Object?
     <Object> cast(cstring name, Object any) {
+        // TODO #13: use null if supported
+        int nil := 0;           // -8(%ebp)
+        Object oNil ::= nil;    // -12(%ebp)
+        // TODO: replace int with working class header "struct"
+        int classDesc = 0;      // -16(%ebp)
+        Object ret = oNil;      // -20(%ebp)
+        classDesc = this.getClassDesc(name);
+        // TODO #4: use pool guard
+__pasm__("cmpl 0, -16(%ebp); jz _crma_return_null   // return NULL if class not exists");
         __pasm__(<"
-        _crma_start:
-            movl 0, 24(%ebp)    // not-found default handle: NULL
-            movl 12(%ebp), %esi // @this (Type Runtime)
-            
-            subl 4, %esp        // return value of getClassDesc
-            pushl 16(%ebp)      // param @classname
-            pushl %esi; pushl _my_core_Runtime_m_getClassDesc; call (%esi)
-        	addl 12, %esp
-            popl %ecx           // @class-desc
-            addl 0, %ecx; jz _crma_return   // return NULL if class not exists
-           
+            movl -16(%ebp), %ecx // var <classDesc>
             movl 20(%ebp), %eax // @obj (Type ANY)
             movl 4(%eax), %ebx  // @obj
             movl (%ebx), %eax   // @obj-class desc
@@ -326,13 +325,16 @@ __pasm__("_bs_return_null:");
             je _crma_found
             addl _my_core_Runtime_coi_cts_size, %eax
             cmpl 0, (%eax)
-            je _crma_return
+            je _crma_return_null
             jmp _crma_loop
         _crma_found:
             addl _my_core_Runtime_coi_cts_ho(%eax), %ebx
-            movl %ebx, 24(%ebp) // return correct handle
-        _crma_return:
+            movl %ebx, -20(%ebp) // var <ret>
         ">);
+        return ret;
+        // TODO #4: use pool guard
+__pasm__("_crma_return_null:");
+        return oNil;
     }
     
     <> createAndRunThread(cstring name) {

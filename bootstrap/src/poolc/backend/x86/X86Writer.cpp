@@ -27,8 +27,6 @@
 #define methodDeclOffset(m) manualClsPrefix((m)->scope->getClassDeclNode()) << "_mdo_" << (m)->name
 #define methodTabs() localClsPrefix(curClass) << "_mts"
 #define methodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
-#define methodRef(cls, m) localClsPrefix(curClass) << "_mtm" << localClsPrefix(cls) << "_" << (m)->name
-#define methodRefOffset(cls, m) manualClsPrefix(cls) << "_m_" << (m)->name
 
 #define methodDeclReturn(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name << "_return"
 
@@ -153,8 +151,6 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                     MethodScope & superMethodScope = mit.next();
                     MethodDeclNode * methodDecl = instanceScope->getMethod(superMethodScope)->getMethodDeclNode();
                     if (methodDecl->kind == naked) { continue; }
-                    // TODO: remove label after all inline pasm method calls are replaced with pool method calls
-                    LOCAL(methodRefOffset(superClassDecl, methodDecl), 8 * superMethodScope.index);
                     LONG(4 * methodDecl->index);
                     LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
                 }
@@ -166,8 +162,6 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                     MethodScope & superMethodScope = mit.next();
                     MethodDeclNode * methodDecl = classScope->getMethod(superMethodScope)->getMethodDeclNode();
                     if (methodDecl->kind == naked) { continue; }
-                    // TODO: remove label after all inline pasm method calls are replaced with pool method calls
-                    LOCAL(methodRefOffset(superClassDecl, methodDecl), 8 * superMethodScope.index);
                     LONG(4 * methodDecl->index);
                     LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
                 }
