@@ -5,15 +5,19 @@
 
 #include "poolc/ast/Scope.hpp"
 #include "poolc/parser/ClassLoader.hpp"
-#include "poolc/ast/scopes/IntType.hpp"
+#include "poolc/ast/scopes/AllType.hpp"
+#include "poolc/ast/scopes/AnyType.hpp"
 #include "poolc/ast/scopes/CStringType.hpp"
+#include "poolc/ast/scopes/IntType.hpp"
 
 class ClassResolver: public Visitor {
     private:
     Scope * curScope;
     ClassLoader & loader;
-    IntType & intType;
+    AllType & allType;
+    AnyType & anyType;
     CStringType & cStringType;
+    IntType & intType;
     
     public:
     ClassResolver(Environment &env, MemoryInfo &mi, ClassLoader & loader);

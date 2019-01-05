@@ -117,7 +117,7 @@ void PIRMethod::addAsm(String & pasm) {
 
 void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {
     if (value.isNull()) {
-        if (!dest.type.isInstance()) {
+        if (!dest.type.isInstance() && !dest.type.isAll() && !dest.type.isAny()) {
             error() << "incompatible destination " << dest << " for null\n";
             return;
         }

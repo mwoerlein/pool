@@ -12,12 +12,16 @@
 // public
 ClassResolver::ClassResolver(Environment &env, MemoryInfo &mi, ClassLoader & loader)
         :Object(env, mi), LoggerAware(env, mi),
-         intType(env.create<IntType>()),
+         allType(env.create<AllType>()),
+         anyType(env.create<AnyType>()),
          cStringType(env.create<CStringType>()),
+         intType(env.create<IntType>()),
          loader(loader), curScope(0) {}
 ClassResolver::~ClassResolver() {
-    intType.destroy();
+    allType.destroy();
+    anyType.destroy();
     cStringType.destroy();
+    intType.destroy();
 }
 
 

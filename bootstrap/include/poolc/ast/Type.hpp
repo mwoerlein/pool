@@ -3,19 +3,23 @@
 
 #include "sys/Object.hpp"
 
+class AllType;
+class AnyType;
 class ClassScope;
+class CStringType;
 class InstanceScope;
 class IntType;
-class CStringType;
 class Type: virtual public Object {
     public:
     Type(Environment &env, MemoryInfo &mi);
     virtual ~Type();
     
+    virtual AllType * isAll();
+    virtual AnyType * isAny();
     virtual ClassScope * isClass();
+    virtual CStringType * isCString();
     virtual InstanceScope * isInstance();
     virtual IntType * isInt();
-    virtual CStringType * isCString();
     
     virtual OStream & operator >>(OStream & stream) override;
 };
