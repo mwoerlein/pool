@@ -77,8 +77,8 @@ void PIRMethod::init(MethodScope &scope) {
     if (!decl.global) {
         Type &thisType = *scope.getInstance();
         this->_this = &env().create<PIRLocation, Type &, location_kind, int>(thisType, loc_this, 0);
-        this->_thisTemp = newLocation(loc_temp, thisType);
         // TODO #11: treat all locations as "temps" until register allocations seperates frame and register locations
+        //this->_thisTemp = newLocation(loc_temp, thisType);
         //addMove(*this->_this, *this->_thisTemp);
     }
     
