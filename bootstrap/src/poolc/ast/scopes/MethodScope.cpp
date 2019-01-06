@@ -10,3 +10,7 @@ MethodScope::~MethodScope() {}
 MethodScope * MethodScope::isMethod() { return this; }
 MethodScope * MethodScope::getMethod() { return this; }
 MethodDeclNode * MethodScope::getMethodDeclNode() { return &methodDecl; }
+
+void MethodScope::printDebugName(OStream & stream) {
+    stream << "MethodScope of " << methodDecl;
+}

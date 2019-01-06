@@ -16,6 +16,9 @@ class InstanceScope: public Scope, public Type {
     virtual InstanceScope * isInstance() override;
     virtual InstanceScope * getInstance() override;
     virtual ClassDeclNode * getClassDeclNode() override;
+    
+    virtual OStream & operator >>(OStream & stream) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPES_INSTANCESCOPE_HPP_LOCK

@@ -15,6 +15,8 @@ class BlockScope: public Scope {
     virtual BlockScope * isBlock() override;
     virtual BlockScope * getBlock() override;
     virtual BlockInstNode * getBlockInstNode() override;
+
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPES_BLOCKSCOPE_HPP_LOCK

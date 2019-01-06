@@ -19,6 +19,8 @@ class VariableScope: public Scope {
     virtual VariableScope * isVariable() override;
     virtual VariableScope * getVariable() override;
     virtual VariableDeclNode * getVariableDeclNode() override;
+
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPES_VARIABLESCOPE_HPP_LOCK

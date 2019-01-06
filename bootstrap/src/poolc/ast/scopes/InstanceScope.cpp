@@ -9,3 +9,12 @@ InstanceScope::~InstanceScope() {}
 InstanceScope * InstanceScope::isInstance() { return this; }
 InstanceScope * InstanceScope::getInstance() { return this; }
 ClassDeclNode * InstanceScope::getClassDeclNode() { return &classDecl; }
+
+OStream & InstanceScope::operator >>(OStream & stream) {
+    printDebugName(stream);
+    return stream;
+}
+
+void InstanceScope::printDebugName(OStream & stream) {
+    stream << "InstanceScope of " << classDecl;
+}

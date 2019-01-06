@@ -27,10 +27,6 @@ OStream & Type::operator >>(OStream & stream) {
         stream << "type-<int>";
     } else if (isCString()) {
         stream << "type-<cstring>";
-    } else if (InstanceScope *scope = isInstance()) {
-        stream << "type-<instance "<<scope->getClassDeclNode()->fullQualifiedName << ">";
-    } else if (ClassScope *scope = isClass()) {
-        stream << "type-<class "<<scope->getClassDeclNode()->fullQualifiedName << ">";
     } else {
         stream << "type-<UNKNOWN>";
     }

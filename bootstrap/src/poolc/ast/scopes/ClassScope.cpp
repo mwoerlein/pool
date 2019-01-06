@@ -36,3 +36,12 @@ String & ClassScope::stringId(String &string, String *id) {
 Iterator<String> & ClassScope::strings() {
     return _strings.keys();
 }
+
+OStream & ClassScope::operator >>(OStream & stream) {
+    printDebugName(stream);
+    return stream;
+}
+
+void ClassScope::printDebugName(OStream & stream) {
+    stream << "ClassScope of " << classDecl;
+}

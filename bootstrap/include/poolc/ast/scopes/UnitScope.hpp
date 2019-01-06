@@ -15,6 +15,8 @@ class UnitScope: public Scope {
     virtual UnitScope * isUnit() override;
     virtual UnitScope * getUnit() override;
     virtual TranslationUnitNode * getUnitNode() override;
+
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPES_UNITSCOPE_HPP_LOCK

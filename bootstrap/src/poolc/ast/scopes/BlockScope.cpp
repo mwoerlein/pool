@@ -9,3 +9,7 @@ BlockScope::~BlockScope() {}
 BlockScope * BlockScope::isBlock() { return this; }
 BlockScope * BlockScope::getBlock() { return this; }
 BlockInstNode * BlockScope::getBlockInstNode() { return &block; }
+
+void BlockScope::printDebugName(OStream & stream) {
+    stream << "BlockScope of " << block;
+}

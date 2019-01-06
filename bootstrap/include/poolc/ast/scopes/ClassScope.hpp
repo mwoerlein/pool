@@ -31,6 +31,9 @@ class ClassScope: public Scope, public Type {
     
     virtual String & stringId(String &string, String *id = 0);
     virtual Iterator<String> & strings();
+
+    virtual OStream & operator >>(OStream & stream) override;
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPES_CLASSSCOPE_HPP_LOCK

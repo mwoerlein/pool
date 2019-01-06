@@ -19,6 +19,8 @@ class MethodScope: public Scope {
     virtual MethodScope * isMethod() override;
     virtual MethodScope * getMethod() override;
     virtual MethodDeclNode * getMethodDeclNode() override;
+
+    virtual void printDebugName(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPES_METHODSCOPE_HPP_LOCK

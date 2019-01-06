@@ -141,3 +141,8 @@ VariableScope * Scope::getVariable(String & name) {
     }
     return 0;
 }
+
+OStream & Scope::operator >>(OStream & stream) {
+    printDebugName(stream);
+    return stream;
+}

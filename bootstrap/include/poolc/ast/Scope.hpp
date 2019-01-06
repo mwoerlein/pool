@@ -68,6 +68,9 @@ class Scope: virtual public Object {
     virtual MethodDeclNode * getMethodDeclNode();
     virtual BlockInstNode * getBlockInstNode();
     virtual VariableDeclNode * getVariableDeclNode();
+    
+    virtual void printDebugName(OStream & stream) = 0;
+    virtual OStream & operator >>(OStream & stream) override;
 };
 
 #endif //POOLC_AST_SCOPE_HPP_LOCK

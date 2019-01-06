@@ -9,3 +9,7 @@ UnitScope::~UnitScope() {}
 UnitScope * UnitScope::isUnit() { return this; }
 UnitScope * UnitScope::getUnit() { return this; }
 TranslationUnitNode * UnitScope::getUnitNode() { return &unit; }
+
+void UnitScope::printDebugName(OStream & stream) {
+    stream << "UnitScope of " << unit;
+}

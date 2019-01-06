@@ -9,3 +9,7 @@ VariableScope::~VariableScope() {}
 VariableScope * VariableScope::isVariable() { return this; }
 VariableScope * VariableScope::getVariable() { return this; }
 VariableDeclNode * VariableScope::getVariableDeclNode() { return &variableDecl; }
+
+void VariableScope::printDebugName(OStream & stream) {
+    stream << "VariableScope of " << variableDecl;
+}
