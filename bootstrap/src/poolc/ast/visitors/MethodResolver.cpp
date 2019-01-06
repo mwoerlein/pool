@@ -75,7 +75,7 @@ bool MethodResolver::visit(MethodDeclNode & methodDecl) {
 
 bool MethodResolver::visit(VariableDeclNode & variableDecl) {
     variableDecl.scope = curScope->registerVariable(variableDecl);
-    if (curScope->isBlock()) {
+    if (curScope->getBlock()) {
         curScope = variableDecl.scope; 
     }
     variableDecl.type.accept(*this);

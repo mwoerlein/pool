@@ -47,6 +47,7 @@ class A extends Object {
 //*/
 /*/
     <> testScope() {
+        int c = 0;
         int a = b;
         int b = a;
     }
