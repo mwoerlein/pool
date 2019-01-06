@@ -11,7 +11,7 @@
 
 // public
 MethodResolver::MethodResolver(Environment &env, MemoryInfo &mi)
-        :Object(env, mi), LoggerAware(env, mi), curScope(0) {}
+        :Object(env, mi), LoggerAware(env, mi), curScope(0), curInit(0) {}
 MethodResolver::~MethodResolver() {}
 
 
@@ -75,6 +75,9 @@ bool MethodResolver::visit(MethodDeclNode & methodDecl) {
 
 bool MethodResolver::visit(VariableDeclNode & variableDecl) {
     variableDecl.scope = curScope->registerVariable(variableDecl);
+    if (curScope->isBlock()) {
+        curScope = variableDecl.scope; 
+    }
     variableDecl.type.accept(*this);
     return true;
 }
@@ -136,12 +139,11 @@ bool MethodResolver::visit(ReturnInstNode & returnInst) {
 
 bool MethodResolver::visit(VariableInitInstNode & variableInit) {
     variableInit.scope = curScope;
-    variableInit.variables.acceptAll(*this);
-    if (variableInit.variables.size() == 1) {
-        curScope = variableInit.variables.first()->scope;
-    }
+    curInit = &variableInit;
     variableInit.initializer.accept(*this);
-    curScope = variableInit.scope;
+    // variable declarations *after* initializers to make them unaccessable *in* initializers
+    variableInit.variables.acceptAll(*this);
+    curInit = 0;
     return true;
 }
 
@@ -155,9 +157,8 @@ bool MethodResolver::visit(AssignmentExprNode & assignment) {
 bool MethodResolver::visit(ConstCStringExprNode & constCString) {
     constCString.scope = curScope;
     String *id = 0;
-    if (VariableScope *scope = curScope->isVariable()) {
-        id = &scope->getVariableDeclNode()->name;
-        constCString.scope = curScope->parent;
+    if (curScope->isClass() && curInit && (curInit->variables.size() == 1)) {
+        id = &curInit->variables.first()->name;
     }
     constCString.stringId = &curScope->getClass()->stringId(constCString.value, id);
     return true;

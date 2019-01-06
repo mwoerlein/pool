@@ -8,6 +8,7 @@
 class MethodResolver: public Visitor {
     private:
     Scope * curScope;
+    VariableInitInstNode * curInit;
     
     public:
     MethodResolver(Environment &env, MemoryInfo &mi);

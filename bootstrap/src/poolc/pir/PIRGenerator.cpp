@@ -52,9 +52,11 @@ bool PIRGenerator::visit(MethodDeclNode & methodDecl) {
 
 bool PIRGenerator::visit(VariableDeclNode & variableDecl) {
     VariableScope *scope = variableDecl.scope->isVariable();
-    if (scope->parent->isBlock()) {
+    if (scope->getBlock()) {
         scope->pir = &curMethod->newTemp(*variableDecl.resolvedType);
     }
+    // method parameters are handled in PIRMethod::init
+    // instance variables and consts have no location
     return true;
 }
 
@@ -307,8 +309,11 @@ bool PIRGenerator::visit(VariableExprNode & variable) {
             crit() << "unexpected context " << *variable.context << " in " << variable << "\n";
             return false;
         }
-    } else {
+    } else if (variable.resolvedVariable->pir) {
         lastLocations.add(*variable.resolvedVariable->pir);
+    } else {
+        crit() << "PIR generation: unvisited resolved variable " << *variable.resolvedVariable->getVariableDeclNode() << " found for " <<variable << "!\n";
+        return false;
     }
     return true;
 }

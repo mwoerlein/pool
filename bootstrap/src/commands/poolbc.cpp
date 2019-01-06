@@ -105,7 +105,9 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                 if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 if (classDef) {
                     classDef->accept(resolveMethods);
+                    if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                     classDef->accept(resolveTypes);
+                    if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                     classDef->accept(generatePIR);
                     classDef->accept(dump);
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }

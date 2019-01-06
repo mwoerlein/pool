@@ -183,7 +183,7 @@ bool TypeResolver::visit(VariableExprNode & variable) {
         }
     } else {
         variable.printDebugInfo(error() << variable.scope->getClassDeclNode()->fullQualifiedName); 
-        error() << ": unknown variable '" << variable.name << "'\n";
+        error() << ": unknown variable '" << variable.name << "' in " << *contextScope << "\n";
         return false;
     }
     return true;

@@ -33,7 +33,7 @@ class A extends Object {
         return <row, column>;
     }
     
-/*
+/*/
     A nullTest;
     <A> testNull(A a) {
         Runtime rt = null;
@@ -44,7 +44,13 @@ class A extends Object {
         a.testNull(null);
         return null;
     }
-*/    
+//*/
+/*/
+    <> testScope() {
+        int a = b;
+        int b = a;
+    }
+//*/
     <> test(int row) {
         int out := Runtime:out;             // fixed variable
         int err := my::core::Runtime:err;   // fixed variable
