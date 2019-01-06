@@ -1,5 +1,7 @@
 #include "poolc/pir/PIRGenerator.hpp"
 
+#include "sys/collection/HashMap.hpp"
+
 #include "poolc/ast/Type.hpp"
 #include "poolc/ast/nodes/all.hpp"
 
@@ -67,8 +69,49 @@ bool PIRGenerator::visit(ExpressionInstNode & expressionInst) {
     return true;
 }
 
-bool PIRGenerator::visit(InlinePasmInstNode & pasmInstruction) {
-    curMethod->addAsm(pasmInstruction.pasm);
+bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
+    HashMap<String, PIRLocation> &in = env().create<HashMap<String, PIRLocation>>();
+    {
+        Iterator<String> &it = pasmInst.in.keys();
+        while (it.hasNext()) {
+            String &reg = it.next();
+            ExpressionNode &ex = pasmInst.in.get(reg);
+            ex.accept(*this);
+            if (lastLocations.size() == 1) {
+                in.set(reg, curMethod->asTemp(*lastLocations.first()));
+                lastLocations.clear();
+            } else if (lastValue) {
+                PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
+                curMethod->addAssign(*lastValue, tmp);
+                in.set(reg, tmp);
+                lastValue = 0;
+            } else {
+                crit() << "unexpected input expression " << ex << " in " << pasmInst << "\n";
+                return false;
+            }
+        }
+        it.destroy();
+    }
+    
+    HashMap<String, PIRLocation> &out = env().create<HashMap<String, PIRLocation>>();
+    {
+        Iterator<String> &it = pasmInst.out.keys();
+        while (it.hasNext()) {
+            String &reg = it.next();
+            ExpressionNode &ex = pasmInst.out.get(reg);
+            ex.accept(*this);
+            if ((lastLocations.size() == 1) && (lastLocations.first()->kind == loc_temp)) {
+                out.set(reg, *lastLocations.first());
+                lastLocations.clear();
+            } else {
+                crit() << "unexpected output expression " << ex << " in " << pasmInst << "\n";
+                return false;
+            }
+        }
+        it.destroy();
+    }
+
+    curMethod->addAsm(pasmInst.pasm, in, out);
     return true;
 }
 

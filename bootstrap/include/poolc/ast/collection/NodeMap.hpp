@@ -19,9 +19,11 @@ template <class Obj> class NodeMap: public HashMap<String, Obj> {
     }
     
     virtual void destroyAll() {
-        Iterator<Obj> &it = this->iterator();
+        Iterator<String> &it = this->keys();
         while (it.hasNext()) {
-            it.next().destroy();
+            String &key = it.next();
+            this->get(key).destroy();
+            key.destroy();
         }
         it.destroy();
         this->destroy();

@@ -123,6 +123,8 @@ bool MethodResolver::visit(ExpressionInstNode & expressionInst) {
 
 bool MethodResolver::visit(InlinePasmInstNode & pasmInstruction) {
     pasmInstruction.scope = curScope;
+    pasmInstruction.in.acceptAll(*this);
+    pasmInstruction.out.acceptAll(*this);
     return true;
 }
 

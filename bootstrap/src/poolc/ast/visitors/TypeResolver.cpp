@@ -89,6 +89,12 @@ bool TypeResolver::visit(ExpressionInstNode & expressionInst) {
     return true;
 }
 
+bool TypeResolver::visit(InlinePasmInstNode & pasmInstruction) {
+    pasmInstruction.in.acceptAll(*this);
+    pasmInstruction.out.acceptAll(*this);
+    return true;
+}
+
 bool TypeResolver::visit(ReturnInstNode & returnInst) {
     returnInst.values.acceptAll(*this);
     // TODO: compare values.resolvedTypes with method resultTypes

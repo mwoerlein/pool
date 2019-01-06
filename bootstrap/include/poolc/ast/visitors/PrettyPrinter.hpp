@@ -17,31 +17,31 @@ class PrettyPrinter: public Writer {
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
-    virtual bool visit(ClassDeclNode & classDef);
-    virtual bool visit(MethodDeclNode & methodDef);
-    virtual bool visit(NamespaceDeclNode & namespaceDef);
-    virtual bool visit(VariableDeclNode & variableDef);
+    virtual bool visit(ClassDeclNode & classDef) override;
+    virtual bool visit(MethodDeclNode & methodDef) override;
+    virtual bool visit(NamespaceDeclNode & namespaceDef) override;
+    virtual bool visit(VariableDeclNode & variableDef) override;
     
     virtual bool visit(AllRefNode & type) override;
     virtual bool visit(AnyRefNode & type) override;
-    virtual bool visit(ClassRefNode & classRef);
-    virtual bool visit(CStringRefNode & type);
-    virtual bool visit(IntRefNode & type);
-    virtual bool visit(UseStatementNode & useStmt);
+    virtual bool visit(ClassRefNode & classRef) override;
+    virtual bool visit(CStringRefNode & type) override;
+    virtual bool visit(IntRefNode & type) override;
+    virtual bool visit(UseStatementNode & useStmt) override;
     
-    virtual bool visit(BlockInstNode & block);
-    virtual bool visit(ExpressionInstNode & exprInst);
-    virtual bool visit(InlinePasmInstNode & pasmInst);
-    virtual bool visit(ReturnInstNode & returnInst);
-    virtual bool visit(VariableInitInstNode & variableInit);
+    virtual bool visit(BlockInstNode & block) override;
+    virtual bool visit(ExpressionInstNode & exprInst) override;
+    virtual bool visit(InlinePasmInstNode & pasmInst) override;
+    virtual bool visit(ReturnInstNode & returnInst) override;
+    virtual bool visit(VariableInitInstNode & variableInit) override;
     
-    virtual bool visit(AssignmentExprNode & assignment);
-    virtual bool visit(ConstCStringExprNode & constCString);
-    virtual bool visit(ConstIntExprNode & constInt);
-    virtual bool visit(MethodCallExprNode & methodCall);
+    virtual bool visit(AssignmentExprNode & assignment) override;
+    virtual bool visit(ConstCStringExprNode & constCString) override;
+    virtual bool visit(ConstIntExprNode & constInt) override;
+    virtual bool visit(MethodCallExprNode & methodCall) override;
     virtual bool visit(NullExprNode & constNull) override;
-    virtual bool visit(ThisExprNode & constThis);
-    virtual bool visit(VariableExprNode & variable);
+    virtual bool visit(ThisExprNode & constThis) override;
+    virtual bool visit(VariableExprNode & variable) override;
 };
 
 #endif //POOLC_AST_VISITORS_PRETTYPRINTER_HPP_LOCK

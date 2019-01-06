@@ -171,7 +171,31 @@ bool PrettyPrinter::visit(ExpressionInstNode & exprInst) {
 bool PrettyPrinter::visit(InlinePasmInstNode & pasmInst) {
     indent() << "__pasm__(<\"\n";
     elem() << pasmInst.pasm << "\n";
-    indent() << "\">);\n";
+    indent() << "\">, {";
+    {
+        Iterator<String> &it = pasmInst.in.keys();
+        while (it.hasNext()) {
+            String &reg = it.next();
+            reg.escapeToStream(elem());
+            elem() << ": ";
+            pasmInst.in.get(reg).accept(*this);
+            if (it.hasNext()) { elem() << ", "; }
+        }
+        it.destroy();
+    }
+    elem() << "}, {";
+    {
+        Iterator<String> &it = pasmInst.out.keys();
+        while (it.hasNext()) {
+            String &reg = it.next();
+            reg.escapeToStream(elem());
+            elem() << ": ";
+            pasmInst.out.get(reg).accept(*this);
+            if (it.hasNext()) { elem() << ", "; }
+        }
+        it.destroy();
+    }
+    elem() << "});\n";
 }
 
 bool PrettyPrinter::visit(ReturnInstNode & returnInst) {

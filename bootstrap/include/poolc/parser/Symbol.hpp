@@ -5,6 +5,7 @@
 
 #include "sys/collection/LinkedList.hpp"
 #include "sys/collection/HashMap.hpp"
+#include "poolc/ast/collection/NodeMap.hpp"
 
 #include "poolc/ast/nodes/all.hpp"
 

@@ -111,8 +111,8 @@ PIRLocation &PIRMethod::spillTemp(int idx) {
     return spill;
 }
 
-void PIRMethod::addAsm(String & pasm) {
-    _statements.add(env().create<PIRAsm, String&>(pasm));
+void PIRMethod::addAsm(String & pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out) {
+    _statements.add(env().create<PIRAsm, String&, Map<String, PIRLocation> &, Map<String, PIRLocation> &>(pasm, in, out));
 }
 
 void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {

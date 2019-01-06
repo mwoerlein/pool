@@ -86,7 +86,7 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     }
     PIRLocation &spillTemp(int idx);
     
-    void addAsm(String &pasm);
+    void addAsm(String &pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out);
     void addAssign(PIRValue &value, PIRLocation &dest);
     void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
     void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);

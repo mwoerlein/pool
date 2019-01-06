@@ -167,7 +167,11 @@ bool ClassResolver::visit(ExpressionInstNode & expressionInst) {
     return true;
 }
 
-bool ClassResolver::visit(InlinePasmInstNode & pasmInstruction) { return true; }
+bool ClassResolver::visit(InlinePasmInstNode & pasmInstruction) {
+    pasmInstruction.in.acceptAll(*this);
+    pasmInstruction.out.acceptAll(*this);
+    return true;
+}
 
 bool ClassResolver::visit(ReturnInstNode & returnInst) {
     returnInst.values.acceptAll(*this);

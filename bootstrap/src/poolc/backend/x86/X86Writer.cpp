@@ -370,7 +370,23 @@ void X86Writer::write(PIRStatement &stmt) {
 }
 
 void X86Writer::write(PIRAsm &asmStmt) {
+    {
+        Iterator<String> &it = asmStmt.in.keys();
+        while (it.hasNext()) {
+            String &reg = it.next();
+            code() << "movl "; write(asmStmt.in.get(reg)); elem() << ", " << reg << "\n";
+        }
+        it.destroy();
+    }
     elem() << asmStmt.pasm << "\n";
+    {
+        Iterator<String> &it = asmStmt.out.keys();
+        while (it.hasNext()) {
+            String &reg = it.next();
+            code() << "movl " << reg << ", "; write(asmStmt.out.get(reg)); elem() << "\n";
+        }
+        it.destroy();
+    }
 }
 
 void X86Writer::write(PIRAssign &assignStmt) {
