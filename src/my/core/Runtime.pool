@@ -63,7 +63,6 @@ class Runtime extends Object {
         // create class "Class"
         // TODO: replace int with working ClassHeader "struct"
         int cdClass = 0;
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0; pushl %eax; pushl _my_core_Runtime_coi_SysCall_find_class
             pushl %esp; pushl %edi; call %esi
@@ -74,7 +73,6 @@ __pasm__("cmpl 0, %eax; je _bs_return_null // return NULL if class not found", {
 
         // TODO: replace int with working MemInfo "struct"
         int icClass = 0;
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0
             pushl _my_core_Runtime_coi_ch_tpl_size(%eax) // instance size
@@ -95,7 +93,6 @@ __pasm__("cmpl 0, %eax; je _bs_return_null // return NULL on allocate error", {"
         // create Runtime
         // TODO: replace int with working ClassHeader "struct"
         int cdRuntime = 0;
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0; pushl %eax; pushl _my_core_Runtime_coi_SysCall_find_class
             pushl %esp; pushl %edi; call %esi
@@ -106,7 +103,6 @@ __pasm__("cmpl 0, %eax; je _bs_return_null // return NULL if class not found", {
 
         // TODO: replace int with working MemInfo "struct"
         int irt = 0;
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0
             pushl _my_core_Runtime_coi_ch_tpl_size(%eax) // instance size
@@ -154,7 +150,6 @@ __pasm__("_bs_return_null:");
     // TODO: replace cstring with working String class
     <int> getClassDesc(cstring name) {
         int classDesc = 0;
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0; pushl %eax; pushl _my_core_Runtime_coi_SysCall_find_class
             pushl %esp; pushl %edi; call %esi
@@ -167,7 +162,6 @@ __pasm__("_bs_return_null:");
     <int> allocate(int size) {
         // TODO: replace int with working MemInfo "struct"
         int info = 0;
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl 0; pushl %eax; pushl _my_core_Runtime_coi_SysCall_allocate
             pushl %esp; pushl %edi; call %esi
@@ -178,7 +172,6 @@ __pasm__("_bs_return_null:");
     
     // TODO: replace int with working MemInfo "struct"
     <> free(int info) {
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl %eax; pushl 0; pushl _my_core_Runtime_coi_SysCall_free
             pushl %esp; pushl %edi; call %esi
@@ -187,7 +180,6 @@ __pasm__("_bs_return_null:");
     }
     
     <> printChar(int c, int stream) {
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_char; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -196,7 +188,6 @@ __pasm__("_bs_return_null:");
     }
     
     <> printString(cstring s, int stream) {
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_string; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -205,7 +196,6 @@ __pasm__("_bs_return_null:");
     }
     
     <> printInt(int i, int stream) {
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_int; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -214,7 +204,6 @@ __pasm__("_bs_return_null:");
     }
     
     <> printHex(int i, int stream) {
-        // TODO #5: simplify syscall
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_hex; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
