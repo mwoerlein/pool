@@ -78,11 +78,15 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     
     inline PIRLocation &newTemp(Type &type) { return *newLocation(loc_temp, type); }
     inline PIRLocation &asTemp(PIRLocation &src) {
+        // TODO #11: treat all locations as "temps" until register allocations seperates frame and register locations
+        return src;
+/*        
         if (src.kind == loc_temp) { return src; }
         if (&src == _this) { return *_thisTemp; }
         PIRLocation &tmp = *newLocation(loc_temp, src.type);
         addMove(src, tmp);
         return tmp;
+*/
     }
     PIRLocation &spillTemp(int idx);
     
