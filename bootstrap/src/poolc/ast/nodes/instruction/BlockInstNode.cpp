@@ -12,5 +12,5 @@ bool BlockInstNode::accept(Visitor & visitor) {
 }
 
 void BlockInstNode::printDebugName(OStream & stream) {
-    stream << "return";
+    stream << "block";
 }
