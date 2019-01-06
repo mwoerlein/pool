@@ -17,37 +17,35 @@ class Object {
     
     // methods
     <Class> getClass() {
+        Class cl = null;
         __pasm__(<"
-            movl 12(%ebp), %eax    // @this (Type Object)
-            movl 4(%eax), %eax     // @this
-            movl (%eax), %eax      // @class desc
-            movl _my_core_Object_coi_ch_inst_handle(%eax), %eax // @class handle
-            movl %eax, 16(%ebp)    // return @class handle
-        ">);
+             movl 4(%eax), %eax     // @this
+             movl (%eax), %eax      // @class desc
+             movl _my_core_Object_coi_ch_inst_handle(%eax), %eax // @class handle
+         ">, {"%eax": this} , {"%eax": cl});
+        return cl;
     }
     
     <int> hash() {
+        int hash = 0;
         __pasm__(<"
-            movl 12(%ebp), %eax    // @this (Type Object)
-            movl 4(%eax), %eax     // @this
-            movl %eax, 16(%ebp)    // return @this as hash
-        ">);
+             movl 4(%eax), %eax     // @this
+         ">, {"%eax": this} , {"%eax": hash});
+        return hash;
     }
     
     // TODO: use generic method instead of plain Object?
     // TODO #4: use bool instead of int
     <int> equals(__any__ obj) {
+        int eq = 0;
         __pasm__(<"
-            movl 0, 20(%ebp)       // default return: false
-            movl 12(%ebp), %eax    // @this (Type Object)
-            movl 4(%eax), %eax     // @this
-            movl 16(%ebp), %ebx    // @obj (Type ANY)
-            movl 4(%ebx), %ebx     // @obj
-            cmpl %eax, %ebx
+            movl 4(%eax), %eax  // @this
+            cmpl %eax, 4(%ebx)  // @obj
             jne _come_ret
-            movl 1, 20(%ebp)       // return true
+            movl 1, %ecx        // return true
             _come_ret:
-        ">);
+        ">, {"%eax": this, "%ebx": obj, "%ecx": eq}, {"%ecx": eq});
+        return eq;
     }
     
     <Runtime> rt() {

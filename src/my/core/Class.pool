@@ -27,26 +27,16 @@ class Class extends Object {
     // TODO: replace int with working ClassHeader "struct"
     <> setDesc(int desc) {
         this.desc = desc;
-        // desc.class = this; 
-        __pasm__(<"
-            movl 16(%ebp), %eax                     // param @class desc
-            movl 12(%ebp), %ebx                     // @this (Type Class)
-            movl %ebx, _my_core_Class_coi_ch_inst_handle(%eax)   // store @this (Type Class) in class desc
-        ">);
+        // desc.inst_handle = this; 
+        __pasm__("movl %eax, _my_core_Class_coi_ch_inst_handle(%ebx)", {"%eax": this, "%ebx": desc});
         return;
     }
     
     // TODO: replace cstring with working String class
     <cstring> getName() {
-        // TODO: replace int with working ClassHeader "struct"
-        int desc = 0;       // -8(%ebp)
-        cstring name = "";  // -12(%ebp)
-        desc = this.desc;
-        __pasm__(<"
-            movl -8(%ebp), %eax     // var <desc>
-            addl _my_core_Class_coi_ch_name(%eax), %eax
-            movl %eax, -12(%ebp)    // var <name>
-        ">);
+        // return this.desc.name;
+        cstring name = "";
+        __pasm__("addl _my_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": name});
         return name;
     }
     
