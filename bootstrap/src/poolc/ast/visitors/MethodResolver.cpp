@@ -147,6 +147,26 @@ bool MethodResolver::visit(VariableInitInstNode & variableInit) {
     return true;
 }
 
+bool MethodResolver::visit(ArithAssignmentExprNode & arithAssignment) {
+    arithAssignment.scope = curScope;
+    arithAssignment.variable.accept(*this);
+    arithAssignment.value.accept(*this);
+    return true;
+}
+
+bool MethodResolver::visit(ArithBinaryExprNode & arithBinary) {
+    arithBinary.scope = curScope;
+    arithBinary.left.accept(*this);
+    arithBinary.right.accept(*this);
+    return true;
+}
+
+bool MethodResolver::visit(ArithUnaryExprNode & arithUnary) {
+    arithUnary.scope = curScope;
+    arithUnary.variable.accept(*this);
+    return true;
+}
+
 bool MethodResolver::visit(AssignmentExprNode & assignment) {
     assignment.scope = curScope;
     assignment.variable.accept(*this);
@@ -178,6 +198,12 @@ bool MethodResolver::visit(MethodCallExprNode & methodCall) {
 
 bool MethodResolver::visit(NullExprNode & constNull) {
     constNull.scope = curScope;
+    return true;
+}
+
+bool MethodResolver::visit(SignExprNode & sign) {
+    sign.scope = curScope;
+    sign.expression.accept(*this);
     return true;
 }
 

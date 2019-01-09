@@ -111,6 +111,51 @@ bool TypeResolver::visit(VariableInitInstNode & variableInit) {
     return true;
 }
 
+bool TypeResolver::visit(ArithAssignmentExprNode & arithAssignment) {
+    arithAssignment.variable.accept(*this);
+    if (!arithAssignment.variable.resolvedType->isInt()) {
+        arithAssignment.printDebugInfo(error() << arithAssignment.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid variable type '" << *arithAssignment.variable.resolvedType << "' in " << arithAssignment << "\n";
+        return false;
+    }
+    arithAssignment.value.accept(*this);
+    if (!arithAssignment.value.resolvedType->isInt()) {
+        arithAssignment.printDebugInfo(error() << arithAssignment.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid value type '" << *arithAssignment.value.resolvedType << "' in " << arithAssignment << "\n";
+        return false;
+    }
+    arithAssignment.resolvedType = arithAssignment.variable.resolvedType;
+    return true;
+}
+
+bool TypeResolver::visit(ArithBinaryExprNode & arithBinary) {
+    arithBinary.left.accept(*this);
+    if (!arithBinary.left.resolvedType->isInt()) {
+        arithBinary.printDebugInfo(error() << arithBinary.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid left type '" << *arithBinary.left.resolvedType << "' in " << arithBinary << "\n";
+        return false;
+    }
+    arithBinary.right.accept(*this);
+    if (!arithBinary.right.resolvedType->isInt()) {
+        arithBinary.printDebugInfo(error() << arithBinary.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid right type '" << *arithBinary.right.resolvedType << "' in " << arithBinary << "\n";
+        return false;
+    }
+    arithBinary.resolvedType = arithBinary.left.resolvedType;
+    return true;
+}
+
+bool TypeResolver::visit(ArithUnaryExprNode & arithUnary) {
+    arithUnary.variable.accept(*this);
+    if (!arithUnary.variable.resolvedType->isInt()) {
+        arithUnary.printDebugInfo(error() << arithUnary.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid type '" << *arithUnary.variable.resolvedType << "' in " << arithUnary << "\n";
+        return false;
+    }
+    arithUnary.resolvedType = arithUnary.variable.resolvedType;
+    return true;
+}
+
 bool TypeResolver::visit(AssignmentExprNode & assignment) {
     assignment.variable.accept(*this);
     assignment.value.accept(*this);
@@ -149,6 +194,17 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
 }
 
 bool TypeResolver::visit(NullExprNode & constNull) {
+    return true;
+}
+
+bool TypeResolver::visit(SignExprNode & sign) {
+    sign.expression.accept(*this);
+    if (!sign.expression.resolvedType->isInt()) {
+        sign.printDebugInfo(error() << sign.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid type '" << *sign.expression.resolvedType << "' in " << sign << "\n";
+        return false;
+    }
+    sign.resolvedType = sign.expression.resolvedType;
     return true;
 }
 

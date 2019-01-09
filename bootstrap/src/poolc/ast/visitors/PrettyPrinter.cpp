@@ -231,7 +231,6 @@ bool PrettyPrinter::visit(ArithAssignmentExprNode & arithAssignment) {
     }
     arithAssignment.value.accept(*this);
     elem() << ")";
-    
 }
 bool PrettyPrinter::visit(ArithBinaryExprNode & arithBinary) {
     elem() << "(";

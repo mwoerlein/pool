@@ -32,11 +32,15 @@ class MethodResolver: public Visitor {
     virtual bool visit(ReturnInstNode & returnInst) override;
     virtual bool visit(VariableInitInstNode & variableInit) override;
     
+    virtual bool visit(ArithAssignmentExprNode & arithAssignment);
+    virtual bool visit(ArithBinaryExprNode & arithBinary);
+    virtual bool visit(ArithUnaryExprNode & arithUnary);
     virtual bool visit(AssignmentExprNode & assignment) override;
     virtual bool visit(ConstCStringExprNode & constCString) override;
     virtual bool visit(ConstIntExprNode & constInt) override;
     virtual bool visit(MethodCallExprNode & methodCall) override;
     virtual bool visit(NullExprNode & constNull) override;
+    virtual bool visit(SignExprNode & sign);
     virtual bool visit(ThisExprNode & constThis) override;
     virtual bool visit(VariableExprNode & variable) override;
     

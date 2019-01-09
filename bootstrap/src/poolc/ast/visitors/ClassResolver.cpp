@@ -184,6 +184,23 @@ bool ClassResolver::visit(VariableInitInstNode & variableInit) {
     return true;
 }
 
+bool ClassResolver::visit(ArithAssignmentExprNode & arithAssignment) {
+    arithAssignment.variable.accept(*this);
+    arithAssignment.value.accept(*this);
+    return true;
+}
+
+bool ClassResolver::visit(ArithBinaryExprNode & arithBinary) {
+    arithBinary.left.accept(*this);
+    arithBinary.right.accept(*this);
+    return true;
+}
+
+bool ClassResolver::visit(ArithUnaryExprNode & arithUnary) {
+    arithUnary.variable.accept(*this);
+    return true;
+}
+
 bool ClassResolver::visit(AssignmentExprNode & assignment) {
     assignment.variable.accept(*this);
     assignment.value.accept(*this);
@@ -208,6 +225,11 @@ bool ClassResolver::visit(MethodCallExprNode & methodCall) {
 
 bool ClassResolver::visit(NullExprNode & constNull) {
     constNull.resolvedType = &allType;
+    return true;
+}
+
+bool ClassResolver::visit(SignExprNode & sign) {
+    sign.expression.accept(*this);
     return true;
 }
 
