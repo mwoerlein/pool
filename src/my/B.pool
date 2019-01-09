@@ -56,8 +56,7 @@ class B extends myThread, my::A {
     }
     
     <int> getRow() {
-        return row;
-//        return 2*row;
+        return 2*row;
     }
     
 }

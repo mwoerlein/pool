@@ -52,6 +52,31 @@ class A extends Object {
         int b = a;
     }
 //*/
+/*/
+    <> testArith() {
+        A o = this;
+        int a = 0;
+        int b = -100;
+        int c = a++ + --b;
+        int d = -a - +b;
+        int e = a*b+d/c%b;
+        a = o.row;
+        a = o.getRow();
+        a = -c;
+        a = +c;
+        a = --c;
+        a = ++c;
+        a = c--;
+        a = c++;
+        a = b + c;
+        a = b - c;
+        a = b * c;
+        a = b / c;
+        a = b % c;
+        a -= b += c *= d /= e %= a;
+        a = b + (c = d = e);
+    }
+//*/
     <> test(int row) {
         int out := Runtime:out;             // fixed variable
         int err := my::core::Runtime:err;   // fixed variable
