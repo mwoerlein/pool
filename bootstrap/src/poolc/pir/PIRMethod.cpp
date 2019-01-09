@@ -7,6 +7,7 @@
 #include "poolc/ast/scopes/ClassScope.hpp"
 #include "poolc/ast/scopes/InstanceScope.hpp"
 
+#include "poolc/pir/statement/PIRArithOp.hpp"
 #include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
@@ -105,11 +106,35 @@ PIRString &PIRMethod::getConstString(ConstCStringExprNode &value) {
     return env().create<PIRString, String&>(_scope->getClass()->stringId(value.value));
 }
 
+PIRLocation *PIRMethod::getZeroTemp(Type &type) {
+    if (!_zeroTemp) {
+        _zeroTemp = &newTemp(type);
+        addAssign(env().create<PIRInt, int>(0), *_zeroTemp);
+    }
+    return _zeroTemp;
+}
+
+PIRLocation *PIRMethod::getOneTemp(Type &type) {
+    if (!_oneTemp) {
+        _oneTemp = &newTemp(type);
+        addAssign(env().create<PIRInt, int>(1), *_oneTemp);
+    }
+    return _oneTemp;
+}
+
 PIRLocation &PIRMethod::spillTemp(int idx) {
     PIRLocation &temp = *getTemp(idx);
     PIRLocation &spill = *newLocation(loc_spill, temp.type);
     // TODO: adjust and insert spill statements
     return spill;
+}
+
+void PIRMethod::addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest) {
+    if (!left.type.isInt() || !right.type.isInt() || !dest.type.isInt()) {
+        error() << "invalid types for arithmetic operation: " << dest << " = " << left << " <op> " << right << "\n";
+        return;
+    }
+    _statements.add(env().create<PIRArithOp, arith_op, PIRLocation&, PIRLocation&, PIRLocation&>(op, left, right, dest));
 }
 
 void PIRMethod::addAsm(String & pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out) {

@@ -3,6 +3,8 @@
 
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 
+#include "poolc/Arith.hpp"
+
 class ArithUnaryExprNode: public ExpressionNode {
     public:
     arith_unary op;

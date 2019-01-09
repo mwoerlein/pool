@@ -3,6 +3,8 @@
 
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 
+#include "poolc/Arith.hpp"
+
 class SignExprNode: public ExpressionNode {
     public:
     sign_t sign;

@@ -4,6 +4,7 @@
 PIRStatement::PIRStatement(Environment &env, MemoryInfo &mi): Object(env, mi) {}
 PIRStatement::~PIRStatement() {}
 
+PIRArithOp *PIRStatement::isArithOp() { return 0; }
 PIRAsm *PIRStatement::isAsm() { return 0; }
 PIRAssign *PIRStatement::isAssign() { return 0; }
 PIRCall *PIRStatement::isCall() { return 0; }

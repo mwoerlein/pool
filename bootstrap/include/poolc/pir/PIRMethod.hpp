@@ -5,6 +5,7 @@
 #include "sys/log/LoggerAware.hpp"
 
 #include "sys/collection/LinkedList.hpp"
+#include "poolc/Arith.hpp"
 #include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
 #include "poolc/ast/scopes/MethodScope.hpp"
@@ -38,9 +39,11 @@
 */
 class PIRMethod: virtual public Object, virtual public LoggerAware {
     private:
-    MethodScope *_scope;
-    PIRLocation *_this;
-    PIRLocation *_thisTemp;
+    MethodScope *_scope = 0;
+    PIRLocation *_this = 0;
+    PIRLocation *_thisTemp = 0;
+    PIRLocation *_zeroTemp = 0;
+    PIRLocation *_oneTemp = 0;
     PIRNull &_null;
     LinkedList<PIRLocation> &_params;
     LinkedList<PIRLocation> &_rets;
@@ -73,6 +76,8 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     inline PIRNull &getNull() { return _null; }
     inline PIRInt &getConstInt(ConstIntExprNode &value) { return env().create<PIRInt, int>(value.value); }
     PIRString &getConstString(ConstCStringExprNode &value);
+    PIRLocation *getZeroTemp(Type &type);
+    PIRLocation *getOneTemp(Type &type);
     
     inline Iterator<PIRStatement> &statements() { return _statements.iterator(); }
     
@@ -90,6 +95,7 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     }
     PIRLocation &spillTemp(int idx);
     
+    void addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest);
     void addAsm(String &pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out);
     void addAssign(PIRValue &value, PIRLocation &dest);
     void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);

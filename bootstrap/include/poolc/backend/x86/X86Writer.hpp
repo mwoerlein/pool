@@ -6,6 +6,7 @@
 #include "poolc/pir/PIRLocation.hpp"
 #include "poolc/pir/PIRMethod.hpp"
 #include "poolc/pir/PIRStatement.hpp"
+#include "poolc/pir/statement/PIRArithOp.hpp"
 #include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
@@ -35,6 +36,7 @@ class X86Writer: public Writer {
     virtual bool visit(VariableInitInstNode & variableInit) override;
     
     virtual void write(PIRStatement &stmt);
+    virtual void write(PIRArithOp &arithOpStmt);
     virtual void write(PIRAsm &asmStmt);
     virtual void write(PIRAssign &assignStmt);
     virtual void write(PIRCall &callStmt);

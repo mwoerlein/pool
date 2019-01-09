@@ -357,7 +357,8 @@ bool X86Writer::visit(VariableInitInstNode & variableInit) {
 }
 
 void X86Writer::write(PIRStatement &stmt) {
-    if (PIRAsm *asmStmt = stmt.isAsm()) { write(*asmStmt); }
+    if (PIRArithOp *arithOpStmt = stmt.isArithOp()) { write(*arithOpStmt); }
+    else if (PIRAsm *asmStmt = stmt.isAsm()) { write(*asmStmt); }
     else if (PIRAssign *assignStmt = stmt.isAssign()) { write(*assignStmt); }
     else if (PIRCall *callStmt = stmt.isCall()) { write(*callStmt); }
     else if (PIRGet *getStmt = stmt.isGet()) { write(*getStmt); }
@@ -366,6 +367,41 @@ void X86Writer::write(PIRStatement &stmt) {
     else if (PIRSet *setStmt = stmt.isSet()) { write(*setStmt); }
     else {
         error() << "unexpected PIR statement " << stmt << "\n";
+    }
+}
+
+void X86Writer::write(PIRArithOp &arithOpStmt) {
+    switch (arithOpStmt.op) {
+        case op_add:
+            code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
+            code() << "addl "; write(arithOpStmt.right); elem() << ", %eax\n";
+            code() << "movl %eax, "; write(arithOpStmt.dest); elem() << "\n";
+            break;
+        case op_sub:
+            code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
+            code() << "subl "; write(arithOpStmt.right); elem() << ", %eax\n";
+            code() << "movl %eax, "; write(arithOpStmt.dest); elem() << "\n";
+            break;
+        case op_mul:
+            code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
+            code() << "movl "; write(arithOpStmt.right); elem() << ", %ebx\n";
+            code() << ".byte 0x0f; .byte 0xaf; .byte 0xc3 #//imul %ebx, %eax\n";
+            code() << "movl %eax, "; write(arithOpStmt.dest); elem() << "\n";
+            break;
+        case op_div:
+            code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
+            code() << ".byte 0x99 #//cdq\n";
+            code() << "movl "; write(arithOpStmt.right); elem() << ", %ebx\n";
+            code() << ".byte 0xf7; .byte 0xfb #//idiv %ebx\n";
+            code() << "movl %eax, "; write(arithOpStmt.dest); elem() << "\n";
+            break;
+        case op_mod:
+            code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
+            code() << ".byte 0x99 #//cdq\n";
+            code() << "movl "; write(arithOpStmt.right); elem() << ", %ebx\n";
+            code() << ".byte 0xf7; .byte 0xfb #//idiv %ebx\n";
+            code() << "movl %edx, "; write(arithOpStmt.dest); elem() << "\n";
+            break;
     }
 }
 

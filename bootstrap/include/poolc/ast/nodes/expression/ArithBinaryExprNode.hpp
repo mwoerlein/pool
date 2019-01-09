@@ -3,6 +3,8 @@
 
 #include "poolc/ast/nodes/ExpressionNode.hpp"
 
+#include "poolc/Arith.hpp"
+
 class ArithBinaryExprNode: public ExpressionNode {
     public:
     arith_op op;

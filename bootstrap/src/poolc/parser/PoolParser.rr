@@ -170,8 +170,8 @@ int PoolParser::lex()
         "*"             { setLocation(); return parser->makeStar(); }
         "/"             { setLocation(); return parser->makeSlash(); }
         "%"             { setLocation(); return parser->makePercentage(); }
-        "--"            { setLocation(); return parser->makePlusPlus(); }
-        "++"            { setLocation(); return parser->makeMinusMinus(); }
+        "++"            { setLocation(); return parser->makePlusPlus(); }
+        "--"            { setLocation(); return parser->makeMinusMinus(); }
         "+="            { setLocation(); return parser->makePlusEqual(); }
         "-="            { setLocation(); return parser->makeMinusEqual(); }
         "*="            { setLocation(); return parser->makeStarEqual(); }
