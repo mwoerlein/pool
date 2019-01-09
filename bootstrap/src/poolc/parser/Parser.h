@@ -29,6 +29,18 @@ class Parser: public ParserBase
         int makeColonColonEqual();
         int makeDot();
         int makeEqual();
+        int makeMinus();
+        int makeMinusEqual();
+        int makeMinusMinus();
+        int makePercentage();
+        int makePercentageEqual();
+        int makePlus();
+        int makePlusEqual();
+        int makePlusPlus(); 
+        int makeSlash();
+        int makeSlashEqual();
+        int makeStar();
+        int makeStarEqual();
         
         int makeAbstract();
         int makeAs();

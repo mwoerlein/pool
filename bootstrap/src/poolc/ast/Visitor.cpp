@@ -23,10 +23,14 @@ bool Visitor::visit(InlinePasmInstNode & pasmInstruction) { return false; }
 bool Visitor::visit(ReturnInstNode & returnInst) { return false; }
 bool Visitor::visit(VariableInitInstNode & variableInit) { return false; }
 
+bool Visitor::visit(ArithAssignmentExprNode & arithAssignment) { return false; }
+bool Visitor::visit(ArithBinaryExprNode & arithBinary) { return false; }
+bool Visitor::visit(ArithUnaryExprNode & arithUnary) { return false; }
 bool Visitor::visit(AssignmentExprNode & assignment) { return false; }
 bool Visitor::visit(ConstCStringExprNode & constCString) { return false; }
 bool Visitor::visit(ConstIntExprNode & constInt) { return false; }
 bool Visitor::visit(MethodCallExprNode & methodCall) { return false; }
 bool Visitor::visit(NullExprNode & constNull) { return false; }
+bool Visitor::visit(SignExprNode & constNull) { return false; }
 bool Visitor::visit(ThisExprNode & constThis) { return false; }
 bool Visitor::visit(VariableExprNode & variable) { return false; }

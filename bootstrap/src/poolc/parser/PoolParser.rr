@@ -165,6 +165,18 @@ int PoolParser::lex()
         "::="           { setLocation(); return parser->makeColonColonEqual(); }
         "."             { setLocation(); return parser->makeDot(); }
         "="             { setLocation(); return parser->makeEqual(); }
+        "+"             { setLocation(); return parser->makePlus(); }
+        "-"             { setLocation(); return parser->makeMinus(); }
+        "*"             { setLocation(); return parser->makeStar(); }
+        "/"             { setLocation(); return parser->makeSlash(); }
+        "%"             { setLocation(); return parser->makePercentage(); }
+        "--"            { setLocation(); return parser->makePlusPlus(); }
+        "++"            { setLocation(); return parser->makeMinusMinus(); }
+        "+="            { setLocation(); return parser->makePlusEqual(); }
+        "-="            { setLocation(); return parser->makeMinusEqual(); }
+        "*="            { setLocation(); return parser->makeStarEqual(); }
+        "/="            { setLocation(); return parser->makeSlashEqual(); }
+        "%="            { setLocation(); return parser->makePercentageEqual(); }
         
         "abstract"      { setLocation(); return parser->makeAbstract(); }
         "as"            { setLocation(); return parser->makeAs(); }
@@ -185,15 +197,11 @@ int PoolParser::lex()
         "__naked__"     { setLocation(); return parser->makeNaked(); }
         "__pasm__"      { setLocation(); return parser->makePasm(); }
         
-        "0" [bB] @o1 [01]+ @o2          { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2,  2)); }
-        "-0" [bB] @o1 [01]+ @o2         { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2,  2)); }
-        "0" @o1 [0-7]+ @o2              { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2,  8)); }
-        "-0" @o1 [0-7]+ @o2             { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2,  8)); }
-        @o1 [1-9][0-9]* @o2             { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2, 10)); } 
-        "-" @o1 [1-9][0-9]* @o2         { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2, 10)); } 
-        "0"[xX] @o1 [0-9a-fA-F]+ @o2    { setLocation(); return parser->makeNumber( parseIntegerValue(o1, o2, 16)); }
-        "-0"[xX] @o1 [0-9a-fA-F]+ @o2   { setLocation(); return parser->makeNumber(-parseIntegerValue(o1, o2, 16)); }
-        "-"? "0"                        { setLocation(); return parser->makeNumber(0); }
+        "0" [bB] @o1 [01]+ @o2          { setLocation(); return parser->makeNumber(parseIntegerValue(o1, o2,  2)); }
+        "0" @o1 [0-7]+ @o2              { setLocation(); return parser->makeNumber(parseIntegerValue(o1, o2,  8)); }
+        @o1 [1-9][0-9]* @o2             { setLocation(); return parser->makeNumber(parseIntegerValue(o1, o2, 10)); } 
+        "0"[xX] @o1 [0-9a-fA-F]+ @o2    { setLocation(); return parser->makeNumber(parseIntegerValue(o1, o2, 16)); }
+        "0"                             { setLocation(); return parser->makeNumber(0); }
         
         @o1 id ("::" id)+ @o2  {
                         String &s = env().create<String, char *, char *>(o1, o2);

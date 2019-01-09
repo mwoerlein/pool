@@ -33,8 +33,6 @@
 %token COLON
 %token COLON_EQUAL
 %token COLON_COLON_EQUAL
-%right EQUAL
-%left DOT
 
 %token ABSTRACT
 %token AS
@@ -60,6 +58,14 @@
 %token <u_string> FQN
 %token <u_number> NUMBER
 
+%right EQUAL PLUS_EQUAL MINUS_EQUAL STAR_EQUAL SLASH_EQUAL PERCENTAGE_EQUAL
+%left PLUS MINUS
+%left STAR SLASH PERCENTAGE
+%left SIGN_PREC
+%right PLUS_PLUS MINUS_MINUS
+%left UNARY_POST_PREC
+%left DOT
+
 %type <u_unit> translation_unit
 %type <u_namespace_decl> namespace_decl
 %type <u_use_stmt> use_stmt
@@ -82,14 +88,15 @@
 %type <u_expression_list> expression_list_empty
 %type <u_expression_map> expression_map
 %type <u_expression_map> expression_map_empty
-%type <u_method_call> method_call_expr
+%type <u_expression> value_expr
 %type <u_variable> variable_expr
+%type <u_method_call> method_call_expr
+%type <u_expression> arithmetic_expr
 
 %type <u_type> type
 %type <u_type_class> type_class
 %type <u_type_list> type_list
 %type <u_type_list> type_list_empty
-
 
 //=
 %%
@@ -433,41 +440,9 @@ method_decl:
 
 // EXPRESSIONS
 expression:
-    NUMBER
+    value_expr
     {
-        $$ = &driver.env().create<ConstIntExprNode, int>($1);
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @1.last_line;
-        $$->last_column = @1.last_column;
-    }
-|   STRING
-    {
-        $$ = &driver.env().create<ConstCStringExprNode, String&>(*$1);
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @1.last_line;
-        $$->last_column = @1.last_column;
-    }
-|   THIS
-    {
-        $$ = &driver.env().create<ThisExprNode>();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @1.last_line;
-        $$->last_column = @1.last_column;
-    }
-|   T_NULL
-    {
-        $$ = &driver.env().create<NullExprNode>();
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @1.last_line;
-        $$->last_column = @1.last_column;
+        $$ = $1;
     }
 |   variable_expr
     {
@@ -477,14 +452,9 @@ expression:
     {
         $$ = $1;
     }
-|   variable_expr EQUAL expression
+|   arithmetic_expr
     {
-        $$ = &driver.env().create<AssignmentExprNode, VariableExprNode&, ExpressionNode&>(*$1, *$3);
-        
-        $$->first_line = @1.first_line;
-        $$->first_column = @1.first_column;
-        $$->last_line = @3.last_line;
-        $$->last_column = @3.last_column;
+        $$ = $1;
     }
 |   '(' expression ')'
     {
@@ -534,6 +504,63 @@ expression_map_empty:
 |   expression_map
 ;
 
+value_expr:
+    NUMBER
+    {
+        $$ = &driver.env().create<ConstIntExprNode, int>($1);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   PLUS NUMBER
+    {
+        $$ = &driver.env().create<ConstIntExprNode, int>($2);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   MINUS NUMBER
+    {
+        $$ = &driver.env().create<ConstIntExprNode, int>(-$2);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   STRING
+    {
+        $$ = &driver.env().create<ConstCStringExprNode, String&>(*$1);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   THIS
+    {
+        $$ = &driver.env().create<ThisExprNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+|   T_NULL
+    {
+        $$ = &driver.env().create<NullExprNode>();
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @1.last_line;
+        $$->last_column = @1.last_column;
+    }
+;
+
 variable_expr:
     ID
     {
@@ -575,6 +602,162 @@ method_call_expr:
         $$->last_column = @6.last_column;
         
         $5->destroy();
+    }
+;
+
+arithmetic_expr:
+    expression PLUS expression
+    {
+        $$ = &driver.env().create<ArithBinaryExprNode, arith_op, ExpressionNode&, ExpressionNode&>(op_add, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression MINUS expression
+    {
+        $$ = &driver.env().create<ArithBinaryExprNode, arith_op, ExpressionNode&, ExpressionNode&>(op_sub, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression STAR expression
+    {
+        $$ = &driver.env().create<ArithBinaryExprNode, arith_op, ExpressionNode&, ExpressionNode&>(op_mul, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression SLASH expression
+    {
+        $$ = &driver.env().create<ArithBinaryExprNode, arith_op, ExpressionNode&, ExpressionNode&>(op_div, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression PERCENTAGE expression
+    {
+        $$ = &driver.env().create<ArithBinaryExprNode, arith_op, ExpressionNode&, ExpressionNode&>(op_mod, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   PLUS expression %prec SIGN_PREC
+    {
+        $$ = &driver.env().create<SignExprNode, sign_t, ExpressionNode&>(sign_plus, *$2);
+
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   MINUS expression %prec SIGN_PREC
+    {
+        $$ = &driver.env().create<SignExprNode, sign_t, ExpressionNode&>(sign_minus, *$2);
+
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   PLUS_PLUS variable_expr
+    {
+        $$ = &driver.env().create<ArithUnaryExprNode, arith_unary, VariableExprNode&>(unary_inc, *$2);
+
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   MINUS_MINUS variable_expr
+    {
+        $$ = &driver.env().create<ArithUnaryExprNode, arith_unary, VariableExprNode&>(unary_dec, *$2);
+
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   variable_expr PLUS_PLUS %prec UNARY_POST_PREC
+    {
+        $$ = &driver.env().create<ArithUnaryExprNode, arith_unary, VariableExprNode&>(unary_post_inc, *$1);
+
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   variable_expr MINUS_MINUS %prec UNARY_POST_PREC
+    {
+        $$ = &driver.env().create<ArithUnaryExprNode, arith_unary, VariableExprNode&>(unary_post_dec, *$1);
+
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   variable_expr EQUAL expression
+    {
+        $$ = &driver.env().create<AssignmentExprNode, VariableExprNode&, ExpressionNode&>(*$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   variable_expr PLUS_EQUAL expression
+    {
+        $$ = &driver.env().create<ArithAssignmentExprNode, arith_op, VariableExprNode&, ExpressionNode&>(op_add, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   variable_expr MINUS_EQUAL expression
+    {
+        $$ = &driver.env().create<ArithAssignmentExprNode, arith_op, VariableExprNode&, ExpressionNode&>(op_sub, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   variable_expr STAR_EQUAL expression
+    {
+        $$ = &driver.env().create<ArithAssignmentExprNode, arith_op, VariableExprNode&, ExpressionNode&>(op_mul, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   variable_expr SLASH_EQUAL expression
+    {
+        $$ = &driver.env().create<ArithAssignmentExprNode, arith_op, VariableExprNode&, ExpressionNode&>(op_div, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   variable_expr PERCENTAGE_EQUAL expression
+    {
+        $$ = &driver.env().create<ArithAssignmentExprNode, arith_op, VariableExprNode&, ExpressionNode&>(op_mod, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
     }
 ;
 

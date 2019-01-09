@@ -5,11 +5,15 @@
 #include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
+#include "poolc/ast/nodes/expression/ArithAssignmentExprNode.hpp"
+#include "poolc/ast/nodes/expression/ArithBinaryExprNode.hpp"
+#include "poolc/ast/nodes/expression/ArithUnaryExprNode.hpp"
 #include "poolc/ast/nodes/expression/AssignmentExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstCStringExprNode.hpp"
 #include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
 #include "poolc/ast/nodes/expression/MethodCallExprNode.hpp"
 #include "poolc/ast/nodes/expression/NullExprNode.hpp"
+#include "poolc/ast/nodes/expression/SignExprNode.hpp"
 #include "poolc/ast/nodes/expression/ThisExprNode.hpp"
 #include "poolc/ast/nodes/expression/VariableExprNode.hpp"
 

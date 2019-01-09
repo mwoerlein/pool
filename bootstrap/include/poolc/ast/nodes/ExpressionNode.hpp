@@ -7,11 +7,15 @@ class ExpressionNode: virtual public Node {
     public:
     virtual ~ExpressionNode();
     
+    virtual ArithAssignmentExprNode * isArithAssignment();
+    virtual ArithBinaryExprNode * isArithBinary();
+    virtual ArithUnaryExprNode * isArithUnary();
     virtual AssignmentExprNode * isAssignment();
     virtual ConstCStringExprNode * isConstCString();
     virtual ConstIntExprNode * isConstInt();
     virtual MethodCallExprNode * isMethodCall();
     virtual NullExprNode * isNull();
+    virtual SignExprNode * isSign();
     virtual ThisExprNode * isThis();
     virtual VariableExprNode * isVariable();
     virtual ClassRefNode * isClass();

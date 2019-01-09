@@ -19,11 +19,15 @@ class IntRefNode;
 class TypeRefNode;
 class UseStatementNode;
 
+class ArithAssignmentExprNode;
+class ArithBinaryExprNode;
+class ArithUnaryExprNode;
 class AssignmentExprNode;
 class ConstCStringExprNode;
 class ConstIntExprNode;
 class MethodCallExprNode;
 class NullExprNode;
+class SignExprNode;
 class ThisExprNode;
 class VariableExprNode;
 
@@ -57,11 +61,15 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     virtual bool visit(ReturnInstNode & returnInst);
     virtual bool visit(VariableInitInstNode & variableInit);
     
+    virtual bool visit(ArithAssignmentExprNode & arithAssignment);
+    virtual bool visit(ArithBinaryExprNode & arithBinary);
+    virtual bool visit(ArithUnaryExprNode & arithUnary);
     virtual bool visit(AssignmentExprNode & assignment);
     virtual bool visit(ConstCStringExprNode & constCString);
     virtual bool visit(ConstIntExprNode & constInt);
     virtual bool visit(MethodCallExprNode & methodCall);
     virtual bool visit(NullExprNode & constNull);
+    virtual bool visit(SignExprNode & sign);
     virtual bool visit(ThisExprNode & constThis);
     virtual bool visit(VariableExprNode & variable);
 };

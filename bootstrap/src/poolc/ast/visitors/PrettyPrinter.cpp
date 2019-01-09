@@ -219,6 +219,43 @@ bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
     line << ";\n";
 }
 
+bool PrettyPrinter::visit(ArithAssignmentExprNode & arithAssignment) {
+    elem() << "(";
+    arithAssignment.variable.accept(*this);
+    switch (arithAssignment.op) {
+        case op_add: elem() << " += "; break;
+        case op_sub: elem() << " -= "; break;
+        case op_mul: elem() << " *= "; break;
+        case op_div: elem() << " /= "; break;
+        case op_mod: elem() << " %= "; break;
+    }
+    arithAssignment.value.accept(*this);
+    elem() << ")";
+    
+}
+bool PrettyPrinter::visit(ArithBinaryExprNode & arithBinary) {
+    elem() << "(";
+    arithBinary.left.accept(*this);
+    switch (arithBinary.op) {
+        case op_add: elem() << " + "; break;
+        case op_sub: elem() << " - "; break;
+        case op_mul: elem() << " * "; break;
+        case op_div: elem() << " / "; break;
+        case op_mod: elem() << " % "; break;
+    }
+    arithBinary.right.accept(*this);
+    elem() << ")";
+}
+bool PrettyPrinter::visit(ArithUnaryExprNode & arithUnary) {
+    elem() << "(";
+    switch (arithUnary.op) {
+        case unary_inc: elem() << "++"; arithUnary.variable.accept(*this); break;
+        case unary_dec: elem() << "--"; arithUnary.variable.accept(*this); break;
+        case unary_post_inc: arithUnary.variable.accept(*this); elem() << "++"; break;
+        case unary_post_dec: arithUnary.variable.accept(*this); elem() << "--"; break;
+    }
+    elem() << ")";
+}
 bool PrettyPrinter::visit(AssignmentExprNode & assignment) {
     elem() << "(";
     assignment.variable.accept(*this);
@@ -247,6 +284,14 @@ bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
 }
 bool PrettyPrinter::visit(NullExprNode & constNull) {
     elem() << "null";
+}
+bool PrettyPrinter::visit(SignExprNode & sign) {
+    elem() << "(";
+    switch (sign.sign) {
+        case sign_plus: elem() << "+"; sign.expression.accept(*this); break;
+        case sign_minus: elem() << "-"; sign.expression.accept(*this); break;
+    }
+    elem() << ")";
 }
 bool PrettyPrinter::visit(ThisExprNode & constThis) {
     elem() << "this";

@@ -9,6 +9,10 @@
 #include "sys/String.hpp"
 #include "poolc/parser/token/FullQualifiedName.hpp"
 
+enum sign_t { sign_plus, sign_minus };
+enum arith_op { op_add, op_sub, op_mul, op_div, op_mod };
+enum arith_unary { unary_inc, unary_dec, unary_post_inc, unary_post_dec };
+
 class Scope;
 class Type;
 class Node: virtual public Object {
