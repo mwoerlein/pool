@@ -167,6 +167,13 @@ bool ClassResolver::visit(ExpressionInstNode & expressionInst) {
     return true;
 }
 
+bool ClassResolver::visit(IfInstNode & ifInst) {
+    ifInst.condition.accept(*this);
+    ifInst.trueBlock.accept(*this);
+    ifInst.falseBlock.accept(*this);
+    return true;
+}
+
 bool ClassResolver::visit(InlinePasmInstNode & pasmInstruction) {
     pasmInstruction.in.acceptAll(*this);
     pasmInstruction.out.acceptAll(*this);
@@ -181,6 +188,12 @@ bool ClassResolver::visit(ReturnInstNode & returnInst) {
 bool ClassResolver::visit(VariableInitInstNode & variableInit) {
     variableInit.variables.acceptAll(*this);
     variableInit.initializer.accept(*this);
+    return true;
+}
+
+bool ClassResolver::visit(WhileInstNode & whileInst) {
+    whileInst.condition.accept(*this);
+    whileInst.block.accept(*this);
     return true;
 }
 
@@ -214,6 +227,19 @@ bool ClassResolver::visit(ConstCStringExprNode & constCString) {
 
 bool ClassResolver::visit(ConstIntExprNode & constInt) {
     constInt.resolvedType = &intType;
+    return true;
+}
+
+bool ClassResolver::visit(LogicalBinaryExprNode & logicalBinary) {
+    logicalBinary.resolvedType = &intType;
+    logicalBinary.left.accept(*this);
+    logicalBinary.right.accept(*this);
+    return true;
+}
+
+bool ClassResolver::visit(LogicalUnaryExprNode & logicalUnary) {
+    logicalUnary.resolvedType = &intType;
+    logicalUnary.expression.accept(*this);
     return true;
 }
 

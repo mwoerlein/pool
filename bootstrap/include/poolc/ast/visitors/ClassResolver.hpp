@@ -39,9 +39,11 @@ class ClassResolver: public Visitor {
     
     virtual bool visit(BlockInstNode & block) override;
     virtual bool visit(ExpressionInstNode & exprInst) override;
+    virtual bool visit(IfInstNode & ifInst) override;
     virtual bool visit(InlinePasmInstNode & pasmInst) override;
     virtual bool visit(ReturnInstNode & returnInst) override;
     virtual bool visit(VariableInitInstNode & variableInit) override;
+    virtual bool visit(WhileInstNode & whileInst) override;
     
     virtual bool visit(ArithAssignmentExprNode & arithAssignment);
     virtual bool visit(ArithBinaryExprNode & arithBinary);
@@ -49,6 +51,8 @@ class ClassResolver: public Visitor {
     virtual bool visit(AssignmentExprNode & assignment) override;
     virtual bool visit(ConstCStringExprNode & constCString) override;
     virtual bool visit(ConstIntExprNode & constInt) override;
+    virtual bool visit(LogicalBinaryExprNode & logicalBinary) override;
+    virtual bool visit(LogicalUnaryExprNode & logicalUnary) override;
     virtual bool visit(MethodCallExprNode & methodCall) override;
     virtual bool visit(NullExprNode & constNull) override;
     virtual bool visit(SignExprNode & sign);

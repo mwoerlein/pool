@@ -95,6 +95,18 @@ bool TypeResolver::visit(InlinePasmInstNode & pasmInstruction) {
     return true;
 }
 
+bool TypeResolver::visit(IfInstNode & ifInst) {
+    ifInst.condition.accept(*this);
+    if (!ifInst.condition.resolvedType->isBool()) {
+        ifInst.printDebugInfo(error() << ifInst.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid condition '" << *ifInst.condition.resolvedType << "' in " << ifInst << "\n";
+        return false;
+    }
+    ifInst.trueBlock.accept(*this);
+    ifInst.falseBlock.accept(*this);
+    return true;
+}
+
 bool TypeResolver::visit(ReturnInstNode & returnInst) {
     returnInst.values.acceptAll(*this);
     // TODO: compare values.resolvedTypes with method resultTypes
@@ -108,6 +120,17 @@ bool TypeResolver::visit(VariableInitInstNode & variableInit) {
     if (variableInit.final) {
         variableInit.variables.first()->scope->isVariable()->finalInitializer = &variableInit.initializer;
     }
+    return true;
+}
+
+bool TypeResolver::visit(WhileInstNode & whileInst) {
+    whileInst.condition.accept(*this);
+    if (!whileInst.condition.resolvedType->isBool()) {
+        whileInst.printDebugInfo(error() << whileInst.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid condition '" << *whileInst.condition.resolvedType << "' in " << whileInst << "\n";
+        return false;
+    }
+    whileInst.block.accept(*this);
     return true;
 }
 
@@ -169,6 +192,49 @@ bool TypeResolver::visit(ConstCStringExprNode & constCString) {
 }
 
 bool TypeResolver::visit(ConstIntExprNode & constInt) {
+    return true;
+}
+
+bool TypeResolver::visit(LogicalBinaryExprNode & logicalBinary) {
+    logicalBinary.left.accept(*this);
+    logicalBinary.right.accept(*this);
+    switch (logicalBinary.op) {
+        case op_and:
+        case op_or:
+            if (!logicalBinary.left.resolvedType->isBool()) {
+                logicalBinary.printDebugInfo(error() << logicalBinary.scope->getClassDeclNode()->fullQualifiedName); 
+                error() << ": invalid left type '" << *logicalBinary.left.resolvedType << "' in " << logicalBinary << "\n";
+                return false;
+            }
+            if (!logicalBinary.right.resolvedType->isBool()) {
+                logicalBinary.printDebugInfo(error() << logicalBinary.scope->getClassDeclNode()->fullQualifiedName); 
+                error() << ": invalid right type '" << *logicalBinary.right.resolvedType << "' in " << logicalBinary << "\n";
+                return false;
+            }
+            // any current types are implicit bool
+            break;
+        default:
+            if (!logicalBinary.left.resolvedType->isInt()) {
+                logicalBinary.printDebugInfo(error() << logicalBinary.scope->getClassDeclNode()->fullQualifiedName); 
+                error() << ": invalid left type '" << *logicalBinary.left.resolvedType << "' in " << logicalBinary << "\n";
+                return false;
+            }
+            if (!logicalBinary.right.resolvedType->isInt()) {
+                logicalBinary.printDebugInfo(error() << logicalBinary.scope->getClassDeclNode()->fullQualifiedName); 
+                error() << ": invalid right type '" << *logicalBinary.right.resolvedType << "' in " << logicalBinary << "\n";
+                return false;
+            }
+    }
+    return true;
+}
+
+bool TypeResolver::visit(LogicalUnaryExprNode & logicalUnary) {
+    logicalUnary.expression.accept(*this);
+    if (!logicalUnary.expression.resolvedType->isBool()) {
+        logicalUnary.printDebugInfo(error() << logicalUnary.scope->getClassDeclNode()->fullQualifiedName); 
+        error() << ": invalid expression type '" << *logicalUnary.expression.resolvedType << "' in " << logicalUnary << "\n";
+        return false;
+    }
     return true;
 }
 

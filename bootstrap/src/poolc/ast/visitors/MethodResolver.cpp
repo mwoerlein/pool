@@ -124,6 +124,14 @@ bool MethodResolver::visit(ExpressionInstNode & expressionInst) {
     return true;
 }
 
+bool MethodResolver::visit(IfInstNode & ifInst) {
+    ifInst.scope = curScope;
+    ifInst.condition.accept(*this);
+    ifInst.trueBlock.accept(*this);
+    ifInst.falseBlock.accept(*this);
+    return true;
+}
+
 bool MethodResolver::visit(InlinePasmInstNode & pasmInstruction) {
     pasmInstruction.scope = curScope;
     pasmInstruction.in.acceptAll(*this);
@@ -144,6 +152,13 @@ bool MethodResolver::visit(VariableInitInstNode & variableInit) {
     // variable declarations *after* initializers to make them unaccessable *in* initializers
     variableInit.variables.acceptAll(*this);
     curInit = 0;
+    return true;
+}
+
+bool MethodResolver::visit(WhileInstNode & whileInst) {
+    whileInst.scope = curScope;
+    whileInst.condition.accept(*this);
+    whileInst.block.accept(*this);
     return true;
 }
 
@@ -186,6 +201,19 @@ bool MethodResolver::visit(ConstCStringExprNode & constCString) {
 
 bool MethodResolver::visit(ConstIntExprNode & constInt) {
     constInt.scope = curScope;
+    return true;
+}
+
+bool MethodResolver::visit(LogicalBinaryExprNode & logicalBinary) {
+    logicalBinary.scope = curScope;
+    logicalBinary.left.accept(*this);
+    logicalBinary.right.accept(*this);
+    return true;
+}
+
+bool MethodResolver::visit(LogicalUnaryExprNode & logicalUnary) {
+    logicalUnary.scope = curScope;
+    logicalUnary.expression.accept(*this);
     return true;
 }
 
