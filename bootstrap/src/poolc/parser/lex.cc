@@ -3,34 +3,47 @@
 
 #include "poolc/parser/PoolParser.hpp"
 
-int Parser::makeColon()     { return COLON; }
-int Parser::makeColonEqual(){ return COLON_EQUAL; }
-int Parser::makeColonColonEqual() { return COLON_COLON_EQUAL; }
-int Parser::makeDot()       { return DOT; }
-int Parser::makeEqual()     { return EQUAL; }
-int Parser::makeMinus()     { return MINUS; }
-int Parser::makeMinusEqual(){ return MINUS_EQUAL; }
-int Parser::makeMinusMinus(){ return MINUS_MINUS; }
-int Parser::makePercentage(){ return PERCENTAGE; }
-int Parser::makePercentageEqual() { return PERCENTAGE_EQUAL; }
-int Parser::makePlus()      { return PLUS; }
-int Parser::makePlusEqual() { return PLUS_EQUAL; }
-int Parser::makePlusPlus()  { return PLUS_PLUS; }
-int Parser::makeSlash()     { return SLASH; }
-int Parser::makeSlashEqual(){ return SLASH_EQUAL; }
-int Parser::makeStar()      { return STAR; }
-int Parser::makeStarEqual() { return STAR_EQUAL; }
+int Parser::makeColon()             { return COLON; }
+int Parser::makeColonEqual()        { return COLON_EQUAL; }
+int Parser::makeColonColonEqual()   { return COLON_COLON_EQUAL; }
+int Parser::makeDot()               { return DOT; }
+int Parser::makeEqual()             { return EQUAL; }
+int Parser::makeMinus()             { return MINUS; }
+int Parser::makeMinusEqual()        { return MINUS_EQUAL; }
+int Parser::makeMinusMinus()        { return MINUS_MINUS; }
+int Parser::makePercentage()        { return PERCENTAGE; }
+int Parser::makePercentageEqual()   { return PERCENTAGE_EQUAL; }
+int Parser::makePlus()              { return PLUS; }
+int Parser::makePlusEqual()         { return PLUS_EQUAL; }
+int Parser::makePlusPlus()          { return PLUS_PLUS; }
+int Parser::makeSlash()             { return SLASH; }
+int Parser::makeSlashEqual()        { return SLASH_EQUAL; }
+int Parser::makeStar()              { return STAR; }
+int Parser::makeStarEqual()         { return STAR_EQUAL; }
+
+int Parser::makeAmpersandAmpersand()     { return AMPERSAND_AMPERSAND; }
+int Parser::makePipePipe()               { return PIPE_PIPE; }
+int Parser::makeExclamationmark()        { return EXCLAMATIONMARK; }
+int Parser::makeEqualEqual()             { return EQUAL_EQUAL; }
+int Parser::makeExclamationmarkEqual()   { return EXCLAMATIONMARK_EQUAL; }
+int Parser::makeAnglebracketopen()       { return ANGLEBRACKETOPEN; }
+int Parser::makeAnglebracketopenEqual()  { return ANGLEBRACKETOPEN_EQUAL; }
+int Parser::makeAnglebracketclose()      { return ANGLEBRACKETCLOSE; }
+int Parser::makeAnglebracketcloseEqual() { return ANGLEBRACKETCLOSE_EQUAL; }
 
 int Parser::makeAbstract()  { return ABSTRACT; }
 int Parser::makeAs()        { return AS; }
 int Parser::makeClass()     { return CLASS; }
+int Parser::makeElse()      { return ELSE; }
 int Parser::makeExtends()   { return EXTENDS; }
 int Parser::makeGlobal()    { return GLOBAL; }
+int Parser::makeIf()        { return IF; }
 int Parser::makeNamespace() { return NAMESPACE; }
 int Parser::makeNull()      { return T_NULL; }
 int Parser::makeReturn()    { return RETURN; }
 int Parser::makeThis()      { return THIS; }
 int Parser::makeUse()       { return USE; }
+int Parser::makeWhile()     { return WHILE; }
 
 int Parser::makeAll()       { return ALL; }
 int Parser::makeAny()       { return ANY; }

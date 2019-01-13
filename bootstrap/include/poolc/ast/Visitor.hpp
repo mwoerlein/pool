@@ -25,6 +25,8 @@ class ArithUnaryExprNode;
 class AssignmentExprNode;
 class ConstCStringExprNode;
 class ConstIntExprNode;
+class LogicalBinaryExprNode;
+class LogicalUnaryExprNode;
 class MethodCallExprNode;
 class NullExprNode;
 class SignExprNode;
@@ -33,9 +35,11 @@ class VariableExprNode;
 
 class BlockInstNode;
 class ExpressionInstNode;
+class IfInstNode;
 class InlinePasmInstNode;
 class ReturnInstNode;
 class VariableInitInstNode;
+class WhileInstNode;
 
 class Visitor: virtual public Object, virtual public LoggerAware {
     public:
@@ -57,9 +61,11 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     
     virtual bool visit(BlockInstNode & block);
     virtual bool visit(ExpressionInstNode & exprInst);
+    virtual bool visit(IfInstNode & ifInst);
     virtual bool visit(InlinePasmInstNode & pasmInst);
     virtual bool visit(ReturnInstNode & returnInst);
     virtual bool visit(VariableInitInstNode & variableInit);
+    virtual bool visit(WhileInstNode & whileInst);
     
     virtual bool visit(ArithAssignmentExprNode & arithAssignment);
     virtual bool visit(ArithBinaryExprNode & arithBinary);
@@ -67,6 +73,8 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     virtual bool visit(AssignmentExprNode & assignment);
     virtual bool visit(ConstCStringExprNode & constCString);
     virtual bool visit(ConstIntExprNode & constInt);
+    virtual bool visit(LogicalBinaryExprNode & logicalBinary);
+    virtual bool visit(LogicalUnaryExprNode & logicalUnary);
     virtual bool visit(MethodCallExprNode & methodCall);
     virtual bool visit(NullExprNode & constNull);
     virtual bool visit(SignExprNode & sign);

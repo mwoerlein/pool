@@ -12,6 +12,8 @@ class BlockInstNode: public InstructionNode {
     BlockInstNode(Environment &env, MemoryInfo &mi);
     virtual ~BlockInstNode();
     
+    inline bool isEmpty() { return instructions.isEmpty(); }
+    
     virtual bool accept(Visitor & visitor) override;
     virtual void printDebugName(OStream & stream) override;
 };

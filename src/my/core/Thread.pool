@@ -10,6 +10,6 @@ namespace my::core;
 class Thread extends Object {
     
     // methods
-    abstract <> run();
+    abstract [] run();
     
 }

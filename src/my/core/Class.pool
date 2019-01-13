@@ -19,13 +19,13 @@ class Class extends Object {
     
     // methods
     // TODO: replace int with working ClassHeader "struct"
-    <int> getDesc() {
+    [int] getDesc() {
         return desc;
     }
     
     // TODO: move to constructor?
     // TODO: replace int with working ClassHeader "struct"
-    <> setDesc(int desc) {
+    [] setDesc(int desc) {
         this.desc = desc;
         // desc.inst_handle = this; 
         __pasm__("movl %eax, _my_core_Class_coi_ch_inst_handle(%ebx)", {"%eax": this, "%ebx": desc});
@@ -33,7 +33,7 @@ class Class extends Object {
     }
     
     // TODO: replace cstring with working String class
-    <cstring> getName() {
+    [cstring] getName() {
         // return this.desc.name;
         cstring name = "";
         __pasm__("addl _my_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": name});

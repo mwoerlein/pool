@@ -153,8 +153,8 @@ int PoolParser::lex()
 /*!re2c
         ","         { setLocation(); return ','; }
         ";"         { setLocation(); return ';'; }
-        "<"         { setLocation(); return '<'; }
-        ">"         { setLocation(); return '>'; }
+        "["         { setLocation(); return '['; }
+        "]"         { setLocation(); return ']'; }
         "{"         { setLocation(); return '{'; }
         "}"         { setLocation(); return '}'; }
         "("         { setLocation(); return '('; }
@@ -178,16 +178,29 @@ int PoolParser::lex()
         "/="            { setLocation(); return parser->makeSlashEqual(); }
         "%="            { setLocation(); return parser->makePercentageEqual(); }
         
+        "&&"            { setLocation(); return parser->makeAmpersandAmpersand(); }
+        "||"            { setLocation(); return parser->makePipePipe(); }
+        "!"             { setLocation(); return parser->makeExclamationmark(); }
+        "=="            { setLocation(); return parser->makeEqualEqual(); }
+        "!="            { setLocation(); return parser->makeExclamationmarkEqual(); }
+        "<"             { setLocation(); return parser->makeAnglebracketopen(); }
+        "<="            { setLocation(); return parser->makeAnglebracketopenEqual(); }
+        ">"             { setLocation(); return parser->makeAnglebracketclose(); }
+        ">="            { setLocation(); return parser->makeAnglebracketcloseEqual(); }
+        
         "abstract"      { setLocation(); return parser->makeAbstract(); }
         "as"            { setLocation(); return parser->makeAs(); }
         "class"         { setLocation(); return parser->makeClass(); }
         "extends"       { setLocation(); return parser->makeExtends(); }
+        "else"          { setLocation(); return parser->makeElse(); }
         "global"        { setLocation(); return parser->makeGlobal(); }
+        "if"            { setLocation(); return parser->makeIf(); }
         "namespace"     { setLocation(); return parser->makeNamespace(); }
         "null"          { setLocation(); return parser->makeNull(); }
         "return"        { setLocation(); return parser->makeReturn(); }
         "this"          { setLocation(); return parser->makeThis(); }
         "use"           { setLocation(); return parser->makeUse(); }
+        "while"         { setLocation(); return parser->makeWhile(); }
         
         "__all__"       { setLocation(); return parser->makeAll(); }
         "__any__"       { setLocation(); return parser->makeAny(); }

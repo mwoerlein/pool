@@ -1,6 +1,6 @@
 /*[meta]
 mimetype = text/x-pool
-author = Marc Woerlein <marc.woerlein@gmx.de>
+author = Marc Woerlein [marc.woerlein@gmx.de]
 version = 0.1.0
 */
 namespace my;
@@ -12,7 +12,7 @@ use my::core::Object;
 class B extends myThread, my::A {
     
     // methods
-    <> run() {
+    [] run() {
         Runtime rt := this.rt();    // fixed variable
         this.init(7, 20);
         A a := rt.createInstance(A:CLASSNAME);
@@ -22,7 +22,7 @@ class B extends myThread, my::A {
         return;
     }
     
-    <> doIt(A a) {
+    [] doIt(A a) {
         int out := Runtime:out;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
         rt.printChar('@', Runtime:err);
@@ -38,7 +38,7 @@ class B extends myThread, my::A {
         return;
     }
     
-    <> testAllocate(int size) {
+    [] testAllocate(int size) {
         int out := Runtime:out;     // fixed variable
         Runtime rt := this.rt();    // fixed variable
         // TODO: replace int with working MemInfo "struct"
@@ -55,7 +55,7 @@ class B extends myThread, my::A {
         return;
     }
     
-    <int> getRow() {
+    [int] getRow() {
         return 2*row;
     }
     

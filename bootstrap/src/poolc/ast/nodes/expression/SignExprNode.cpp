@@ -1,7 +1,5 @@
 #include "poolc/ast/nodes/expression/SignExprNode.hpp"
 
-#include "poolc/ast/nodes/expression/VariableExprNode.hpp"
-
 // public
 SignExprNode::SignExprNode(Environment &env, MemoryInfo &mi, sign_t sign, ExpressionNode & expression)
         :Object(env, mi), sign(sign), expression(expression) {}

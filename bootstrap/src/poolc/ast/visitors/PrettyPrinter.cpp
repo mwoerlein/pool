@@ -95,7 +95,7 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
                 line << "global ";
             }
     }
-    line << "<";
+    line << "[";
     {
         Iterator<TypeRefNode> &it = methodDef.returnTypes.iterator();
         while (it.hasNext()) {
@@ -104,7 +104,7 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
         }
         it.destroy();
     }
-    line << "> " << methodDef.name << "(";
+    line << "] " << methodDef.name << "(";
     {
         Iterator<VariableDeclNode> &it = methodDef.parameters.iterator();
         while (it.hasNext()) {
@@ -121,9 +121,13 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
             line << ";\n";
             break;
         default:
-            startBlock(&line);
-            methodDef.body.instructions.acceptAll(*this);
-            endBlock();
+            if (methodDef.body.isEmpty()) {
+                line << " {}\n";
+            } else {
+                startBlock(&line);
+                methodDef.body.instructions.acceptAll(*this);
+                endBlock();
+            }
     }
     indent() << "\n";
 }
@@ -133,7 +137,7 @@ bool PrettyPrinter::visit(VariableInitInstNode & variableInit) {
     OStream & line = indent();
     
     if (variableInit.global) { line << "global "; }
-    if (tuple) { line << "<"; }
+    if (tuple) { line << "["; }
     {
         Iterator<VariableDeclNode> &it = variableInit.variables.iterator();
         while (it.hasNext()) {
@@ -144,8 +148,8 @@ bool PrettyPrinter::visit(VariableInitInstNode & variableInit) {
         }
         it.destroy();
     }
-    if (tuple) { line << ">"; }
-    line << (variableInit.final ? " := " : " = ");
+    if (tuple) { line << "]"; }
+    line << (variableInit.final ? (variableInit.reinterpret ? " ::= " : " := ") : " = ");
     variableInit.initializer.accept(*this);
     line << ";\n";
 }
@@ -157,15 +161,47 @@ bool PrettyPrinter::visit(VariableDeclNode & variableDef) {
 }
 
 bool PrettyPrinter::visit(BlockInstNode & block) {
-    startBlock();
-    block.instructions.acceptAll(*this);
-    endBlock();
+    if (block.isEmpty()) {
+        indent() << "{}\n";
+    } else {
+        startBlock();
+        block.instructions.acceptAll(*this);
+        endBlock();
+    }
 }
 
 bool PrettyPrinter::visit(ExpressionInstNode & exprInst) {
     OStream & line = indent();
     exprInst.expression.accept(*this);
     line << ";\n";
+}
+
+bool PrettyPrinter::visit(IfInstNode & ifInst) {
+    OStream & line = indent() << "if (";
+    ifInst.condition.accept(*this);
+    line << ")";
+    
+    if (ifInst.trueBlock.isEmpty()) {
+        line << " {}";
+        if (ifInst.falseBlock.isEmpty()) {
+            line << "\n";
+        } else {
+            line << " else";
+            startBlock(&line);
+            ifInst.falseBlock.instructions.acceptAll(*this);
+            endBlock();
+        }
+    } else {
+        startBlock(&line);
+        ifInst.trueBlock.instructions.acceptAll(*this);
+        if (!ifInst.falseBlock.isEmpty()) {
+            _indent -= 4;
+            indent() << "} else {";
+            _indent += 4;
+            ifInst.falseBlock.instructions.acceptAll(*this);
+        }
+        endBlock();
+    }
 }
 
 bool PrettyPrinter::visit(InlinePasmInstNode & pasmInst) {
@@ -206,7 +242,7 @@ bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
     bool tuple = returnInst.values.size() > 1;
     
     OStream & line = indent() << "return ";
-    if (tuple) { line << "<"; }
+    if (tuple) { line << "["; }
     {
         Iterator<ExpressionNode> &it = returnInst.values.iterator();
         while (it.hasNext()) {
@@ -215,8 +251,22 @@ bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
         }
         it.destroy();
     }
-    if (tuple) { line << ">"; }
+    if (tuple) { line << "]"; }
     line << ";\n";
+}
+
+bool PrettyPrinter::visit(WhileInstNode & whileInst) {
+    OStream & line = indent() << "while (";
+    whileInst.condition.accept(*this);
+    line << ")";
+    
+    if (whileInst.block.isEmpty()) {
+        line << " {}\n";
+    } else {
+        startBlock(&line);
+        whileInst.block.instructions.acceptAll(*this);
+        endBlock();
+    }
 }
 
 bool PrettyPrinter::visit(ArithAssignmentExprNode & arithAssignment) {
@@ -267,6 +317,29 @@ bool PrettyPrinter::visit(ConstCStringExprNode & constCString) {
 }
 bool PrettyPrinter::visit(ConstIntExprNode & constInt) {
     elem() << constInt.value;
+}
+bool PrettyPrinter::visit(LogicalBinaryExprNode & logicalBinary) {
+    elem() << "(";
+    logicalBinary.left.accept(*this);
+    switch (logicalBinary.op) {
+        case op_and: elem() << " && "; break;
+        case op_or: elem() << " || "; break;
+        case op_eq: elem() << " == "; break;
+        case op_neq: elem() << " != "; break;
+        case op_lt: elem() << " < "; break;
+        case op_le: elem() << " <= "; break;
+        case op_gt: elem() << " > "; break;
+        case op_ge: elem() << " >= "; break;
+    }
+    logicalBinary.right.accept(*this);
+    elem() << ")";
+}
+bool PrettyPrinter::visit(LogicalUnaryExprNode & logicalUnary) {
+    elem() << "(";
+    switch (logicalUnary.op) {
+        case unary_not: elem() << "!"; logicalUnary.expression.accept(*this); break;
+    }
+    elem() << ")";
 }
 bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
     methodCall.context.accept(*this);

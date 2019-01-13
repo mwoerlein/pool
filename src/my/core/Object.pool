@@ -16,7 +16,7 @@ class Object {
     Runtime runtime;
     
     // methods
-    <Class> getClass() {
+    [Class] getClass() {
         Class cl = null;
         __pasm__(<"
              movl 4(%eax), %eax     // @this
@@ -26,7 +26,7 @@ class Object {
         return cl;
     }
     
-    <int> hash() {
+    [int] hash() {
         int hash = 0;
         __pasm__(<"
              movl 4(%eax), %eax     // @this
@@ -36,7 +36,7 @@ class Object {
     
     // TODO: use generic method instead of plain Object?
     // TODO #4: use bool instead of int
-    <int> equals(__any__ obj) {
+    [int] equals(__any__ obj) {
         int eq = 0;
         __pasm__(<"
             movl 4(%eax), %eax  // @this
@@ -48,12 +48,12 @@ class Object {
         return eq;
     }
     
-    <Runtime> rt() {
+    [Runtime] rt() {
         return runtime;
     }
     
     // TODO #7: move to constructor?
-    <> setRt(Runtime rt) {
+    [] setRt(Runtime rt) {
         runtime = rt;
         return;
     }

@@ -19,23 +19,23 @@ class A extends Object {
     
     // methods
     // TODO #7: move to constructor
-    <> init(int row, int column) {
+    [] init(int row, int column) {
         this.row = row;         // assignment
         this.column = column;   // assignment
         return;
     }
     
-    <int> getRow() {
+    [int] getRow() {
         return row;
     }
     
-    <int, int> getRowAndColumn() {
-        return <row, column>;
+    [int, int] getRowAndColumn() {
+        return [row, column];
     }
     
 /*/
     A nullTest;
-    <A> testNull(A a) {
+    [A] testNull(A a) {
         Runtime rt = null;
         Object o := null;
         A a ::= null;
@@ -46,14 +46,32 @@ class A extends Object {
     }
 //*/
 /*/
-    <> testScope() {
+    [] testScope() {
         int c = 0;
         int a = b;
         int b = a;
     }
 //*/
 /*/
-    <> testArith() {
+    [int, int] testLogical() {
+        int a = 1;
+        int b = 1;
+        int c = 0;
+        
+        
+        
+        if (a && !b && c || a) {}
+        if (!(a == b && c != a && c <= a && c<a && b>=a && b>c)) {
+        } else {
+            (a > c != b < c);
+        }
+        
+        while (c) {}
+        return [c < a, b > c];
+    }
+//*/
+/*/
+    [] testArith() {
         A o = this;
         int a = 0;
         int b = -100;
@@ -77,7 +95,7 @@ class A extends Object {
         a = b + (c = d = e);
     }
 //*/
-    <> test(int row) {
+    [] test(int row) {
         int out := Runtime:out;             // fixed variable
         int err := my::core::Runtime:err;   // fixed variable
         Runtime rt := this.rt();            // fixed variable
@@ -93,9 +111,9 @@ class A extends Object {
         rt.printChar(' ', out);
         rt.printHex(cafe, err);
         rt.printChar(' ', out);
-        <int _row2, int _col2> := this.getRowAndColumn();   // fixed variables
+        [int _row2, int _col2] := this.getRowAndColumn();   // fixed variables
         {
-            <int _row, int _col> = this.getRowAndColumn();  // modifiable variables
+            [int _row, int _col] = this.getRowAndColumn();  // modifiable variables
             rt.printInt(_row, out);
             rt.printChar(' ', out);
             rt.printInt(_col, out);

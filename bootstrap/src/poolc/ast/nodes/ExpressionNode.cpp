@@ -9,6 +9,8 @@ ArithUnaryExprNode * ExpressionNode::isArithUnary() { return 0; }
 AssignmentExprNode * ExpressionNode::isAssignment() { return 0; }
 ConstCStringExprNode * ExpressionNode::isConstCString() { return 0; }
 ConstIntExprNode * ExpressionNode::isConstInt() { return 0; }
+LogicalBinaryExprNode * ExpressionNode::isLogicalBinary() { return 0; }
+LogicalUnaryExprNode * ExpressionNode::isLogicalUnary() { return 0; }
 MethodCallExprNode * ExpressionNode::isMethodCall() { return 0; }
 NullExprNode * ExpressionNode::isNull() { return 0; }
 SignExprNode * ExpressionNode::isSign() { return 0; }

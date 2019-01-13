@@ -13,6 +13,8 @@ class ExpressionNode: virtual public Node {
     virtual AssignmentExprNode * isAssignment();
     virtual ConstCStringExprNode * isConstCString();
     virtual ConstIntExprNode * isConstInt();
+    virtual LogicalBinaryExprNode * isLogicalBinary();
+    virtual LogicalUnaryExprNode * isLogicalUnary();
     virtual MethodCallExprNode * isMethodCall();
     virtual NullExprNode * isNull();
     virtual SignExprNode * isSign();

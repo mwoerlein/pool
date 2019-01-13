@@ -58,7 +58,7 @@ class Runtime extends Object {
     int syscall_entry;
     
     // methods
-    global <Runtime> bootstrap(int syscall_runtime, int syscall_entry) {
+    global [Runtime] bootstrap(int syscall_runtime, int syscall_entry) {
         
         // create class "Class"
         // TODO: replace int with working ClassHeader "struct"
@@ -141,14 +141,14 @@ __pasm__("_bs_return_null:");
         return null;
     }
     
-    <> initSysCall(int syscall_runtime, int syscall_entry) {
+    [] initSysCall(int syscall_runtime, int syscall_entry) {
         this.syscall_runtime = syscall_runtime;
         this.syscall_entry = syscall_entry;
     }
     
     // TODO: replace int with working ClassHeader "struct"
     // TODO: replace cstring with working String class
-    <int> getClassDesc(cstring name) {
+    [int] getClassDesc(cstring name) {
         int classDesc = 0;
         __pasm__(<"
             pushl 0; pushl %eax; pushl _my_core_Runtime_coi_SysCall_find_class
@@ -159,7 +159,7 @@ __pasm__("_bs_return_null:");
     }
     
     // TODO: replace int with working MemInfo "struct"
-    <int> allocate(int size) {
+    [int] allocate(int size) {
         // TODO: replace int with working MemInfo "struct"
         int info = 0;
         __pasm__(<"
@@ -171,7 +171,7 @@ __pasm__("_bs_return_null:");
     }
     
     // TODO: replace int with working MemInfo "struct"
-    <> free(int info) {
+    [] free(int info) {
         __pasm__(<"
             pushl %eax; pushl 0; pushl _my_core_Runtime_coi_SysCall_free
             pushl %esp; pushl %edi; call %esi
@@ -179,7 +179,7 @@ __pasm__("_bs_return_null:");
         ">, {"%eax": info, "%edi": syscall_runtime, "%esi": syscall_entry});
     }
     
-    <> printChar(int c, int stream) {
+    [] printChar(int c, int stream) {
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_char; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -187,7 +187,7 @@ __pasm__("_bs_return_null:");
         ">, {"%eax": c, "%ebx": stream, "%edi": syscall_runtime, "%esi": syscall_entry});
     }
     
-    <> printString(cstring s, int stream) {
+    [] printString(cstring s, int stream) {
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_string; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -195,7 +195,7 @@ __pasm__("_bs_return_null:");
         ">, {"%eax": s, "%ebx": stream, "%edi": syscall_runtime, "%esi": syscall_entry});
     }
     
-    <> printInt(int i, int stream) {
+    [] printInt(int i, int stream) {
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_int; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -203,7 +203,7 @@ __pasm__("_bs_return_null:");
         ">, {"%eax": i, "%ebx": stream, "%edi": syscall_runtime, "%esi": syscall_entry});
     }
     
-    <> printHex(int i, int stream) {
+    [] printHex(int i, int stream) {
         __pasm__(<"
             pushl %eax; pushl _my_core_Runtime_coi_spk_hex; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
             pushl %esp; pushl %edi; call %esi
@@ -212,7 +212,7 @@ __pasm__("_bs_return_null:");
     }
     
     // TODO #9: use generic method instead of __any__
-    <> destroyInstance(__any__ obj) {
+    [] destroyInstance(__any__ obj) {
         int info = 0;
         __pasm__(<"
             movl 4(%eax), %eax  // @obj
@@ -223,7 +223,7 @@ __pasm__("_bs_return_null:");
     }
     
     // TODO #9: use generic method or special cast syntax instead __all__/__any__
-    <__all__> cast(cstring name, __any__ obj) {
+    [__all__] cast(cstring name, __any__ obj) {
         // TODO: replace int with working class header "struct"
         int classDesc = this.getClassDesc(name);
         // TODO #4: use pool guard
@@ -251,7 +251,7 @@ __pasm__("_crma_return_null:");
         return null;
     }
     
-    <> createAndRunThread(cstring name) {
+    [] createAndRunThread(cstring name) {
         __any__ instance = this.createInstance(name);
         // TODO #4: use pool guard
 __pasm__("cmpl 0, %eax; je _mcrmcart_return     // break if not instantiated", {"%eax": instance});
@@ -268,7 +268,7 @@ __pasm__("_mcrmcart_return:");
     }
     
     // TODO #9: use generic method or special new syntax instead __all__
-    <__all__> createInstance(cstring name) {
+    [__all__] createInstance(cstring name) {
         // TODO: replace int with working class header "struct"
         int classDesc = this.getClassDesc(name);
         // TODO #4: use pool guard
@@ -314,7 +314,7 @@ __pasm__("_crmci_return_null:");
         return null;
     }
     
-    __naked__ <> _crh_instantiate() {
+    __naked__ [] _crh_instantiate() {
         __pasm__(<"
         _crh_instantiate:       // %eax: @object-meminfo %ebx: @_call_entry %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
             movl (%eax), %edi   // @object
@@ -346,7 +346,7 @@ __pasm__("_crmci_return_null:");
         ">);
     }
     
-    __naked__ <> _call_entry() {
+    __naked__ [] _call_entry() {
         __pasm__(<"
         _cr_mo_call_entry := (_call_entry - _my_core_Runtime)
         _call_entry:

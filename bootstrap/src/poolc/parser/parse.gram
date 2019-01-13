@@ -37,13 +37,16 @@
 %token ABSTRACT
 %token AS
 %token CLASS
+%token ELSE
 %token EXTENDS
 %token GLOBAL
+%token IF
 %token NAMESPACE
 %token T_NULL
 %token RETURN
 %token THIS
 %token USE
+%token WHILE
 
 %token ALL
 %token ANY
@@ -59,10 +62,13 @@
 %token <u_number> NUMBER
 
 %right EQUAL PLUS_EQUAL MINUS_EQUAL STAR_EQUAL SLASH_EQUAL PERCENTAGE_EQUAL
+%left PIPE_PIPE
+%left AMPERSAND_AMPERSAND
+%left EQUAL_EQUAL EXCLAMATIONMARK_EQUAL
+%left ANGLEBRACKETOPEN ANGLEBRACKETOPEN_EQUAL ANGLEBRACKETCLOSE ANGLEBRACKETCLOSE_EQUAL 
 %left PLUS MINUS
 %left STAR SLASH PERCENTAGE
-%left SIGN_PREC
-%right PLUS_PLUS MINUS_MINUS
+%right SIGN_PREC PLUS_PLUS MINUS_MINUS EXCLAMATIONMARK
 %left UNARY_POST_PREC
 %left DOT
 
@@ -70,33 +76,24 @@
 %type <u_namespace_decl> namespace_decl
 %type <u_use_stmt> use_stmt
 
-%type <u_class_decl> class_decl
-%type <u_class_decl> class_body_empty
+%type <u_class_decl> class_decl class_body_empty
 %type <u_method_decl> method_decl
 %type <u_variable_decl> variable_decl
-%type <u_variable_decl_list> variable_decl_list
-%type <u_variable_decl_list> variable_decl_list_empty
+%type <u_variable_decl_list> variable_decl_list variable_decl_list_empty
 
-%type <u_instruction> instruction
-%type <u_instruction> inline_pasm_inst
-%type <u_instruction> return_inst
+%type <u_instruction> instruction condition_inst loop_inst return_inst inline_pasm_inst
 %type <u_block> instruction_block
 %type <u_variable_init> variable_initializer_inst
 
-%type <u_expression> expression
-%type <u_expression_list> expression_list
-%type <u_expression_list> expression_list_empty
-%type <u_expression_map> expression_map
-%type <u_expression_map> expression_map_empty
-%type <u_expression> value_expr
+%type <u_expression> expression arithmetic_expr logical_expr value_expr
+%type <u_expression_list> expression_list expression_list_empty
+%type <u_expression_map> expression_map expression_map_empty
 %type <u_variable> variable_expr
 %type <u_method_call> method_call_expr
-%type <u_expression> arithmetic_expr
 
 %type <u_type> type
 %type <u_type_class> type_class
-%type <u_type_list> type_list
-%type <u_type_list> type_list_empty
+%type <u_type_list> type_list type_list_empty
 
 //=
 %%
@@ -379,7 +376,7 @@ variable_decl_list_empty:
 ;
 
 method_decl:
-    '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
+    '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$4, *$9, *$2, *$6);
         
@@ -391,7 +388,7 @@ method_decl:
         $2->destroy();
         $6->destroy();
     }
-|   GLOBAL '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
+|   GLOBAL '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$10, *$3, *$7);
         $$->global = true;
@@ -404,7 +401,7 @@ method_decl:
         $3->destroy();
         $7->destroy();
     }
-|   NAKED '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
+|   NAKED '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$10, *$3, *$7);
         $$->global = true;
@@ -418,7 +415,7 @@ method_decl:
         $3->destroy();
         $7->destroy();
     }
-|   ABSTRACT '<' type_list_empty '>' ID '(' variable_decl_list_empty ')' ';'
+|   ABSTRACT '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' ';'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$3, *$7);
         $$->kind = abstract;
@@ -431,10 +428,10 @@ method_decl:
         $3->destroy();
         $7->destroy();
     }
-|   '<' error '}'
-|   GLOBAL '<' error '}'
-|   NAKED '<' error '}'
-|   ABSTRACT '<' error ';'
+|   '[' error '}'
+|   GLOBAL '[' error '}'
+|   NAKED '[' error '}'
+|   ABSTRACT '[' error ';'
 ;
 
 
@@ -453,6 +450,10 @@ expression:
         $$ = $1;
     }
 |   arithmetic_expr
+    {
+        $$ = $1;
+    }
+|   logical_expr
     {
         $$ = $1;
     }
@@ -761,6 +762,90 @@ arithmetic_expr:
     }
 ;
 
+logical_expr:
+    expression AMPERSAND_AMPERSAND expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_and, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression PIPE_PIPE expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_or, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   EXCLAMATIONMARK expression
+    {
+        $$ = &driver.env().create<LogicalUnaryExprNode, logical_unary, ExpressionNode&>(unary_not, *$2);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @2.last_line;
+        $$->last_column = @2.last_column;
+    }
+|   expression EQUAL_EQUAL expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_eq, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression EXCLAMATIONMARK_EQUAL expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_neq, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression ANGLEBRACKETOPEN expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_lt, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression ANGLEBRACKETOPEN_EQUAL expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_le, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression ANGLEBRACKETCLOSE expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_gt, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+|   expression ANGLEBRACKETCLOSE_EQUAL expression
+    {
+        $$ = &driver.env().create<LogicalBinaryExprNode, logical_op, ExpressionNode&, ExpressionNode&>(op_ge, *$1, *$3);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @3.last_line;
+        $$->last_column = @3.last_column;
+    }
+;
+
 
 // INSTRUCTIONS
 instruction:
@@ -794,6 +879,14 @@ instruction:
         $$->last_line = @2.last_line;
         $$->last_column = @2.last_column;
     }
+|   loop_inst
+    {
+        $$ = $1;
+    }
+|   condition_inst
+    {
+        $$ = $1;
+    }
 |   '{' instruction_block '}'
     {
         $$ = $2;
@@ -819,7 +912,7 @@ instruction_block:
 ;
 
 return_inst:
-    RETURN '<' expression_list_empty '>'
+    RETURN '[' expression_list_empty ']'
     {
         $$ = &driver.env().create<ReturnInstNode, MutableCollection<ExpressionNode>&>(*$3);
         
@@ -881,7 +974,7 @@ variable_initializer_inst:
         $$->last_line = @3.last_line;
         $$->last_column = @3.last_column;
     }
-|   '<' variable_decl_list '>' EQUAL method_call_expr
+|   '[' variable_decl_list ']' EQUAL method_call_expr
     {
         $$ = &driver.env().create<VariableInitInstNode, MutableCollection<VariableDeclNode> &, MethodCallExprNode &>(*$2, *$5);
         
@@ -892,7 +985,7 @@ variable_initializer_inst:
         
         $2->destroy();
     }
-|   '<' variable_decl_list '>' COLON_EQUAL method_call_expr
+|   '[' variable_decl_list ']' COLON_EQUAL method_call_expr
     {
         $$ = &driver.env().create<VariableInitInstNode, MutableCollection<VariableDeclNode> &, MethodCallExprNode &>(*$2, *$5);
         $$->final = true;
@@ -954,6 +1047,39 @@ inline_pasm_inst:
         $$->last_column = @12.last_column;
         
         $3->destroy();
+    }
+;
+
+loop_inst:
+    WHILE '(' expression ')' '{' instruction_block '}'
+    {
+        $$ = &driver.env().create<WhileInstNode, ExpressionNode&, BlockInstNode&>(*$3, *$6);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @7.last_line;
+        $$->last_column = @7.last_column;
+    }
+;
+
+condition_inst:
+    IF '(' expression ')' '{' instruction_block '}'
+    {
+        $$ = &driver.env().create<IfInstNode, ExpressionNode&, BlockInstNode&, BlockInstNode&>(*$3, *$6, driver.env().create<BlockInstNode>());
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @7.last_line;
+        $$->last_column = @7.last_column;
+    }
+|   IF '(' expression ')' '{' instruction_block '}' ELSE '{' instruction_block '}'
+    {
+        $$ = &driver.env().create<IfInstNode, ExpressionNode&, BlockInstNode&, BlockInstNode&>(*$3, *$6, *$10);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @11.last_line;
+        $$->last_column = @11.last_column;
     }
 ;
 

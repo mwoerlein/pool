@@ -42,16 +42,29 @@ class Parser: public ParserBase
         int makeStar();
         int makeStarEqual();
         
+        int makeAmpersandAmpersand();
+        int makePipePipe();
+        int makeExclamationmark();
+        int makeEqualEqual();
+        int makeExclamationmarkEqual();
+        int makeAnglebracketopen();
+        int makeAnglebracketopenEqual();
+        int makeAnglebracketclose();
+        int makeAnglebracketcloseEqual();
+
         int makeAbstract();
         int makeAs();
         int makeClass();
+        int makeElse();
         int makeExtends();
         int makeGlobal();
+        int makeIf();
         int makeNamespace();
         int makeNull();
         int makeReturn();
         int makeThis();
         int makeUse();
+        int makeWhile();
         
         int makeAll();
         int makeAny();

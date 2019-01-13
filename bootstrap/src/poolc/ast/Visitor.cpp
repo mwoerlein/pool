@@ -19,9 +19,11 @@ bool Visitor::visit(UseStatementNode & useStmt) { return false; }
 
 bool Visitor::visit(BlockInstNode & block) { return false; }
 bool Visitor::visit(ExpressionInstNode & block) { return false; }
+bool Visitor::visit(IfInstNode & ifInst) { return false; }
 bool Visitor::visit(InlinePasmInstNode & pasmInstruction) { return false; }
 bool Visitor::visit(ReturnInstNode & returnInst) { return false; }
 bool Visitor::visit(VariableInitInstNode & variableInit) { return false; }
+bool Visitor::visit(WhileInstNode & whileInst) { return false; }
 
 bool Visitor::visit(ArithAssignmentExprNode & arithAssignment) { return false; }
 bool Visitor::visit(ArithBinaryExprNode & arithBinary) { return false; }
@@ -29,6 +31,8 @@ bool Visitor::visit(ArithUnaryExprNode & arithUnary) { return false; }
 bool Visitor::visit(AssignmentExprNode & assignment) { return false; }
 bool Visitor::visit(ConstCStringExprNode & constCString) { return false; }
 bool Visitor::visit(ConstIntExprNode & constInt) { return false; }
+bool Visitor::visit(LogicalBinaryExprNode & logicalBinary) { return false; }
+bool Visitor::visit(LogicalUnaryExprNode & logicalUnary) { return false; }
 bool Visitor::visit(MethodCallExprNode & methodCall) { return false; }
 bool Visitor::visit(NullExprNode & constNull) { return false; }
 bool Visitor::visit(SignExprNode & constNull) { return false; }

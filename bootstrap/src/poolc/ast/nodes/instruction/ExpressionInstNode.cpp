@@ -12,5 +12,5 @@ bool ExpressionInstNode::accept(Visitor & visitor) {
 }
 
 void ExpressionInstNode::printDebugName(OStream & stream) {
-    stream << "return";
+    stream << "expression-<" << expression << ">";
 }
