@@ -9,7 +9,6 @@ class PIRAssign;
 class PIRCall;
 class PIRGet;
 class PIRMove;
-class PIRReturn;
 class PIRSet;
 class PIRStatement: virtual public Object {
     public:
@@ -22,7 +21,6 @@ class PIRStatement: virtual public Object {
     virtual PIRCall *isCall();
     virtual PIRGet *isGet();
     virtual PIRMove *isMove();
-    virtual PIRReturn *isReturn();
     virtual PIRSet *isSet();
 };
 

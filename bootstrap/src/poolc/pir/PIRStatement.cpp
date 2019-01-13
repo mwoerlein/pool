@@ -10,5 +10,4 @@ PIRAssign *PIRStatement::isAssign() { return 0; }
 PIRCall *PIRStatement::isCall() { return 0; }
 PIRGet *PIRStatement::isGet() { return 0; }
 PIRMove *PIRStatement::isMove() { return 0; }
-PIRReturn *PIRStatement::isReturn() { return 0; }
 PIRSet *PIRStatement::isSet() { return 0; }

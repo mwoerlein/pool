@@ -11,8 +11,8 @@
 #include "poolc/ast/scopes/MethodScope.hpp"
 #include "poolc/ast/scopes/VariableScope.hpp"
 
+#include "poolc/pir/PIRBasicBlock.hpp"
 #include "poolc/pir/PIRLocation.hpp"
-#include "poolc/pir/PIRStatement.hpp"
 #include "poolc/pir/value/PIRNull.hpp"
 #include "poolc/pir/value/PIRInt.hpp"
 #include "poolc/pir/value/PIRString.hpp"
@@ -49,12 +49,15 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     LinkedList<PIRLocation> &_rets;
     LinkedList<PIRLocation> &_spills;
     LinkedList<PIRLocation> &_temps;
-    LinkedList<PIRStatement> &_statements;
+    
+    LinkedList<PIRBasicBlock> &_blocks;
     
     PIRLocation *newLocation(location_kind kind, Type &type);
-    bool isAssignable(Type &src, Type &dest);
     
     public:
+    PIRBasicBlock *entry = 0;
+    PIRBasicBlock *exit = 0;
+    
     PIRMethod(Environment &env, MemoryInfo &mi);
     virtual ~PIRMethod();
     
@@ -79,11 +82,12 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
     PIRLocation *getZeroTemp(Type &type);
     PIRLocation *getOneTemp(Type &type);
     
-    inline Iterator<PIRStatement> &statements() { return _statements.iterator(); }
+    inline Iterator<PIRBasicBlock> &blocks() { return _blocks.iterator(); }
+    PIRBasicBlock &newBasicBlock();
     
     inline PIRLocation &newTemp(Type &type) { return *newLocation(loc_temp, type); }
     inline PIRLocation &asTemp(PIRLocation &src) {
-        // TODO #11: treat all locations as "temps" until register allocations seperates frame and register locations
+        // TODO #11: treat all locations as "temps" until register allocations separates frame and register locations
         return src;
 /*        
         if (src.kind == loc_temp) { return src; }
@@ -94,15 +98,6 @@ class PIRMethod: virtual public Object, virtual public LoggerAware {
 */
     }
     PIRLocation &spillTemp(int idx);
-    
-    void addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest);
-    void addAsm(String &pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out);
-    void addAssign(PIRValue &value, PIRLocation &dest);
-    void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
-    void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);
-    void addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret = false);
-    void addReturn();
-    void addSet(PIRLocation &context, VariableScope &var, PIRLocation &src);
 };
 
 #endif //POOLC_PIR_PIRMETHOD_HPP_LOCK

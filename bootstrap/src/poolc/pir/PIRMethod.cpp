@@ -7,15 +7,6 @@
 #include "poolc/ast/scopes/ClassScope.hpp"
 #include "poolc/ast/scopes/InstanceScope.hpp"
 
-#include "poolc/pir/statement/PIRArithOp.hpp"
-#include "poolc/pir/statement/PIRAsm.hpp"
-#include "poolc/pir/statement/PIRAssign.hpp"
-#include "poolc/pir/statement/PIRCall.hpp"
-#include "poolc/pir/statement/PIRGet.hpp"
-#include "poolc/pir/statement/PIRMove.hpp"
-#include "poolc/pir/statement/PIRReturn.hpp"
-#include "poolc/pir/statement/PIRSet.hpp"
-
 // public
 PIRMethod::PIRMethod(Environment &env, MemoryInfo &mi)
         :Object(env, mi), LoggerAware(env, mi),
@@ -23,7 +14,7 @@ PIRMethod::PIRMethod(Environment &env, MemoryInfo &mi)
          _rets(env.create<LinkedList<PIRLocation>>()),
          _spills(env.create<LinkedList<PIRLocation>>()),
          _temps(env.create<LinkedList<PIRLocation>>()),
-         _statements(env.create<LinkedList<PIRStatement>>()),
+         _blocks(env.create<LinkedList<PIRBasicBlock>>()),
          _null(env.create<PIRNull>()) {}
 PIRMethod::~PIRMethod() {
     _null.destroy();
@@ -61,12 +52,12 @@ PIRMethod::~PIRMethod() {
         _temps.destroy();
     }
     {
-        Iterator<PIRStatement> &it = _statements.iterator();
+        Iterator<PIRBasicBlock> &it = _blocks.iterator();
         while (it.hasNext()) {
             it.next().destroy();
         }
         it.destroy();
-        _statements.destroy();
+        _blocks.destroy();
     }
 }
 
@@ -75,12 +66,17 @@ void PIRMethod::init(MethodScope &scope) {
     this->_scope = &scope;
     MethodDeclNode &decl = *scope.getMethodDeclNode();
     
+    entry = &env().create<PIRBasicBlock, bb_kind, PIRMethod&, int>(bb_entry, *this, _blocks.size());
+    _blocks.add(*entry);
+    exit = &env().create<PIRBasicBlock, bb_kind, PIRMethod&, int>(bb_exit, *this, _blocks.size());
+    _blocks.add(*exit);
+            
     if (!decl.global) {
         Type &thisType = *scope.getInstance();
         this->_this = &env().create<PIRLocation, Type &, location_kind, int>(thisType, loc_this, 0);
         // TODO #11: treat all locations as "temps" until register allocations seperates frame and register locations
         //this->_thisTemp = newLocation(loc_temp, thisType);
-        //addMove(*this->_this, *this->_thisTemp);
+        //entry->addMove(*this->_this, *this->_thisTemp);
     }
     
     {
@@ -109,7 +105,7 @@ PIRString &PIRMethod::getConstString(ConstCStringExprNode &value) {
 PIRLocation *PIRMethod::getZeroTemp(Type &type) {
     if (!_zeroTemp) {
         _zeroTemp = &newTemp(type);
-        addAssign(env().create<PIRInt, int>(0), *_zeroTemp);
+        entry->addAssign(env().create<PIRInt, int>(0), *_zeroTemp);
     }
     return _zeroTemp;
 }
@@ -117,7 +113,7 @@ PIRLocation *PIRMethod::getZeroTemp(Type &type) {
 PIRLocation *PIRMethod::getOneTemp(Type &type) {
     if (!_oneTemp) {
         _oneTemp = &newTemp(type);
-        addAssign(env().create<PIRInt, int>(1), *_oneTemp);
+        entry->addAssign(env().create<PIRInt, int>(1), *_oneTemp);
     }
     return _oneTemp;
 }
@@ -129,137 +125,10 @@ PIRLocation &PIRMethod::spillTemp(int idx) {
     return spill;
 }
 
-void PIRMethod::addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest) {
-    if (!left.type.isInt() || !right.type.isInt() || !dest.type.isInt()) {
-        error() << "invalid types for arithmetic operation: " << dest << " = " << left << " <op> " << right << "\n";
-        return;
-    }
-    _statements.add(env().create<PIRArithOp, arith_op, PIRLocation&, PIRLocation&, PIRLocation&>(op, left, right, dest));
-}
-
-void PIRMethod::addAsm(String & pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out) {
-    _statements.add(env().create<PIRAsm, String&, Map<String, PIRLocation> &, Map<String, PIRLocation> &>(pasm, in, out));
-}
-
-void PIRMethod::addAssign(PIRValue &value, PIRLocation &dest) {
-    if (value.isNull()) {
-        if (!dest.type.isInstance() && !dest.type.isAll() && !dest.type.isAny()) {
-            error() << "incompatible destination " << dest << " for null\n";
-            return;
-        }
-    } else if (value.isInt()) {
-        if (!dest.type.isInt()) {
-            error() << "incompatible destination " << dest << " for int constant\n";
-            return;
-        }
-    } else if (value.isString()) {
-        if (!dest.type.isCString()) {
-            error() << "incompatible destination " << dest << " for string constant\n";
-            return;
-        }
-    }
-    _statements.add(env().create<PIRAssign, PIRValue&, PIRLocation&>(value, dest));
-}
-
-void PIRMethod::addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
-    MethodDeclNode &decl = *method.getMethodDeclNode();
-    if (method.getInstance() != &context.type) {
-        error() << "invalid context " << context << " of method " << decl << "\n";
-        return;
-    }
-    {
-        if (decl.parameters.size() != params.size()) {
-            error() << "invalid parameter count " << params.size() << " for method " << decl << "\n";
-            return;
-        }
-        Iterator<VariableDeclNode> &declIt = decl.parameters.iterator();
-        Iterator<PIRLocation> &locIt = params.iterator();
-        while (declIt.hasNext()) {
-            VariableDeclNode &vDecl = declIt.next();
-            PIRLocation &loc = locIt.next();
-            // TODO: handle type conversion?
-            if (!isAssignable(loc.type, *vDecl.resolvedType)) {
-                error() << "incompatible parameter " << loc << " for method " << decl << "\n";
-                error() << *vDecl.resolvedType << " <-> " << loc.type << "\n";
-                return;
-            }
-        }
-        declIt.destroy();
-        locIt.destroy();
-    }
-    {
-        if (decl.returnTypes.size() != rets.size()) {
-            error() << "invalid return count " << rets.size() << " for method " << decl << "\n";
-            return;
-        }
-        Iterator<Type> &typeIt = decl.resolvedReturns.iterator();
-        Iterator<PIRLocation> &locIt = rets.iterator();
-        while (typeIt.hasNext()) {
-            Type &type = typeIt.next();
-            PIRLocation &loc = locIt.next();
-            // TODO: handle type conversion?
-            if (!isAssignable(type, loc.type)) {
-                error() << "incompatible return " << loc << " for method " << decl << "\n";
-                return;
-            }
-        }
-        typeIt.destroy();
-        locIt.destroy();
-    }
-    _statements.add(env().create<PIRCall, PIRLocation &, MethodScope &, Collection<PIRLocation> &, Collection<PIRLocation> &>(context, method, params, rets));
-}
-
-void PIRMethod::addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest) {
-    VariableDeclNode &decl = *var.getVariableDeclNode();
-    if (InstanceScope *contextScope = context.type.isInstance()) {
-        if (!contextScope->getClass()->hasSuper(*var.getClass())) {
-            error() << "incompatible context " << context << " for variable " << decl << "\n";
-            return;
-        }
-    } else {
-        error() << "invalid context " << context << " for variable " << decl << "\n";
-        return;
-    }
-    // TODO: handle type conversion?
-    if (!isAssignable(*decl.resolvedType, dest.type)) {
-        error() << "incompatible destination " << dest << " for variable " << decl << "\n";
-        return;
-    }
-    _statements.add(env().create<PIRGet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, dest));
-}
-
-void PIRMethod::addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret) {
-    if (!reinterpret) {
-        // TODO: handle type conversion?
-        if (!isAssignable(src.type, dest.type)) {
-            error() << "incompatible types for move: " << src << " <-> " << dest << "\n";
-            return;
-        }
-    }
-    _statements.add(env().create<PIRMove, PIRLocation&, PIRLocation&>(src, dest));
-}
-
-void PIRMethod::addReturn() {
-    _statements.add(env().create<PIRReturn>());
-}
-
-void PIRMethod::addSet(PIRLocation &context, VariableScope &var, PIRLocation &src) {
-    VariableDeclNode &decl = *var.getVariableDeclNode();
-    if (InstanceScope *contextScope = context.type.isInstance()) {
-        if (!contextScope->getClass()->hasSuper(*var.getClass())) {
-            error() << "incompatible context " << context << " for variable " << decl << "\n";
-            return;
-        }
-    } else {
-        error() << "invalid context " << context << " for variable " << decl << "\n";
-        return;
-    }
-    // TODO: handle type conversion?
-    if (!isAssignable(src.type, *decl.resolvedType)) {
-        error() << "incompatible source " << src << " for variable " << decl << " " << decl.resolvedType << "\n";
-        return;
-    }
-    _statements.add(env().create<PIRSet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, src));
+PIRBasicBlock &PIRMethod::newBasicBlock() {
+    PIRBasicBlock &block = env().create<PIRBasicBlock, bb_kind, PIRMethod&, int>(bb_block, *this, _blocks.size());
+    _blocks.add(block);
+    return block;
 }
 
 // private    
@@ -285,21 +154,4 @@ PIRLocation *PIRMethod::newLocation(location_kind kind, Type &type) {
     PIRLocation &ret = env().create<PIRLocation, Type &, location_kind, int>(type, kind, idx);
     list->add(ret);
     return &ret;
-}
-
-bool PIRMethod::isAssignable(Type &src, Type &dest) {
-    if (&src == &dest) { return true; }
-    
-    AllType *srcAll = src.isAll();
-    AnyType *srcAny = src.isAny();
-    InstanceScope *srcInstance = src.isInstance();
-    if (!srcAll && !srcInstance && !srcAny) { return false; }
-    
-    AllType *destAll = dest.isAll();
-    AnyType *destAny = dest.isAny();
-    InstanceScope *destInstance = dest.isInstance();
-    if (!destAll && !destInstance && !destAny) { return false; }
-    
-    // TODO: handle type conversion?
-    return srcAll || destAny;
 }

@@ -15,7 +15,7 @@
 // public
 PIRGenerator::PIRGenerator(Environment &env, MemoryInfo &mi)
         :Object(env, mi), LoggerAware(env, mi),
-         curMethod(0), lastValue(0),
+         curMethod(0), curBlock(0), lastValue(0),
          lastLocations(env.create<LinkedList<PIRLocation>>()){}
 PIRGenerator::~PIRGenerator() {
     lastLocations.destroy();
@@ -45,7 +45,12 @@ bool PIRGenerator::visit(MethodDeclNode & methodDecl) {
     scope->pir = curMethod = &env().create<PIRMethod>();
     curMethod->setLogger(*logger);
     curMethod->init(*scope);
+    PIRLocation *_this = curMethod->getThis();
+    curMethod->entry->next = curBlock = &curMethod->newBasicBlock();
     methodDecl.body.accept(*this);
+    if (!curBlock->next) {
+        curBlock->next = curMethod->exit;
+    }
     curMethod = 0;
     return true;
 }
@@ -84,7 +89,7 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
                 lastLocations.clear();
             } else if (lastValue) {
                 PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
-                curMethod->addAssign(*lastValue, tmp);
+                curBlock->addAssign(*lastValue, tmp);
                 in.set(reg, tmp);
                 lastValue = 0;
             } else {
@@ -113,7 +118,7 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
         it.destroy();
     }
 
-    curMethod->addAsm(pasmInst.pasm, in, out);
+    curBlock->addAsm(pasmInst.pasm, in, out);
     return true;
 }
 
@@ -124,12 +129,12 @@ bool PIRGenerator::visit(ReturnInstNode & returnInst) {
         ExpressionNode &ex = it.next();
         ex.accept(*this);
         if (lastLocations.size() == 1) {
-            curMethod->addMove(curMethod->asTemp(*lastLocations.first()), *curMethod->getRet(idx++));
+            curBlock->addMove(curMethod->asTemp(*lastLocations.first()), *curMethod->getRet(idx++));
             lastLocations.clear();
         } else if (lastValue) {
             PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
-            curMethod->addAssign(*lastValue, tmp);
-            curMethod->addMove(tmp, *curMethod->getRet(idx++));
+            curBlock->addAssign(*lastValue, tmp);
+            curBlock->addMove(tmp, *curMethod->getRet(idx++));
             lastValue = 0;
         } else {
             crit() << "unexpected value " << ex << " in " << returnInst << "\n";
@@ -137,7 +142,8 @@ bool PIRGenerator::visit(ReturnInstNode & returnInst) {
         }
     }
     it.destroy();
-    curMethod->addReturn();
+    curBlock->next = curMethod->exit;
+    curBlock = &curMethod->newBasicBlock();
     return true;
 }
 
@@ -148,10 +154,10 @@ bool PIRGenerator::visit(VariableInitInstNode & variableInit) {
     if (variableInit.variables.size() == 1) {
         PIRLocation *dest = variableInit.variables.first()->scope->isVariable()->pir;
         if (lastLocations.size() == 1) {
-            curMethod->addMove(curMethod->asTemp(*lastLocations.first()), *dest, variableInit.reinterpret);
+            curBlock->addMove(curMethod->asTemp(*lastLocations.first()), *dest, variableInit.reinterpret);
             lastLocations.clear();
         } else if (lastValue) {
-            curMethod->addAssign(*lastValue, *dest);
+            curBlock->addAssign(*lastValue, *dest);
             lastValue = 0;
         } else {
             crit() << "unexpected initializer " << variableInit.initializer << " in " << variableInit << "\n";
@@ -163,7 +169,7 @@ bool PIRGenerator::visit(VariableInitInstNode & variableInit) {
             Iterator<PIRLocation> &lit = lastLocations.iterator();
             while (vit.hasNext()) {
                 PIRLocation *dest = vit.next().scope->isVariable()->pir;
-                curMethod->addMove(curMethod->asTemp(lit.next()), *dest);
+                curBlock->addMove(curMethod->asTemp(lit.next()), *dest);
             }
             lit.destroy();
             vit.destroy();
@@ -185,7 +191,7 @@ bool PIRGenerator::visit(ArithAssignmentExprNode & arithAssignment) {
         lastLocations.clear();
     } else if (lastValue) {
         val = &curMethod->newTemp(*arithAssignment.resolvedType);
-        curMethod->addAssign(*lastValue, *val);
+        curBlock->addAssign(*lastValue, *val);
         lastValue = 0;
     } else {
         crit() << "unexpected value " << arithAssignment.value << " in " << arithAssignment << "\n";
@@ -204,13 +210,13 @@ bool PIRGenerator::visit(ArithAssignmentExprNode & arithAssignment) {
         }
         
         PIRLocation *tmp = &curMethod->newTemp(*arithAssignment.resolvedType);
-        curMethod->addGet(*ctx, *arithAssignment.variable.resolvedVariable, *tmp);
-        curMethod->addArithOp(arithAssignment.op, *tmp, *val, *tmp);
-        curMethod->addSet(*ctx, *arithAssignment.variable.resolvedVariable, *tmp);
+        curBlock->addGet(*ctx, *arithAssignment.variable.resolvedVariable, *tmp);
+        curBlock->addArithOp(arithAssignment.op, *tmp, *val, *tmp);
+        curBlock->addSet(*ctx, *arithAssignment.variable.resolvedVariable, *tmp);
         lastLocations.add(*tmp);
     } else {
         PIRLocation *var = arithAssignment.variable.resolvedVariable->pir;
-        curMethod->addArithOp(arithAssignment.op, *var, *val, *var);
+        curBlock->addArithOp(arithAssignment.op, *var, *val, *var);
         lastLocations.add(*var);
     }
     return true;
@@ -224,7 +230,7 @@ bool PIRGenerator::visit(ArithBinaryExprNode & arithBinary) {
         lastLocations.clear();
     } else if (lastValue) {
         left = &curMethod->newTemp(*arithBinary.resolvedType);
-        curMethod->addAssign(*lastValue, *left);
+        curBlock->addAssign(*lastValue, *left);
         lastValue = 0;
     } else {
         crit() << "unexpected left " << arithBinary.left << " in " << arithBinary << "\n";
@@ -237,14 +243,14 @@ bool PIRGenerator::visit(ArithBinaryExprNode & arithBinary) {
         lastLocations.clear();
     } else if (lastValue) {
         right = &curMethod->newTemp(*arithBinary.resolvedType);
-        curMethod->addAssign(*lastValue, *right);
+        curBlock->addAssign(*lastValue, *right);
         lastValue = 0;
     } else {
         crit() << "unexpected right " << arithBinary.right << " in " << arithBinary << "\n";
         return false;
     }
     PIRLocation *dest = &curMethod->newTemp(*arithBinary.resolvedType);
-    curMethod->addArithOp(arithBinary.op, *left, *right, *dest);
+    curBlock->addArithOp(arithBinary.op, *left, *right, *dest);
     lastLocations.add(*dest);
     return true;
 }
@@ -261,28 +267,28 @@ bool PIRGenerator::visit(ArithUnaryExprNode & arithUnary) {
             return false;
         }
         PIRLocation *tmp = &curMethod->newTemp(*arithUnary.resolvedType);
-        curMethod->addGet(*ctx, *arithUnary.variable.resolvedVariable, *tmp);
+        curBlock->addGet(*ctx, *arithUnary.variable.resolvedVariable, *tmp);
         switch (arithUnary.op) {
             case unary_inc: {
-                curMethod->addArithOp(op_add, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp);
-                curMethod->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp);
+                curBlock->addArithOp(op_add, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp);
+                curBlock->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp);
                 break;
             }
             case unary_dec: {
-                curMethod->addArithOp(op_sub, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp);
-                curMethod->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp);
+                curBlock->addArithOp(op_sub, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp);
+                curBlock->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp);
                 break;
             }
             case unary_post_inc: {
                 PIRLocation *tmp2 = &curMethod->newTemp(*arithUnary.resolvedType);
-                curMethod->addArithOp(op_add, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp2);
-                curMethod->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp2);
+                curBlock->addArithOp(op_add, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp2);
+                curBlock->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp2);
                 break;
             }
             case unary_post_dec: {
                 PIRLocation *tmp2 = &curMethod->newTemp(*arithUnary.resolvedType);
-                curMethod->addArithOp(op_sub, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp2);
-                curMethod->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp2);
+                curBlock->addArithOp(op_sub, *tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *tmp2);
+                curBlock->addSet(*ctx, *arithUnary.variable.resolvedVariable, *tmp2);
                 break;
             }
         }
@@ -291,26 +297,26 @@ bool PIRGenerator::visit(ArithUnaryExprNode & arithUnary) {
         PIRLocation *var = arithUnary.variable.resolvedVariable->pir;
         switch (arithUnary.op) {
             case unary_inc: {
-                curMethod->addArithOp(op_add, *var, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
+                curBlock->addArithOp(op_add, *var, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
                 lastLocations.add(*var);
                 break;
             }
             case unary_dec: {
-                curMethod->addArithOp(op_sub, *var, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
+                curBlock->addArithOp(op_sub, *var, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
                 lastLocations.add(*var);
                 break;
             }
             case unary_post_inc: {
                 PIRLocation &tmp = curMethod->newTemp(*arithUnary.resolvedType);
-                curMethod->addMove(*var, tmp);
-                curMethod->addArithOp(op_add, tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
+                curBlock->addMove(*var, tmp);
+                curBlock->addArithOp(op_add, tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
                 lastLocations.add(tmp);
                 break;
             }
             case unary_post_dec: {
                 PIRLocation &tmp = curMethod->newTemp(*arithUnary.resolvedType);
-                curMethod->addMove(*var, tmp);
-                curMethod->addArithOp(op_sub, tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
+                curBlock->addMove(*var, tmp);
+                curBlock->addArithOp(op_sub, tmp, *curMethod->getOneTemp(*arithUnary.resolvedType), *var);
                 lastLocations.add(tmp);
                 break;
             }
@@ -333,13 +339,13 @@ bool PIRGenerator::visit(AssignmentExprNode & assignment) {
         assignment.value.accept(*this);
         if (lastLocations.size() == 1) {
             PIRLocation &src = curMethod->asTemp(*lastLocations.first());
-            curMethod->addSet(*ctx, *assignment.variable.resolvedVariable, src);
+            curBlock->addSet(*ctx, *assignment.variable.resolvedVariable, src);
             lastLocations.clear();
             lastLocations.add(src);
         } else if (lastValue) {
             PIRLocation &tmp = curMethod->newTemp(*assignment.resolvedType);
-            curMethod->addAssign(*lastValue, tmp);
-            curMethod->addSet(*ctx, *assignment.variable.resolvedVariable, tmp);
+            curBlock->addAssign(*lastValue, tmp);
+            curBlock->addSet(*ctx, *assignment.variable.resolvedVariable, tmp);
             lastValue = 0;
         } else {
             crit() << "unexpected value " << assignment.value << " in " << assignment << "\n";
@@ -349,10 +355,10 @@ bool PIRGenerator::visit(AssignmentExprNode & assignment) {
         PIRLocation *dest = assignment.variable.resolvedVariable->pir;
         assignment.value.accept(*this);
         if (lastLocations.size() == 1) {
-            curMethod->addMove(curMethod->asTemp(*lastLocations.first()), *dest);
+            curBlock->addMove(curMethod->asTemp(*lastLocations.first()), *dest);
             lastLocations.clear();
         } else if (lastValue) {
-            curMethod->addAssign(*lastValue, *dest);
+            curBlock->addAssign(*lastValue, *dest);
             lastValue = 0;
         } else {
             crit() << "unexpected value " << assignment.value << " in " << assignment << "\n";
@@ -395,7 +401,7 @@ bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
                 lastLocations.clear();
             } else if (lastValue) {
                 PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
-                curMethod->addAssign(*lastValue, tmp);
+                curBlock->addAssign(*lastValue, tmp);
                 params.add(tmp);
                 lastValue = 0;
             } else {
@@ -415,7 +421,7 @@ bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
         }
         it.destroy();
     }
-    curMethod->addCall(*context, *methodCall.resolvedMethod, params, rets);
+    curBlock->addCall(*context, *methodCall.resolvedMethod, params, rets);
     return true;
 }
 
@@ -434,7 +440,7 @@ bool PIRGenerator::visit(SignExprNode & sign) {
                 PIRLocation &left = *curMethod->getZeroTemp(*sign.expression.resolvedType);
                 PIRLocation &dest = curMethod->newTemp(*sign.expression.resolvedType);
                 
-                curMethod->addArithOp(op_sub, left, curMethod->asTemp(*lastLocations.first()), dest);
+                curBlock->addArithOp(op_sub, left, curMethod->asTemp(*lastLocations.first()), dest);
                 lastLocations.clear();
                 lastLocations.add(dest);
                 return true;
@@ -466,7 +472,7 @@ bool PIRGenerator::visit(VariableExprNode & variable) {
         variable.context->accept(*this);
         if (lastLocations.size() == 1) {
             PIRLocation &tmp = curMethod->newTemp(*variable.resolvedType);
-            curMethod->addGet(curMethod->asTemp(*lastLocations.first()), *variable.resolvedVariable, tmp);
+            curBlock->addGet(curMethod->asTemp(*lastLocations.first()), *variable.resolvedVariable, tmp);
             lastLocations.clear();
             lastLocations.add(tmp);
         } else {

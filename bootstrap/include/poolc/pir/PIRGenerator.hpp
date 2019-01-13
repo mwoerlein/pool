@@ -5,6 +5,7 @@
 
 #include "sys/collection/LinkedList.hpp"
 
+#include "poolc/pir/PIRBasicBlock.hpp"
 #include "poolc/pir/PIRLocation.hpp"
 #include "poolc/pir/PIRMethod.hpp"
 #include "poolc/pir/PIRValue.hpp"
@@ -12,6 +13,7 @@
 class PIRGenerator: public Visitor {
     private:
     PIRMethod *curMethod;
+    PIRBasicBlock *curBlock;
     PIRValue *lastValue;
     LinkedList<PIRLocation> &lastLocations;
     

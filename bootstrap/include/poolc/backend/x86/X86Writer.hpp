@@ -3,6 +3,7 @@
 
 #include "poolc/ast/visitors/Writer.hpp"
 
+#include "poolc/pir/PIRBasicBlock.hpp"
 #include "poolc/pir/PIRLocation.hpp"
 #include "poolc/pir/PIRMethod.hpp"
 #include "poolc/pir/PIRStatement.hpp"
@@ -12,7 +13,6 @@
 #include "poolc/pir/statement/PIRCall.hpp"
 #include "poolc/pir/statement/PIRGet.hpp"
 #include "poolc/pir/statement/PIRMove.hpp"
-#include "poolc/pir/statement/PIRReturn.hpp"
 #include "poolc/pir/statement/PIRSet.hpp"
 
 class X86Writer: public Writer {
@@ -35,6 +35,7 @@ class X86Writer: public Writer {
     virtual bool visit(VariableDeclNode & variableDef) override;
     virtual bool visit(VariableInitInstNode & variableInit) override;
     
+    virtual void write(PIRBasicBlock &block);
     virtual void write(PIRStatement &stmt);
     virtual void write(PIRArithOp &arithOpStmt);
     virtual void write(PIRAsm &asmStmt);
@@ -42,7 +43,6 @@ class X86Writer: public Writer {
     virtual void write(PIRCall &callStmt);
     virtual void write(PIRGet &getStmt);
     virtual void write(PIRMove &moveStmt);
-    virtual void write(PIRReturn &returnStmt);
     virtual void write(PIRSet &setStmt);
     
     virtual void write(PIRLocation &location);

@@ -25,10 +25,9 @@
 #define methodDeclTab() localClsPrefix(curClass) << "_mdt"
 #define methodDecl(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name
 #define methodDeclOffset(m) manualClsPrefix((m)->scope->getClassDeclNode()) << "_mdo_" << (m)->name
+#define methodDeclBlock(m, b) localClsPrefix(curClass) << "_md_" << (m)->name << "_bb_" << (b)->idx
 #define methodTabs() localClsPrefix(curClass) << "_mts"
 #define methodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
-
-#define methodDeclReturn(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name << "_return"
 
 #define instanceStart() localClsPrefix(curClass) << "_tpl"
 #define instanceEnd() localClsPrefix(curClass) << "_tpl_end"
@@ -281,36 +280,16 @@ bool X86Writer::visit(MethodDeclNode & methodDef) {
     switch (methodDef.kind) {
         case abstract:
             break;
-        case naked:
-            {
-                Iterator<PIRStatement> &it = curMethod->statements();
-                while (it.hasNext()) {
-                    write(it.next());
-                }
-                it.destroy();
-            }
-            break;
-        default:
+        case normal:
             LABEL(methodDecl(&methodDef));
-            code() << "pushl %ebp; movl %esp, %ebp\n";
-            int localVariables = curMethod->tempCount() + curMethod->spillCount();
-            if (localVariables) {
-                code() << "subl " << (4*localVariables) << ", %esp\n";
-            }
-            // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
-            code() << "pushad\n";
+        default:
             {
-                Iterator<PIRStatement> &it = curMethod->statements();
+                Iterator<PIRBasicBlock> &it = curMethod->blocks();
                 while (it.hasNext()) {
                     write(it.next());
                 }
                 it.destroy();
             }
-            LABEL(methodDeclReturn(&methodDef));
-            // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
-            code() << "popad\n";
-            code() << "leave\n";
-            code() << "ret\n";
     }
     curMethod = 0;
     return true;
@@ -356,6 +335,63 @@ bool X86Writer::visit(VariableInitInstNode & variableInit) {
     return false;
 }
 
+void X86Writer::write(PIRBasicBlock &block) {
+    MethodDeclNode *methodDecl = block.method.scope().getMethodDeclNode();
+    switch (block.kind) {
+        case bb_entry: {
+            if (methodDecl->kind == normal) {
+                code() << "pushl %ebp; movl %esp, %ebp\n";
+                int localVariables = curMethod->tempCount() + curMethod->spillCount();
+                if (localVariables) {
+                    code() << "subl " << (4*localVariables) << ", %esp\n";
+                }
+                // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
+                code() << "pushad\n";
+                {
+                    Iterator<PIRStatement> &it = block.statements();
+                    while (it.hasNext()) {
+                        write(it.next());
+                    }
+                    it.destroy();
+                }
+                if (block.cond) {
+                    code() << "cmpl 0, "; write(*block.cond); elem() << "\n"; 
+                    code() << "jne " << methodDeclBlock(methodDecl, block.condNext) << "\n";
+                }
+                code() << "jmp " << methodDeclBlock(methodDecl, block.next) << "\n";
+            }
+            break;
+        }
+        case bb_exit: {
+            if (methodDecl->kind == normal) {
+                LABEL(methodDeclBlock(methodDecl, &block));
+                // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
+                code() << "popad\n";
+                code() << "leave\n";
+                code() << "ret\n";
+            }
+            break;
+        }
+        default: {
+            LABEL(methodDeclBlock(methodDecl, &block));
+            {
+                Iterator<PIRStatement> &it = block.statements();
+                while (it.hasNext()) {
+                    write(it.next());
+                }
+                it.destroy();
+            }
+            if (block.cond) {
+                code() << "cmpl 0, "; write(*block.cond); elem() << "\n"; 
+                code() << "jne " << methodDeclBlock(methodDecl, block.condNext) << "\n";
+            }
+            if (methodDecl->kind == normal || block.next->kind == bb_block) {
+                code() << "jmp " << methodDeclBlock(methodDecl, block.next) << "\n";
+            }
+        }
+    }
+}
+
 void X86Writer::write(PIRStatement &stmt) {
     if (PIRArithOp *arithOpStmt = stmt.isArithOp()) { write(*arithOpStmt); }
     else if (PIRAsm *asmStmt = stmt.isAsm()) { write(*asmStmt); }
@@ -363,7 +399,6 @@ void X86Writer::write(PIRStatement &stmt) {
     else if (PIRCall *callStmt = stmt.isCall()) { write(*callStmt); }
     else if (PIRGet *getStmt = stmt.isGet()) { write(*getStmt); }
     else if (PIRMove *moveStmt = stmt.isMove()) { write(*moveStmt); }
-    else if (PIRReturn *returnStmt = stmt.isReturn()) { write(*returnStmt); }
     else if (PIRSet *setStmt = stmt.isSet()) { write(*setStmt); }
     else {
         error() << "unexpected PIR statement " << stmt << "\n";
@@ -476,10 +511,6 @@ void X86Writer::write(PIRGet &getStmt) {
 void X86Writer::write(PIRMove &moveStmt) {
     code() << "movl "; write(moveStmt.src); elem() << ", %eax\n";
     code() << "movl %eax, "; write(moveStmt.dest); elem() << "\n";
-}
-
-void X86Writer::write(PIRReturn &returnStmt) {
-    code() << "jmp " << methodDeclReturn(curMethod->scope().getMethodDeclNode())<<"\n";
 }
 
 void X86Writer::write(PIRSet &setStmt) {
