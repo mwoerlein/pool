@@ -35,7 +35,6 @@ class Object {
     }
     
     // TODO: use generic method instead of plain Object?
-    // TODO #4: use bool instead of int
     [int] equals(__any__ obj) {
         int eq = 0;
         __pasm__(<"

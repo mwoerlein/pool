@@ -1,6 +1,6 @@
 /*[meta]
 mimetype = text/x-pool
-author = Marc Woerlein [marc.woerlein@gmx.de]
+author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
 namespace my;
@@ -33,9 +33,31 @@ class B extends myThread, my::A {
         this.testAllocate(0x1234);
         rt.printChar('@', Runtime:err);
         rt.printChar('\n', out);
+        this.testLoop(4);
         this.test(this.getRow());
         a.test(a.getRow());
         return;
+    }
+    
+    [] testLoop(int n) {
+        int out = Runtime:out;      // modifiable variable
+        Runtime rt := this.rt();    // fixed variable
+        int i = n;
+        while (i--) {
+            int j = n;
+            while (j--) {
+                if (i<=j) {
+                    out = Runtime:out;
+                } else {
+                    out = Runtime:err;
+                }
+                rt.printInt(i, out);
+                rt.printChar(' ', out);
+                rt.printInt(j, out);
+                rt.printChar('\t', out);
+            }
+            rt.printChar('\n', out);
+        }
     }
     
     [] testAllocate(int size) {

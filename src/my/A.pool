@@ -58,15 +58,20 @@ class A extends Object {
         int b = 1;
         int c = 0;
         
-        
-        
-        if (a && !b && c || a) {}
+//        if (a > 0) {
+//        if (a > 0 && b != 1) {
+//        if (a && !b && c || a) {
+        if (a && !(b>5) && c<a || a>=0) {
+            this.rt().printString(Runtime:newline, Runtime:out);
+        }
         if (!(a == b && c != a && c <= a && c<a && b>=a && b>c)) {
         } else {
             (a > c != b < c);
         }
+        c = !(a || b);
+        !(a || b);
         
-        while (c) {}
+        while (c && !(a || b)) {}
         return [c < a, b > c];
     }
 //*/
