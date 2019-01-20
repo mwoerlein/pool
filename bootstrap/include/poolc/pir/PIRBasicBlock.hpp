@@ -39,7 +39,7 @@ class PIRBasicBlock: virtual public Object, virtual public LoggerAware {
     
     void addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest);
     void addAsm(String &pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out);
-    void addAssign(PIRValue &value, PIRLocation &dest);
+    void addAssign(PIRValue &value, PIRLocation &dest, bool reinterpret = false);
     void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
     void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);
     void addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret = false);

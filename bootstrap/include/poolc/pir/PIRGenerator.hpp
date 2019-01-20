@@ -20,8 +20,8 @@ class PIRGenerator: public Visitor {
     PIRValue *lastValue;
     LinkedList<PIRLocation> &lastLocations;
     
-    virtual PIRLocation* asTemp(ExpressionNode &expr, Node &context);
-    virtual void branch(ExpressionNode &expr, Node &context, PIRBasicBlock &trueBlock, PIRBasicBlock &falseBlock);
+    virtual PIRLocation* exprAsTemp(ExpressionNode &expr, Type *interpretAs = 0);
+    virtual void branch(ExpressionNode &expr, PIRBasicBlock &trueBlock, PIRBasicBlock &falseBlock);
     
     public:
     PIRGenerator(Environment &env, MemoryInfo &mi, TypeManager &types);

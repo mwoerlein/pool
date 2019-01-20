@@ -68,21 +68,23 @@ void PIRBasicBlock::addAsm(String & pasm, Map<String, PIRLocation> &in, Map<Stri
     _statements.add(env().create<PIRAsm, String&, Map<String, PIRLocation> &, Map<String, PIRLocation> &>(pasm, in, out));
 }
 
-void PIRBasicBlock::addAssign(PIRValue &value, PIRLocation &dest) {
-    if (value.isNull()) {
-        if (!dest.type.isInstance() && !dest.type.isAll() && !dest.type.isAny()) {
-            error() << "incompatible destination " << dest << " for null\n";
-            return;
-        }
-    } else if (value.isInt()) {
-        if (!dest.type.isInt()) {
-            error() << "incompatible destination " << dest << " for int constant\n";
-            return;
-        }
-    } else if (value.isString()) {
-        if (!dest.type.isCString()) {
-            error() << "incompatible destination " << dest << " for string constant\n";
-            return;
+void PIRBasicBlock::addAssign(PIRValue &value, PIRLocation &dest, bool reinterpret) {
+    if (!reinterpret) {
+        if (value.isNull()) {
+            if (!dest.type.isInstance() && !dest.type.isAll() && !dest.type.isAny()) {
+                error() << "incompatible destination " << dest << " for null\n";
+                return;
+            }
+        } else if (value.isInt()) {
+            if (!dest.type.isInt()) {
+                error() << "incompatible destination " << dest << " for int constant\n";
+                return;
+            }
+        } else if (value.isString()) {
+            if (!dest.type.isCString()) {
+                error() << "incompatible destination " << dest << " for string constant\n";
+                return;
+            }
         }
     }
     _statements.add(env().create<PIRAssign, PIRValue&, PIRLocation&>(value, dest));
