@@ -12,6 +12,7 @@ class MethodScope: public Scope {
     
     public:
     int index;
+    bool typesResolved;
     PIRMethod *pir;
     
     MethodScope(Environment &env, MemoryInfo &mi, Scope & parent, MethodDeclNode & methodDecl);

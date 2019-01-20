@@ -22,7 +22,7 @@ bool TypeResolver::visit(TranslationUnitNode & translationUnit) {
 
 bool TypeResolver::visit(ClassDeclNode & classDecl) {
     if (!classDecl.scope) {
-        crit() << classDecl.name << ": classes must be resolved before methods!\n";
+        crit() << classDecl.name << ": classes must be resolved before type checking/resolution!\n";
         return false;
     }
     
@@ -43,6 +43,16 @@ bool TypeResolver::visit(ClassDeclNode & classDecl) {
 }
 
 bool TypeResolver::visit(MethodDeclNode & methodDecl) {
+    if (!methodDecl.scope) {
+        crit() << methodDecl << ": classes must be resolved before type checking/resolution!\n";
+        return false;
+    }
+    MethodScope *methodScope = methodDecl.scope->isMethod();
+    if (methodScope->typesResolved) {
+        return true;
+    }
+    methodScope->typesResolved = true;
+    
     {
         Iterator<TypeRefNode> &it = methodDecl.returnTypes.iterator();
         int idx = 0;
@@ -240,10 +250,22 @@ bool TypeResolver::visit(LogicalUnaryExprNode & logicalUnary) {
 
 bool TypeResolver::visit(MethodCallExprNode & methodCall) {
     methodCall.context.accept(*this);
+    if (!methodCall.context.resolvedType) {
+        error() << methodCall.scope->getClassDeclNode()->name << ": invalid method call context '" << methodCall.context << "'\n";
+        return false;
+    }
     methodCall.parameters.acceptAll(*this);
     if (InstanceScope * contextInstanceScope = methodCall.context.resolvedType->isInstance()) {
         if (MethodScope *calledMethodScope = contextInstanceScope->getMethod(methodCall)) {
             methodCall.resolvedMethod = calledMethodScope;
+            MethodDeclNode *decl = calledMethodScope->getMethodDeclNode();
+            // ensure method decl to be resolved
+            // TODO: handle recursive method calls correctly
+            decl->accept(*this);
+            if (decl->returnTypes.size() == 1) {
+                methodCall.resolvedType = decl->resolvedReturns.first();
+            }
+            // TODO: handle multi return types
             // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
         } else {
             error() << methodCall.scope->getClassDeclNode()->name 

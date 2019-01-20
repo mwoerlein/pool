@@ -3,7 +3,7 @@
 // public
 MethodScope::MethodScope(Environment &env, MemoryInfo &mi, Scope & parent, MethodDeclNode & methodDecl)
         :Scope(env, mi, &parent), Object(env, mi),
-         index(-1), pir(0),
+         index(-1), typesResolved(false), pir(0),
          methodDecl(methodDecl) {
 }
 MethodScope::~MethodScope() {}
