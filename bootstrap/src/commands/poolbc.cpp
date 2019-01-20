@@ -67,8 +67,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         if (hasProperty("warning")) ll = log_warn; 
         if (hasProperty("error")) ll = log_error; 
         Logger &logger = env().create<Logger, log_level>(ll);
-        
-        ClassLoader &loader = env().create<ClassLoader>();
+        TypeManager &types = env().create<TypeManager>();
+        ClassLoader &loader = env().create<ClassLoader, TypeManager&>(types);
         loader.setLogger(logger);
         {
             Iterator<String> &it = optionSet("classpath");
@@ -89,7 +89,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         resolveMethods.setLogger(logger);
         Visitor &resolveTypes = env().create<TypeResolver>();
         resolveTypes.setLogger(logger);
-        Visitor &generatePIR = env().create<PIRGenerator>();
+        Visitor &generatePIR = env().create<PIRGenerator, TypeManager&>(types);
         generatePIR.setLogger(logger);
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
         Visitor &dump = env().create<X86Writer, PoolStorage &>(outPS);
@@ -122,6 +122,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         resolveMethods.destroy();
         if (pretty) { pretty->destroy(); }
         loader.destroy();
+        types.destroy();
         logger.destroy();
         
         return 0;

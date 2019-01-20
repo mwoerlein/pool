@@ -5,10 +5,10 @@
 #include "poolc/ast/visitors/PrettyPrinter.hpp"
 
 // public
-ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi)
+ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi, TypeManager & types)
         :ClassPathStorage(env, mi), LoggerAware(env, mi), HashMap(env, mi), Object(env, mi),
          parser(env.create<PoolParser>()),
-         resolve(env.create<ClassResolver, ClassLoader &>(*this)),
+         resolve(env.create<ClassResolver, ClassLoader &, TypeManager &>(*this, types)),
          pretty(0) {
 }
 

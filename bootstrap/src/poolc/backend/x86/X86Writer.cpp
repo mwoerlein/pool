@@ -11,6 +11,8 @@
 #include "poolc/ast/scopes/BlockScope.hpp"
 #include "poolc/ast/scopes/VariableScope.hpp"
 
+#include "poolc/pir/statement/PIRCond.hpp"
+
 #define localClsPrefix(cls) (cls)->localPrefix
 // TODO: replace with localClsPrefix after all inline pasm method calls are replaced pool method calls
 #define manualClsPrefix(cls) (cls)->globalPrefix
@@ -355,8 +357,7 @@ void X86Writer::write(PIRBasicBlock &block) {
                     it.destroy();
                 }
                 if (block.cond) {
-                    code() << "cmpl 0, "; write(*block.cond); elem() << "\n"; 
-                    code() << "jne " << methodDeclBlock(methodDecl, block.condNext) << "\n";
+                    write(*block.cond, *block.condNext);
                 }
                 code() << "jmp " << methodDeclBlock(methodDecl, block.next) << "\n";
             }
@@ -382,14 +383,28 @@ void X86Writer::write(PIRBasicBlock &block) {
                 it.destroy();
             }
             if (block.cond) {
-                code() << "cmpl 0, "; write(*block.cond); elem() << "\n"; 
-                code() << "jne " << methodDeclBlock(methodDecl, block.condNext) << "\n";
+                write(*block.cond, *block.condNext);
             }
             if (methodDecl->kind == normal || block.next->kind == bb_block) {
                 code() << "jmp " << methodDeclBlock(methodDecl, block.next) << "\n";
             }
         }
     }
+}
+
+void X86Writer::write(PIRCond &cond, PIRBasicBlock &trueBlock) {
+    code() << "movl "; write(cond.left); elem() << ", %eax\n";
+    code() << "cmpl "; write(cond.right); elem() << ", %eax\n";
+    switch (cond.op) {
+        case op_eq: code() << "je "; break;
+        case op_neq: code() << "jne "; break;
+        case op_lt: code() << "jlt "; break;
+        case op_le: code() << "jle "; break;
+        case op_gt: code() << "jgt "; break;
+        case op_ge: code() << "jge "; break;
+    
+    } 
+    elem() << methodDeclBlock(trueBlock.method.scope().getMethodDeclNode(), &trueBlock) << "\n";
 }
 
 void X86Writer::write(PIRStatement &stmt) {

@@ -12,9 +12,11 @@
 #include "poolc/ast/scopes/BlockScope.hpp"
 #include "poolc/ast/scopes/VariableScope.hpp"
 
+#include "poolc/pir/statement/PIRCond.hpp"
+
 // public
-PIRGenerator::PIRGenerator(Environment &env, MemoryInfo &mi)
-        :Object(env, mi), LoggerAware(env, mi),
+PIRGenerator::PIRGenerator(Environment &env, MemoryInfo &mi, TypeManager &types)
+        :Object(env, mi), LoggerAware(env, mi), types(types),
          curMethod(0), curBlock(0), lastValue(0),
          lastLocations(env.create<LinkedList<PIRLocation>>()){}
 PIRGenerator::~PIRGenerator() {
@@ -73,6 +75,7 @@ bool PIRGenerator::visit(BlockInstNode & block) {
 bool PIRGenerator::visit(ExpressionInstNode & expressionInst) {
     expressionInst.expression.accept(*this);
     lastLocations.clear();
+    lastValue = 0;
     return true;
 }
 
@@ -83,17 +86,9 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
         while (it.hasNext()) {
             String &reg = it.next();
             ExpressionNode &ex = pasmInst.in.get(reg);
-            ex.accept(*this);
-            if (lastLocations.size() == 1) {
-                in.set(reg, curMethod->asTemp(*lastLocations.first()));
-                lastLocations.clear();
-            } else if (lastValue) {
-                PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
-                curBlock->addAssign(*lastValue, tmp);
-                in.set(reg, tmp);
-                lastValue = 0;
+            if (PIRLocation *tmp = asTemp(ex, ex)) {
+                in.set(reg, *tmp);
             } else {
-                crit() << "unexpected input expression " << ex << " in " << pasmInst << "\n";
                 return false;
             }
         }
@@ -122,22 +117,32 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
     return true;
 }
 
+bool PIRGenerator::visit(IfInstNode & ifInst) {
+    PIRBasicBlock *next = &curMethod->newBasicBlock();
+    PIRBasicBlock *trueBlock = &curMethod->newBasicBlock();
+    PIRBasicBlock *falseBlock = &curMethod->newBasicBlock();
+    
+    branch(ifInst.condition, ifInst, *trueBlock, *falseBlock);
+    
+    curBlock = trueBlock;
+    ifInst.trueBlock.instructions.acceptAll(*this);
+    curBlock->next = next;
+    
+    curBlock = falseBlock;
+    ifInst.falseBlock.instructions.acceptAll(*this);
+    curBlock->next = next;
+    
+    curBlock = next;
+}
+
 bool PIRGenerator::visit(ReturnInstNode & returnInst) {
     Iterator<ExpressionNode> &it = returnInst.values.iterator();
     int idx = 0;
     while (it.hasNext()) {
         ExpressionNode &ex = it.next();
-        ex.accept(*this);
-        if (lastLocations.size() == 1) {
-            curBlock->addMove(curMethod->asTemp(*lastLocations.first()), *curMethod->getRet(idx++));
-            lastLocations.clear();
-        } else if (lastValue) {
-            PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
-            curBlock->addAssign(*lastValue, tmp);
-            curBlock->addMove(tmp, *curMethod->getRet(idx++));
-            lastValue = 0;
+        if (PIRLocation *tmp = asTemp(ex, ex)) {
+            curBlock->addMove(*tmp, *curMethod->getRet(idx++));
         } else {
-            crit() << "unexpected value " << ex << " in " << returnInst << "\n";
             return false;
         }
     }
@@ -150,20 +155,14 @@ bool PIRGenerator::visit(ReturnInstNode & returnInst) {
 bool PIRGenerator::visit(VariableInitInstNode & variableInit) {
     variableInit.variables.acceptAll(*this);
     
-    variableInit.initializer.accept(*this);
     if (variableInit.variables.size() == 1) {
-        PIRLocation *dest = variableInit.variables.first()->scope->isVariable()->pir;
-        if (lastLocations.size() == 1) {
-            curBlock->addMove(curMethod->asTemp(*lastLocations.first()), *dest, variableInit.reinterpret);
-            lastLocations.clear();
-        } else if (lastValue) {
-            curBlock->addAssign(*lastValue, *dest);
-            lastValue = 0;
+        if (PIRLocation *tmp = asTemp(variableInit.initializer, variableInit.initializer)) {
+            curBlock->addMove(*tmp, *variableInit.variables.first()->scope->isVariable()->pir);
         } else {
-            crit() << "unexpected initializer " << variableInit.initializer << " in " << variableInit << "\n";
             return false;
         }
     } else {
+        variableInit.initializer.accept(*this);
         if (lastLocations.size() == variableInit.variables.size()) {
             Iterator<VariableDeclNode> &vit = variableInit.variables.iterator();
             Iterator<PIRLocation> &lit = lastLocations.iterator();
@@ -183,18 +182,23 @@ bool PIRGenerator::visit(VariableInitInstNode & variableInit) {
     return true;
 }
 
+bool PIRGenerator::visit(WhileInstNode & whileInst) {
+    PIRBasicBlock *next = &curMethod->newBasicBlock();
+    PIRBasicBlock *body = &curMethod->newBasicBlock();
+    PIRBasicBlock *test = &curMethod->newBasicBlock();
+    curBlock->next = test;
+    
+    curBlock = test;
+    branch(whileInst.condition, whileInst, *body, *next);
+    curBlock = body;
+    whileInst.block.accept(*this);
+    curBlock->next = test;
+    curBlock = next;
+}
+
 bool PIRGenerator::visit(ArithAssignmentExprNode & arithAssignment) {
-    PIRLocation *val = 0;
-    arithAssignment.value.accept(*this);
-    if (lastLocations.size() == 1) {
-        val = &curMethod->asTemp(*lastLocations.first());
-        lastLocations.clear();
-    } else if (lastValue) {
-        val = &curMethod->newTemp(*arithAssignment.resolvedType);
-        curBlock->addAssign(*lastValue, *val);
-        lastValue = 0;
-    } else {
-        crit() << "unexpected value " << arithAssignment.value << " in " << arithAssignment << "\n";
+    PIRLocation *val = asTemp(arithAssignment.value, arithAssignment);
+    if (!val) {
         return false;
     }
 
@@ -223,30 +227,9 @@ bool PIRGenerator::visit(ArithAssignmentExprNode & arithAssignment) {
 }
 
 bool PIRGenerator::visit(ArithBinaryExprNode & arithBinary) {
-    PIRLocation *left = 0;
-    arithBinary.left.accept(*this);
-    if (lastLocations.size() == 1) {
-        left = &curMethod->asTemp(*lastLocations.first());
-        lastLocations.clear();
-    } else if (lastValue) {
-        left = &curMethod->newTemp(*arithBinary.resolvedType);
-        curBlock->addAssign(*lastValue, *left);
-        lastValue = 0;
-    } else {
-        crit() << "unexpected left " << arithBinary.left << " in " << arithBinary << "\n";
-        return false;
-    }
-    PIRLocation *right = 0;
-    arithBinary.right.accept(*this);
-    if (lastLocations.size() == 1) {
-        right = &curMethod->asTemp(*lastLocations.first());
-        lastLocations.clear();
-    } else if (lastValue) {
-        right = &curMethod->newTemp(*arithBinary.resolvedType);
-        curBlock->addAssign(*lastValue, *right);
-        lastValue = 0;
-    } else {
-        crit() << "unexpected right " << arithBinary.right << " in " << arithBinary << "\n";
+    PIRLocation *left = asTemp(arithBinary.left, arithBinary);
+    PIRLocation *right = asTemp(arithBinary.right, arithBinary);
+    if (!left || !right) {
         return false;
     }
     PIRLocation *dest = &curMethod->newTemp(*arithBinary.resolvedType);
@@ -336,35 +319,17 @@ bool PIRGenerator::visit(AssignmentExprNode & assignment) {
             crit() << "unexpected context " << *assignment.variable.context << " " << lastLocations.size() << " in " << assignment << "\n";
             return false;
         }
-        assignment.value.accept(*this);
-        if (lastLocations.size() == 1) {
-            PIRLocation &src = curMethod->asTemp(*lastLocations.first());
-            curBlock->addSet(*ctx, *assignment.variable.resolvedVariable, src);
-            lastLocations.clear();
-            lastLocations.add(src);
-        } else if (lastValue) {
-            PIRLocation &tmp = curMethod->newTemp(*assignment.resolvedType);
-            curBlock->addAssign(*lastValue, tmp);
-            curBlock->addSet(*ctx, *assignment.variable.resolvedVariable, tmp);
-            lastValue = 0;
+        if (PIRLocation *tmp = asTemp(assignment.value, assignment.value)) {
+            curBlock->addSet(*ctx, *assignment.variable.resolvedVariable, *tmp);
+            lastLocations.add(*tmp);
         } else {
-            crit() << "unexpected value " << assignment.value << " in " << assignment << "\n";
             return false;
         }
+    } else if (PIRLocation *tmp = asTemp(assignment.value, assignment.value)) {
+        curBlock->addMove(*tmp, *assignment.variable.resolvedVariable->pir);
+        lastLocations.add(*tmp);
     } else {
-        PIRLocation *dest = assignment.variable.resolvedVariable->pir;
-        assignment.value.accept(*this);
-        if (lastLocations.size() == 1) {
-            curBlock->addMove(curMethod->asTemp(*lastLocations.first()), *dest);
-            lastLocations.clear();
-        } else if (lastValue) {
-            curBlock->addAssign(*lastValue, *dest);
-            lastValue = 0;
-        } else {
-            crit() << "unexpected value " << assignment.value << " in " << assignment << "\n";
-            return false;
-        }
-        lastLocations.add(*dest);
+        return false;
     }
     return true;
 }
@@ -377,6 +342,22 @@ bool PIRGenerator::visit(ConstCStringExprNode & constCString) {
 bool PIRGenerator::visit(ConstIntExprNode & constInt) {
     lastValue = &curMethod->getConstInt(constInt);
     return true;
+}
+
+bool PIRGenerator::visit(LogicalBinaryExprNode & logicalBinary) {
+    if (PIRLocation *tmp = asTemp(logicalBinary, logicalBinary)) {
+        lastLocations.add(*tmp);
+        return true;
+    }
+    return false;
+}
+
+bool PIRGenerator::visit(LogicalUnaryExprNode & logicalUnary) {
+    if (PIRLocation *tmp = asTemp(logicalUnary.expression, logicalUnary)) {
+        lastLocations.add(*tmp);
+        return true;
+    }
+    return false;
 }
 
 bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
@@ -395,17 +376,9 @@ bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
         Iterator<ExpressionNode> &it = methodCall.parameters.iterator();
         while (it.hasNext()) {
             ExpressionNode &ex = it.next();
-            ex.accept(*this);
-            if (lastLocations.size() == 1) {
-                params.add(curMethod->asTemp(*lastLocations.first()));
-                lastLocations.clear();
-            } else if (lastValue) {
-                PIRLocation &tmp = curMethod->newTemp(*ex.resolvedType);
-                curBlock->addAssign(*lastValue, tmp);
-                params.add(tmp);
-                lastValue = 0;
+            if (PIRLocation *tmp = asTemp(ex, ex)) {
+                params.add(*tmp);
             } else {
-                crit() << "unexpected parameter " << ex << " in " << methodCall << "\n";
                 return false;
             }
         }
@@ -437,8 +410,8 @@ bool PIRGenerator::visit(SignExprNode & sign) {
             case sign_plus:
                 return true;
             case sign_minus:
-                PIRLocation &left = *curMethod->getZeroTemp(*sign.expression.resolvedType);
-                PIRLocation &dest = curMethod->newTemp(*sign.expression.resolvedType);
+                PIRLocation &left = *curMethod->getZeroTemp(types.intType);
+                PIRLocation &dest = curMethod->newTemp(types.intType);
                 
                 curBlock->addArithOp(op_sub, left, curMethod->asTemp(*lastLocations.first()), dest);
                 lastLocations.clear();
@@ -487,3 +460,77 @@ bool PIRGenerator::visit(VariableExprNode & variable) {
     }
     return true;
 }
+
+// private
+
+PIRLocation* PIRGenerator::asTemp(ExpressionNode &expr, Node &context) {
+    if (expr.isLogicalBinary() || expr.isLogicalUnary()) {
+        PIRBasicBlock *next = &curMethod->newBasicBlock();
+        PIRBasicBlock *trueBlock = &curMethod->newBasicBlock();
+        trueBlock->next = next;
+        
+        PIRLocation &loc = curMethod->newTemp(types.intType);
+        curBlock->addMove(*curMethod->getZeroTemp(types.intType), loc);
+        trueBlock->addMove(*curMethod->getOneTemp(types.intType), loc);
+        
+        branch(expr, context, *trueBlock, *next);
+        curBlock = next;
+        return &loc;
+    }
+    
+    expr.accept(*this);
+    if (lastLocations.size() == 1) {
+        PIRLocation &loc = curMethod->asTemp(*lastLocations.first());
+        lastLocations.clear();
+        return &loc;
+    }
+    if (lastValue) {
+        PIRLocation &loc = curMethod->newTemp(*context.resolvedType);
+        curBlock->addAssign(*lastValue, loc);
+        lastValue = 0;
+        return &loc;
+    }
+    crit() << "unexpected " << expr << " in " << context << "\n";
+    return 0;
+}
+
+void PIRGenerator::branch(ExpressionNode &expr, Node &context, PIRBasicBlock &trueBlock, PIRBasicBlock &falseBlock) {
+    if (LogicalUnaryExprNode *logicalUnary = expr.isLogicalUnary()) {
+        switch (logicalUnary->op) {
+            case unary_not: {
+                branch(logicalUnary->expression, context, falseBlock, trueBlock);
+                return;
+            }
+        }    
+    }
+    if (LogicalBinaryExprNode *logicalBinary = expr.isLogicalBinary()) {
+        switch (logicalBinary->op) {
+            case op_and: {
+                PIRBasicBlock *nextCond = &curMethod->newBasicBlock();
+                branch(logicalBinary->left, context, *nextCond, falseBlock);
+                curBlock = nextCond;
+                branch(logicalBinary->right, context, trueBlock, falseBlock);
+                return;
+            }
+            case op_or: {
+                PIRBasicBlock *nextCond = &curMethod->newBasicBlock();
+                branch(logicalBinary->left, context, trueBlock, *nextCond);
+                curBlock = nextCond;
+                branch(logicalBinary->right, context, trueBlock, falseBlock);
+                return;
+            }
+            default: {
+                PIRLocation *left = asTemp(logicalBinary->left, *logicalBinary);
+                PIRLocation *right = asTemp(logicalBinary->right, *logicalBinary);
+                if (left && right) {
+                    curBlock->setCondNext(logicalBinary->op, *left, *right, trueBlock, falseBlock);
+                }
+                return;
+            }
+        }
+    }
+    if (PIRLocation *tmp = asTemp(expr, context)) {
+        curBlock->setCondNext(op_neq, *tmp, *curMethod->getZeroTemp(types.intType), trueBlock, falseBlock);
+    }
+}
+

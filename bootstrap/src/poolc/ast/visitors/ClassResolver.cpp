@@ -10,19 +10,9 @@
 #include "poolc/ast/scopes/VariableScope.hpp"
 
 // public
-ClassResolver::ClassResolver(Environment &env, MemoryInfo &mi, ClassLoader & loader)
-        :Object(env, mi), LoggerAware(env, mi),
-         allType(env.create<AllType>()),
-         anyType(env.create<AnyType>()),
-         cStringType(env.create<CStringType>()),
-         intType(env.create<IntType>()),
-         loader(loader), curScope(0) {}
-ClassResolver::~ClassResolver() {
-    allType.destroy();
-    anyType.destroy();
-    cStringType.destroy();
-    intType.destroy();
-}
+ClassResolver::ClassResolver(Environment &env, MemoryInfo &mi, ClassLoader & loader, TypeManager & types)
+        :Object(env, mi), LoggerAware(env, mi), loader(loader), types(types), curScope(0) {}
+ClassResolver::~ClassResolver() {}
 
 
 bool ClassResolver::visit(TranslationUnitNode & translationUnit) {
@@ -100,12 +90,12 @@ bool ClassResolver::visit(VariableDeclNode & variableDecl) {
 }
 
 bool ClassResolver::visit(AllRefNode & type) {
-    type.resolvedType = &allType;
+    type.resolvedType = &types.allType;
     return true;
 }
 
 bool ClassResolver::visit(AnyRefNode & type) {
-    type.resolvedType = &anyType;
+    type.resolvedType = &types.anyType;
     return true;
 }
 
@@ -137,12 +127,12 @@ bool ClassResolver::visit(ClassRefNode & classRef) {
 }
 
 bool ClassResolver::visit(CStringRefNode & type) {
-    type.resolvedType = &cStringType;
+    type.resolvedType = &types.cStringType;
     return true;
 }
 
 bool ClassResolver::visit(IntRefNode & type) {
-    type.resolvedType = &intType;
+    type.resolvedType = &types.intType;
     return true;
 }
 
@@ -221,24 +211,24 @@ bool ClassResolver::visit(AssignmentExprNode & assignment) {
 }
 
 bool ClassResolver::visit(ConstCStringExprNode & constCString) {
-    constCString.resolvedType = &cStringType;
+    constCString.resolvedType = &types.cStringType;
     return true;
 }
 
 bool ClassResolver::visit(ConstIntExprNode & constInt) {
-    constInt.resolvedType = &intType;
+    constInt.resolvedType = &types.intType;
     return true;
 }
 
 bool ClassResolver::visit(LogicalBinaryExprNode & logicalBinary) {
-    logicalBinary.resolvedType = &intType;
+    logicalBinary.resolvedType = &types.intType;
     logicalBinary.left.accept(*this);
     logicalBinary.right.accept(*this);
     return true;
 }
 
 bool ClassResolver::visit(LogicalUnaryExprNode & logicalUnary) {
-    logicalUnary.resolvedType = &intType;
+    logicalUnary.resolvedType = &types.intType;
     logicalUnary.expression.accept(*this);
     return true;
 }
@@ -250,7 +240,7 @@ bool ClassResolver::visit(MethodCallExprNode & methodCall) {
 }
 
 bool ClassResolver::visit(NullExprNode & constNull) {
-    constNull.resolvedType = &allType;
+    constNull.resolvedType = &types.allType;
     return true;
 }
 

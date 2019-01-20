@@ -7,6 +7,7 @@
 #include "sys/String.hpp"
 #include "sys/log/LoggerAware.hpp"
 #include "poolc/parser/PoolParser.hpp"
+#include "poolc/ast/TypeManager.hpp"
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 
 class ClassResolver;
@@ -18,7 +19,7 @@ class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private 
     PrettyPrinter * pretty;
     
     public:
-    ClassLoader(Environment &env, MemoryInfo &mi);
+    ClassLoader(Environment &env, MemoryInfo &mi, TypeManager &types);
     virtual ~ClassLoader();
     
     virtual void setLogger(Logger &logger) override;

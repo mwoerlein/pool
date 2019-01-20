@@ -36,6 +36,7 @@ class X86Writer: public Writer {
     virtual bool visit(VariableInitInstNode & variableInit) override;
     
     virtual void write(PIRBasicBlock &block);
+    virtual void write(PIRCond &cond, PIRBasicBlock &trueBlock);
     virtual void write(PIRStatement &stmt);
     virtual void write(PIRArithOp &arithOpStmt);
     virtual void write(PIRAsm &asmStmt);

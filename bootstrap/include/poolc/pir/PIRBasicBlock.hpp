@@ -28,17 +28,14 @@ class PIRBasicBlock: virtual public Object, virtual public LoggerAware {
     bb_kind kind;
     PIRMethod &method;
     int idx;
-    PIRLocation *cond;
+    PIRCond *cond;
     PIRBasicBlock *next, *condNext;
     
     PIRBasicBlock(Environment &env, MemoryInfo &mi, bb_kind kind, PIRMethod &method, int idx);
     virtual ~PIRBasicBlock();
     
     inline Iterator<PIRStatement> &statements() { return _statements.iterator(); }
-    inline void setCondNext(PIRLocation &cond, PIRBasicBlock &condNext) {
-        this->cond = &cond;
-        this->condNext = &condNext;
-    }
+    void setCondNext(logical_op op, PIRLocation &left, PIRLocation &right, PIRBasicBlock &trueNext, PIRBasicBlock &falseNext);
     
     void addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest);
     void addAsm(String &pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out);

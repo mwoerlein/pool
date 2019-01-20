@@ -11,6 +11,7 @@
 #include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
+#include "poolc/pir/statement/PIRCond.hpp"
 #include "poolc/pir/statement/PIRGet.hpp"
 #include "poolc/pir/statement/PIRMove.hpp"
 #include "poolc/pir/statement/PIRSet.hpp"
@@ -41,6 +42,19 @@ OStream & PIRBasicBlock::operator >>(OStream & stream) {
     return stream << "basic-block-" << idx;
 }
 
+void PIRBasicBlock::setCondNext(logical_op op, PIRLocation &left, PIRLocation &right, PIRBasicBlock &trueNext, PIRBasicBlock &falseNext) {
+    if ((op == op_and) || (op == op_or)) {
+        error() << "invalid operator for condition: " << left << " <op> " << right << "\n";
+        return;
+    }
+    if (!left.type.isInt() || !right.type.isInt()) {
+        error() << "invalid types for condition: " << left << " <op> " << right << "\n";
+        return;
+    }
+    this->cond = &env().create<PIRCond, logical_op, PIRLocation&, PIRLocation&>(op, left, right);
+    this->condNext = &trueNext;
+    this->next = &falseNext;
+}
 
 void PIRBasicBlock::addArithOp(arith_op op, PIRLocation &left, PIRLocation &right, PIRLocation &dest) {
     if (!left.type.isInt() || !right.type.isInt() || !dest.type.isInt()) {

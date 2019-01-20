@@ -127,6 +127,7 @@ PIRLocation &PIRMethod::spillTemp(int idx) {
 
 PIRBasicBlock &PIRMethod::newBasicBlock() {
     PIRBasicBlock &block = env().create<PIRBasicBlock, bb_kind, PIRMethod&, int>(bb_block, *this, _blocks.size());
+    if (logger) { block.setLogger(*logger); }
     _blocks.add(block);
     return block;
 }
