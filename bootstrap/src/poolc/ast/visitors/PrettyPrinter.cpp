@@ -196,7 +196,7 @@ bool PrettyPrinter::visit(IfInstNode & ifInst) {
         ifInst.trueBlock.instructions.acceptAll(*this);
         if (!ifInst.falseBlock.isEmpty()) {
             _indent -= 4;
-            indent() << "} else {";
+            indent() << "} else {\n";
             _indent += 4;
             ifInst.falseBlock.instructions.acceptAll(*this);
         }
