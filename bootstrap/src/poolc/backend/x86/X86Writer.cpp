@@ -517,7 +517,7 @@ void X86Writer::write(PIRGet &getStmt) {
     ClassDeclNode *declClass = getStmt.variable.getClassDeclNode();
      
     code() << "movl "; write(getStmt.context); elem() << ", %eax\n";
-    code() << "movl " << instanceHandleVarsOffset(declClass)<< "(%eax), %ebx\n";
+    code() << "movl " << instanceHandleVarsOffset(declClass) << "(%eax), %ebx\n";
     code() << "addl 4(%eax), %ebx\n";
     code() << "movl " << instanceVarOffset(declClass, decl) << "(%ebx), %eax\n";
     code() << "movl %eax, "; write(getStmt.dest); elem() << "\n";
@@ -533,7 +533,7 @@ void X86Writer::write(PIRSet &setStmt) {
     ClassDeclNode *declClass = setStmt.variable.getClassDeclNode();
      
     code() << "movl "; write(setStmt.context); elem() << ", %eax\n";
-    code() << "movl " << instanceHandleVarsOffset(declClass)<< "(%eax), %ebx\n";
+    code() << "movl " << instanceHandleVarsOffset(declClass) << "(%eax), %ebx\n";
     code() << "addl 4(%eax), %ebx\n";
     code() << "movl "; write(setStmt.src); elem() << ", %eax\n";
     code() << "movl %eax, " << instanceVarOffset(declClass, decl) << "(%ebx)\n";
@@ -549,10 +549,10 @@ void X86Writer::write(PIRLocation &location) {
             offset = 16 + 4*curMethod->paramCount() + 4*location.idx;
             break;
         case loc_spill:
-            offset = -4 - 4*curMethod->tempCount() - 4*location.idx;
+            offset = -4 - 4*location.idx;
             break;
         case loc_temp:
-            offset = -4 - 4*location.idx;
+            offset = -4 - 4*curMethod->spillCount() - 4*location.idx;
             break;
         case loc_this:
             offset = 12;

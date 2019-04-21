@@ -34,6 +34,7 @@ class B extends myThread, my::A {
         rt.printChar('@', Runtime:err);
         rt.printChar('\n', out);
         this.testLoop(4);
+//        this.testLoop(13);
         this.test(this.getRow());
         a.test(a.getRow());
         return;
@@ -46,15 +47,29 @@ class B extends myThread, my::A {
         while (i--) {
             int j = n;
             while (j--) {
-                if (i<=j) {
-                    out = Runtime:out;
+                if (n>=10) {
+                    if (i==j || i+j==n-1) {
+                        out = Runtime:err;
+                    } else {
+                        out = Runtime:out;
+                    }
+                    if (i<10) {
+                        rt.printChar(' ', out);
+                    }
                 } else {
-                    out = Runtime:err;
+                    if (i<=j) {
+                        out = Runtime:out;
+                    } else {
+                        out = Runtime:err;
+                    }
                 }
                 rt.printInt(i, out);
                 rt.printChar(' ', out);
                 rt.printInt(j, out);
-                rt.printChar('\t', out);
+                if (j) {
+                    rt.printChar(' ', out);
+                    rt.printChar(' ', out);
+                }
             }
             rt.printChar('\n', out);
         }
