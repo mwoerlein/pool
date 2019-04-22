@@ -25,6 +25,7 @@ R"(Pool Bootstrap Compiler.
       -v --verbose                  Set verbose.
       --warning                     Set warning.
       --error                       Set error.
+      -r --recursive                Generate output for all required classes.
       -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
       -p <dir> --prettyprint <dir>  Dump classes into <dir>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
@@ -40,6 +41,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         registerOptionAlias("output", "o");
         registerOptionAlias("prettyprint", "p");
         registerOptionAlias("classpath", "c");
+        registerOptionAlias("recursive", "r");
         
         registerOptionSet("classpath");
     }
@@ -96,9 +98,16 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         dump.setLogger(logger);
         
         {
-            Iterator<String> &it = arguments();
-            while (it.hasNext()) {
-                String &name = it.next();
+            Iterator<String> *it = &arguments();
+            if (hasProperty("recursive")) {
+                while (it->hasNext()) {
+                    loader.getClass(it->next());
+                }
+                it->destroy();
+                it = &loader.classNames();
+            }
+            while (it->hasNext()) {
+                String &name = it->next();
                 logger.note() << "compile " << name << "\n";
                 
                 ClassDeclNode * classDef = loader.getClass(name);
@@ -113,7 +122,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
             }
-            it.destroy();
+            it->destroy();
         }
         
         dump.destroy();

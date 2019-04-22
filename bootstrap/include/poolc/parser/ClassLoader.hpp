@@ -27,6 +27,8 @@ class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private 
     
     virtual ClassDeclNode * getClass(String & fullQualifiedName);
     virtual void registerClass(ClassDeclNode & classDef);
+    
+    inline Iterator<String> & classNames() { return HashMap::keys(); }
 };
 
 #endif //POOLC_PARSER_CLASSLOADER_HPP_LOCK
