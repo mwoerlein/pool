@@ -3,14 +3,14 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace my;
+namespace my::simple;
 
 use my::core::Object;
 use my::core::OStream;
 use my::core::Runtime;
 use my::core::Thread as myThread;
 
-class B extends myThread, my::A {
+class B extends myThread, my::simple::A {
     
     // methods
     [] run() {
