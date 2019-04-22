@@ -73,6 +73,9 @@ bool TypeResolver::visit(MethodDeclNode & methodDecl) {
 }
 
 bool TypeResolver::visit(VariableDeclNode & variableDecl) {
+    if (variableDecl.resolvedType) {
+        return true;
+    }
     variableDecl.type.accept(*this);
     variableDecl.resolvedType = variableDecl.type.resolvedType;
     if (ClassScope * classScope = variableDecl.resolvedType->isClass()) {
@@ -317,6 +320,8 @@ bool TypeResolver::visit(VariableExprNode & variable) {
     }
     if (variable.resolvedVariable = contextScope->getVariable(variable.name)) {
         VariableDeclNode &decl = *variable.resolvedVariable->getVariableDeclNode();
+        // ensure variable decl to be resolved
+        decl.accept(*this);
         variable.resolvedType = decl.resolvedType;
         
         // convert implicit "this" to explicit "this"
