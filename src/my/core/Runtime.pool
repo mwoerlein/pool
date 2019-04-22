@@ -11,13 +11,6 @@ namespace my::core;
 
 class Runtime extends Object {
     
-    // constants
-    // streams
-    int out := 0;
-    int err := 1;
-    
-    cstring newline := "\n";
-    
     // TODO: remove with syscall
     // SysCall constants
     int SysCall_allocate := 1;
@@ -31,11 +24,6 @@ class Runtime extends Object {
     int spk_int := 1;
     int spk_hex := 2;
     int spk_string := 3;
-    
-    // TODO: remove with syscall
-    // SysCall print streams
-    int sps_out := 0;
-    int sps_err := 1;
     
     // TODO: remove with working ClassHeader "struct"
     int ch_inst_handle := 4;
@@ -128,12 +116,32 @@ class Runtime extends Object {
         Class cRuntime := rt.createInstance(Class:CLASSNAME);
         if (!cRuntime) { return null; } // abort on initialization error
         cRuntime.setDesc(cdRuntime);
+        
+        rt.initStreams();
         return rt;
     }
     
     [] initSysCall(int syscall_runtime, int syscall_entry) {
         this.syscall_runtime = syscall_runtime;
         this.syscall_entry = syscall_entry;
+    }
+    
+    OStream out;
+    OStream err;
+    
+    [] initStreams() {
+        RuntimeOStream rs0 = this.createInstance(RuntimeOStream:CLASSNAME);
+        out = rs0.initOStream(0);
+        RuntimeOStream rs1 = this.createInstance(RuntimeOStream:CLASSNAME);
+        err = rs1.initOStream(1);
+    }
+    
+    [OStream] out() {
+        return out;
+    }
+    
+    [OStream] err() {
+        return err;
     }
     
     // TODO: replace int with working ClassHeader "struct"

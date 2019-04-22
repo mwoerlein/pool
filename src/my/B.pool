@@ -5,9 +5,10 @@ version = 0.1.0
 */
 namespace my;
 
-use my::core::Thread as myThread;
-use my::core::Runtime;
 use my::core::Object;
+use my::core::OStream;
+use my::core::Runtime;
+use my::core::Thread as myThread;
 
 class B extends myThread, my::A {
     
@@ -23,16 +24,16 @@ class B extends myThread, my::A {
     }
     
     [] doIt(A a) {
-        int out := Runtime:out;    // fixed variable
         Runtime rt := this.rt();    // fixed variable
-        rt.printChar('@', Runtime:err);
-        rt.printString("OMG!! ", out);
-        rt.printInt(this.equals(this), out);
-        rt.printChar(' ', out);
-        rt.printInt(this.equals(a), out);
+        OStream out := rt.out();
+        OStream err := rt.err();
+        
+        err.printChar('@');
+        out.printString("OMG!! ");
+        out.printInt(this.equals(this)).printChar(' ').printInt(this.equals(a));
         this.testAllocate(0x1234);
-        rt.printChar('@', Runtime:err);
-        rt.printChar('\n', out);
+        err.printChar('@').printNewline();
+        
         this.testLoop(4);
 //        this.testLoop(13);
         this.test(this.getRow());
@@ -41,53 +42,46 @@ class B extends myThread, my::A {
     }
     
     [] testLoop(int n) {
-        int out = Runtime:out;      // modifiable variable
         Runtime rt := this.rt();    // fixed variable
+        OStream out = rt.out();     // modifiable variable
         int i = n;
         while (i--) {
             int j = n;
             while (j--) {
                 if (n>=10) {
                     if (i==j || i+j==n-1) {
-                        out = Runtime:err;
+                        out = rt.err();
                     } else {
-                        out = Runtime:out;
+                        out = rt.out();
                     }
                     if (i<10) {
-                        rt.printChar(' ', out);
+                        out.printChar(' ');
                     }
                 } else {
                     if (i<=j) {
-                        out = Runtime:out;
+                        out = rt.out();
                     } else {
-                        out = Runtime:err;
+                        out = rt.err();
                     }
                 }
-                rt.printInt(i, out);
-                rt.printChar(' ', out);
-                rt.printInt(j, out);
+                out.printInt(i).printChar(' ').printInt(j);
                 if (j) {
-                    rt.printChar(' ', out);
-                    rt.printChar(' ', out);
+                    out.printChar(' ').printChar(' ');
                 }
             }
-            rt.printChar('\n', out);
+            out.printNewline();
         }
     }
     
     [] testAllocate(int size) {
-        int out := Runtime:out;     // fixed variable
         Runtime rt := this.rt();    // fixed variable
         // TODO: replace int with working MemInfo "struct"
         int mem := rt.allocate(size);
-        rt.printChar(' ', out);
-        rt.printHex(mem, out);
-        rt.printChar(' ', out);
-        rt.printHex(0xdead, out);
-//        rt.printHex(mem.buffer, out);
-        rt.printChar(' ', out);
-        rt.printHex(0xc0de, out);
-//        rt.printHex(mem.size, out);
+        rt.out()
+            .printChar(' ').printHex(mem)
+            .printChar(' ').printHex(0xdead) //.printHex(mem.buffer)
+            .printChar(' ').printHex(0xc0de) //.printHex(mem.size)
+        ;
         rt.free(mem);
         return;
     }

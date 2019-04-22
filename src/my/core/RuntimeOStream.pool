@@ -1,0 +1,40 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace my::core;
+
+class RuntimeOStream extends OStream {
+    
+    int stream;
+    
+    // TODO: replace with this, after implicit casts are implemented
+    OStream self;
+    
+    [OStream] initOStream(int stream) {
+        this.stream = stream;
+        self = this.rt().cast(OStream:CLASSNAME, this);
+        return self;
+    }
+    
+    [OStream] printChar(int c) {
+        this.rt().printChar(c, stream);
+        return self;
+    }
+    
+    [OStream] printString(cstring s) {
+        this.rt().printString(s, stream);
+        return self;
+    }
+    
+    [OStream] printInt(int i) {
+        this.rt().printInt(i, stream);
+        return self;
+    }
+    
+    [OStream] printHex(int i) {
+        this.rt().printHex(i, stream);
+        return self;
+    }
+}

@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace my::core;
+
+class OStream extends Object {
+    
+    abstract [OStream] printChar(int c);
+    
+    abstract [OStream] printString(cstring s);
+    
+    abstract [OStream] printInt(int i);
+    
+    abstract [OStream] printHex(int i);
+    
+    [OStream] printNewline() {
+        return this.printChar('\n');
+    }
+}
