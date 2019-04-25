@@ -1081,6 +1081,18 @@ condition_inst:
         $$->last_line = @11.last_line;
         $$->last_column = @11.last_column;
     }
+|   IF '(' expression ')' '{' instruction_block '}' ELSE condition_inst
+    {
+        BlockInstNode* else_block = &driver.env().create<BlockInstNode>();
+        else_block->instructions.add(*$9);
+        
+        $$ = &driver.env().create<IfInstNode, ExpressionNode&, BlockInstNode&, BlockInstNode&>(*$3, *$6, *else_block);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @9.last_line;
+        $$->last_column = @9.last_column;
+    }
 ;
 
 //=
