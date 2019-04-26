@@ -185,22 +185,6 @@ class Runtime extends Object {
         ">, {"%eax": c, "%ebx": stream, "%edi": syscall_runtime, "%esi": syscall_entry});
     }
     
-    [] printInt(int i, int stream) {
-        __pasm__(<"
-            pushl %eax; pushl _my_core_Runtime_coi_spk_int; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
-            pushl %esp; pushl %edi; call %esi
-            addl 24, %esp
-        ">, {"%eax": i, "%ebx": stream, "%edi": syscall_runtime, "%esi": syscall_entry});
-    }
-    
-    [] printHex(int i, int stream) {
-        __pasm__(<"
-            pushl %eax; pushl _my_core_Runtime_coi_spk_hex; pushl %ebx; pushl _my_core_Runtime_coi_SysCall_print
-            pushl %esp; pushl %edi; call %esi
-            addl 24, %esp
-        ">, {"%eax": i, "%ebx": stream, "%edi": syscall_runtime, "%esi": syscall_entry});
-    }
-    
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
         int info = 0;

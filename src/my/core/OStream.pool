@@ -9,20 +9,18 @@ class OStream extends Object {
     
     abstract [OStream] printChar(int c);
     
-    abstract [OStream] printInt(int i);
+    [OStream] printInt(int i) {
+        return this._printInt(i, 10, 0);
+    }
     
-    abstract [OStream] printHex(int i);
+    [OStream] printHex(int i) {
+        return this._printHex(i, 0);
+    }
     
     [OStream] printCString(cstring s) {
-        int pointer = 0;
-        int c = 0;
-        __pasm__("movb (%eax), %bl", {"%eax": s, "%ebx": c} , {"%eax": pointer, "%ebx": c});
-        while (c) {
-            this.printChar(c);
-            pointer++;
-            __pasm__("movb (%eax), %bl", {"%eax": pointer, "%ebx": c} , {"%ebx": c});
-        }
-        return this;
+        int buf = 0;
+        __pasm__("", {"%eax": s} , {"%eax": buf});
+        return this._printCStringBuffer(buf);
     }
     
     // TODO: use generic method instead of plain Object?
@@ -34,4 +32,78 @@ class OStream extends Object {
     [OStream] printNewline() {
         return this.printChar('\n');
     }
+
+    // private
+    [OStream] _printInt(int d, int base, int pad) {
+        if (d < 0) {
+            this.printChar('-');
+            d = -d;
+        }
+        return this._printUInt(d, base, pad);
+    }
+    
+    [OStream] _printUInt(int d, int base, int pad) {
+        int buf_size := 21;
+        int p = 0;
+        __pasm__("movl %esp, %ebx; subl %eax, %esp", {"%eax": buf_size} , {"%ebx": p});
+        
+        this._putChar(--p, 0); // string terminator
+        int padded_start = p - pad;
+        
+        /*  Divide D by BASE until D == 0. */
+        { // TODO: use do {...} while, if available
+            int remainder = d % base;
+            if (remainder < 10) {
+                this._putChar(--p, remainder + '0');
+            } else {
+                this._putChar(--p, remainder + 'a' - 10);
+            }
+        }
+        while (d /= base) {
+            int remainder = d % base;
+            if (remainder < 10) {
+                this._putChar(--p, remainder + '0');
+            } else {
+                this._putChar(--p, remainder + 'a' - 10);
+            }
+        }
+        while (p > padded_start) {
+            this._putChar(--p, '0');
+        }
+    
+        this._printCStringBuffer(p);
+        __pasm__("addl %eax, %esp", {"%eax": buf_size});
+        return this;
+    }
+    
+    [OStream] _printHex(int d, int pad) {
+        if (d < 0) {
+            this.printChar('-');
+            d = -d;
+        }
+        return this._printUHex(d, pad);
+    }
+    
+    [OStream] _printUHex(int d, int pad) {
+        return this.printChar('0').printChar('x')._printUInt(d, 16, pad);
+    }
+    
+    [OStream] _printCStringBuffer(int buffer) {
+        int c = 0;
+        while (c = this._getChar(buffer++)) {
+            this.printChar(c);
+        }
+        return this;
+    }
+    
+    [] _putChar(int pointer, int c) {
+        __pasm__("movb %bl, (%eax)", {"%eax": pointer, "%ebx": c});
+    }
+    
+    [int] _getChar(int pointer) {
+        int c = 0;
+        __pasm__("movb (%eax), %bl", {"%eax": pointer, "%ebx": c} , {"%ebx": c});
+        return c;
+    }
+    
 }

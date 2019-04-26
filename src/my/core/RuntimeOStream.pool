@@ -22,14 +22,4 @@ class RuntimeOStream extends OStream {
         this.rt().printChar(c, stream);
         return self;
     }
-    
-    [OStream] printInt(int i) {
-        this.rt().printInt(i, stream);
-        return self;
-    }
-    
-    [OStream] printHex(int i) {
-        this.rt().printHex(i, stream);
-        return self;
-    }
 }
