@@ -9,11 +9,27 @@ class OStream extends Object {
     
     abstract [OStream] printChar(int c);
     
-    abstract [OStream] printString(cstring s);
-    
     abstract [OStream] printInt(int i);
     
     abstract [OStream] printHex(int i);
+    
+    [OStream] printCString(cstring s) {
+        int pointer = 0;
+        int c = 0;
+        __pasm__("movb (%eax), %bl", {"%eax": s, "%ebx": c} , {"%eax": pointer, "%ebx": c});
+        while (c) {
+            this.printChar(c);
+            pointer++;
+            __pasm__("movb (%eax), %bl", {"%eax": pointer, "%ebx": c} , {"%ebx": c});
+        }
+        return this;
+    }
+    
+    // TODO: use generic method instead of plain Object?
+    [OStream] print(__any__ o) {
+        Object obj = this.rt().cast(Object:CLASSNAME, o);
+        return obj.printToStream(this);
+    }
     
     [OStream] printNewline() {
         return this.printChar('\n');

@@ -29,7 +29,7 @@ class B extends myThread, my::simple::A {
         OStream err := rt.err();
         
         err.printChar('@');
-        out.printString("OMG!! ");
+        out.printCString("OMG!! ");
         out.printInt(this.equals(this)).printChar(' ').printInt(this.equals(a));
         this.testAllocate(0x1234);
         err.printChar('@').printNewline();
@@ -88,6 +88,10 @@ class B extends myThread, my::simple::A {
     
     [int] getRow() {
         return 2*row;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printCString("I-am-B");
     }
     
 }

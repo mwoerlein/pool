@@ -47,6 +47,12 @@ class Object {
         return eq;
     }
     
+    [OStream] printToStream(OStream stream) {
+        int addr = 0;
+        __pasm__("movl 4(%eax), %eax     // @this", {"%eax": this} , {"%eax": addr});
+        return stream.printCString(this.getClass().getName()).printChar('@').printHex(addr);
+    }
+    
     [Runtime] rt() {
         return runtime;
     }

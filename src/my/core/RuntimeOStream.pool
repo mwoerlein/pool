@@ -23,11 +23,6 @@ class RuntimeOStream extends OStream {
         return self;
     }
     
-    [OStream] printString(cstring s) {
-        this.rt().printString(s, stream);
-        return self;
-    }
-    
     [OStream] printInt(int i) {
         this.rt().printInt(i, stream);
         return self;

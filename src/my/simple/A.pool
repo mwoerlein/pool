@@ -104,10 +104,10 @@ class A extends Object {
     [] test(int row) {
         Runtime rt := this.rt();            // fixed variable
         OStream out := rt.out();             // fixed variable
-        my::core::Class c = this.getClass();// modifiable variable
+//        my::core::Class c = this.getClass();// modifiable variable
 //        c = c.getClass();                   // assignment
 //        rt.err().printString(c.CLASSNAME).printChar(' ');   // static constant access "my::core::Class"
-        out.printString(c.getName()).printChar(' ')
+        out.print(this).printChar(' ')
             .printInt(this.column).printChar(' ')
             .printInt(row).printChar(' ');
         rt.err().printHex(cafe);
@@ -117,7 +117,7 @@ class A extends Object {
             out.printChar(' ').printInt(_row)
                 .printChar(' ').printInt(_col);
         }
-        rt.err().printString(" compile test");
+        rt.err().printCString(" compile test");
         out.printNewline();
         return;
     }
