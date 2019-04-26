@@ -78,8 +78,8 @@ class B extends myThread, my::simple::A {
         // TODO: replace int with working MemInfo "struct"
         int mem := rt.allocate(size);
         rt.out()
-            .printChar(' ').printHex(mem)
-            .printChar(' ').printHex(0xdead) //.printHex(mem.buffer)
+            .printChar(' ').printPtr(mem)
+            .printChar(' ').printPtr(0xdead) //.printPtr(mem.buffer)
             .printChar(' ').printHex(0xc0de) //.printHex(mem.size)
         ;
         rt.free(mem);

@@ -17,6 +17,10 @@ class OStream extends Object {
         return this._printHex(i, 0);
     }
     
+    [OStream] printPtr(int i) {
+        return this._printUHex(i, 8);
+    }
+    
     [OStream] printCString(cstring s) {
         int buf = 0;
         __pasm__("", {"%eax": s} , {"%eax": buf});
