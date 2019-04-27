@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+
+class Runtime extends Object {
+
+    OStream out;
+    OStream err;
+    
+    [OStream] out() { return out; }
+    [OStream] err() { return err; }
+    [] setOut(OStream out) { this.out = out; }
+    [] setErr(OStream err) { this.err = err; }
+    
+    abstract [__all__] createInstance(cstring name);
+    abstract [__all__] cast(cstring name, __any__ obj);
+    abstract [] destroyInstance(__any__ obj);
+    
+    [] createAndRunThread(cstring name) {
+        __any__ instance = this.createInstance(name);
+        if (!instance) { return; } // abort on initialization error
+        
+        Thread thread = this.cast(Thread:CLASSNAME, instance);
+        if (thread) { thread.run(); }
+        this.destroyInstance(instance);
+    }
+        
+}

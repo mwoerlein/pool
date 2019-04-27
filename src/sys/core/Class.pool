@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace my::core;
+namespace sys::core;
 
 
 class Class extends Object {
@@ -28,7 +28,7 @@ class Class extends Object {
     [] setDesc(int desc) {
         this.desc = desc;
         // desc.inst_handle = this; 
-        __pasm__("movl %eax, _my_core_Class_coi_ch_inst_handle(%ebx)", {"%eax": this, "%ebx": desc});
+        __pasm__("movl %eax, _sys_core_Class_coi_ch_inst_handle(%ebx)", {"%eax": this, "%ebx": desc});
         return;
     }
     
@@ -36,7 +36,7 @@ class Class extends Object {
     [cstring] getName() {
         // return this.desc.name;
         cstring name = "";
-        __pasm__("addl _my_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": name});
+        __pasm__("addl _sys_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": name});
         return name;
     }
     

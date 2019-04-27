@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace my::core;
+namespace sys::core;
 
 
 // TODO: convert to interface 

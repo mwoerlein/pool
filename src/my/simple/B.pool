@@ -5,10 +5,10 @@ version = 0.1.0
 */
 namespace my::simple;
 
-use my::core::Object;
-use my::core::OStream;
-use my::core::Runtime;
-use my::core::Thread as myThread;
+use sys::core::Object;
+use sys::core::OStream;
+use sys::core::Runtime;
+use sys::core::Thread as myThread;
 
 class B extends myThread, my::simple::A {
     
@@ -31,7 +31,7 @@ class B extends myThread, my::simple::A {
         err.printChar('@');
         out.printCString("OMG!! ");
         out.printInt(this.equals(this)).printChar(' ').printInt(this.equals(a));
-        this.testAllocate(0x1234);
+//        this.testAllocate(0x1234);
         err.printChar('@').printNewline();
         
         this.testLoop(4);
@@ -72,7 +72,7 @@ class B extends myThread, my::simple::A {
             out.printNewline();
         }
     }
-    
+/*    
     [] testAllocate(int size) {
         Runtime rt := this.rt();    // fixed variable
         // TODO: replace int with working MemInfo "struct"
@@ -85,7 +85,7 @@ class B extends myThread, my::simple::A {
         rt.free(mem);
         return;
     }
-    
+*/    
     [int] getRow() {
         return 2*row;
     }

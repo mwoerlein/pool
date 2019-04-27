@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace my::core;
+namespace sys::core;
 
 
 class Object {
@@ -21,7 +21,7 @@ class Object {
         __pasm__(<"
              movl 4(%eax), %eax     // @this
              movl (%eax), %eax      // @class desc
-             movl _my_core_Object_coi_ch_inst_handle(%eax), %eax // @class handle
+             movl _sys_core_Object_coi_ch_inst_handle(%eax), %eax // @class handle
          ">, {"%eax": this} , {"%eax": cl});
         return cl;
     }

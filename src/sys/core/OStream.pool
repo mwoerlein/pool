@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace my::core;
+namespace sys::core;
 
 class OStream extends Object {
     
@@ -22,9 +22,7 @@ class OStream extends Object {
     }
     
     [OStream] printCString(cstring s) {
-        int buf = 0;
-        __pasm__("", {"%eax": s} , {"%eax": buf});
-        return this._printCStringBuffer(buf);
+        return this._printCStringBuffer(this._getCStringBuffer(s));
     }
     
     // TODO: use generic method instead of plain Object?
@@ -47,35 +45,39 @@ class OStream extends Object {
     }
     
     [OStream] _printUInt(int d, int base, int pad) {
-        int buf_size := 21;
         int p = 0;
-        __pasm__("movl %esp, %ebx; subl %eax, %esp", {"%eax": buf_size} , {"%ebx": p});
+        // allocate buffer on stack
+        int buf_size := 21;
+        __pasm__("subl %eax, %esp", {"%eax": buf_size} , {"%esp": p});
         
-        this._putChar(--p, 0); // string terminator
+        p += buf_size;          // goto end of buffer..
+        this._putCharToMem(--p, 0);  // .. and terminate temporal cstring
         int padded_start = p - pad;
         
         /*  Divide D by BASE until D == 0. */
         { // TODO: use do {...} while, if available
             int remainder = d % base;
             if (remainder < 10) {
-                this._putChar(--p, remainder + '0');
+                this._putCharToMem(--p, remainder + '0');
             } else {
-                this._putChar(--p, remainder + 'a' - 10);
+                this._putCharToMem(--p, remainder + 'a' - 10);
             }
         }
         while (d /= base) {
             int remainder = d % base;
             if (remainder < 10) {
-                this._putChar(--p, remainder + '0');
+                this._putCharToMem(--p, remainder + '0');
             } else {
-                this._putChar(--p, remainder + 'a' - 10);
+                this._putCharToMem(--p, remainder + 'a' - 10);
             }
         }
         while (p > padded_start) {
-            this._putChar(--p, '0');
+            this._putCharToMem(--p, '0');
         }
     
         this._printCStringBuffer(p);
+        
+        // free stack
         __pasm__("addl %eax, %esp", {"%eax": buf_size});
         return this;
     }
@@ -92,19 +94,25 @@ class OStream extends Object {
         return this.printChar('0').printChar('x')._printUInt(d, 16, pad);
     }
     
+    [int] _getCStringBuffer(cstring s) {
+        int buf = 0;
+        __pasm__("", {"%eax": s} , {"%eax": buf});
+        return buf;
+    }
+    
     [OStream] _printCStringBuffer(int buffer) {
         int c = 0;
-        while (c = this._getChar(buffer++)) {
+        while (c = this._getCharFromMem(buffer++)) {
             this.printChar(c);
         }
         return this;
     }
     
-    [] _putChar(int pointer, int c) {
+    [] _putCharToMem(int pointer, int c) {
         __pasm__("movb %bl, (%eax)", {"%eax": pointer, "%ebx": c});
     }
     
-    [int] _getChar(int pointer) {
+    [int] _getCharFromMem(int pointer) {
         int c = 0;
         __pasm__("movb (%eax), %bl", {"%eax": pointer, "%ebx": c} , {"%ebx": c});
         return c;
