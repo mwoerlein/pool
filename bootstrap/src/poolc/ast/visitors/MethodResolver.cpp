@@ -65,7 +65,20 @@ bool MethodResolver::visit(MethodDeclNode & methodDecl) {
     Scope *tmpScope = curScope;
     curScope = methodDecl.scope;
     
-    methodDecl.returnTypes.acceptAll(*this);
+    {
+        Iterator<TypeRefNode> &it = methodDecl.returnTypes.iterator();
+        int idx = 0;
+        while (it.hasNext()) {
+            TypeRefNode &ref = it.next();
+            ref.accept(*this);
+            if (ClassScope * classScope = ref.resolvedType->isClass()) {
+                methodDecl.resolvedReturns.add(*classScope->getInstance());
+            } else {
+                methodDecl.resolvedReturns.add(*ref.resolvedType);
+            }
+        }
+        it.destroy();
+    }
     methodDecl.parameters.acceptAll(*this);
     methodDecl.body.accept(*this);
     

@@ -53,20 +53,7 @@ bool TypeResolver::visit(MethodDeclNode & methodDecl) {
     }
     methodScope->typesResolved = true;
     
-    {
-        Iterator<TypeRefNode> &it = methodDecl.returnTypes.iterator();
-        int idx = 0;
-        while (it.hasNext()) {
-            TypeRefNode &ref = it.next();
-            ref.accept(*this);
-            if (ClassScope * classScope = ref.resolvedType->isClass()) {
-                methodDecl.resolvedReturns.add(*classScope->getInstance());
-            } else {
-                methodDecl.resolvedReturns.add(*ref.resolvedType);
-            }
-        }
-        it.destroy();
-    }
+    methodDecl.returnTypes.acceptAll(*this);
     methodDecl.parameters.acceptAll(*this);
     methodDecl.body.accept(*this);
     return true;
@@ -262,9 +249,6 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
         if (MethodScope *calledMethodScope = contextInstanceScope->getMethod(methodCall)) {
             methodCall.resolvedMethod = calledMethodScope;
             MethodDeclNode *decl = calledMethodScope->getMethodDeclNode();
-            // ensure method decl to be resolved
-            // TODO: handle recursive method calls correctly
-            decl->accept(*this);
             if (decl->returnTypes.size() == 1) {
                 methodCall.resolvedType = decl->resolvedReturns.first();
             }
