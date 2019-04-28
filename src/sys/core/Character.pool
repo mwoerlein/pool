@@ -1,0 +1,37 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+
+// TODO: extends Comparable<Character> for compare operator support, if available
+class Character extends Object {
+
+    int _c;
+    
+    // methods
+    [] assignChar(int c) { _c = c; }
+    [] assignCharacter(Character c) { _c = c.getChar(); }
+    
+    [int] getChar() { return _c; }
+    
+    [int] compareChar(int c) { return _c - c; }
+    [int] compareCharacter(Character c) { return _c - c.getChar(); }
+    
+    [int] hash() { return _c; }
+    [int] equals(__any__ obj) {
+        Runtime rt = this.rt();
+        Character c = rt.cast(Character:CLASSNAME, obj);
+        if (c) {
+            return this.compareCharacter(c) != 0;
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printChar(_c);
+    }
+
+}
