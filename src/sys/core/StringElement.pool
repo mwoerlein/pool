@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class StringElement extends Character {
+
+    StringElement next;
+    
+    [StringElement] getNext() { return this.next; }
+    [] setNext(StringElement next) { this.next = next; }
+    
+}

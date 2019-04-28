@@ -1,0 +1,122 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+
+class String extends OStream {
+
+    StringElement _first;
+    StringElement _last;
+    
+    int _length;
+    int _hash;
+    // TODO: replace with this, after implicit casts are implemented
+    OStream self;
+    
+    // TODO #7: move to constructor with (implicit) parent calls
+    [] __init() {
+        self = this.rt().cast(OStream:CLASSNAME, this);
+        _first = _last = null;
+        _length = _hash = 0;
+    }
+
+    // TODO: move to destructor with implicit destruction instead of manual one
+    [] __destruct() {
+        this.clear();
+    }
+    
+    // methods
+    [] assignCString(cstring s) { this.clear(); this.printCString(s); }
+    [] assignString(String s) { this.clear(); this.print(s); }
+
+    [int] length() { return _length; }
+    
+    [] clear() {
+        StringElement cur = _first;
+        while (cur) {
+            StringElement kill = cur;
+            cur = cur.getNext();
+            kill.destroy();
+        }
+        _first = _last = null;
+        _length = _hash = 0;
+    }
+
+    [OStream] printChar(int c) {
+        StringElement newElem = this.rt().createInstance(StringElement:CLASSNAME);
+        newElem.assignChar(c);
+        if (_last) {
+            _last.setNext(newElem);
+            _last = newElem;
+        } else {
+            _first = _last = newElem;
+        }
+        _length++;
+        _hash *= 33;
+        _hash += c;
+        
+        return self;
+    }
+    
+    [int] compareCString(cstring s) {
+        StringElement e1 = _first;
+        int p2 = this._getCStringBuffer(s);
+        int c2 = 0;
+        while (e1 && (c2 = this._getCharFromMem(p2++))) {
+            int diff = e1.getChar() - c2;
+            if (diff) {
+                return diff;
+            }
+            e1 = e1.getNext();
+        }
+        if (e1) {
+            return e1.getChar();
+        }
+        if (c2) {
+            return -c2;
+        }
+        return 0;
+    }
+    
+    [int] compareString(String s) {
+        StringElement e1 = _first;
+        StringElement e2 = s._first;
+        while (e1 && e2) {
+            int diff = e1.getChar() - e2.getChar();
+            if (diff) {
+                return diff;
+            }
+            e1 = e1.getNext();
+            e2 = e2.getNext();
+        }
+        if (e1) {
+            return e1.getChar();
+        }
+        if (e2) {
+            return -e2.getChar();
+        }
+        return 0;
+    }
+    
+    [int] hash() { return _hash; }
+    [int] equals(__any__ obj) {
+        String s = this.rt().cast(String:CLASSNAME, obj);
+        if (s) {
+            return this.compareString(s) != 0;
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        StringElement cur = _first;
+        while (cur) {
+            stream.print(cur);
+            cur = cur.getNext();
+        }
+        return stream;
+    }
+    
+}
