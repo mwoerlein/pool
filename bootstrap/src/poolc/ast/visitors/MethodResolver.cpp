@@ -31,12 +31,12 @@ bool MethodResolver::visit(ClassDeclNode & classDecl) {
         // skip already resolved class
         return true;
     }
+    classScope->methodsRegistered = true;
     
     Scope *tmpScope = curScope;
     curScope = classScope;
     classDecl.extends.acceptAll(*this);
     registerMethods(classDecl);
-    classScope->methodsRegistered = true;
     
     classDecl.consts.acceptAll(*this);
     curScope = classDecl.instanceScope;
@@ -67,7 +67,6 @@ bool MethodResolver::visit(MethodDeclNode & methodDecl) {
     
     {
         Iterator<TypeRefNode> &it = methodDecl.returnTypes.iterator();
-        int idx = 0;
         while (it.hasNext()) {
             TypeRefNode &ref = it.next();
             ref.accept(*this);
@@ -79,7 +78,19 @@ bool MethodResolver::visit(MethodDeclNode & methodDecl) {
         }
         it.destroy();
     }
-    methodDecl.parameters.acceptAll(*this);
+    {
+        Iterator<VariableDeclNode> &it = methodDecl.parameters.iterator();
+        while (it.hasNext()) {
+            VariableDeclNode &variableDecl = it.next();
+            variableDecl.accept(*this);
+            if (ClassScope * classScope = variableDecl.type.resolvedType->isClass()) {
+                variableDecl.resolvedType = classScope->getInstance();
+            } else {
+                variableDecl.resolvedType = variableDecl.type.resolvedType;
+            }
+        }
+        it.destroy();
+    }
     methodDecl.body.accept(*this);
     
     curScope = tmpScope;

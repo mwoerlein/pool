@@ -60,13 +60,14 @@ bool TypeResolver::visit(MethodDeclNode & methodDecl) {
 }
 
 bool TypeResolver::visit(VariableDeclNode & variableDecl) {
-    if (variableDecl.resolvedType) {
-        return true;
-    }
     variableDecl.type.accept(*this);
-    variableDecl.resolvedType = variableDecl.type.resolvedType;
-    if (ClassScope * classScope = variableDecl.resolvedType->isClass()) {
-        variableDecl.resolvedType = classScope->getInstance();
+    
+    if (!variableDecl.resolvedType) {
+        if (ClassScope * classScope = variableDecl.type.resolvedType->isClass()) {
+            variableDecl.resolvedType = classScope->getInstance();
+        } else {
+            variableDecl.resolvedType = variableDecl.type.resolvedType;
+        }
     }
     return true;
 }
