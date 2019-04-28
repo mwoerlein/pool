@@ -1,0 +1,51 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+
+// TODO: extends Comparable<Integer> for compare operator support, if available
+class Integer extends Object {
+
+    int _n;
+    
+    // methods
+    [] assignInt(int n) { _n = n; }
+    [] assignInteger(Integer n) { _n = n.getInt(); }
+    
+    [] inc() { _n++; }
+    [] dec() { _n++; }
+    
+    [] addInt(int n) { _n += n; }
+    [] subInt(int n) { _n -= n; }
+    [] mulInt(int n) { _n *= n; }
+    [] divInt(int n) { _n /= n; }
+    [] modInt(int n) { _n %= n; }
+    
+    [] addInteger(Integer n) { _n += n.getInt(); }
+    [] subInteger(Integer n) { _n -= n.getInt(); }
+    [] mulInteger(Integer n) { _n *= n.getInt(); }
+    [] divInteger(Integer n) { _n /= n.getInt(); }
+    [] modInteger(Integer n) { _n %= n.getInt(); }
+    
+    [int] getInt() { return _n; }
+    
+    [int] compareInt(int n) { return _n - n; }
+    [int] compareInteger(Integer n) { return _n - n.getInt(); }
+    
+    [int] hash() { return _n; }
+    [int] equals(__any__ obj) {
+        Integer n = this.rt().cast(Integer:CLASSNAME, obj);
+        if (n) {
+            return this.compareInteger(n) != 0;
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printInt(_n);
+    }
+
+}

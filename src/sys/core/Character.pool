@@ -22,8 +22,7 @@ class Character extends Object {
     
     [int] hash() { return _c; }
     [int] equals(__any__ obj) {
-        Runtime rt = this.rt();
-        Character c = rt.cast(Character:CLASSNAME, obj);
+        Character c = this.rt().cast(Character:CLASSNAME, obj);
         if (c) {
             return this.compareCharacter(c) != 0;
         }

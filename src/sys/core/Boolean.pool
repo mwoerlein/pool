@@ -1,0 +1,38 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+
+class Boolean extends Object {
+
+    int _b;
+    
+    // methods
+    [] assignBool(int b) { if (b) { _b = 1; } else { _b = 0; } }
+    [] assignBoolean(Boolean b) { _b = b.getBool(); }
+    
+    [] flip() { _b = 1 - _b; }
+    
+    [int] getBool() { return _b; }
+    
+    [int] hash() { return _b; }
+    [int] equals(__any__ obj) {
+        Boolean b = this.rt().cast(Boolean:CLASSNAME, obj);
+        if (b) {
+            return _b == b.getBool();
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        if (_b) {
+            return stream.printCString("true");
+        } else {
+            return stream.printCString("false");
+        }
+    }
+
+}
