@@ -23,10 +23,12 @@ class Runtime extends Object {
     [] createAndRunThread(cstring name) {
         __any__ instance = this.createInstance(name);
         if (!instance) { return; } // abort on initialization error
+        Object o = this.cast(Object:CLASSNAME, instance);
+        if (!o) { return; } // abort on initialization error
         
         Thread thread = this.cast(Thread:CLASSNAME, instance);
         if (thread) { thread.run(); }
-        this.destroyInstance(instance);
+        o.destroy();
     }
         
 }

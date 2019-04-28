@@ -58,9 +58,20 @@ class Object {
     }
     
     // TODO #7: move to constructor?
+    [] __init() {}
+    
+    // TODO #7: move to constructor?
     [] setRt(Runtime rt) {
         runtime = rt;
-        return;
+    }
+    
+    // TODO: move to destructor/implicit destruction instead of manual one
+    [] __destruct() {}
+    
+    // TODO: move to destructor/implicit destruction instead of manual one
+    [] destroy() {
+        this.__destruct();
+        this.rt().destroyInstance(this);
     }
     
 }
