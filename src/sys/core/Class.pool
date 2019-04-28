@@ -16,8 +16,13 @@ class Class extends Object {
     // variables
     // TODO: replace int with working ClassHeader "struct"
     int desc;
+    String name;
     
     // methods
+    [String] getName() {
+        return name;
+    }
+    
     // TODO: replace int with working ClassHeader "struct"
     [int] getDesc() {
         return desc;
@@ -29,15 +34,17 @@ class Class extends Object {
         this.desc = desc;
         // desc.inst_handle = this; 
         __pasm__("movl %eax, _sys_core_Class_coi_ch_inst_handle(%ebx)", {"%eax": this, "%ebx": desc});
-        return;
+        
+        name = this.rt().createInstance(String:CLASSNAME);
+        // name.assignCString(desc.name);
+        cstring _name = "";
+        __pasm__("addl _sys_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": _name});
+        name.assignCString(_name);
     }
     
-    // TODO: replace cstring with working String class
-    [cstring] getName() {
-        // return this.desc.name;
-        cstring name = "";
-        __pasm__("addl _sys_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": name});
-        return name;
+    // TODO: move to destructor with implicit destruction instead of manual one
+    [] __destruct() {
+        name.destroy();
     }
     
 }
