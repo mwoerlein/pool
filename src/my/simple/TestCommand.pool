@@ -34,7 +34,8 @@ class TestCommand extends Object { //extends linux::CommandLine {
         __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "Byebye pool!\n"});
 /*/        
         OStream out = this.rt().out();
-        out.printCString("Hello pool!").printNewline();
+        OStream err = this.rt().err();
+        err.printCString("Hello pool!").printNewline();
         
         while (argc) {
             cstring arg = "";
@@ -44,7 +45,7 @@ class TestCommand extends Object { //extends linux::CommandLine {
             argv += 4;
         }
         
-        out.printCString("Byebye pool!").printNewline();
+        err.printCString("Byebye pool!").printNewline();
 //*/
         return 0;
     }

@@ -111,7 +111,8 @@ class Runtime extends CoreRuntime {
         LinuxOStream ls1 = this.createInstance(LinuxOStream:CLASSNAME);
         this.setOut(ls1.initOStream(1));
         LinuxOStream ls2 = this.createInstance(LinuxOStream:CLASSNAME);
-        this.setErr(ls2.initOStream(2));
+        FormattedOStream f2 = this.createInstance(FormattedOStream:CLASSNAME);
+        this.setErr(f2.initOStream(ls2.initOStream(2)));
     }
     
     [] initHeap(int heapStart, int heapSize, int heapHead) {
@@ -188,6 +189,7 @@ class Runtime extends CoreRuntime {
         _lr_classes:
             .long _linux_Runtime
             .long _linux_LinuxOStream
+            .long _linux_FormattedOStream
             .long _my_simple_TestCommand
             .long _sys_core_Character
             .long _sys_core_Class

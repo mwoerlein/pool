@@ -1,0 +1,24 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::core::OStream;
+
+class FormattedOStream extends OStream {
+    
+    OStream inner;
+    // TODO: replace with this, after implicit casts are implemented
+    OStream self;
+    
+    [OStream] initOStream(OStream inner) {
+        this.inner = inner;
+        return self = this.rt().cast(OStream:CLASSNAME, this);
+    }
+    
+    [OStream] printChar(int c) {
+        inner.printChar(0x1b).printCString("[1;31m").printChar(c).printChar(0x1b).printCString("[0;39m");
+    }
+}
