@@ -26,6 +26,7 @@ R"(Pool Bootstrap Compiler.
       --warning                     Set warning.
       --error                       Set error.
       -r --recursive                Generate output for all required classes.
+      --resolveClasses              Generate static resolved classes.
       -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
       -p <dir> --prettyprint <dir>  Dump classes into <dir>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
@@ -94,7 +95,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         Visitor &generatePIR = env().create<PIRGenerator, TypeManager&>(types);
         generatePIR.setLogger(logger);
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
-        Visitor &dump = env().create<X86Writer, PoolStorage &>(outPS);
+        Visitor &dump = env().create<X86Writer, PoolStorage &, bool>(outPS, hasProperty("resolveClasses"));
         dump.setLogger(logger);
         
         {

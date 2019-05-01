@@ -20,12 +20,13 @@ class X86Writer: public Writer {
     ClassDeclNode * curClass;
     ClassDeclNode * curSuper;
     PIRMethod * curMethod;
+    bool resolveClasses;
 
     virtual OStream & code();
     virtual void pushAllReverse(Iterator<PIRLocation> &it);
     
     public:
-    X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps);
+    X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps, bool resolveClasses = false);
     virtual ~X86Writer();
     
     virtual bool visit(TranslationUnitNode & translationUnit) override;

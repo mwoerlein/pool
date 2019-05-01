@@ -20,6 +20,7 @@
 #define classDesc() manualClsPrefix(curClass)
 #define classTabs() localClsPrefix(curClass) << "_cts"
 #define classTab(cls) localClsPrefix(curClass) << "_ct" << localClsPrefix(cls)
+#define classTabDesc(cls) manualClsPrefix(cls)
 #define classTabOffset(cls) localClsPrefix(curClass) << "_cto" << localClsPrefix(cls)
 #define constInt(c) manualClsPrefix(curClass) << "_coi_" << (c)->name
 #define constString(id) localClsPrefix(curClass) << "_cos_" << id
@@ -49,8 +50,9 @@
 #define LOCAL(l,v) elem() << l << " := " << v << "\n";
 
 // public
-X86Writer::X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps)
+X86Writer::X86Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps, bool resolveClasses)
         :Writer(env, mi, ps, MIMETYPE_PASM), Object(env, mi), LoggerAware(env, mi),
+         resolveClasses(resolveClasses),
          curClass(0), curSuper(0), curMethod(0) {}
 X86Writer::~X86Writer() {}
 
@@ -122,7 +124,11 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                 CLASS_OFFSET(classTab(superDecl))
             );
             LABEL(classTab(superDecl));
-            LONG("0"); // @class-desc filled on class loading
+            if (resolveClasses) {
+                LONG(classTabDesc(superDecl));
+            } else {
+                LONG("0"); // @class-desc filled on class loading
+            }
             LONG(constStringOffset(classScope->stringId(superDecl->fullQualifiedName)));
             LONG(CLASS_OFFSET(methodTab(superDecl))); //  vtab offset in description
             LONG(INSTANCE_OFFSET(instanceHandle(superDecl))); // handle offset in instance
