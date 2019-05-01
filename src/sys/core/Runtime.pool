@@ -121,13 +121,44 @@ __pasm__("_crma_return:");
         return;
     }
     
-    global [__all__] _raw_instantiate(int instInfo, int classDesc) {
-        __all__ instance = null;
+    // TODO: replace int with working ClassHeader "struct"
+    [Runtime] _finalizeBootstrap(Class cClass, int cdClass, int cdRuntime) {
+        this.setRt(this);
+        
+        // prepare class "Class"
+        cClass.setRt(this);
+        cClass.setDesc(cdClass);
+        
+        // init class "Class"
+        cClass.__init();
+
+        // init Runtime
+        this.__init();
+        
+        // create and init class for current Runtime
+        Class cRuntime := this.createInstance(Class:CLASSNAME);
+        if (!cRuntime) { return null; } // abort on initialization error
+        cRuntime.setDesc(cdRuntime);
+        
+        return this;
+    }
+    
+    // TODO: replace int with working MemInfo "struct"
+    // TODO: replace int with working ClassHeader "struct"
+    global [__all__, Class] _instantiateBootstrap(int irt, int cdRuntime, int icClass, int cdClass) {
+        Class cClass = null;
         __pasm__(<"
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
             call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        ">, {"%eax": instInfo, "%edx": classDesc}, {"%esi": instance});
-        return instance;
+        ">, {"%eax": icClass, "%edx": cdClass}, {"%esi": cClass});
+        
+        __all__ runtime = null;
+        __pasm__(<"
+            movl 8(%ebp), %ebx      // @class-desc "Runtime"
+            call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
+        ">, {"%eax": irt, "%edx": cdRuntime}, {"%esi": runtime});
+        
+        return [runtime, cClass];
     }
     
     __naked__ [] _crh_instantiate() {

@@ -16,7 +16,7 @@ class Runtime extends CoreRuntime {
     int PAGESIZE := 4096;
     
     // TODO: remove with working global method calls
-    int _raw_instantiate := 44;
+    int _instantiateBootstrap := 48;
     
     // TODO: remove int with working MemInfo "struct"
     int mi_buf := 0;
@@ -34,8 +34,20 @@ class Runtime extends CoreRuntime {
     int heapHead;
     
     // methods
-    global [Runtime] buildRuntime() {
+    global [CoreRuntime] buildRuntime() {
+
+        // get class descriptors
+        // TODO: replace int with working ClassHeader "struct"
+        int cdClass = 0;
+        __pasm__("movl _sys_core_Class, %eax", {}, {"%eax": cdClass});
+        if (!cdClass) { return null; } // abort on initialization error
         
+        // TODO: replace int with working ClassHeader "struct"
+        int cdRuntime = 0;
+        __pasm__("movl _linux_Runtime, %eax", {}, {"%eax": cdRuntime});
+        if (!cdRuntime) { return null; } // abort on initialization error
+        
+        // allocate spaces
         // TODO: extract allocator
         int heapStart = 0;
         int heapSize = PAGESIZE*1024;
@@ -52,13 +64,6 @@ class Runtime extends CoreRuntime {
             addl 24, %esp
         ">, {"%eax": heapSize}, {"%eax": heapStart});
         int heapHead = heapStart;
-        
-        // create class "Class"
-        // TODO: replace int with working ClassHeader "struct"
-        int cdClass = 0;
-        int tplSizeClass = 0;
-        __pasm__("movl _sys_core_Class, %eax", {}, {"%eax": cdClass});
-        if (!cdClass) { return null; } // abort on initialization error
 
         // TODO: replace int with working MemInfo "struct"
         int icClass = 0;
@@ -72,25 +77,6 @@ class Runtime extends CoreRuntime {
         ">, {"%eax": cdClass, "%edi": heapHead, "%esi": mi_size}, {"%eax": icClass, "%edi": heapHead});
         if (!icClass) { return null; } // abort on initialization error
 
-        // TODO: Class cClass = CoreRuntime:_raw_instantiate(icClass, cdClass);
-        Class cClass = null;
-        __pasm__(<"
-            subl 4, %esp // ret
-            pushl %edx; pushl %ecx // args
-            movl 8(%ebp), %eax; movl _1a2f00c8_cto_d67a0794(%eax), %eax // @class-desc "CoreRuntime"
-            movl %eax, %ebx; addl _linux_Runtime_coi_ch_mdt(%eax), %ebx;
-            movl _linux_Runtime_coi__raw_instantiate(%ebx), %ebx // get method offset
-            addl %eax, %ebx // @func
-            pushl 0; pushl %eax; call %ebx // call global func
-            addl 16, %esp; popl %eax
-        ">, {"%ecx": icClass, "%edx": cdClass}, {"%eax": cClass});
-
-        // create Runtime
-        // TODO: replace int with working ClassHeader "struct"
-        int cdRuntime = 0;
-        __pasm__("movl _linux_Runtime, %eax", {}, {"%eax": cdRuntime});
-        if (!cdRuntime) { return null; } // abort on initialization error
-
         // TODO: replace int with working MemInfo "struct"
         int irt = 0;
         __pasm__(<"
@@ -103,40 +89,22 @@ class Runtime extends CoreRuntime {
         ">, {"%eax": cdRuntime, "%edi": heapHead, "%esi": mi_size}, {"%eax": irt, "%edi": heapHead});
         if (!irt) { return null; } // abort on initialization error
 
-        // TODO: Runtime rt = CoreRuntime:_raw_instantiate(irt, cdRuntime);
         Runtime rt = null;
+        Class cClass = null;
+        // TODO: [rt, cClass] = CoreRuntime:_instantiateBootstrap(irt, cdRuntime, icClass, cdClass);
         __pasm__(<"
-            subl 4, %esp // ret
-            pushl %edx; pushl %ecx // args
+            subl 8, %esp // ret
+            pushl %edx; pushl %ecx; pushl %ebx; pushl %eax // args
             movl 8(%ebp), %eax; movl _1a2f00c8_cto_d67a0794(%eax), %eax // @class-desc "CoreRuntime"
             movl %eax, %ebx; addl _linux_Runtime_coi_ch_mdt(%eax), %ebx;
-            movl _linux_Runtime_coi__raw_instantiate(%ebx), %ebx // get method offset
+            movl _linux_Runtime_coi__instantiateBootstrap(%ebx), %ebx // get method offset
             addl %eax, %ebx // @func
             pushl 0; pushl %eax; call %ebx // call global func
-            addl 16, %esp; popl %eax
-        ">, {"%ecx": irt, "%edx": cdRuntime}, {"%eax": rt});
+            addl 24, %esp; popl %eax; popl %ebx
+        ">, {"%eax": irt, "%ebx": cdRuntime, "%ecx": icClass, "%edx": cdClass}, {"%eax": rt, "%ebx": cClass});
         
-        // prepare Runtime
         rt.initHeap(heapStart, heapSize, heapHead);
-        CoreRuntime crt = rt.cast(CoreRuntime:CLASSNAME, rt);
-        crt.setRt(crt);
-        
-        // prepare class "Class"
-        cClass.setRt(crt);
-        cClass.setDesc(cdClass);
-        
-        // init class "Class"
-        cClass.__init();
-
-        // init Runtime
-        crt.__init();
-        
-        // create and init class "Runtime"
-        Class cRuntime := crt.createInstance(Class:CLASSNAME);
-        if (!cRuntime) { return null; } // abort on initialization error
-        cRuntime.setDesc(cdRuntime);
-        
-        return rt;
+        return rt._finalizeBootstrap(cClass, cdClass, cdRuntime);
     }
     
     [] __init() {
