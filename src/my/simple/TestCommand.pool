@@ -8,7 +8,6 @@ namespace my::simple;
 use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Runtime;
-use linux::Runtime as LinuxRuntime;
 
 class TestCommand extends Object { //extends linux::CommandLine {
 
@@ -18,36 +17,22 @@ class TestCommand extends Object { //extends linux::CommandLine {
     [int] run(int argc, int argv) {
         // this.parse(argc, argv);
         // do fancy stuff
-/*/        
-        __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "Hello pool!\n"});
+        Runtime rt = this.rt();
+        rt.err().printCString("Hello pool!").printNewline();
         
-        while (argc) {
-            int arg = 0;
-            __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
-            __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "- "});
-            __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": arg});
-            __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "\n"});
-            argc --;
+        while (argc--) {
+            rt.out().printCString("# ").printCString(this.readArg(argv)).printNewline();
             argv += 4;
         }
         
-        __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "Byebye pool!\n"});
-/*/        
-        OStream out = this.rt().out();
-        OStream err = this.rt().err();
-        err.printCString("Hello pool!").printNewline();
-        
-        while (argc) {
-            cstring arg = "";
-            __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
-            out.printCString("# ").printCString(arg).printNewline();
-            argc --;
-            argv += 4;
-        }
-        
-        err.printCString("Byebye pool!").printNewline();
-//*/
+        rt.err().printCString("Byebye pool!").printNewline();
         return 0;
+    }
+    
+    [cstring] readArg(int argv) {
+        cstring arg = "";
+        __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
+        return arg;
     }
     
     // methods
@@ -58,7 +43,7 @@ _entry_class_desc   := _my_simple_TestCommand
 _entry_global_func  := _491d8eb7_md___entry__
         ">);
         
-        // Runtime rt = LinuxRuntime:buildRuntime();
+        // Runtime rt = linux::Runtime:buildRuntime();
         Runtime rt = null;
         __pasm__(<"
             subl 4, %esp // ret
