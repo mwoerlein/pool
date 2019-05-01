@@ -39,7 +39,7 @@
 #define instanceHandleVarsOffset(cls) manualClsPrefix(curClass) << "_hvo" << manualClsPrefix(cls)
 #define instanceVars(cls) localClsPrefix(curClass) << "_tpl_vs" << localClsPrefix(cls)
 #define instanceVar(cls, var) localClsPrefix(curClass) << "_tpl_v" << localClsPrefix(cls) << "_" << (var)->name
-#define instanceVarOffset(cls, var) manualClsPrefix(cls) << "_i_" << (var)->name
+#define instanceVarOffset(cls, var) localClsPrefix(curClass) << "_i_" << localClsPrefix(cls) << "_" << (var)->name
 
 #define OFFSET(start, end) "(" << end << " - " << start << ")"
 #define CLASS_OFFSET(end) "(" << end << " - " << classDesc() << ")"
@@ -311,10 +311,12 @@ bool X86Writer::visit(VariableDeclNode & variableDecl) {
     if (InstanceScope *scope = variableDecl.scope->parent->isInstance()) {
         ClassDeclNode *superClassDecl = scope->getClassDeclNode();
         elem() << "// variable " << variableDecl.name << "\n";
-        LOCAL(
-            instanceVarOffset(superClassDecl, &variableDecl),
-            OFFSET(instanceVars(superClassDecl), instanceVar(superClassDecl, &variableDecl))
-        );
+//        if ((superClassDecl == curClass) || !resolveClasses) {
+            LOCAL(
+                instanceVarOffset(superClassDecl, &variableDecl),
+                OFFSET(instanceVars(superClassDecl), instanceVar(superClassDecl, &variableDecl))
+            );
+//        }
         LABEL(instanceVar(superClassDecl, &variableDecl));
         LONG("0"); // TODO: size_of variable
         return true;
