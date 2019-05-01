@@ -5,9 +5,11 @@ version = 0.1.0
 */
 namespace my::simple;
 
+use sys::core::Object;
+use sys::core::OStream;
 use linux::Runtime as LinuxRuntime;
 
-class TestCommand { //extends linux::CommandLine {
+class TestCommand extends Object { //extends linux::CommandLine {
 
     // TODO #7: move to constructor with (implicit) parent calls
     [] initCommand() {}
@@ -15,36 +17,8 @@ class TestCommand { //extends linux::CommandLine {
     [int] run(int argc, int argv) {
         // this.parse(argc, argv);
         // do fancy stuff
-        return 0;
-    }
-    
-    // methods
-    global [int] __entry__(int argc, int argv) {
-        // TODO: generate automatically via new __entry__ flag for method or via naming convention? 
-        __pasm__(<"
-_entry_class_desc   := _my_simple_TestCommand
-_entry_global_func  := _491d8eb7_md___entry__
-        ">);
-        
-        // TestCommand command = LinuxRuntime:buildRuntime().createInstance(TestCommand:CLASSNAME);
-        // command.initCommand();
-        // return command.run(argc, argv);
-        
-        // Write the string to stdout:
+/*/        
         __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "Hello pool!\n"});
-        
-        
-        // LinuxRuntime rt = LinuxRuntime:buildRuntime();
-        LinuxRuntime rt = null;
-        __pasm__(<"
-            subl 4, %esp // ret
-            movl _linux_Runtime, %eax // @class-desc "linux::Runtime"
-            movl %eax, %ebx; addl 20(%eax), %ebx; movl 0(%ebx), %ebx // get method offset
-            addl %eax, %ebx // @func
-            pushl 0; pushl %eax; call %ebx // call global func
-            addl 8, %esp; popl %eax
-        ">, {}, {"%eax": rt});
-        
         
         while (argc) {
             int arg = 0;
@@ -57,6 +31,44 @@ _entry_global_func  := _491d8eb7_md___entry__
         }
         
         __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "Byebye pool!\n"});
+/*/        
+        OStream out = this.rt().out();
+        out.printCString("Hello pool!").printNewline();
+        
+        while (argc) {
+            cstring arg = "";
+            __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
+            out.printCString("# ").printCString(arg).printNewline();
+            argc --;
+            argv += 4;
+        }
+        
+        out.printCString("Byebye pool!").printNewline();
+//*/
         return 0;
+    }
+    
+    // methods
+    global [int] __entry__(int argc, int argv) {
+        // TODO: generate automatically via new __entry__ flag for method or via naming convention? 
+        __pasm__(<"
+_entry_class_desc   := _my_simple_TestCommand
+_entry_global_func  := _491d8eb7_md___entry__
+        ">);
+        
+        // LinuxRuntime rt = LinuxRuntime:buildRuntime();
+        LinuxRuntime rt = null;
+        __pasm__(<"
+            subl 4, %esp // ret
+            movl _linux_Runtime, %eax // @class-desc "linux::Runtime"
+            movl %eax, %ebx; addl 20(%eax), %ebx; movl 0(%ebx), %ebx // get method offset
+            addl %eax, %ebx // @func
+            pushl 0; pushl %eax; call %ebx // call global func
+            addl 8, %esp; popl %eax
+        ">, {}, {"%eax": rt});
+        
+        TestCommand command = rt.createInstance(TestCommand:CLASSNAME);
+        command.initCommand();
+        return command.run(argc, argv);
     }
 }

@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::core::OStream;
+
+class LinuxOStream extends OStream {
+    
+    int stream;
+    
+    // TODO: replace with this, after implicit casts are implemented
+    OStream self;
+    
+    [OStream] initOStream(int stream) {
+        this.stream = stream;
+        return self = this.rt().cast(OStream:CLASSNAME, this);
+    }
+    
+    [OStream] printChar(int c) {
+        __pasm__(<"
+            subl 4, %esp;
+            movb %cl, (%esp); movl %esp, %ecx; int 0x80
+            addl 4, %esp
+        ">, {"%eax": 4, "%ebx": stream, "%ecx": c, "%edx": 1});
+        return self;
+    }
+}

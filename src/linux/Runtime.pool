@@ -5,12 +5,232 @@ version = 0.1.0
 */
 namespace linux;
 
-class Runtime { //extends sys::core::Runtime {
+use sys::core::Class;
+use sys::core::Object;
+use sys::core::OStream;
+use sys::core::Runtime as CoreRuntime;
+
+class Runtime extends CoreRuntime {
+
+    // constants
+    int PAGESIZE := 4096;
+    
+    // TODO: remove with working global method calls
+    int _raw_instantiate := 44;
+    
+    // TODO: remove int with working MemInfo "struct"
+    int mi_buf := 0;
+    int mi_len := 4;
+    int mi_size := 24;
+    // TODO: remove with working ClassHeader "struct"
+    int ch_inst_handle := 4;
+    int ch_name := 8;
+    int ch_mdt := 20;
+    int ch_tpl_size := 28;
+    
+    // TODO: extract allocator
+    int heapStart;
+    int heapSize;
+    int heapHead;
     
     // methods
     global [Runtime] buildRuntime() {
-        // Write the string to stdout:
-        __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "bootstrap runtime\n"});
-        return null;
+        
+        // TODO: extract allocator
+        int heapStart = 0;
+        int heapSize = PAGESIZE*1024;
+        __pasm__(<"
+            pushl 0     // offset
+            pushl -1    // fd
+            pushl 34    //flags
+            pushl 3     // prot
+            pushl %eax  // len
+            pushl 0     // addr
+            movl 90, %eax
+            movl %esp, %ebx
+            int 0x80 
+            addl 24, %esp
+        ">, {"%eax": heapSize}, {"%eax": heapStart});
+        int heapHead = heapStart;
+        
+        // create class "Class"
+        // TODO: replace int with working ClassHeader "struct"
+        int cdClass = 0;
+        int tplSizeClass = 0;
+        __pasm__("movl _sys_core_Class, %eax", {}, {"%eax": cdClass});
+        if (!cdClass) { return null; } // abort on initialization error
+
+        // TODO: replace int with working MemInfo "struct"
+        int icClass = 0;
+        __pasm__(<"
+            movl _linux_Runtime_coi_ch_tpl_size(%eax), %ebx
+            movl %edi, %eax
+            addl %esi, %edi
+            movl %edi, _linux_Runtime_coi_mi_buf(%eax)
+            movl %ebx, _linux_Runtime_coi_mi_len(%eax)
+            addl %ebx, %edi
+        ">, {"%eax": cdClass, "%edi": heapHead, "%esi": mi_size}, {"%eax": icClass, "%edi": heapHead});
+        if (!icClass) { return null; } // abort on initialization error
+
+        // TODO: Class cClass = CoreRuntime:_raw_instantiate(icClass, cdClass);
+        Class cClass = null;
+        __pasm__(<"
+            subl 4, %esp // ret
+            pushl %edx; pushl %ecx // args
+            movl 8(%ebp), %eax; movl _1a2f00c8_cto_d67a0794(%eax), %eax // @class-desc "CoreRuntime"
+            movl %eax, %ebx; addl _linux_Runtime_coi_ch_mdt(%eax), %ebx;
+            movl _linux_Runtime_coi__raw_instantiate(%ebx), %ebx // get method offset
+            addl %eax, %ebx // @func
+            pushl 0; pushl %eax; call %ebx // call global func
+            addl 16, %esp; popl %eax
+        ">, {"%ecx": icClass, "%edx": cdClass}, {"%eax": cClass});
+
+        // create Runtime
+        // TODO: replace int with working ClassHeader "struct"
+        int cdRuntime = 0;
+        __pasm__("movl _linux_Runtime, %eax", {}, {"%eax": cdRuntime});
+        if (!cdRuntime) { return null; } // abort on initialization error
+
+        // TODO: replace int with working MemInfo "struct"
+        int irt = 0;
+        __pasm__(<"
+            movl _linux_Runtime_coi_ch_tpl_size(%eax), %ebx
+            movl %edi, %eax
+            addl %esi, %edi
+            movl %edi, _linux_Runtime_coi_mi_buf(%eax)
+            movl %ebx, _linux_Runtime_coi_mi_len(%eax)
+            addl %ebx, %edi
+        ">, {"%eax": cdRuntime, "%edi": heapHead, "%esi": mi_size}, {"%eax": irt, "%edi": heapHead});
+        if (!irt) { return null; } // abort on initialization error
+
+        // TODO: Runtime rt = CoreRuntime:_raw_instantiate(irt, cdRuntime);
+        Runtime rt = null;
+        __pasm__(<"
+            subl 4, %esp // ret
+            pushl %edx; pushl %ecx // args
+            movl 8(%ebp), %eax; movl _1a2f00c8_cto_d67a0794(%eax), %eax // @class-desc "CoreRuntime"
+            movl %eax, %ebx; addl _linux_Runtime_coi_ch_mdt(%eax), %ebx;
+            movl _linux_Runtime_coi__raw_instantiate(%ebx), %ebx // get method offset
+            addl %eax, %ebx // @func
+            pushl 0; pushl %eax; call %ebx // call global func
+            addl 16, %esp; popl %eax
+        ">, {"%ecx": irt, "%edx": cdRuntime}, {"%eax": rt});
+        
+        // prepare Runtime
+        rt.initHeap(heapStart, heapSize, heapHead);
+        CoreRuntime crt = rt.cast(CoreRuntime:CLASSNAME, rt);
+        crt.setRt(crt);
+        
+        // prepare class "Class"
+        cClass.setRt(crt);
+        cClass.setDesc(cdClass);
+        
+        // init class "Class"
+        cClass.__init();
+
+        // init Runtime
+        crt.__init();
+        
+        // create and init class "Runtime"
+        Class cRuntime := crt.createInstance(Class:CLASSNAME);
+        if (!cRuntime) { return null; } // abort on initialization error
+        cRuntime.setDesc(cdRuntime);
+        
+        return rt;
     }
+    
+    [] __init() {
+        LinuxOStream ls1 = this.createInstance(LinuxOStream:CLASSNAME);
+        this.setOut(ls1.initOStream(1));
+        LinuxOStream ls2 = this.createInstance(LinuxOStream:CLASSNAME);
+        this.setErr(ls2.initOStream(2));
+    }
+    
+    [] initHeap(int heapStart, int heapSize, int heapHead) {
+        // TODO: extract allocator
+        this.heapStart = heapStart;
+        this.heapSize = heapSize;
+        this.heapHead = heapHead;
+    }
+
+    // TODO: replace int with working class header "struct"
+    [int] getClassDesc(cstring name) {
+        // TODO: extract ClassRegistry
+        int classes = 0;
+        int classDesc = 0;
+        int diff = 0;
+        __pasm__("movl _lr_classes, %eax", {}, {"%eax": classes});
+        __pasm__("movl (%eax), %ebx", {"%eax": classes} , {"%ebx": classDesc});
+        while (classDesc) {
+            __pasm__(<"
+                addl _linux_Runtime_coi_ch_name(%eax), %eax
+                call _lr_strcmp
+            ">, {"%eax": classDesc, "%ebx": name}, {"%ecx": diff});
+            if (!diff) {
+                return classDesc;
+            }
+            classes += 4;
+            __pasm__("movl (%eax), %ebx", {"%eax": classes} , {"%ebx": classDesc});
+        }
+        return 0;
+    }
+    
+    // TODO: replace int with working MemInfo "struct"
+    [int] allocate(int size) {
+        // TODO: extract allocator
+        if (heapHead + mi_size + size > heapStart + heapSize) {
+            return 0;
+        }
+        int head = heapHead;
+        int info = 0;
+        __pasm__(<"
+            movl %edi, %eax
+            addl %esi, %edi
+            movl %edi, _linux_Runtime_coi_mi_buf(%eax)
+            movl %ebx, _linux_Runtime_coi_mi_len(%eax)
+            addl %ebx, %edi
+        ">, {"%ebx": size, "%edi": head, "%esi": mi_size}, {"%eax": info, "%edi": head});
+        heapHead = head;
+        return info;
+    }
+    
+    // TODO: replace int with working MemInfo "struct"
+    [] free(int info) {
+        // TODO: extract allocator
+    }
+    
+    __naked__ [] _misc() {
+        __pasm__(<"
+        _lr_strcmp: // %eax: cstring, %ebx: cstring, return: %cl < > = 0
+            movl 0, %ecx
+        _lr_strcmp_loop:
+            movb (%ebx), %cl
+            cmpb 0, %cl;        je _lr_strcmp_ret_neg_a
+            cmpb 0, (%eax);     je _lr_strcmp_ret
+            subb (%eax), %cl;   jnz _lr_strcmp_ret
+            addl 1, %eax
+            addl 1, %ebx
+            jmp _lr_strcmp_loop
+        _lr_strcmp_ret_neg_a:
+            subb (%eax), %cl
+        _lr_strcmp_ret:
+            ret
+            
+        // TODO: extract ClassRegistry
+        _lr_classes:
+            .long _linux_Runtime
+            .long _linux_LinuxOStream
+            .long _my_simple_TestCommand
+            .long _sys_core_Character
+            .long _sys_core_Class
+            .long _sys_core_Object
+            .long _sys_core_OStream
+            .long _sys_core_Runtime
+            .long _sys_core_String
+            .long _sys_core_StringElement
+            .long _sys_core_Thread
+            .long 0
+        ">);
+    }
+
 }
