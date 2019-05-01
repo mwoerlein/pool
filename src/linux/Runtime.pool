@@ -1,0 +1,16 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+class Runtime { //extends sys::core::Runtime {
+    
+    // methods
+    global [Runtime] buildRuntime() {
+        // Write the string to stdout:
+        __pasm__("call strLen; int 0x80", {"%eax": 4, "%ebx": 1, "%ecx": "bootstrap runtime\n"});
+        return null;
+    }
+}
