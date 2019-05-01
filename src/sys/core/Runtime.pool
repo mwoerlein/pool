@@ -16,9 +16,12 @@ class Runtime extends Object {
     [] setOut(OStream out) { this.out = out; }
     [] setErr(OStream err) { this.err = err; }
     
-    abstract [__all__] createInstance(cstring name);
-    abstract [__all__] cast(cstring name, __any__ obj);
-    abstract [] destroyInstance(__any__ obj);
+    // TODO: replace int with working class header "struct"
+    abstract [int] getClassDesc(cstring name);
+    // TODO: replace int with working MemInfo "struct"
+    abstract [int] allocate(int size);
+    // TODO: replace int with working MemInfo "struct"
+    abstract [] free(int info);
     
     [] createAndRunThread(cstring name) {
         __any__ instance = this.createInstance(name);
@@ -31,4 +34,158 @@ class Runtime extends Object {
         o.destroy();
     }
         
+    // TODO: remove with working ClassHeader "struct"
+    int ch_inst_handle := 4;
+    int ch_cts := 12;
+    int ch_mdt := 20;
+    int ch_tpl := 24;
+    int ch_tpl_size := 28;
+    int ch_tpl_obj_handle := 32;
+    int ch_tpl_cls_handle := 36;
+    
+    // TODO: remove with working ClassTab "struct"
+    int cts_cdo := 0;
+    int cts_vto := 8;
+    int cts_ho := 12;
+    int cts_size := 16;
+    
+    // TODO #9: use generic method or special cast syntax instead __all__/__any__
+    [__all__] cast(cstring name, __any__ obj) {
+        __all__ ret = null;
+        // TODO: replace int with working class header "struct"
+        int classDesc = this.getClassDesc(name);
+        if (classDesc) {
+            __pasm__(<"
+                movl 4(%eax), %ebx  // @obj
+                movl (%ebx), %eax   // @obj-class desc
+                addl _sys_core_Runtime_coi_ch_cts(%eax), %eax // @obj-class vtabs entry
+            _crma_loop:
+                cmpl (%eax), %ecx
+                je _crma_found
+                addl _sys_core_Runtime_coi_cts_size, %eax
+                cmpl 0, (%eax)
+                je _crma_return
+                jmp _crma_loop
+            _crma_found:
+                addl _sys_core_Runtime_coi_cts_ho(%eax), %ebx
+            ">, {"%eax": obj, "%ecx": classDesc}, {"%ebx": ret});
+        }
+__pasm__("_crma_return:");
+        return ret;
+    }
+    
+    // TODO #9: use generic method or special new syntax instead __all__
+    [__all__] createInstance(cstring name) {
+        // TODO: replace int with working class header "struct"
+        int classDesc = this.getClassDesc(name);
+        if (!classDesc) { return null; } // abort on initialization error
+        
+        // TODO: replace ints with working class header "struct"
+        int instHandle = 0;
+        int tplSize = 0;
+        __pasm__(<"
+            movl _sys_core_Runtime_coi_ch_inst_handle(%eax), %ebx
+            movl _sys_core_Runtime_coi_ch_tpl_size(%eax), %eax
+        ">, {"%eax": classDesc}, {"%eax": tplSize, "%ebx": instHandle});
+        
+        if (!instHandle) {
+            Class cl = this.createInstance(Class:CLASSNAME);
+            if (!cl) { return null; } // abort on initialization error
+            cl.setDesc(classDesc);
+        }
+        
+        // allocate memory for instance
+        // TODO: replace int with working MemInfo "struct"
+        int instInfo = this.allocate(tplSize);
+        if (!instInfo) { return null; } // abort on initialization error
+
+        Object oinstance = null;
+        __all__ instance = null;
+        __pasm__(<"
+            movl 8(%ebp), %ebx      // @class-desc "Runtime"
+            call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
+        ">, {"%eax": instInfo, "%edx": classDesc}, {"%edi": oinstance, "%esi": instance});
+        oinstance.setRt(this.rt());
+        oinstance.__init();
+        return instance;
+    }
+    
+    // TODO #9: use generic method instead of __any__
+    [] destroyInstance(__any__ obj) {
+        int info = 0;
+        __pasm__(<"
+            movl 4(%eax), %eax  // @obj
+            movl 4(%eax), %eax  // @obj meminfo
+        ">, {"%eax": obj}, {"%eax": info});
+        this.free(info);
+        return;
+    }
+    
+    global [__all__] _raw_instantiate(int instInfo, int classDesc) {
+        __all__ instance = null;
+        __pasm__(<"
+            movl 8(%ebp), %ebx      // @class-desc "Runtime"
+            call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
+        ">, {"%eax": instInfo, "%edx": classDesc}, {"%esi": instance});
+        return instance;
+    }
+    
+    __naked__ [] _crh_instantiate() {
+        __pasm__(<"
+        _crh_instantiate:       // %eax: @object-meminfo %ebx: @Class-desc "Runtime" %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
+            addl _cr_mo_call_entry, %ebx
+            movl (%eax), %edi   // @object
+            movl %edx, %esi
+            addl _sys_core_Runtime_coi_ch_tpl(%edx), %esi         // @instance tpl
+            movl _sys_core_Runtime_coi_ch_tpl_size(%edx), %ecx    // instance size
+            .byte 0xf3; .byte 0xa4 #// rep movsb // copy template to object
+            
+            movl (%eax), %edi   // @object
+            movl %edx, (%edi)   // store @class desc in instance 
+            movl %eax, 4(%edi)  // store @meminfo in instance
+            
+            movl %edx, %eax     // @obj-class desc
+            addl _sys_core_Runtime_coi_ch_cts(%eax), %eax         // @obj-class vtabs entry
+        _crhi_loop:
+            movl _sys_core_Runtime_coi_cts_ho(%eax), %esi
+            movl _sys_core_Runtime_coi_cts_vto(%eax), %ecx
+            movl %ebx, (%edi, %esi)     // store @call-entry in handle
+            movl %edi, 4(%edi, %esi)    // store @object in handle
+            movl %ecx, 8(%edi, %esi)    // store vtab-offset in handle
+            addl _sys_core_Runtime_coi_cts_size, %eax
+            cmpl 0, (%eax)
+            jne _crhi_loop
+            
+            movl %edi, %esi
+            addl _sys_core_Runtime_coi_ch_tpl_obj_handle(%edx), %edi // @object (Type Object)
+            addl _sys_core_Runtime_coi_ch_tpl_cls_handle(%edx), %esi // @object (Type <class>)
+            ret
+        ">);
+    }
+    
+    __naked__ [] _call_entry() {
+        __pasm__(<"
+        _cr_mo_call_entry := (_call_entry - _sys_core_Runtime)
+        _call_entry:
+            pushl %ecx
+            movl 12(%esp), %ebx // load object handle
+            movl 4(%ebx), %ecx	// get object
+            movl 0(%ecx), %eax  // get class-desc
+            addl 8(%ebx), %eax  // get vtab
+            addl 8(%esp), %eax	// get vtab-entry by adding method-offset number
+            movl 0(%ecx), %ebx	// get class-desc
+            addl 4(%eax), %ebx  // get method-vtabs-entry
+            addl _sys_core_Runtime_coi_cts_ho(%ebx), %ecx  // compute method-@this
+            movl %ecx, 12(%esp) // store method-@this
+            movl _sys_core_Runtime_coi_cts_cdo(%ebx), %ebx // get method-class-desc
+            movl %ebx, 8(%esp)  // store method-class-desc
+            movl %ebx, %ecx
+            addl _sys_core_Runtime_coi_ch_mdt(%ecx), %ecx   // get methods-tab
+            addl 0(%eax), %ecx  // get method-offset-addr
+            addl (%ecx), %ebx   // compute method-addr
+            popl %ecx
+            jmp %ebx            // goto method
+        ">);
+    }
+    
 }
