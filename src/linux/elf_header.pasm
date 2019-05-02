@@ -7,7 +7,7 @@ __elf_ehdr_start:                                       # Elf32_Ehdr
     .word 3                                             #   e_machine
     .long 1                                             #   e_version
     .long __elf_code_start                              #   e_entry
-    .long (__elf_phdr_start - __elf_ehdr_start)         #   e_phoff
+    .long (__elf_phdr_start - __elf_file_start)         #   e_phoff
     .long 0                                             #   e_shoff
     .long 0                                             #   e_flags
     .long ((__elf_phdr_size << 16) + __elf_ehdr_size)   #   e_ehsize & e_phentsize
@@ -22,10 +22,10 @@ __elf_phdr_size := (__elf_phdr_end - __elf_phdr_start)
 __elf_phdr_start:                                       # Elf32_Phdr
     .long 1                                             #   p_type
     .long 0                                             #   p_offset
-    .long __elf_ehdr_start                              #   p_vaddr
-    .long __elf_ehdr_start                              #   p_paddr
-    .long (__elf_file_end - __elf_ehdr_start)           #   p_filesz
-    .long (__elf_file_end - __elf_ehdr_start)           #   p_memsz
+    .long __elf_file_start                              #   p_vaddr
+    .long __elf_file_start                              #   p_paddr
+    .long (__elf_file_end - __elf_file_start)           #   p_filesz
+    .long (__elf_file_end - __elf_file_start)           #   p_memsz
     .long 7                                             #   p_flags
     .long 0x1000                                        #   p_align
 __elf_phdr_end:
