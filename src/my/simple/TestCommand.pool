@@ -8,6 +8,7 @@ namespace my::simple;
 use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Runtime;
+use linux::Runtime as LinuxRuntime; // mark dependency until global method call implementation ensures it 
 
 class TestCommand extends Object { //extends linux::CommandLine {
 

@@ -27,6 +27,7 @@ class Runtime extends CoreRuntime {
     int ch_name := 8;
     int ch_mdt := 20;
     int ch_tpl_size := 28;
+    int ch_class_size := 40;
     
     // TODO: extract allocator
     int heapStart;
@@ -124,13 +125,17 @@ class Runtime extends CoreRuntime {
 
     // TODO: replace int with working class header "struct"
     [int] getClassDesc(cstring name) {
+        int classesStart = 0;
+        int classesEnd = 0;
+        __pasm__("movl __classes_start, %eax", {}, {"%eax": classesStart});
+        __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
+
         // TODO: extract ClassRegistry
-        int classes = 0;
-        int classDesc = 0;
+        int classDesc = classesStart;
+        int magic = 0;
         int diff = 0;
-        __pasm__("movl _lr_classes, %eax", {}, {"%eax": classes});
-        __pasm__("movl (%eax), %ebx", {"%eax": classes} , {"%ebx": classDesc});
-        while (classDesc) {
+        __pasm__("movl (%eax), %ebx", {"%eax": classDesc}, {"%ebx": magic});
+        while ((classDesc < classesEnd) && (magic == 0x15AC1A55)) {
             __pasm__(<"
                 addl _linux_Runtime_coi_ch_name(%eax), %eax
                 call _lr_strcmp
@@ -138,8 +143,10 @@ class Runtime extends CoreRuntime {
             if (!diff) {
                 return classDesc;
             }
-            classes += 4;
-            __pasm__("movl (%eax), %ebx", {"%eax": classes} , {"%ebx": classDesc});
+            __pasm__(<"
+                addl _linux_Runtime_coi_ch_class_size(%eax), %eax
+                movl (%eax), %ebx
+            ">, {"%eax": classDesc}, {"%eax": classDesc, "%ebx": magic});
         }
         return 0;
     }
@@ -184,22 +191,6 @@ class Runtime extends CoreRuntime {
             subb (%eax), %cl
         _lr_strcmp_ret:
             ret
-            
-        // TODO: extract ClassRegistry
-        _lr_classes:
-            .long _linux_Runtime
-            .long _linux_LinuxOStream
-            .long _linux_FormattedOStream
-            .long _my_simple_TestCommand
-            .long _sys_core_Character
-            .long _sys_core_Class
-            .long _sys_core_Object
-            .long _sys_core_OStream
-            .long _sys_core_Runtime
-            .long _sys_core_String
-            .long _sys_core_StringElement
-            .long _sys_core_Thread
-            .long 0
         ">);
     }
 
