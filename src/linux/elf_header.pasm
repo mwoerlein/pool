@@ -92,3 +92,5 @@ strLen_check:
 strLen_end:
     subl %ecx, %edx
     ret
+
+__classes_start:

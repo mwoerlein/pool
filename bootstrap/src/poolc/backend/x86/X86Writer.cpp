@@ -17,7 +17,8 @@
 // TODO: replace with localClsPrefix after all inline pasm method calls are replaced pool method calls
 #define manualClsPrefix(cls) (cls)->globalPrefix
 
-#define classDesc() manualClsPrefix(curClass)
+#define classStart() manualClsPrefix(curClass)
+#define classEnd() localClsPrefix(curClass) << "_end"
 #define classTabs() localClsPrefix(curClass) << "_cts"
 #define classTab(cls) localClsPrefix(curClass) << "_ct" << localClsPrefix(cls)
 #define classTabDesc(cls) manualClsPrefix(cls)
@@ -42,8 +43,8 @@
 #define instanceVarOffset(cls, var) localClsPrefix(curClass) << "_i_" << localClsPrefix(cls) << "_" << (var)->name
 
 #define OFFSET(start, end) "(" << end << " - " << start << ")"
-#define CLASS_OFFSET(end) "(" << end << " - " << classDesc() << ")"
-#define INSTANCE_OFFSET(end) "(" << end << " - " << instanceStart() << ")"
+#define CLASS_OFFSET(end) OFFSET(classStart(), end)
+#define INSTANCE_OFFSET(end) OFFSET(instanceStart(), end)
 #define LABEL(l) elem() << l << ":\n";
 #define LONG(l) elem() << "    .long " << l << "\n";
 #define ASCIZ(str) {(str).escapeToStream(elem() << "    .asciz "); elem() << "\n";}
@@ -100,7 +101,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     
     // header
     elem() << "// class " << curClass->name << "\n";
-    LABEL(classDesc());
+    LABEL(classStart());
     LONG("0x15AC1A55");
     LONG("0");
     LONG(constStringOffset(classScope->stringId(curClass->fullQualifiedName)));
@@ -111,6 +112,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     LONG(INSTANCE_OFFSET(instanceEnd())); // instance size
     LONG(INSTANCE_OFFSET(instanceHandle(classScope->firstSuper()->getClassDeclNode()))); // Object handle offset in instance
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
+    LONG(CLASS_OFFSET(classEnd()));       // <class> size
 
     // dependent classes
     elem() << "\n// class tab\n";
@@ -274,6 +276,8 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     // methods
     elem() << "\n// method definitions";
     curClass->methods.acceptAll(*this);
+    
+    LABEL(classEnd());
     
     finalizeElement();
     
