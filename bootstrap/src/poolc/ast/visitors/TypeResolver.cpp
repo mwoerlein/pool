@@ -50,7 +50,7 @@ bool TypeResolver::visit(StructDeclNode & structDecl) {
     }
     
     StructScope *structScope = structDecl.scope->isStruct();
-    if (structScope->instanceSize < 0) {
+    if (structScope->sizeExpr->value < 0) {
         crit() << structDecl.name << ": methods/variables must be registered before type checking/resolution!\n";
         return false;
     }

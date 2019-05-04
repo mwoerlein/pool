@@ -9,7 +9,6 @@ namespace sys::runtime;
 struct MemoryInfo {
 
     global int PAGESIZE := 4096;
-    global int SIZE := 24;
 
     int buf;
     int len;

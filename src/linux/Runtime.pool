@@ -48,13 +48,13 @@ class Runtime extends CoreRuntime {
 
         MemoryInfo icClass = null;
         __pasm__("", {"%eax": heapHead}, {"%eax": icClass});
-        icClass.buf = (heapHead += MemoryInfo:SIZE);
+        icClass.buf = (heapHead += MemoryInfo:SIZEOF);
         heapHead += (icClass.len = cdClass.inst_tpl_size);
         if (!icClass) { return null; } // abort on initialization error
 
         MemoryInfo irt = null;
         __pasm__("", {"%eax": heapHead}, {"%eax": irt});
-        irt.buf = (heapHead += MemoryInfo:SIZE);
+        irt.buf = (heapHead += MemoryInfo:SIZEOF);
         heapHead += (irt.len = cdRuntime.inst_tpl_size);
         if (!irt) { return null; } // abort on initialization error
         
@@ -103,12 +103,12 @@ class Runtime extends CoreRuntime {
     
     [MemoryInfo] allocate(int size) {
         // TODO: extract allocator
-        if (heapHead + MemoryInfo:SIZE + size > heapStart + heapSize) {
+        if (heapHead + MemoryInfo:SIZEOF + size > heapStart + heapSize) {
             return null;
         }
         MemoryInfo info = null;
         __pasm__("", {"%eax": heapHead}, {"%eax": info});
-        info.buf = (heapHead += MemoryInfo:SIZE);
+        info.buf = (heapHead += MemoryInfo:SIZEOF);
         heapHead += (info.len = size);
         return info;
     }

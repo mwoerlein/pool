@@ -2,6 +2,7 @@
 #define POOLC_AST_NODE_HPP_LOCK
 
 #define CLASSNAME_ID "CLASSNAME"
+#define SIZEOF_ID "SIZEOF"
 
 #include "sys/Object.hpp"
 

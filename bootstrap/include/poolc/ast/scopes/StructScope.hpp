@@ -5,6 +5,7 @@
 #include "poolc/ast/scopes/NamedType.hpp"
 
 #include "poolc/ast/nodes/declaration/StructDeclNode.hpp"
+#include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
 
 class StructScope: public Scope, public NamedType {
     private:
@@ -12,7 +13,7 @@ class StructScope: public Scope, public NamedType {
     
     public:
     bool typesResolved;
-    int instanceSize;
+    ConstIntExprNode* sizeExpr;
     
     StructScope(Environment &env, MemoryInfo &mi, Scope & parent, StructDeclNode & structDecl);
     virtual ~StructScope();

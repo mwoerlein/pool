@@ -46,6 +46,7 @@ VariableInitInstNode &ClassDeclNode::addStringConstant(String &name, String &val
     ConstCStringExprNode &cstring = env().create<ConstCStringExprNode, String&>(value);
     VariableInitInstNode &init = env().create<VariableInitInstNode, VariableDeclNode &, ExpressionNode &>(decl, cstring);
     init.final = true;
+    decl.global = true;
     consts.add(init);
     return init;
 }

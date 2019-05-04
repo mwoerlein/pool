@@ -16,6 +16,9 @@ class StructDeclNode: virtual public Node {
     StructDeclNode(Environment &env, MemoryInfo &mi);
     virtual ~StructDeclNode();
     
+    // uses to add default constants like SIZEOF
+    virtual VariableInitInstNode &addIntConstant(String &name, int value);
+    
     virtual bool accept(Visitor & visitor) override;
     virtual void printDebugName(OStream & stream) override;
 };

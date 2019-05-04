@@ -2,7 +2,8 @@
 
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 #include "poolc/ast/nodes/instruction/VariableInitInstNode.hpp"
-
+#include "poolc/ast/nodes/expression/ConstIntExprNode.hpp"
+#include "poolc/ast/nodes/reference/IntRefNode.hpp"
 
 // public
 StructDeclNode::StructDeclNode(Environment &env, MemoryInfo &mi)
@@ -18,6 +19,17 @@ StructDeclNode::~StructDeclNode() {
     
     variables.destroyAll();
     consts.destroyAll();
+}
+
+VariableInitInstNode &StructDeclNode::addIntConstant(String &name, int value) {
+    TypeRefNode &ref = env().create<IntRefNode>();
+    VariableDeclNode &decl = env().create<VariableDeclNode, TypeRefNode&, String&>(ref, name);
+    ConstIntExprNode &cint = env().create<ConstIntExprNode, int>(value);
+    VariableInitInstNode &init = env().create<VariableInitInstNode, VariableDeclNode &, ExpressionNode &>(decl, cint);
+    init.final = true;
+    decl.global = true;
+    consts.add(init);
+    return init;
 }
 
 bool StructDeclNode::accept(Visitor & visitor) {

@@ -87,7 +87,9 @@ bool ClassResolver::visit(StructDeclNode & structDecl) {
         return false;
     }
     
-    structDecl.scope = curScope->registerStruct(structDecl, structDecl.name);
+    StructScope *scope = curScope->registerStruct(structDecl, structDecl.name);
+    scope->sizeExpr = structDecl.addIntConstant(env().create<String, const char*>(SIZEOF_ID), -1).initializer.isConstInt();
+    structDecl.scope = scope;
     loader.registerStruct(structDecl);
     
     Scope *tmpScope = curScope;

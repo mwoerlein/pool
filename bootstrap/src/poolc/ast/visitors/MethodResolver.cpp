@@ -69,11 +69,11 @@ bool MethodResolver::visit(StructDeclNode & structDecl) {
     }
     
     StructScope *structScope = structDecl.scope->isStruct();
-    if (structScope->instanceSize >= 0) {
+    if (structScope->sizeExpr->value >= 0) {
         // skip already resolved struct
         return true;
     }
-    structScope->instanceSize = 0;
+    int offset = structScope->sizeExpr->value = 0;
     
     Scope *tmpScope = curScope;
     curScope = structScope;
@@ -83,11 +83,12 @@ bool MethodResolver::visit(StructDeclNode & structDecl) {
         while (it.hasNext()) {
             VariableDeclNode &variableDecl = it.next();
             variableDecl.accept(*this);
-            variableDecl.scope->isVariable()->offset = structScope->instanceSize;
-            structScope->instanceSize += 4; // TODO: get other sizes from variableDecl.type.resolvedType
+            variableDecl.scope->isVariable()->offset = offset;
+            offset += 4; // TODO: get other sizes from variableDecl.type.resolvedType
         }
         it.destroy();
     }
+    structScope->sizeExpr->value = offset;
     curScope = tmpScope;
     return true;
 }
