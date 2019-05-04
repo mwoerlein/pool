@@ -37,6 +37,7 @@ bool MethodResolver::visit(ClassDeclNode & classDecl) {
     Scope *tmpScope = curScope;
     curScope = classScope;
     classDecl.extends.acceptAll(*this);
+    registerSupers(classDecl);
     registerMethods(classDecl);
     
     classDecl.consts.acceptAll(*this);
@@ -307,6 +308,30 @@ bool MethodResolver::visit(VariableExprNode & variable) {
         variable.context->accept(*this);
     }
     return true;
+}
+
+bool MethodResolver::registerSupers(ClassDeclNode & classDecl) {
+    ClassScope *classScope = classDecl.scope->isClass();
+    
+    Iterator<TypeRefNode> &it = classDecl.extends.iterator();
+    while (it.hasNext()) {
+        TypeRefNode & type = it.next();
+        if (ClassScope *extendClassScope = type.resolvedType->isClass()) {
+            if (!extendClassScope->hasSuper(*extendClassScope)) {
+                error() << classDecl.fullQualifiedName << ": cyclic class hierarchy detected! (unfinished " << type << ")\n";
+            }
+            Iterator<ClassScope> &sit = extendClassScope->supers();
+            while (sit.hasNext()) {
+                classScope->addSuper(sit.next());
+            }
+            sit.destroy();
+        } else {
+            error() << classDecl.fullQualifiedName << ": invalid super type '" << type << "'\n";
+        }
+    }
+    it.destroy();
+    
+    classScope->addSuper(*classScope);
 }
 
 bool MethodResolver::registerMethods(ClassDeclNode & classDecl) {

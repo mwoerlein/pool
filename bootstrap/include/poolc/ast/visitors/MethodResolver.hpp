@@ -49,6 +49,7 @@ class MethodResolver: public Visitor {
     virtual bool visit(ThisExprNode & constThis) override;
     virtual bool visit(VariableExprNode & variable) override;
     
+    virtual bool registerSupers(ClassDeclNode & classDecl);
     virtual bool registerMethods(ClassDeclNode & classDecl);
 };
 

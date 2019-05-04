@@ -53,7 +53,8 @@ class ClassResolver: public Visitor {
     virtual bool visit(ThisExprNode & constThis) override;
     virtual bool visit(VariableExprNode & variable) override;
     
-    virtual bool registerSupers(ClassDeclNode & classDecl);
+    virtual bool registerClass(ClassDeclNode & classDecl);
+    virtual bool registerStruct(StructDeclNode & structDecl);
 };
 
 #endif //POOLC_AST_VISITORS_CLASSRESOLVER_HPP_LOCK

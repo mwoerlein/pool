@@ -26,6 +26,22 @@ bool ClassResolver::visit(TranslationUnitNode & translationUnit) {
         return false;
     }
     translationUnit.ns->accept(*this);
+    
+    {
+        Iterator<ClassDeclNode> &it = translationUnit.classes.iterator();
+        while (it.hasNext()) {
+            this->registerClass(it.next());
+        }
+        it.destroy();
+    }
+    {
+        Iterator<StructDeclNode> &it = translationUnit.structs.iterator();
+        while (it.hasNext()) {
+            this->registerStruct(it.next());
+        }
+        it.destroy();
+    }
+    
     translationUnit.uses.acceptAll(*this);
     translationUnit.classes.acceptAll(*this);
     translationUnit.structs.acceptAll(*this);
@@ -35,22 +51,10 @@ bool ClassResolver::visit(TranslationUnitNode & translationUnit) {
 }
 
 bool ClassResolver::visit(ClassDeclNode & classDecl) {
-    if (classDecl.scope) {
-        crit() << classDecl.name << ": already resolved" << "\n";
+    if (!classDecl.scope) {
+        crit() << classDecl.name << ": classes must be registered before resolving!\n";
         return false;
     }
-    
-    TranslationUnitNode * curUnit = curScope->getUnitNode();
-    classDecl.fullQualifiedName << curUnit->ns->name << "::" << classDecl.name;
-    if (classDecl.fullQualifiedName != curUnit->name) {
-        error() << curUnit->name << ": class name '" << classDecl.fullQualifiedName << "' does not match compilation unit\n";
-        return false;
-    }
-    classDecl.addStringConstant(env().create<String, const char*>(CLASSNAME_ID), classDecl.fullQualifiedName);
-    
-    classDecl.scope = curScope->registerClass(classDecl, classDecl.name);
-    classDecl.instanceScope = &env().create<InstanceScope, Scope &, ClassDeclNode &>(*classDecl.scope, classDecl);
-    loader.registerClass(classDecl);
 
     { // TODO: move pasm lable/prefix management to correspondig writer?
         Iterator<String> &it = classDecl.fullQualifiedName.parts();
@@ -64,7 +68,6 @@ bool ClassResolver::visit(ClassDeclNode & classDecl) {
     Scope *tmpScope = curScope;
     curScope = classDecl.scope;
     classDecl.extends.acceptAll(*this);
-    registerSupers(classDecl);
     
     classDecl.consts.acceptAll(*this);
     classDecl.variables.acceptAll(*this);
@@ -75,22 +78,10 @@ bool ClassResolver::visit(ClassDeclNode & classDecl) {
 }
 
 bool ClassResolver::visit(StructDeclNode & structDecl) {
-    if (structDecl.scope) {
-        crit() << structDecl.name << ": already resolved" << "\n";
+    if (!structDecl.scope) {
+        crit() << structDecl.name << ": structs must be registered before resolving!\n";
         return false;
     }
-    
-    TranslationUnitNode * curUnit = curScope->getUnitNode();
-    structDecl.fullQualifiedName << curUnit->ns->name << "::" << structDecl.name;
-    if (structDecl.fullQualifiedName != curUnit->name) {
-        error() << curUnit->name << ": struct name '" << structDecl.fullQualifiedName << "' does not match compilation unit\n";
-        return false;
-    }
-    
-    StructScope *scope = curScope->registerStruct(structDecl, structDecl.name);
-    scope->sizeExpr = structDecl.addIntConstant(env().create<String, const char*>(SIZEOF_ID), -1).initializer.isConstInt();
-    structDecl.scope = scope;
-    loader.registerStruct(structDecl);
     
     Scope *tmpScope = curScope;
     curScope = structDecl.scope;
@@ -279,26 +270,42 @@ bool ClassResolver::visit(VariableExprNode & variable) {
     return true;
 }
 
-bool ClassResolver::registerSupers(ClassDeclNode & classDecl) {
-    ClassScope *classScope = classDecl.scope->isClass();
-    
-    Iterator<TypeRefNode> &it = classDecl.extends.iterator();
-    while (it.hasNext()) {
-        TypeRefNode & type = it.next();
-        if (ClassScope *extendClassScope = type.resolvedType->isClass()) {
-            if (!extendClassScope->hasSuper(*extendClassScope)) {
-                error() << classDecl.fullQualifiedName << ": cyclic class hierarchy detected! (unfinished " << type << ")\n";
-            }
-            Iterator<ClassScope> &sit = extendClassScope->supers();
-            while (sit.hasNext()) {
-                classScope->addSuper(sit.next());
-            }
-            sit.destroy();
-        } else {
-            error() << classDecl.fullQualifiedName << ": invalid super type '" << type << "'\n";
-        }
+bool ClassResolver::registerClass(ClassDeclNode & classDecl) {
+    if (classDecl.scope) {
+        crit() << classDecl.name << ": already resolved" << "\n";
+        return false;
     }
-    it.destroy();
     
-    classScope->addSuper(*classScope);
+    TranslationUnitNode * curUnit = curScope->getUnitNode();
+    classDecl.fullQualifiedName << curUnit->ns->name << "::" << classDecl.name;
+    if (classDecl.fullQualifiedName != curUnit->name) {
+        error() << curUnit->name << ": class name '" << classDecl.fullQualifiedName << "' does not match compilation unit\n";
+        return false;
+    }
+    
+    classDecl.scope = curScope->registerClass(classDecl, classDecl.name);
+    classDecl.instanceScope = &env().create<InstanceScope, Scope &, ClassDeclNode &>(*classDecl.scope, classDecl);
+    classDecl.addStringConstant(env().create<String, const char*>(CLASSNAME_ID), classDecl.fullQualifiedName);
+    loader.registerClass(classDecl);
+    return true;
+}
+
+bool ClassResolver::registerStruct(StructDeclNode & structDecl) {
+    if (structDecl.scope) {
+        crit() << structDecl.name << ": already resolved" << "\n";
+        return false;
+    }
+    
+    TranslationUnitNode * curUnit = curScope->getUnitNode();
+    structDecl.fullQualifiedName << curUnit->ns->name << "::" << structDecl.name;
+    if (structDecl.fullQualifiedName != curUnit->name) {
+        error() << curUnit->name << ": struct name '" << structDecl.fullQualifiedName << "' does not match compilation unit\n";
+        return false;
+    }
+    
+    StructScope *scope = curScope->registerStruct(structDecl, structDecl.name);
+    scope->sizeExpr = structDecl.addIntConstant(env().create<String, const char*>(SIZEOF_ID), -1).initializer.isConstInt();
+    structDecl.scope = scope;
+    loader.registerStruct(structDecl);
+    return true;
 }
