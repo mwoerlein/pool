@@ -5,10 +5,11 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::core::Class;
 
 struct ClassDescriptor {
     int magic;
-    sys::core::Class class_instance;
+    Class class_instance;
     int classname_offset;
     int class_tabs_offset;
     int method_tabs_offset;
