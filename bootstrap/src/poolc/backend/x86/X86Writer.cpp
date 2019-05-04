@@ -137,6 +137,30 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
         }
         it.destroy();
     }
+    {
+        Iterator<ClassScope> &it = classScope->globalRequired();
+        while (it.hasNext()) {
+            ClassScope &requiredScope = it.next();
+            if (!classScope->hasSuper(requiredScope)) {
+                ClassDeclNode *requiredDecl = requiredScope.getClassDeclNode();
+                LOCAL(
+                    classTabOffset(requiredDecl),
+                    CLASS_OFFSET(classTab(requiredDecl))
+                );
+                LABEL(classTab(requiredDecl));
+                if (resolveClasses) {
+                    LONG(classTabDesc(requiredDecl));
+                } else {
+                    LONG("0"); // @class-desc filled on class loading
+                }
+                LONG(constStringOffset(classScope->stringId(requiredDecl->fullQualifiedName)));
+                LONG("0"); // no vtab offset in description
+                LONG("0"); // no handle offset in instance
+            }
+        }
+        it.destroy();
+    }
+    
     elem() << "// class tab end\n";
     LONG("0");
     LONG("0");
@@ -536,9 +560,8 @@ void X86Writer::write(PIRGlobalCall &callStmt) {
         pushAllReverse(it);
         it.destroy();
     }
-    code() << "movl 8(%ebp), %eax\n"; // self @class-desc
-    code() << "movl " << classTabOffset(callStmt.method.getClassDeclNode())<< "(%eax), %eax; movl %eax, %ebx\n"; // method @class-desc
-    code() << "addl 20(%ebx), %ebx\n"; // method table
+    code() << "movl 8(%ebp), %eax; movl " << classTabOffset(callStmt.method.getClassDeclNode())<< "(%eax), %eax\n"; // method @class-desc
+    code() << "movl %eax, %ebx; addl 20(%ebx), %ebx\n"; // method table
     code() << "movl " << (4 * callStmt.method.getMethodDeclNode()->index) << "(%ebx), %ebx\n"; // method offset
     code() << "addl %eax, %ebx\n"; // @method
     code() << "pushl 0; pushl %eax; call %ebx\n";

@@ -11,6 +11,7 @@ class ClassScope: public Scope, public Type {
     private:
     ClassDeclNode & classDecl;
     HashMap<String, ClassScope> &_supers;
+    HashMap<String, ClassScope> &_globalRequired;
     HashMap<String, String> &_strings;
     
     public:
@@ -28,6 +29,9 @@ class ClassScope: public Scope, public Type {
     virtual bool hasSuper(ClassScope &super);
     inline ClassScope * firstSuper() { return _supers.first(); }
     inline Iterator<ClassScope> & supers() { return _supers.iterator(); }
+    
+    virtual void addGlobalRequired(ClassScope &required);
+    inline Iterator<ClassScope> & globalRequired() { return _globalRequired.iterator(); }
     
     virtual String & stringId(String &string, String *id = 0);
     virtual Iterator<String> & strings();

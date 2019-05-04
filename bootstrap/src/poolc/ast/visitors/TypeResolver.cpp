@@ -271,9 +271,7 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
             // TODO: handle multi return types
             // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
             
-            // TODO: register decl in methodCall.scope->getClassDeclNode() as global required class!
-            debug() << methodCall.scope->getClassDeclNode()->fullQualifiedName 
-                << ": TODO: register global required " << *decl->scope->getClassDeclNode() << "\n";
+            methodCall.scope->getClass()->addGlobalRequired(*decl->scope->getClass());
         } else {
             error() << methodCall.scope->getClassDeclNode()->name 
                 << ": unknown global method '" << methodCall.name << "' in class '"

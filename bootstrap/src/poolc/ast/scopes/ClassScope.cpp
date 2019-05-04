@@ -4,10 +4,12 @@
 ClassScope::ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl)
         :Scope(env, mi, &parent), Type(env, mi), Object(env, mi),
          _supers(env.create<HashMap<String, ClassScope>>()),
+         _globalRequired(env.create<HashMap<String, ClassScope>>()),
          _strings(env.create<HashMap<String, String>>()),
          classDecl(classDecl), methodsRegistered(false), typesResolved(false) {
 }
 ClassScope::~ClassScope() {
+    _globalRequired.destroy();
     _supers.destroy();
 }
 ClassScope * ClassScope::isClass() { return this; }
@@ -20,6 +22,10 @@ void ClassScope::addSuper(ClassScope &super) {
 }
 bool ClassScope::hasSuper(ClassScope &super) {
     return _supers.has(super.getClassDeclNode()->fullQualifiedName);
+}
+
+void ClassScope::addGlobalRequired(ClassScope &required) {
+    _globalRequired.set(required.getClassDeclNode()->fullQualifiedName, required);
 }
 
 String & ClassScope::stringId(String &string, String *id) {
