@@ -11,6 +11,7 @@
 #include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
+#include "poolc/pir/statement/PIRGlobalCall.hpp"
 #include "poolc/pir/statement/PIRGet.hpp"
 #include "poolc/pir/statement/PIRMove.hpp"
 #include "poolc/pir/statement/PIRSet.hpp"
@@ -43,6 +44,7 @@ class X86Writer: public Writer {
     virtual void write(PIRAsm &asmStmt);
     virtual void write(PIRAssign &assignStmt);
     virtual void write(PIRCall &callStmt);
+    virtual void write(PIRGlobalCall &callStmt);
     virtual void write(PIRGet &getStmt);
     virtual void write(PIRMove &moveStmt);
     virtual void write(PIRSet &setStmt);

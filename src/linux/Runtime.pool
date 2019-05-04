@@ -15,9 +15,6 @@ class Runtime extends CoreRuntime {
     // constants
     int PAGESIZE := 4096;
     
-    // TODO: remove with working global method calls
-    int _instantiateBootstrap := 48;
-    
     // TODO: remove int with working MemInfo "struct"
     int mi_buf := 0;
     int mi_len := 4;
@@ -25,7 +22,6 @@ class Runtime extends CoreRuntime {
     // TODO: remove with working ClassHeader "struct"
     int ch_inst_handle := 4;
     int ch_name := 8;
-    int ch_mdt := 20;
     int ch_tpl_size := 28;
     int ch_class_size := 40;
     
@@ -90,20 +86,7 @@ class Runtime extends CoreRuntime {
         ">, {"%eax": cdRuntime, "%edi": heapHead, "%esi": mi_size}, {"%eax": irt, "%edi": heapHead});
         if (!irt) { return null; } // abort on initialization error
 
-        Runtime rt = null;
-        Class cClass = null;
-        // TODO: [rt, cClass] = CoreRuntime:_instantiateBootstrap(irt, cdRuntime, icClass, cdClass);
-        __pasm__(<"
-            subl 8, %esp // ret
-            pushl %edx; pushl %ecx; pushl %ebx; pushl %eax // args
-            movl 8(%ebp), %eax; movl _1a2f00c8_cto_d67a0794(%eax), %eax // @class-desc "CoreRuntime"
-            movl %eax, %ebx; addl _linux_Runtime_coi_ch_mdt(%eax), %ebx;
-            movl _linux_Runtime_coi__instantiateBootstrap(%ebx), %ebx // get method offset
-            addl %eax, %ebx // @func
-            pushl 0; pushl %eax; call %ebx // call global func
-            addl 24, %esp; popl %eax; popl %ebx
-        ">, {"%eax": irt, "%ebx": cdRuntime, "%ecx": icClass, "%edx": cdClass}, {"%eax": rt, "%ebx": cClass});
-        
+        [Runtime rt, Class cClass] = CoreRuntime:_instantiateBootstrap(irt, cdRuntime, icClass, cdClass);
         rt.initHeap(heapStart, heapSize, heapHead);
         return rt._finalizeBootstrap(cClass, cdClass, cdRuntime);
     }

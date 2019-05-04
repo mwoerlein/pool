@@ -261,6 +261,25 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
                 << contextInstanceScope->getClassDeclNode()->name << "'\n";
             return false;
         }
+    } else if (ClassScope * contextClassScope = methodCall.context.resolvedType->isClass()) {
+        if (MethodScope *calledMethodScope = contextClassScope->getMethod(methodCall)) {
+            methodCall.resolvedMethod = calledMethodScope;
+            MethodDeclNode *decl = calledMethodScope->getMethodDeclNode();
+            if (decl->returnTypes.size() == 1) {
+                methodCall.resolvedType = decl->resolvedReturns.first();
+            }
+            // TODO: handle multi return types
+            // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
+            
+            // TODO: register decl in methodCall.scope->getClassDeclNode() as global required class!
+            debug() << methodCall.scope->getClassDeclNode()->fullQualifiedName 
+                << ": TODO: register global required " << *decl->scope->getClassDeclNode() << "\n";
+        } else {
+            error() << methodCall.scope->getClassDeclNode()->name 
+                << ": unknown global method '" << methodCall.name << "' in class '"
+                << contextClassScope->getClassDeclNode()->name << "'\n";
+            return false;
+        }
     } else {
         // TODO: handle global method calls
         error() << methodCall.scope->getClassDeclNode()->name << ": invalid method call context type '" << methodCall.context.resolvedType << "'\n";

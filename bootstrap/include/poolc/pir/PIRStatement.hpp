@@ -7,6 +7,7 @@ class PIRArithOp;
 class PIRAsm;
 class PIRAssign;
 class PIRCall;
+class PIRGlobalCall;
 class PIRCond;
 class PIRGet;
 class PIRMove;
@@ -20,6 +21,7 @@ class PIRStatement: virtual public Object {
     virtual PIRAsm *isAsm();
     virtual PIRAssign *isAssign();
     virtual PIRCall *isCall();
+    virtual PIRGlobalCall *isGlobalCall();
     virtual PIRCond *isCond();
     virtual PIRGet *isGet();
     virtual PIRMove *isMove();

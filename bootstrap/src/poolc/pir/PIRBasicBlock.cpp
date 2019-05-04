@@ -11,6 +11,7 @@
 #include "poolc/pir/statement/PIRAsm.hpp"
 #include "poolc/pir/statement/PIRAssign.hpp"
 #include "poolc/pir/statement/PIRCall.hpp"
+#include "poolc/pir/statement/PIRGlobalCall.hpp"
 #include "poolc/pir/statement/PIRCond.hpp"
 #include "poolc/pir/statement/PIRGet.hpp"
 #include "poolc/pir/statement/PIRMove.hpp"
@@ -90,52 +91,20 @@ void PIRBasicBlock::addAssign(PIRValue &value, PIRLocation &dest, bool reinterpr
     _statements.add(env().create<PIRAssign, PIRValue&, PIRLocation&>(value, dest));
 }
 
+void PIRBasicBlock::addGlobalCall(MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
+    if (this->isValidCall(method, params, rets)) {
+        _statements.add(env().create<PIRGlobalCall, MethodScope &, Collection<PIRLocation> &, Collection<PIRLocation> &>(method, params, rets));
+    }
+}
+
 void PIRBasicBlock::addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
-    MethodDeclNode &decl = *method.getMethodDeclNode();
     if (method.getInstance() != &context.type) {
-        error() << "invalid context " << context << " of method " << decl << "\n";
+        error() << "invalid context " << context << " of method " << *method.getMethodDeclNode() << "\n";
         return;
     }
-    {
-        if (decl.parameters.size() != params.size()) {
-            error() << "invalid parameter count " << params.size() << " for method " << decl << "\n";
-            return;
-        }
-        Iterator<VariableDeclNode> &declIt = decl.parameters.iterator();
-        Iterator<PIRLocation> &locIt = params.iterator();
-        while (declIt.hasNext()) {
-            VariableDeclNode &vDecl = declIt.next();
-            PIRLocation &loc = locIt.next();
-            // TODO: handle type conversion?
-            if (!isAssignable(loc.type, *vDecl.resolvedType)) {
-                error() << "incompatible parameter " << loc << " for method " << decl << "\n";
-                error() << *vDecl.resolvedType << " <-> " << loc.type << "\n";
-                return;
-            }
-        }
-        declIt.destroy();
-        locIt.destroy();
+    if (this->isValidCall(method, params, rets)) {
+        _statements.add(env().create<PIRCall, PIRLocation &, MethodScope &, Collection<PIRLocation> &, Collection<PIRLocation> &>(context, method, params, rets));
     }
-    {
-        if (decl.returnTypes.size() != rets.size()) {
-            error() << "invalid return count " << rets.size() << " for method " << decl << "\n";
-            return;
-        }
-        Iterator<Type> &typeIt = decl.resolvedReturns.iterator();
-        Iterator<PIRLocation> &locIt = rets.iterator();
-        while (typeIt.hasNext()) {
-            Type &type = typeIt.next();
-            PIRLocation &loc = locIt.next();
-            // TODO: handle type conversion?
-            if (!isAssignable(type, loc.type)) {
-                error() << "incompatible return " << loc << " for method " << decl << "\n";
-                return;
-            }
-        }
-        typeIt.destroy();
-        locIt.destroy();
-    }
-    _statements.add(env().create<PIRCall, PIRLocation &, MethodScope &, Collection<PIRLocation> &, Collection<PIRLocation> &>(context, method, params, rets));
 }
 
 void PIRBasicBlock::addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest) {
@@ -203,4 +172,48 @@ bool PIRBasicBlock::isAssignable(Type &src, Type &dest) {
     
     // TODO: handle type conversion?
     return srcAll || destAny;
+}
+
+bool PIRBasicBlock::isValidCall(MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {
+    MethodDeclNode &decl = *method.getMethodDeclNode();
+    {
+        if (decl.parameters.size() != params.size()) {
+            error() << "invalid parameter count " << params.size() << " for method " << decl << "\n";
+            return false;
+        }
+        Iterator<VariableDeclNode> &declIt = decl.parameters.iterator();
+        Iterator<PIRLocation> &locIt = params.iterator();
+        while (declIt.hasNext()) {
+            VariableDeclNode &vDecl = declIt.next();
+            PIRLocation &loc = locIt.next();
+            // TODO: handle type conversion?
+            if (!isAssignable(loc.type, *vDecl.resolvedType)) {
+                error() << "incompatible parameter " << loc << " for method " << decl << "\n";
+                error() << *vDecl.resolvedType << " <-> " << loc.type << "\n";
+                return false;
+            }
+        }
+        declIt.destroy();
+        locIt.destroy();
+    }
+    {
+        if (decl.returnTypes.size() != rets.size()) {
+            error() << "invalid return count " << rets.size() << " for method " << decl << "\n";
+            return false;
+        }
+        Iterator<Type> &typeIt = decl.resolvedReturns.iterator();
+        Iterator<PIRLocation> &locIt = rets.iterator();
+        while (typeIt.hasNext()) {
+            Type &type = typeIt.next();
+            PIRLocation &loc = locIt.next();
+            // TODO: handle type conversion?
+            if (!isAssignable(type, loc.type)) {
+                error() << "incompatible return " << loc << " for method " << decl << "\n";
+                return false;
+            }
+        }
+        typeIt.destroy();
+        locIt.destroy();
+    }
+    return true;
 }

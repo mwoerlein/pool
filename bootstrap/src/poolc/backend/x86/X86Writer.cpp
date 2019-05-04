@@ -424,6 +424,7 @@ void X86Writer::write(PIRStatement &stmt) {
     else if (PIRAsm *asmStmt = stmt.isAsm()) { write(*asmStmt); }
     else if (PIRAssign *assignStmt = stmt.isAssign()) { write(*assignStmt); }
     else if (PIRCall *callStmt = stmt.isCall()) { write(*callStmt); }
+    else if (PIRGlobalCall *callStmt = stmt.isGlobalCall()) { write(*callStmt); }
     else if (PIRGet *getStmt = stmt.isGet()) { write(*getStmt); }
     else if (PIRMove *moveStmt = stmt.isMove()) { write(*moveStmt); }
     else if (PIRSet *setStmt = stmt.isSet()) { write(*setStmt); }
@@ -514,6 +515,33 @@ void X86Writer::write(PIRCall &callStmt) {
     }
     code() << "movl "; write(callStmt.context); elem() << ", %eax\n";
     code() << "pushl %eax; pushl " << (8*callStmt.method.index) << "; call (%eax)\n";
+    code() << "addl " << (8 + 4*paramCount) << ", %esp\n";
+    if (retCount) {
+        Iterator<PIRLocation> &it = callStmt.rets.iterator();
+        while (it.hasNext()) {
+            code() << "popl "; write(it.next()); elem() << "\n";
+        }
+        it.destroy();
+    }
+}
+            
+void X86Writer::write(PIRGlobalCall &callStmt) {
+    int retCount = callStmt.rets.size();
+    int paramCount = callStmt.params.size();
+    if (retCount) {
+        code() << "subl " << (4*retCount) << ", %esp\n";
+    }
+    {
+        Iterator<PIRLocation> &it = callStmt.params.iterator();
+        pushAllReverse(it);
+        it.destroy();
+    }
+    code() << "movl 8(%ebp), %eax\n"; // self @class-desc
+    code() << "movl " << classTabOffset(callStmt.method.getClassDeclNode())<< "(%eax), %eax; movl %eax, %ebx\n"; // method @class-desc
+    code() << "addl 20(%ebx), %ebx\n"; // method table
+    code() << "movl " << (4 * callStmt.method.getMethodDeclNode()->index) << "(%ebx), %ebx\n"; // method offset
+    code() << "addl %eax, %ebx\n"; // @method
+    code() << "pushl 0; pushl %eax; call %ebx\n";
     code() << "addl " << (8 + 4*paramCount) << ", %esp\n";
     if (retCount) {
         Iterator<PIRLocation> &it = callStmt.rets.iterator();

@@ -23,6 +23,7 @@ class PIRBasicBlock: virtual public Object, virtual public LoggerAware {
     LinkedList<PIRStatement> &_statements;
     
     bool isAssignable(Type &src, Type &dest);
+    bool isValidCall(MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
     
     public:
     bb_kind kind;
@@ -41,6 +42,7 @@ class PIRBasicBlock: virtual public Object, virtual public LoggerAware {
     void addAsm(String &pasm, Map<String, PIRLocation> &in, Map<String, PIRLocation> &out);
     void addAssign(PIRValue &value, PIRLocation &dest, bool reinterpret = false);
     void addCall(PIRLocation &context, MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
+    void addGlobalCall(MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets);
     void addGet(PIRLocation &context, VariableScope &var, PIRLocation &dest);
     void addMove(PIRLocation &src, PIRLocation &dest, bool reinterpret = false);
     void addSet(PIRLocation &context, VariableScope &var, PIRLocation &src);

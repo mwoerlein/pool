@@ -55,5 +55,5 @@ bool ClassDeclNode::accept(Visitor & visitor) {
 }
 
 void ClassDeclNode::printDebugName(OStream & stream) {
-    stream << "class-decl-<" << name << ">";
+    stream << "class-decl-<" << fullQualifiedName << ">";
 }

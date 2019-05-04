@@ -361,14 +361,17 @@ bool PIRGenerator::visit(LogicalUnaryExprNode & logicalUnary) {
 }
 
 bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
-    methodCall.context.accept(*this);
-    PIRLocation *context;
-    if (lastLocations.size() == 1) {
-        context = &curMethod->asTemp(*lastLocations.first());
-        lastLocations.clear();
-    } else {
-        crit() << "unexpected context " << methodCall.context << " " << lastLocations.size() << " for " << methodCall << "\n";
-        return false;
+    MethodDeclNode *decl = methodCall.resolvedMethod->getMethodDeclNode();
+    PIRLocation *context = 0;
+    if (!decl->global) {
+        methodCall.context.accept(*this);
+        if (lastLocations.size() == 1) {
+            context = &curMethod->asTemp(*lastLocations.first());
+            lastLocations.clear();
+        } else {
+            crit() << "unexpected context " << methodCall.context << " " << lastLocations.size() << " for " << methodCall << "\n";
+            return false;
+        }
     }
     
     LinkedList<PIRLocation> &params = env().create<LinkedList<PIRLocation>>();
@@ -386,7 +389,7 @@ bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
     }
     LinkedList<PIRLocation> &rets = env().create<LinkedList<PIRLocation>>();
     {
-        Iterator<Type> &it = methodCall.resolvedMethod->getMethodDeclNode()->resolvedReturns.iterator();
+        Iterator<Type> &it = decl->resolvedReturns.iterator();
         while (it.hasNext()) {
             PIRLocation &loc = curMethod->newTemp(it.next());
             lastLocations.add(loc);
@@ -394,7 +397,11 @@ bool PIRGenerator::visit(MethodCallExprNode & methodCall) {
         }
         it.destroy();
     }
-    curBlock->addCall(*context, *methodCall.resolvedMethod, params, rets);
+    if (context) {
+        curBlock->addCall(*context, *methodCall.resolvedMethod, params, rets);
+    } else {
+        curBlock->addGlobalCall(*decl->scope->getMethod(), params, rets);
+    }
     return true;
 }
 
