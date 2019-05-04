@@ -3,6 +3,7 @@
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/MethodDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/NamespaceDeclNode.hpp"
+#include "poolc/ast/nodes/declaration/StructDeclNode.hpp"
 #include "poolc/ast/nodes/declaration/VariableDeclNode.hpp"
 
 #include "poolc/ast/nodes/expression/ArithAssignmentExprNode.hpp"

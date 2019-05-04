@@ -15,6 +15,7 @@ class TranslationUnitNode: virtual public Node {
     NamespaceDeclNode * ns;
     NodeList<UseStatementNode> &uses;
     NodeList<ClassDeclNode> &classes;
+    NodeList<StructDeclNode> &structs;
     
     TranslationUnitNode(Environment &env, MemoryInfo &mi, StorageElement &element);
     virtual ~TranslationUnitNode();

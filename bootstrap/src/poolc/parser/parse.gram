@@ -9,6 +9,7 @@
     NamespaceDeclNode *u_namespace_decl;
     UseStatementNode *u_use_stmt;
     
+    StructDeclNode *u_struct_decl;
     ClassDeclNode *u_class_decl;
     MethodDeclNode *u_method_decl;
     VariableDeclNode *u_variable_decl;
@@ -43,6 +44,7 @@
 %token NAMESPACE
 %token T_NULL
 %token RETURN
+%token STRUCT
 %token THIS
 %token USE
 %token WHILE
@@ -75,6 +77,7 @@
 %type <u_namespace_decl> namespace_decl
 %type <u_use_stmt> use_stmt
 
+%type <u_struct_decl> struct_decl struct_body_empty
 %type <u_class_decl> class_decl class_body_empty
 %type <u_method_decl> method_decl
 %type <u_variable_decl> variable_decl
@@ -106,6 +109,11 @@ translation_unit:
     {
         $$ = $1;
         if ($2) { $$->uses.add(*$2); }
+    }
+|   translation_unit struct_decl
+    {
+        $$ = $1;
+        if ($2) { $$->structs.add(*$2); }
     }
 |   translation_unit class_decl
     {
@@ -166,6 +174,53 @@ use_stmt:
         $$->first_column = @1.first_column;
         $$->last_line = @5.last_line;
         $$->last_column = @5.last_column;
+    }
+;
+
+struct_decl:
+    STRUCT ID '{' struct_body_empty '}'
+    {
+        $$ = $4;
+        $$->name = *$2;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @5.last_line;
+        $$->last_column = @5.last_column;
+        
+        $2->destroy();
+    }
+;
+
+struct_body_empty:
+    // empty
+    {
+        $$ = &driver.env().create<StructDeclNode>();
+    }
+|   struct_body_empty variable_decl ';'
+    {
+        $$ = $1;
+        if ($2) {
+            
+            $2->last_line = @3.last_line;
+            $2->last_column = @3.last_column;
+            
+            $$->variables.add(*$2);
+        }
+    }
+|   struct_body_empty GLOBAL variable_initializer_inst ';'
+    {
+        $$ = $1;
+        if ($3) { 
+            $3->global = true;
+            
+            $3->first_line = @2.first_line;
+            $3->first_column = @2.first_column;
+            $3->last_line = @4.last_line;
+            $3->last_column = @4.last_column;
+            
+            $$->consts.add(*$3);
+        }
     }
 ;
 

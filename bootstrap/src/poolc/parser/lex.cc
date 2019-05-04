@@ -41,6 +41,7 @@ int Parser::makeIf()        { return IF; }
 int Parser::makeNamespace() { return NAMESPACE; }
 int Parser::makeNull()      { return T_NULL; }
 int Parser::makeReturn()    { return RETURN; }
+int Parser::makeStruct()    { return STRUCT; }
 int Parser::makeThis()      { return THIS; }
 int Parser::makeUse()       { return USE; }
 int Parser::makeWhile()     { return WHILE; }

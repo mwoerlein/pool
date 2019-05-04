@@ -19,6 +19,7 @@ class ClassResolver: public Visitor {
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
     virtual bool visit(ClassDeclNode & classDecl) override;
+    virtual bool visit(StructDeclNode & structDecl) override;
     virtual bool visit(MethodDeclNode & methodDecl) override;
     virtual bool visit(NamespaceDeclNode & namespaceDecl) override;
     virtual bool visit(VariableDeclNode & variableDecl) override;

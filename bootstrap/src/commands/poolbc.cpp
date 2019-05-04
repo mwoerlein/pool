@@ -102,12 +102,14 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             Iterator<String> *it = &arguments();
             if (hasProperty("recursive")) {
                 while (it->hasNext()) {
-                    loader.getClass(it->next());
+                    String &name = it->next();
+                    ClassDeclNode * classDef = loader.getClass(name);
+                    if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
                 it->destroy();
                 it = &loader.classNames();
             }
-            while (it->hasNext()) {
+            while (!logger.has(log_error) && it->hasNext()) {
                 String &name = it->next();
                 logger.note() << "compile " << name << "\n";
                 

@@ -5,10 +5,11 @@ Visitor::~Visitor() {}
 
 //bool Visitor::visit(TranslationUnitNode & translationUnit) { return false; }
 
-bool Visitor::visit(ClassDeclNode & classDef) { return false; }
-bool Visitor::visit(MethodDeclNode & methodDef) { return false; }
-bool Visitor::visit(NamespaceDeclNode & namespaceDef) { return false; }
-bool Visitor::visit(VariableDeclNode & variableDef) { return false; }
+bool Visitor::visit(ClassDeclNode & classDecl) { return false; }
+bool Visitor::visit(MethodDeclNode & methodDecl) { return false; }
+bool Visitor::visit(NamespaceDeclNode & namespaceDecl) { return false; }
+bool Visitor::visit(StructDeclNode & structDecl) { return false; }
+bool Visitor::visit(VariableDeclNode & variableDecl) { return false; }
 
 bool Visitor::visit(AllRefNode & type) { return false; }
 bool Visitor::visit(AnyRefNode & type) { return false; }

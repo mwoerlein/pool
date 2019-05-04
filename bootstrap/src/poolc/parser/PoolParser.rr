@@ -198,6 +198,7 @@ int PoolParser::lex()
         "namespace"     { setLocation(); return parser->makeNamespace(); }
         "null"          { setLocation(); return parser->makeNull(); }
         "return"        { setLocation(); return parser->makeReturn(); }
+        "struct"        { setLocation(); return parser->makeStruct(); }
         "this"          { setLocation(); return parser->makeThis(); }
         "use"           { setLocation(); return parser->makeUse(); }
         "while"         { setLocation(); return parser->makeWhile(); }

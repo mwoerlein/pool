@@ -9,6 +9,7 @@ class TranslationUnitNode;
 class ClassDeclNode;
 class MethodDeclNode;
 class NamespaceDeclNode;
+class StructDeclNode;
 class VariableDeclNode;
 
 class AllRefNode;
@@ -47,10 +48,11 @@ class Visitor: virtual public Object, virtual public LoggerAware {
     
     virtual bool visit(TranslationUnitNode & translationUnit) = 0;
 
-    virtual bool visit(ClassDeclNode & classDef);
-    virtual bool visit(MethodDeclNode & methodDef);
-    virtual bool visit(NamespaceDeclNode & namespaceDef);
-    virtual bool visit(VariableDeclNode & variableDef);
+    virtual bool visit(ClassDeclNode & classDecl);
+    virtual bool visit(MethodDeclNode & methodDecl);
+    virtual bool visit(NamespaceDeclNode & namespaceDecl);
+    virtual bool visit(StructDeclNode & structDecl);
+    virtual bool visit(VariableDeclNode & variableDecl);
     
     virtual bool visit(AllRefNode & type);
     virtual bool visit(AnyRefNode & type);

@@ -9,11 +9,14 @@
 class TranslationUnitNode;
 class ClassDeclNode;
 class MethodDeclNode;
+class StructDeclNode;
 class VariableDeclNode;
 class BlockInstNode;
 class MethodCallExprNode;
 
+class NamedType;
 class UnitScope;
+class StructScope;
 class ClassScope;
 class InstanceScope;
 class MethodScope;
@@ -21,6 +24,7 @@ class BlockScope;
 class VariableScope;
 class Scope: virtual public Object {
     protected:
+    HashMap<String, StructScope> &_structs;
     HashMap<String, ClassScope> &_classes;
     HashMap<String, MethodScope> &_methods;
     HashMap<String, VariableScope> &_variables;
@@ -32,6 +36,7 @@ class Scope: virtual public Object {
     virtual ~Scope();
     
     virtual UnitScope * isUnit();
+    virtual StructScope * isStruct();
     virtual ClassScope * isClass();
     virtual InstanceScope * isInstance();
     virtual MethodScope * isMethod();
@@ -39,6 +44,7 @@ class Scope: virtual public Object {
     virtual VariableScope * isVariable();
     
     virtual UnitScope * getUnit();
+    virtual StructScope * getStruct();
     virtual ClassScope * getClass();
     virtual InstanceScope * getInstance();
     virtual MethodScope * getMethod();
@@ -47,9 +53,17 @@ class Scope: virtual public Object {
     
     virtual ClassScope * registerClass(ClassDeclNode & classDecl, String & alias);
     virtual ClassScope * registerClass(ClassScope & classScope);
-    virtual ClassScope * registerClass(ClassScope & classScope, String & alias);
+    virtual ClassScope * registerClass(ClassScope & classScope, String & alias); // deprecated by registerNamedType?
     virtual ClassScope * getClass(String & name);
     inline Iterator<ClassScope> &classes() { return _classes.values(); }
+    
+    virtual StructScope * registerStruct(StructDeclNode & structDecl, String & alias);
+    virtual StructScope * registerStruct(StructScope & structScope);
+    virtual StructScope * registerStruct(StructScope & structScope, String & alias); // deprecated by registerNamedType?
+    virtual StructScope * getStruct(String & name);
+    inline Iterator<StructScope> &structs() { return _structs.values(); }
+    
+    virtual NamedType * registerNamedType(NamedType & type, String & alias);
     
     virtual MethodScope * registerMethod(MethodDeclNode & methodDecl);
     virtual MethodScope * registerMethod(MethodScope & scope);
@@ -64,6 +78,7 @@ class Scope: virtual public Object {
     inline Iterator<VariableScope> &variables() { return _variables.values(); }
 
     virtual TranslationUnitNode * getUnitNode();
+    virtual StructDeclNode * getStructDeclNode();
     virtual ClassDeclNode * getClassDeclNode();
     virtual MethodDeclNode * getMethodDeclNode();
     virtual BlockInstNode * getBlockInstNode();

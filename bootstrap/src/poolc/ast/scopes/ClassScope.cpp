@@ -2,7 +2,7 @@
 
 // public
 ClassScope::ClassScope(Environment &env, MemoryInfo &mi, Scope & parent, ClassDeclNode & classDecl)
-        :Scope(env, mi, &parent), Type(env, mi), Object(env, mi),
+        :Scope(env, mi, &parent), NamedType(env, mi), Object(env, mi),
          _supers(env.create<HashMap<String, ClassScope>>()),
          _globalRequired(env.create<HashMap<String, ClassScope>>()),
          _strings(env.create<HashMap<String, String>>()),

@@ -3,6 +3,7 @@
 #include "poolc/ast/nodes/all.hpp"
 
 #include "poolc/ast/scopes/UnitScope.hpp"
+#include "poolc/ast/scopes/StructScope.hpp"
 #include "poolc/ast/scopes/ClassScope.hpp"
 #include "poolc/ast/scopes/InstanceScope.hpp"
 #include "poolc/ast/scopes/MethodScope.hpp"
@@ -27,6 +28,7 @@ bool ClassResolver::visit(TranslationUnitNode & translationUnit) {
     translationUnit.ns->accept(*this);
     translationUnit.uses.acceptAll(*this);
     translationUnit.classes.acceptAll(*this);
+    translationUnit.structs.acceptAll(*this);
     
     curScope = tmpScope;
     return true;
@@ -72,6 +74,32 @@ bool ClassResolver::visit(ClassDeclNode & classDecl) {
     return true;
 }
 
+bool ClassResolver::visit(StructDeclNode & structDecl) {
+    if (structDecl.scope) {
+        crit() << structDecl.name << ": already resolved" << "\n";
+        return false;
+    }
+    
+    TranslationUnitNode * curUnit = curScope->getUnitNode();
+    structDecl.fullQualifiedName << curUnit->ns->name << "::" << structDecl.name;
+    if (structDecl.fullQualifiedName != curUnit->name) {
+        error() << curUnit->name << ": struct name '" << structDecl.fullQualifiedName << "' does not match compilation unit\n";
+        return false;
+    }
+    
+    structDecl.scope = curScope->registerStruct(structDecl, structDecl.name);
+    loader.registerStruct(structDecl);
+    
+    Scope *tmpScope = curScope;
+    curScope = structDecl.scope;
+    
+    structDecl.consts.acceptAll(*this);
+    structDecl.variables.acceptAll(*this);
+
+    curScope = tmpScope;
+    return true;
+}
+
 bool ClassResolver::visit(MethodDeclNode & methodDecl) {
     methodDecl.returnTypes.acceptAll(*this);
     methodDecl.parameters.acceptAll(*this);
@@ -102,22 +130,15 @@ bool ClassResolver::visit(AnyRefNode & type) {
 bool ClassResolver::visit(ClassRefNode & classRef) {
     if (!classRef.resolvedType) {
         if (classRef.name.isFullQualified()) {
-            ClassDeclNode *classDecl = loader.getClass(classRef.name);
-            if (classDecl && classDecl->scope && classDecl->scope->isClass()) {
-                classRef.resolvedType = classDecl->scope->isClass();
-            } else {
-                warn() << "unresolved class '" << classRef.name << "' loaded!\n";
-            }
+            classRef.resolvedType = loader.getNamedType(classRef.name);
         } else {
             classRef.resolvedType = curScope->getClass(classRef.name);
             if (!classRef.resolvedType) {
                 String & fqn = env().create<String>();
                 fqn << curScope->getUnitNode()->ns->name << "::" << classRef.name;
-                ClassDeclNode *classDecl = loader.getClass(fqn);
-                if (classDecl && classDecl->scope && classDecl->scope->isClass()) {
-                    classRef.resolvedType = curScope->registerClass(*classDecl->scope->isClass(), classRef.name);
-                } else {
-                    warn() << "unresolved class '" << fqn << "' loaded!\n";
+                NamedType *type = loader.getNamedType(fqn);
+                if (type) {
+                    classRef.resolvedType = curScope->registerNamedType(*type, classRef.name);
                 }
                 fqn.destroy();
             }
@@ -138,11 +159,9 @@ bool ClassResolver::visit(IntRefNode & type) {
 
 bool ClassResolver::visit(UseStatementNode & useStmt) {
     useStmt.scope = curScope;
-    ClassDeclNode *classDecl = loader.getClass(useStmt.name);
-    if (classDecl && classDecl->scope && classDecl->scope->isClass()) {
-        useStmt.resolvedType = curScope->registerClass(*classDecl->scope->isClass(), useStmt.alias);
-    } else {
-        warn() << "unresolved class '" << useStmt.name << "' loaded!\n";
+    NamedType *type = loader.getNamedType(useStmt.name);
+    if (type) {
+        useStmt.resolvedType = curScope->registerNamedType(*type, useStmt.alias);
     }
     return useStmt.resolvedType;
 }

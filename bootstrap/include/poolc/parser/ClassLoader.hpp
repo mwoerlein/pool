@@ -9,6 +9,8 @@
 #include "poolc/parser/PoolParser.hpp"
 #include "poolc/ast/TypeManager.hpp"
 #include "poolc/ast/nodes/declaration/ClassDeclNode.hpp"
+#include "poolc/ast/nodes/declaration/StructDeclNode.hpp"
+#include "poolc/ast/scopes/NamedType.hpp"
 
 class ClassResolver;
 class PrettyPrinter;
@@ -17,6 +19,10 @@ class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private 
     PoolParser & parser;
     ClassResolver & resolve;
     PrettyPrinter * pretty;
+    HashMap<String, ClassDeclNode> &classes;
+    HashMap<String, StructDeclNode> &structs;
+    
+    bool initialize(String & fullQualifiedName);
     
     public:
     ClassLoader(Environment &env, MemoryInfo &mi, TypeManager &types);
@@ -25,10 +31,13 @@ class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private 
     virtual void setLogger(Logger &logger) override;
     virtual void setPrettyPrint(PrettyPrinter &pretty);
     
-    virtual ClassDeclNode * getClass(String & fullQualifiedName);
-    virtual void registerClass(ClassDeclNode & classDef);
+    virtual ClassDeclNode * getClass(String & fullQualifiedName); // deprecated?
+    virtual void registerClass(ClassDeclNode & classDecl);
+    inline Iterator<String> & classNames() { return classes.keys(); }
     
-    inline Iterator<String> & classNames() { return HashMap::keys(); }
+    virtual NamedType * getNamedType(String & fullQualifiedName);
+    virtual void registerStruct(StructDeclNode & structDecl);
+    
 };
 
 #endif //POOLC_PARSER_CLASSLOADER_HPP_LOCK

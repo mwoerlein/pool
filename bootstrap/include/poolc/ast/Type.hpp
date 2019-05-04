@@ -9,6 +9,7 @@ class ClassScope;
 class CStringType;
 class InstanceScope;
 class IntType;
+class StructScope;
 class Type: virtual public Object {
     public:
     Type(Environment &env, MemoryInfo &mi);
@@ -16,6 +17,7 @@ class Type: virtual public Object {
     
     virtual AllType * isAll();
     virtual AnyType * isAny();
+    virtual StructScope * isStruct();
     virtual ClassScope * isClass();
     virtual CStringType * isCString();
     virtual InstanceScope * isInstance();

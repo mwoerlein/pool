@@ -62,6 +62,7 @@ class Parser: public ParserBase
         int makeNamespace();
         int makeNull();
         int makeReturn();
+        int makeStruct();
         int makeThis();
         int makeUse();
         int makeWhile();
