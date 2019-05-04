@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+struct ClassDescriptor {
+    int magic;
+    sys::core::Class class_instance;
+    int classname_offset;
+    int class_tabs_offset;
+    int method_tabs_offset;
+    int methods_tab_offset;
+    int inst_tpl_offset;
+    int inst_tpl_size;
+    int obj_handle_offset;
+    int class_handle_offset;
+    int class_size;
+}

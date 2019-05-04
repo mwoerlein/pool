@@ -1,0 +1,20 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+struct MemoryInfo {
+
+    global int PAGESIZE := 4096;
+    global int SIZE := 24;
+
+    int buf;
+    int len;
+    int flags;
+    int owner;
+    MemoryInfo prev;
+    MemoryInfo next;
+}

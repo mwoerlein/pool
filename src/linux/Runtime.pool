@@ -9,22 +9,11 @@ use sys::core::Class;
 use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Runtime as CoreRuntime;
+use sys::runtime::ClassDescriptor;
+use sys::runtime::MemoryInfo;
 
 class Runtime extends CoreRuntime {
 
-    // constants
-    int PAGESIZE := 4096;
-    
-    // TODO: remove int with working MemInfo "struct"
-    int mi_buf := 0;
-    int mi_len := 4;
-    int mi_size := 24;
-    // TODO: remove with working ClassHeader "struct"
-    int ch_inst_handle := 4;
-    int ch_name := 8;
-    int ch_tpl_size := 28;
-    int ch_class_size := 40;
-    
     // TODO: extract allocator
     int heapStart;
     int heapSize;
@@ -32,20 +21,17 @@ class Runtime extends CoreRuntime {
     
     // methods
     global [CoreRuntime] buildRuntime() {
-
         // get class descriptors
-        // TODO: replace int with working ClassHeader "struct"
-        int cdClass = Class:_getClassDesc();
+        ClassDescriptor cdClass = Class:_getClassDesc();
         if (!cdClass) { return null; } // abort on initialization error
         
-        // TODO: replace int with working ClassHeader "struct"
-        int cdRuntime = Runtime:_getClassDesc();
+        ClassDescriptor cdRuntime = Runtime:_getClassDesc();
         if (!cdRuntime) { return null; } // abort on initialization error
         
         // allocate spaces
         // TODO: extract allocator
         int heapStart = 0;
-        int heapSize = PAGESIZE*1024;
+        int heapSize = MemoryInfo:PAGESIZE * 1024;
         __pasm__(<"
             pushl 0     // offset
             pushl -1    // fd
@@ -60,28 +46,16 @@ class Runtime extends CoreRuntime {
         ">, {"%eax": heapSize}, {"%eax": heapStart});
         int heapHead = heapStart;
 
-        // TODO: replace int with working MemInfo "struct"
-        int icClass = 0;
-        __pasm__(<"
-            movl _linux_Runtime_coi_ch_tpl_size(%eax), %ebx
-            movl %edi, %eax
-            addl %esi, %edi
-            movl %edi, _linux_Runtime_coi_mi_buf(%eax)
-            movl %ebx, _linux_Runtime_coi_mi_len(%eax)
-            addl %ebx, %edi
-        ">, {"%eax": cdClass, "%edi": heapHead, "%esi": mi_size}, {"%eax": icClass, "%edi": heapHead});
+        MemoryInfo icClass = null;
+        __pasm__("", {"%eax": heapHead}, {"%eax": icClass});
+        icClass.buf = (heapHead += MemoryInfo:SIZE);
+        heapHead += (icClass.len = cdClass.inst_tpl_size);
         if (!icClass) { return null; } // abort on initialization error
 
-        // TODO: replace int with working MemInfo "struct"
-        int irt = 0;
-        __pasm__(<"
-            movl _linux_Runtime_coi_ch_tpl_size(%eax), %ebx
-            movl %edi, %eax
-            addl %esi, %edi
-            movl %edi, _linux_Runtime_coi_mi_buf(%eax)
-            movl %ebx, _linux_Runtime_coi_mi_len(%eax)
-            addl %ebx, %edi
-        ">, {"%eax": cdRuntime, "%edi": heapHead, "%esi": mi_size}, {"%eax": irt, "%edi": heapHead});
+        MemoryInfo irt = null;
+        __pasm__("", {"%eax": heapHead}, {"%eax": irt});
+        irt.buf = (heapHead += MemoryInfo:SIZE);
+        heapHead += (irt.len = cdRuntime.inst_tpl_size);
         if (!irt) { return null; } // abort on initialization error
         
         Class cClass = CoreRuntime:_raw_instantiate(icClass, cdClass);
@@ -106,80 +80,46 @@ class Runtime extends CoreRuntime {
     }
 
     // TODO: replace int with working class header "struct"
-    [int] getClassDesc(cstring name) {
-        int classesStart = 0;
+    [ClassDescriptor] getClassDesc(cstring name) {
+        int curClass = 0;
         int classesEnd = 0;
-        __pasm__("movl __classes_start, %eax", {}, {"%eax": classesStart});
+        ClassDescriptor classDesc = null;
+        __pasm__("movl __classes_start, %eax", {}, {"%eax": curClass});
         __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
+        __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
 
         // TODO: extract ClassRegistry
-        int classDesc = classesStart;
-        int magic = 0;
-        int diff = 0;
-        __pasm__("movl (%eax), %ebx", {"%eax": classDesc}, {"%ebx": magic});
-        while ((classDesc < classesEnd) && (magic == 0x15AC1A55)) {
-            __pasm__(<"
-                addl _linux_Runtime_coi_ch_name(%eax), %eax
-                call _lr_strcmp
-            ">, {"%eax": classDesc, "%ebx": name}, {"%ecx": diff});
-            if (!diff) {
+        cstring descName = "";
+        while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
+            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.classname_offset}, {"%eax": descName});
+            if (sys::core::String:compareCStrings(descName, name) == 0) {
                 return classDesc;
             }
-            __pasm__(<"
-                addl _linux_Runtime_coi_ch_class_size(%eax), %eax
-                movl (%eax), %ebx
-            ">, {"%eax": classDesc}, {"%eax": classDesc, "%ebx": magic});
+            curClass += classDesc.class_size;
+            __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
         }
-        return 0;
+        return null;
     }
     
-    // TODO: replace int with working MemInfo "struct"
-    [int] allocate(int size) {
+    [MemoryInfo] allocate(int size) {
         // TODO: extract allocator
-        if (heapHead + mi_size + size > heapStart + heapSize) {
-            return 0;
+        if (heapHead + MemoryInfo:SIZE + size > heapStart + heapSize) {
+            return null;
         }
-        int head = heapHead;
-        int info = 0;
-        __pasm__(<"
-            movl %edi, %eax
-            addl %esi, %edi
-            movl %edi, _linux_Runtime_coi_mi_buf(%eax)
-            movl %ebx, _linux_Runtime_coi_mi_len(%eax)
-            addl %ebx, %edi
-        ">, {"%ebx": size, "%edi": head, "%esi": mi_size}, {"%eax": info, "%edi": head});
-        heapHead = head;
+        MemoryInfo info = null;
+        __pasm__("", {"%eax": heapHead}, {"%eax": info});
+        info.buf = (heapHead += MemoryInfo:SIZE);
+        heapHead += (info.len = size);
         return info;
     }
     
-    // TODO: replace int with working MemInfo "struct"
-    [] free(int info) {
+    [] free(MemoryInfo info) {
         // TODO: extract allocator
     }
     
-    global [int] _getClassDesc() {
-        int desc = 0;
+    global [ClassDescriptor] _getClassDesc() {
+        ClassDescriptor desc = null;
         __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
         return desc;
     } 
-    
-    __naked__ [] _misc() {
-        __pasm__(<"
-        _lr_strcmp: // %eax: cstring, %ebx: cstring, return: %cl < > = 0
-            movl 0, %ecx
-        _lr_strcmp_loop:
-            movb (%ebx), %cl
-            cmpb 0, %cl;        je _lr_strcmp_ret_neg_a
-            cmpb 0, (%eax);     je _lr_strcmp_ret
-            subb (%eax), %cl;   jnz _lr_strcmp_ret
-            addl 1, %eax
-            addl 1, %ebx
-            jmp _lr_strcmp_loop
-        _lr_strcmp_ret_neg_a:
-            subb (%eax), %cl
-        _lr_strcmp_ret:
-            ret
-        ">);
-    }
-
 }

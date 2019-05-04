@@ -1,0 +1,12 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+struct VTableEntry {
+    int method_tab_offset;
+    int class_table_entry_offset;
+}

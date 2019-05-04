@@ -5,17 +5,12 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::runtime::ClassDescriptor;
 
 class Class extends Object {
     
-    // constants
-    // TODO: remove with working ClassHeader "struct"
-    int ch_inst_handle := 4;
-    int ch_name := 8;
-    
     // variables
-    // TODO: replace int with working ClassHeader "struct"
-    int desc;
+    ClassDescriptor desc;
     String name;
     
     // methods
@@ -23,22 +18,18 @@ class Class extends Object {
         return name;
     }
     
-    // TODO: replace int with working ClassHeader "struct"
-    [int] getDesc() {
+    [ClassDescriptor] getDesc() {
         return desc;
     }
     
     // TODO: move to constructor?
-    // TODO: replace int with working ClassHeader "struct"
-    [] setDesc(int desc) {
+    [] setDesc(ClassDescriptor desc) {
         this.desc = desc;
-        // desc.inst_handle = this; 
-        __pasm__("movl %eax, _sys_core_Class_coi_ch_inst_handle(%ebx)", {"%eax": this, "%ebx": desc});
+        desc.class_instance = this; 
         
         name = this.rt().createInstance(String:CLASSNAME);
-        // name.assignCString(desc.name);
         cstring _name = "";
-        __pasm__("addl _sys_core_Class_coi_ch_name(%eax), %eax", {"%eax": desc}, {"%eax": _name});
+        __pasm__("addl %ebx, %eax", {"%eax": desc, "%ebx": desc.classname_offset}, {"%eax": _name});
         name.assignCString(_name);
     }
     
@@ -47,8 +38,8 @@ class Class extends Object {
         name.destroy();
     }
     
-    global [int] _getClassDesc() {
-        int desc = 0;
+    global [ClassDescriptor] _getClassDesc() {
+        ClassDescriptor desc = null;
         __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
         return desc;
     } 

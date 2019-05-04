@@ -1,0 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+struct InstanceHandle {
+    int call_entry;
+    InstanceDescriptor inst_desc;
+    int vtab_offset;
+}

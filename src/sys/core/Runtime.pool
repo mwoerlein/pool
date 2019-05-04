@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::runtime::ClassDescriptor;
+use sys::runtime::MemoryInfo;
 
 class Runtime extends Object {
 
@@ -16,12 +18,9 @@ class Runtime extends Object {
     [] setOut(OStream out) { this.out = out; }
     [] setErr(OStream err) { this.err = err; }
     
-    // TODO: replace int with working class header "struct"
-    abstract [int] getClassDesc(cstring name);
-    // TODO: replace int with working MemInfo "struct"
-    abstract [int] allocate(int size);
-    // TODO: replace int with working MemInfo "struct"
-    abstract [] free(int info);
+    abstract [ClassDescriptor] getClassDesc(cstring name);
+    abstract [MemoryInfo] allocate(int size);
+    abstract [] free(MemoryInfo info);
     
     [] createAndRunThread(cstring name) {
         __any__ instance = this.createInstance(name);
@@ -52,8 +51,7 @@ class Runtime extends Object {
     // TODO #9: use generic method or special cast syntax instead __all__/__any__
     [__all__] cast(cstring name, __any__ obj) {
         __all__ ret = null;
-        // TODO: replace int with working class header "struct"
-        int classDesc = this.getClassDesc(name);
+        ClassDescriptor classDesc = this.getClassDesc(name);
         if (classDesc) {
             __pasm__(<"
                 movl 4(%eax), %ebx  // @obj
@@ -76,27 +74,17 @@ __pasm__("_crma_return:");
     
     // TODO #9: use generic method or special new syntax instead __all__
     [__all__] createInstance(cstring name) {
-        // TODO: replace int with working class header "struct"
-        int classDesc = this.getClassDesc(name);
+        ClassDescriptor classDesc = this.getClassDesc(name);
         if (!classDesc) { return null; } // abort on initialization error
         
-        // TODO: replace ints with working class header "struct"
-        int instHandle = 0;
-        int tplSize = 0;
-        __pasm__(<"
-            movl _sys_core_Runtime_coi_ch_inst_handle(%eax), %ebx
-            movl _sys_core_Runtime_coi_ch_tpl_size(%eax), %eax
-        ">, {"%eax": classDesc}, {"%eax": tplSize, "%ebx": instHandle});
-        
-        if (!instHandle) {
+        if (!classDesc.class_instance) {
             Class cl = this.createInstance(Class:CLASSNAME);
             if (!cl) { return null; } // abort on initialization error
             cl.setDesc(classDesc);
         }
         
         // allocate memory for instance
-        // TODO: replace int with working MemInfo "struct"
-        int instInfo = this.allocate(tplSize);
+        MemoryInfo instInfo = this.allocate(classDesc.inst_tpl_size);
         if (!instInfo) { return null; } // abort on initialization error
 
         Object oinstance = null;
@@ -112,7 +100,7 @@ __pasm__("_crma_return:");
     
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
-        int info = 0;
+        MemoryInfo info = null;
         __pasm__(<"
             movl 4(%eax), %eax  // @obj
             movl 4(%eax), %eax  // @obj meminfo
@@ -121,8 +109,7 @@ __pasm__("_crma_return:");
         return;
     }
     
-    // TODO: replace int with working ClassHeader "struct"
-    [Runtime] _finalizeBootstrap(Class cClass, int cdClass, int cdRuntime) {
+    [Runtime] _finalizeBootstrap(Class cClass, ClassDescriptor cdClass, ClassDescriptor cdRuntime) {
         this.setRt(this);
         
         // prepare class "Class"
@@ -143,9 +130,7 @@ __pasm__("_crma_return:");
         return this;
     }
     
-    // TODO: replace int with working MemInfo "struct"
-    // TODO: replace int with working ClassHeader "struct"
-    global [__all__] _raw_instantiate(int instInfo, int classDesc) {
+    global [__all__] _raw_instantiate(MemoryInfo instInfo, ClassDescriptor classDesc) {
         __all__ instance = null;
         __pasm__(<"
             movl 8(%ebp), %ebx      // @class-desc "Runtime"

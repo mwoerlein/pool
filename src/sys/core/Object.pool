@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::runtime::InstanceHandle;
 
 class Object {
     
@@ -17,20 +18,14 @@ class Object {
     
     // methods
     [Class] getClass() {
-        Class cl = null;
-        __pasm__(<"
-             movl 4(%eax), %eax     // @this
-             movl (%eax), %eax      // @class desc
-             movl _sys_core_Object_coi_ch_inst_handle(%eax), %eax // @class handle
-         ">, {"%eax": this} , {"%eax": cl});
-        return cl;
+        InstanceHandle self = null;
+        __pasm__("", {"%eax": this}, {"%eax": self});
+        return self.inst_desc.class_desc.class_instance;
     }
     
     [int] hash() {
         int hash = 0;
-        __pasm__(<"
-             movl 4(%eax), %eax     // @this
-         ">, {"%eax": this} , {"%eax": hash});
+        __pasm__("movl 4(%eax), %eax", {"%eax": this}, {"%eax": hash});
         return hash;
     }
     
@@ -49,7 +44,7 @@ class Object {
     
     [OStream] printToStream(OStream stream) {
         int addr = 0;
-        __pasm__("movl 4(%eax), %eax     // @this", {"%eax": this} , {"%eax": addr});
+        __pasm__("movl 4(%eax), %eax", {"%eax": this}, {"%eax": addr});
         return stream.print(this.getClass().getName()).printChar('@').printPtr(addr);
     }
     
