@@ -8,7 +8,6 @@ namespace my::simple;
 use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Runtime;
-use linux::Runtime as LinuxRuntime; // mark dependency until global method call implementation ensures it 
 
 class TestCommand extends Object { //extends linux::CommandLine {
 
@@ -44,18 +43,7 @@ _entry_class_desc   := _my_simple_TestCommand
 _entry_global_func  := _491d8eb7_md___entry__
         ">);
         
-        // Runtime rt = linux::Runtime:buildRuntime();
-        Runtime rt = null;
-        __pasm__(<"
-            subl 4, %esp // ret
-            movl _linux_Runtime, %eax // @class-desc "linux::Runtime"
-            movl %eax, %ebx; addl 20(%eax), %ebx; movl 0(%ebx), %ebx // get method offset
-            addl %eax, %ebx // @func
-            pushl 0; pushl %eax; call %ebx // call global func
-            addl 8, %esp; popl %eax
-        ">, {}, {"%eax": rt});
-        
-        TestCommand command = rt.createInstance(TestCommand:CLASSNAME);
+        TestCommand command = linux::Runtime:buildRuntime().createInstance(TestCommand:CLASSNAME);
         command.initCommand();
         return command.run(argc, argv);
     }

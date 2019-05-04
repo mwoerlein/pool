@@ -35,13 +35,11 @@ class Runtime extends CoreRuntime {
 
         // get class descriptors
         // TODO: replace int with working ClassHeader "struct"
-        int cdClass = 0;
-        __pasm__("movl _sys_core_Class, %eax", {}, {"%eax": cdClass});
+        int cdClass = Class:_getClassDesc();
         if (!cdClass) { return null; } // abort on initialization error
         
         // TODO: replace int with working ClassHeader "struct"
-        int cdRuntime = 0;
-        __pasm__("movl _linux_Runtime, %eax", {}, {"%eax": cdRuntime});
+        int cdRuntime = Runtime:_getClassDesc();
         if (!cdRuntime) { return null; } // abort on initialization error
         
         // allocate spaces
@@ -85,8 +83,9 @@ class Runtime extends CoreRuntime {
             addl %ebx, %edi
         ">, {"%eax": cdRuntime, "%edi": heapHead, "%esi": mi_size}, {"%eax": irt, "%edi": heapHead});
         if (!irt) { return null; } // abort on initialization error
-
-        [Runtime rt, Class cClass] = CoreRuntime:_instantiateBootstrap(irt, cdRuntime, icClass, cdClass);
+        
+        Class cClass = CoreRuntime:_raw_instantiate(icClass, cdClass);
+        Runtime rt = CoreRuntime:_raw_instantiate(irt, cdRuntime);
         rt.initHeap(heapStart, heapSize, heapHead);
         return rt._finalizeBootstrap(cClass, cdClass, cdRuntime);
     }
@@ -157,6 +156,12 @@ class Runtime extends CoreRuntime {
     [] free(int info) {
         // TODO: extract allocator
     }
+    
+    global [int] _getClassDesc() {
+        int desc = 0;
+        __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
+        return desc;
+    } 
     
     __naked__ [] _misc() {
         __pasm__(<"

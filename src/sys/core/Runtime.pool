@@ -63,7 +63,7 @@ class Runtime extends Object {
                 cmpl (%eax), %ecx
                 je _crma_found
                 addl _sys_core_Runtime_coi_cts_size, %eax
-                cmpl 0, (%eax)
+                cmpl 0, _sys_core_Runtime_coi_cts_ho(%eax)
                 je _crma_return
                 jmp _crma_loop
             _crma_found:
@@ -103,7 +103,7 @@ __pasm__("_crma_return:");
         __all__ instance = null;
         __pasm__(<"
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
-            call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
+            call _crh_instantiate   // %eax: @object-meminfo %ebx: @Class-desc "Runtime" %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
         ">, {"%eax": instInfo, "%edx": classDesc}, {"%edi": oinstance, "%esi": instance});
         oinstance.setRt(this.rt());
         oinstance.__init();
@@ -145,20 +145,13 @@ __pasm__("_crma_return:");
     
     // TODO: replace int with working MemInfo "struct"
     // TODO: replace int with working ClassHeader "struct"
-    global [__all__, Class] _instantiateBootstrap(int irt, int cdRuntime, int icClass, int cdClass) {
-        Class cClass = null;
+    global [__all__] _raw_instantiate(int instInfo, int classDesc) {
+        __all__ instance = null;
         __pasm__(<"
             movl 8(%ebp), %ebx      // @class-desc "Runtime"
-            call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        ">, {"%eax": icClass, "%edx": cdClass}, {"%esi": cClass});
-        
-        __all__ runtime = null;
-        __pasm__(<"
-            movl 8(%ebp), %ebx      // @class-desc "Runtime"
-            call _crh_instantiate   // %eax: @object-meminfo %ebx: @_call_entry %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        ">, {"%eax": irt, "%edx": cdRuntime}, {"%esi": runtime});
-        
-        return [runtime, cClass];
+            call _crh_instantiate   // %eax: @object-meminfo %ebx: @Class-desc "Runtime" %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
+        ">, {"%eax": instInfo, "%edx": classDesc}, {"%esi": instance});
+        return instance;
     }
     
     __naked__ [] _crh_instantiate() {
@@ -184,7 +177,7 @@ __pasm__("_crma_return:");
             movl %edi, 4(%edi, %esi)    // store @object in handle
             movl %ecx, 8(%edi, %esi)    // store vtab-offset in handle
             addl _sys_core_Runtime_coi_cts_size, %eax
-            cmpl 0, (%eax)
+            cmpl 0, _sys_core_Runtime_coi_cts_ho(%eax)
             jne _crhi_loop
             
             movl %edi, %esi

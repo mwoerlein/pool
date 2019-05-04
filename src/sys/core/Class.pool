@@ -47,4 +47,10 @@ class Class extends Object {
         name.destroy();
     }
     
+    global [int] _getClassDesc() {
+        int desc = 0;
+        __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
+        return desc;
+    } 
+    
 }
