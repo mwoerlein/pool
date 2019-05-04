@@ -62,25 +62,6 @@ ClassScope * Scope::registerClass(ClassDeclNode & classDecl, String & alias) {
     if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
-ClassScope * Scope::registerClass(ClassScope & scope) {
-    ClassScope *old = &_classes.set(scope.getClassDeclNode()->name, scope);
-    if (old && (old->parent == this)) { old->destroy(); }
-    return &scope;
-}
-ClassScope * Scope::registerClass(ClassScope & scope, String & alias) {
-    ClassScope *old = &_classes.set(alias, scope);
-    if (old && (old->parent == this)) { old->destroy(); }
-    return &scope;
-}
-ClassScope * Scope::getClass(String & name) {
-    if (ClassScope *scope = &_classes.get(name)) {
-        return scope;
-    }
-    if (parent) {
-        return parent->getClass(name);
-    }
-    return 0;
-}
 
 StructScope * Scope::registerStruct(StructDeclNode & structDecl, String & alias) {
     StructScope &scope = env().create<StructScope, Scope &, StructDeclNode &>(*this, structDecl);
@@ -88,33 +69,30 @@ StructScope * Scope::registerStruct(StructDeclNode & structDecl, String & alias)
     if (old && (old->parent == this)) { old->destroy(); }
     return &scope;
 }
-StructScope * Scope::registerStruct(StructScope & scope) {
-    StructScope *old = &_structs.set(scope.getStructDeclNode()->name, scope);
-    if (old && (old->parent == this)) { old->destroy(); }
-    return &scope;
+
+NamedType * Scope::registerNamedType(NamedType & type, String & alias) {
+    if (ClassScope *classScope = type.isClass()) {
+        ClassScope *old = &_classes.set(alias, *classScope);
+        if (old && (old->parent == this)) { old->destroy(); }
+        return classScope;
+    }  
+    if (StructScope *structScope = type.isStruct()) {
+        StructScope *old = &_structs.set(alias, *structScope);
+        if (old && (old->parent == this)) { old->destroy(); }
+        return structScope;
+    }
 }
-StructScope * Scope::registerStruct(StructScope & scope, String & alias) {
-    StructScope *old = &_structs.set(alias, scope);
-    if (old && (old->parent == this)) { old->destroy(); }
-    return &scope;
-}
-StructScope * Scope::getStruct(String & name) {
+NamedType * Scope::getNamedType(String & name) {
+    if (ClassScope *scope = &_classes.get(name)) {
+        return scope;
+    }
     if (StructScope *scope = &_structs.get(name)) {
         return scope;
     }
     if (parent) {
-        return parent->getStruct(name);
+        return parent->getNamedType(name);
     }
     return 0;
-}
-
-NamedType * Scope::registerNamedType(NamedType & type, String & alias) {
-    if (ClassScope *classScope = type.isClass()) {
-        return this->registerClass(*classScope, alias);
-    }  
-    if (StructScope *structScope = type.isStruct()) {
-        return this->registerStruct(*structScope, alias);
-    }
 }
 
 MethodScope * Scope::registerMethod(MethodDeclNode & methodDecl) {

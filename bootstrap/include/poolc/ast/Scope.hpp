@@ -52,18 +52,13 @@ class Scope: virtual public Object {
     virtual VariableScope * getVariable();
     
     virtual ClassScope * registerClass(ClassDeclNode & classDecl, String & alias);
-    virtual ClassScope * registerClass(ClassScope & classScope);
-    virtual ClassScope * registerClass(ClassScope & classScope, String & alias); // deprecated by registerNamedType?
-    virtual ClassScope * getClass(String & name);
     inline Iterator<ClassScope> &classes() { return _classes.values(); }
     
     virtual StructScope * registerStruct(StructDeclNode & structDecl, String & alias);
-    virtual StructScope * registerStruct(StructScope & structScope);
-    virtual StructScope * registerStruct(StructScope & structScope, String & alias); // deprecated by registerNamedType?
-    virtual StructScope * getStruct(String & name);
     inline Iterator<StructScope> &structs() { return _structs.values(); }
     
     virtual NamedType * registerNamedType(NamedType & type, String & alias);
+    virtual NamedType * getNamedType(String & name);
     
     virtual MethodScope * registerMethod(MethodDeclNode & methodDecl);
     virtual MethodScope * registerMethod(MethodScope & scope);

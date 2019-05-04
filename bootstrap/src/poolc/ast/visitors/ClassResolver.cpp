@@ -132,7 +132,7 @@ bool ClassResolver::visit(ClassRefNode & classRef) {
         if (classRef.name.isFullQualified()) {
             classRef.resolvedType = loader.getNamedType(classRef.name);
         } else {
-            classRef.resolvedType = curScope->getClass(classRef.name);
+            classRef.resolvedType = curScope->getNamedType(classRef.name);
             if (!classRef.resolvedType) {
                 String & fqn = env().create<String>();
                 fqn << curScope->getUnitNode()->ns->name << "::" << classRef.name;
