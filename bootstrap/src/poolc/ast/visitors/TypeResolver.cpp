@@ -3,6 +3,7 @@
 #include "poolc/ast/nodes/all.hpp"
 
 #include "poolc/ast/scopes/UnitScope.hpp"
+#include "poolc/ast/scopes/StructScope.hpp"
 #include "poolc/ast/scopes/ClassScope.hpp"
 #include "poolc/ast/scopes/InstanceScope.hpp"
 #include "poolc/ast/scopes/MethodScope.hpp"
@@ -42,6 +43,27 @@ bool TypeResolver::visit(ClassDeclNode & classDecl) {
     return true;
 }
 
+bool TypeResolver::visit(StructDeclNode & structDecl) {
+    if (!structDecl.scope) {
+        crit() << structDecl.name << ": classes must be resolved before type checking/resolution!\n";
+        return false;
+    }
+    
+    StructScope *structScope = structDecl.scope->isStruct();
+    if (structScope->instanceSize < 0) {
+        crit() << structDecl.name << ": methods/variables must be registered before type checking/resolution!\n";
+        return false;
+    }
+    if (structScope->typesResolved) {
+        // skip already resolved class
+        return true;
+    }
+    structScope->typesResolved = true;
+    structDecl.consts.acceptAll(*this);
+    structDecl.variables.acceptAll(*this);
+    return true;
+}
+
 bool TypeResolver::visit(MethodDeclNode & methodDecl) {
     if (!methodDecl.scope) {
         crit() << methodDecl << ": classes must be resolved before type checking/resolution!\n";
@@ -73,9 +95,15 @@ bool TypeResolver::visit(VariableDeclNode & variableDecl) {
 }
 
 bool TypeResolver::visit(ClassRefNode & classRef) {
-    ClassScope *scope = classRef.resolvedType->isClass();
-    if (scope && !scope->typesResolved) {
-        scope->getClassDeclNode()->accept(*this);
+    if (ClassScope *classScope = classRef.resolvedType->isClass()) {
+        if (!classScope->typesResolved) {
+            classScope->getClassDeclNode()->accept(*this);
+        }
+    }
+    if (StructScope *structScope = classRef.resolvedType->isStruct()) {
+        if (!structScope->typesResolved) {
+            structScope->getStructDeclNode()->accept(*this);
+        }
     }
     return true;
 }
@@ -279,8 +307,7 @@ bool TypeResolver::visit(MethodCallExprNode & methodCall) {
             return false;
         }
     } else {
-        // TODO: handle global method calls
-        error() << methodCall.scope->getClassDeclNode()->name << ": invalid method call context type '" << methodCall.context.resolvedType << "'\n";
+        error() << methodCall.scope->getClassDeclNode()->name << ": invalid method call context type '" << *methodCall.context.resolvedType << "'\n";
         return false;
     }
     return true;
@@ -314,9 +341,11 @@ bool TypeResolver::visit(VariableExprNode & variable) {
             contextScope = contextInstanceScope;
         } else if (ClassScope * contextClassScope = variable.context->resolvedType->isClass()) {
             contextScope = contextClassScope;
+        } else if (StructScope * contextStructScope = variable.context->resolvedType->isStruct()) {
+            contextScope = contextStructScope;
         } else {
             // TODO: handle global variable/constant access
-            error() << variable.scope->getClassDeclNode()->name << ": invalid variable access context type '" << variable.context->resolvedType << "'\n";
+            error() << variable.scope->getClassDeclNode()->name << ": invalid variable access context type '" << *variable.context->resolvedType << "'\n";
             return false;
         }
     }

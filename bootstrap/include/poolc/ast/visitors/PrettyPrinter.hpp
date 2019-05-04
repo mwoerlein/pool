@@ -18,6 +18,7 @@ class PrettyPrinter: public Writer {
     virtual bool visit(TranslationUnitNode & translationUnit) override;
 
     virtual bool visit(ClassDeclNode & classDef) override;
+    virtual bool visit(StructDeclNode & structDecl) override;
     virtual bool visit(MethodDeclNode & methodDef) override;
     virtual bool visit(NamespaceDeclNode & namespaceDef) override;
     virtual bool visit(VariableDeclNode & variableDef) override;

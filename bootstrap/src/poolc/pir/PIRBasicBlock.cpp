@@ -114,6 +114,8 @@ void PIRBasicBlock::addGet(PIRLocation &context, VariableScope &var, PIRLocation
             error() << "incompatible context " << context << " for variable " << decl << "\n";
             return;
         }
+    } else if (StructScope *contextScope = context.type.isStruct()) {
+        // TODO: check something?
     } else {
         error() << "invalid context " << context << " for variable " << decl << "\n";
         return;
@@ -144,6 +146,8 @@ void PIRBasicBlock::addSet(PIRLocation &context, VariableScope &var, PIRLocation
             error() << "incompatible context " << context << " for variable " << decl << "\n";
             return;
         }
+    } else if (StructScope *contextScope = context.type.isStruct()) {
+        // TODO: check something?
     } else {
         error() << "invalid context " << context << " for variable " << decl << "\n";
         return;
@@ -160,18 +164,11 @@ void PIRBasicBlock::addSet(PIRLocation &context, VariableScope &var, PIRLocation
 bool PIRBasicBlock::isAssignable(Type &src, Type &dest) {
     if (&src == &dest) { return true; }
     
-    AllType *srcAll = src.isAll();
-    AnyType *srcAny = src.isAny();
-    InstanceScope *srcInstance = src.isInstance();
-    if (!srcAll && !srcInstance && !srcAny) { return false; }
-    
-    AllType *destAll = dest.isAll();
-    AnyType *destAny = dest.isAny();
-    InstanceScope *destInstance = dest.isInstance();
-    if (!destAll && !destInstance && !destAny) { return false; }
+    if (!src.isAll() && !src.isAny() && !src.isInstance() && !src.isStruct()) { return false; }
+    if (!dest.isAll() && !dest.isAny() && !dest.isInstance() && !dest.isStruct()) { return false; }
     
     // TODO: handle type conversion?
-    return srcAll || destAny;
+    return src.isAll() || dest.isAny();
 }
 
 bool PIRBasicBlock::isValidCall(MethodScope &method, Collection<PIRLocation> &params, Collection<PIRLocation> &rets) {

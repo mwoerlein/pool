@@ -577,13 +577,17 @@ void X86Writer::write(PIRGlobalCall &callStmt) {
             
 void X86Writer::write(PIRGet &getStmt) {
     VariableDeclNode *decl = getStmt.variable.getVariableDeclNode();
-    ClassDeclNode *declClass = getStmt.variable.getClassDeclNode();
-     
-    code() << "movl "; write(getStmt.context); elem() << ", %eax\n";
-    code() << "movl " << instanceHandleVarsOffset(declClass) << "(%eax), %ebx\n";
-    code() << "addl 4(%eax), %ebx\n";
-    code() << "movl " << instanceVarOffset(declClass, decl) << "(%ebx), %eax\n";
-    code() << "movl %eax, "; write(getStmt.dest); elem() << "\n";
+    if (ClassDeclNode *declClass = getStmt.variable.getClassDeclNode()) {
+        code() << "movl "; write(getStmt.context); elem() << ", %eax\n";
+        code() << "movl " << instanceHandleVarsOffset(declClass) << "(%eax), %ebx\n";
+        code() << "addl 4(%eax), %ebx\n";
+        code() << "movl " << instanceVarOffset(declClass, decl) << "(%ebx), %eax\n";
+        code() << "movl %eax, "; write(getStmt.dest); elem() << "\n";
+    } else { // struct access
+        code() << "movl "; write(getStmt.context); elem() << ", %ebx\n";
+        code() << "movl " << getStmt.variable.offset << "(%ebx), %eax\n";
+        code() << "movl %eax, "; write(getStmt.dest); elem() << "\n";
+    }
 }
 
 void X86Writer::write(PIRMove &moveStmt) {
@@ -593,13 +597,17 @@ void X86Writer::write(PIRMove &moveStmt) {
 
 void X86Writer::write(PIRSet &setStmt) {
     VariableDeclNode *decl = setStmt.variable.getVariableDeclNode();
-    ClassDeclNode *declClass = setStmt.variable.getClassDeclNode();
-     
-    code() << "movl "; write(setStmt.context); elem() << ", %eax\n";
-    code() << "movl " << instanceHandleVarsOffset(declClass) << "(%eax), %ebx\n";
-    code() << "addl 4(%eax), %ebx\n";
-    code() << "movl "; write(setStmt.src); elem() << ", %eax\n";
-    code() << "movl %eax, " << instanceVarOffset(declClass, decl) << "(%ebx)\n";
+    if (ClassDeclNode *declClass = setStmt.variable.getClassDeclNode()) {
+        code() << "movl "; write(setStmt.context); elem() << ", %eax\n";
+        code() << "movl " << instanceHandleVarsOffset(declClass) << "(%eax), %ebx\n";
+        code() << "addl 4(%eax), %ebx\n";
+        code() << "movl "; write(setStmt.src); elem() << ", %eax\n";
+        code() << "movl %eax, " << instanceVarOffset(declClass, decl) << "(%ebx)\n";
+    } else { // struct access
+        code() << "movl "; write(setStmt.context); elem() << ", %ebx\n";
+        code() << "movl "; write(setStmt.src); elem() << ", %eax\n";
+        code() << "movl %eax, " << setStmt.variable.offset << "(%ebx)\n";
+    }
 }
 
 void X86Writer::write(PIRLocation &location) {

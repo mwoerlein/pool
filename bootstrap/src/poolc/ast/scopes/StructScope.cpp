@@ -3,7 +3,7 @@
 // public
 StructScope::StructScope(Environment &env, MemoryInfo &mi, Scope & parent, StructDeclNode & structDecl)
         :Scope(env, mi, &parent), NamedType(env, mi), Object(env, mi),
-         structDecl(structDecl), instanceSize(0), typesResolved(false) {
+         structDecl(structDecl), instanceSize(-1), typesResolved(false) {
 }
 StructScope::~StructScope() {}
 StructScope * StructScope::isStruct() { return this; }

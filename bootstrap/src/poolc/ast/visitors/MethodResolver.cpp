@@ -3,6 +3,7 @@
 #include "poolc/ast/nodes/all.hpp"
 
 #include "poolc/ast/scopes/UnitScope.hpp"
+#include "poolc/ast/scopes/StructScope.hpp"
 #include "poolc/ast/scopes/ClassScope.hpp"
 #include "poolc/ast/scopes/InstanceScope.hpp"
 #include "poolc/ast/scopes/MethodScope.hpp"
@@ -56,6 +57,36 @@ bool MethodResolver::visit(ClassDeclNode & classDecl) {
             curScope = tmpScope;
             return false;
         }
+    }
+    curScope = tmpScope;
+    return true;
+}
+
+bool MethodResolver::visit(StructDeclNode & structDecl) {
+    if (!structDecl.scope) {
+        crit() << structDecl.name << ": classes must be resolved before methods!\n";
+        return false;
+    }
+    
+    StructScope *structScope = structDecl.scope->isStruct();
+    if (structScope->instanceSize >= 0) {
+        // skip already resolved struct
+        return true;
+    }
+    structScope->instanceSize = 0;
+    
+    Scope *tmpScope = curScope;
+    curScope = structScope;
+    structDecl.consts.acceptAll(*this);
+    {
+        Iterator<VariableDeclNode> &it = structDecl.variables.iterator();
+        while (it.hasNext()) {
+            VariableDeclNode &variableDecl = it.next();
+            variableDecl.accept(*this);
+            variableDecl.scope->isVariable()->offset = structScope->instanceSize;
+            structScope->instanceSize += 4; // TODO: get other sizes from variableDecl.type.resolvedType
+        }
+        it.destroy();
     }
     curScope = tmpScope;
     return true;
@@ -118,7 +149,12 @@ bool MethodResolver::visit(AnyRefNode & type) {
 
 bool MethodResolver::visit(ClassRefNode & classRef) {
     classRef.scope = curScope;
-    classRef.resolvedType->isClass()->getClassDeclNode()->accept(*this);
+    if (ClassScope *classScope = classRef.resolvedType->isClass()) {
+        classScope->getClassDeclNode()->accept(*this);
+    }
+    if (StructScope *structScope = classRef.resolvedType->isStruct()) {
+        structScope->getStructDeclNode()->accept(*this);
+    }
     return true;
 }
 

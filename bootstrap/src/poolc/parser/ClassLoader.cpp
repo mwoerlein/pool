@@ -98,4 +98,5 @@ bool ClassLoader::initialize(String & fullQualifiedName) {
     }
     if (pretty) { unit->accept(*pretty); }
     unit->accept(resolve);
+    return true;
 }

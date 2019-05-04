@@ -4,6 +4,11 @@
 
 #include "poolc/ast/nodes/all.hpp"
 
+#include "poolc/pir/PIRLocation.hpp"
+#include "poolc/pir/PIRMethod.hpp"
+#include "poolc/pir/PIRStatement.hpp"
+#include "poolc/pir/statement/PIRCond.hpp"
+
 // public
 PrettyPrinter::PrettyPrinter(Environment &env, MemoryInfo &mi, PoolStorage &ps)
         :Writer(env, mi, ps, MIMETYPE_POOL), Object(env, mi), LoggerAware(env, mi),
@@ -23,14 +28,15 @@ bool PrettyPrinter::visit(TranslationUnitNode & translationUnit) {
     indent() << "\n";
     translationUnit.uses.acceptAll(*this);
     indent() << "\n";
+    translationUnit.structs.acceptAll(*this);
     translationUnit.classes.acceptAll(*this);
     
     finalizeElement();
     return true;
 }
 
-bool PrettyPrinter::visit(NamespaceDeclNode & namespaceDef) {
-    indent() << "namespace " << namespaceDef.name << ";\n";
+bool PrettyPrinter::visit(NamespaceDeclNode & namespaceDecl) {
+    indent() << "namespace " << namespaceDecl.name << ";\n";
 }
 
 bool PrettyPrinter::visit(UseStatementNode & useStmt) {
@@ -41,11 +47,11 @@ bool PrettyPrinter::visit(UseStatementNode & useStmt) {
     line << ";\n";
 }
 
-bool PrettyPrinter::visit(ClassDeclNode & classDef) {
-    OStream & line = indent() << "class " << classDef.name;
-    if (classDef.extends.size()) {
+bool PrettyPrinter::visit(ClassDeclNode & classDecl) {
+    OStream & line = indent() << "class " << classDecl.name;
+    if (classDecl.extends.size()) {
         line << " extends";
-        Iterator<TypeRefNode> &it = classDef.extends.iterator();
+        Iterator<TypeRefNode> &it = classDecl.extends.iterator();
         if (it.hasNext()) {
             if (ClassRefNode *extend = it.next().isClass()) {
                 line << " " << extend->name;
@@ -60,30 +66,49 @@ bool PrettyPrinter::visit(ClassDeclNode & classDef) {
     }
     startBlock(&line);
     
-    if (classDef.consts.size()) {
+    if (classDecl.consts.size()) {
         indent() << "\n";
         indent() << "// constants\n";
-        classDef.consts.acceptAll(*this);
+        classDecl.consts.acceptAll(*this);
     }
     
-    if (classDef.variables.size()) {
+    if (classDecl.variables.size()) {
         indent() << "\n";
         indent() << "// variables\n";
-        classDef.variables.acceptAll(*this);
+        classDecl.variables.acceptAll(*this);
     }
     
-    if (classDef.methods.size()) {
+    if (classDecl.methods.size()) {
         indent() << "\n";
         indent() << "// methods\n";
-        classDef.methods.acceptAll(*this);
+        classDecl.methods.acceptAll(*this);
     }
     
     endBlock();
 }
 
-bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
+bool PrettyPrinter::visit(StructDeclNode & structDecl) {
+    OStream & line = indent() << "struct " << structDecl.name;
+    startBlock(&line);
+    
+    if (structDecl.consts.size()) {
+        indent() << "\n";
+        indent() << "// constants\n";
+        structDecl.consts.acceptAll(*this);
+    }
+    
+    if (structDecl.variables.size()) {
+        indent() << "\n";
+        indent() << "// variables\n";
+        structDecl.variables.acceptAll(*this);
+    }
+    
+    endBlock();
+}
+
+bool PrettyPrinter::visit(MethodDeclNode & methodDecl) {
     OStream & line = indent();
-    switch (methodDef.kind) {
+    switch (methodDecl.kind) {
         case abstract:
             line << "abstract ";
             break;
@@ -91,22 +116,22 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
             line << "__naked__ ";
             break;
         default:
-            if (methodDef.global) {
+            if (methodDecl.global) {
                 line << "global ";
             }
     }
     line << "[";
     {
-        Iterator<TypeRefNode> &it = methodDef.returnTypes.iterator();
+        Iterator<TypeRefNode> &it = methodDecl.returnTypes.iterator();
         while (it.hasNext()) {
             it.next().accept(*this);
             if (it.hasNext()) { line << ", "; }
         }
         it.destroy();
     }
-    line << "] " << methodDef.name << "(";
+    line << "] " << methodDecl.name << "(";
     {
-        Iterator<VariableDeclNode> &it = methodDef.parameters.iterator();
+        Iterator<VariableDeclNode> &it = methodDecl.parameters.iterator();
         while (it.hasNext()) {
             VariableDeclNode & var = it.next();
             var.type.accept(*this);
@@ -116,16 +141,16 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDef) {
         it.destroy();
     }
     line << ")";
-    switch (methodDef.kind) {
+    switch (methodDecl.kind) {
         case abstract:
             line << ";\n";
             break;
         default:
-            if (methodDef.body.isEmpty()) {
+            if (methodDecl.body.isEmpty()) {
                 line << " {}\n";
             } else {
                 startBlock(&line);
-                methodDef.body.instructions.acceptAll(*this);
+                methodDecl.body.instructions.acceptAll(*this);
                 endBlock();
             }
     }
@@ -154,10 +179,10 @@ bool PrettyPrinter::visit(VariableInitInstNode & variableInit) {
     line << ";\n";
 }
 
-bool PrettyPrinter::visit(VariableDeclNode & variableDef) {
+bool PrettyPrinter::visit(VariableDeclNode & variableDecl) {
     OStream & line = indent();
-    variableDef.type.accept(*this);
-    line << " " << variableDef.name << ";\n";
+    variableDecl.type.accept(*this);
+    line << " " << variableDecl.name << ";\n";
 }
 
 bool PrettyPrinter::visit(BlockInstNode & block) {

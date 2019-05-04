@@ -13,6 +13,7 @@ class VariableScope: public Scope {
     public:
     ExpressionNode *finalInitializer;
     PIRLocation *pir;
+    int offset;
     
     VariableScope(Environment &env, MemoryInfo &mi, Scope & parent, VariableDeclNode & variableDecl);
     virtual ~VariableScope();

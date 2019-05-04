@@ -439,7 +439,8 @@ bool PIRGenerator::visit(ThisExprNode & constThis) {
 
 bool PIRGenerator::visit(VariableExprNode & variable) {
     if (ExpressionNode *initializer = variable.resolvedVariable->finalInitializer) {
-        if (variable.resolvedVariable->parent->isClass()) {
+        Scope *parent = variable.resolvedVariable->parent;
+        if (parent->isClass() || parent->isStruct()) {
             if (ConstCStringExprNode *cCString = initializer->isConstCString()) {
                 return visit(*cCString);
             }

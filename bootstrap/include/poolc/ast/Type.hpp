@@ -22,7 +22,7 @@ class Type: virtual public Object {
     virtual CStringType * isCString();
     virtual InstanceScope * isInstance();
     virtual IntType * isInt();
-    inline bool isBool() { return isInt() || isCString() || isInstance() || isAll() || isAny(); };
+    inline bool isBool() { return isInt() || isCString() || isInstance() || isStruct() || isAll() || isAny(); };
     
     virtual OStream & operator >>(OStream & stream) override;
 };
