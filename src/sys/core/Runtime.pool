@@ -7,6 +7,7 @@ namespace sys::core;
 
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassTableEntry;
+use sys::runtime::InstanceDescriptor;
 use sys::runtime::InstanceHandle;
 use sys::runtime::MemoryInfo;
 
@@ -35,18 +36,6 @@ class Runtime extends Object {
         o.destroy();
     }
         
-    // TODO: remove with working ClassHeader "struct"
-    int ch_cts := 12;
-    int ch_tpl := 24;
-    int ch_tpl_size := 28;
-    int ch_tpl_obj_handle := 32;
-    int ch_tpl_cls_handle := 36;
-    
-    // TODO: remove with working ClassTab "struct"
-    int cts_vto := 8;
-    int cts_ho := 12;
-    int cts_size := 16;
-    
     // TODO #9: use generic method or special cast syntax instead __all__/__any__
     [__all__] cast(cstring name, __any__ obj) {
         InstanceHandle curHandle = null;
@@ -85,12 +74,7 @@ class Runtime extends Object {
         MemoryInfo instInfo = this.allocate(classDesc.inst_tpl_size);
         if (!instInfo) { return null; } // abort on initialization error
 
-        Object oinstance = null;
-        __all__ instance = null;
-        __pasm__(<"
-            movl 8(%ebp), %ebx      // @class-desc "Runtime"
-            call _crh_instantiate   // %eax: @object-meminfo %ebx: @Class-desc "Runtime" %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        ">, {"%eax": instInfo, "%edx": classDesc}, {"%edi": oinstance, "%esi": instance});
+        [__all__ instance, Object oinstance] = Runtime:_initTemplate(instInfo, classDesc);
         oinstance.setRt(this.rt());
         oinstance.__init();
         return instance;
@@ -98,13 +82,9 @@ class Runtime extends Object {
     
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
-        MemoryInfo info = null;
-        __pasm__(<"
-            movl 4(%eax), %eax  // @obj
-            movl 4(%eax), %eax  // @obj meminfo
-        ">, {"%eax": obj}, {"%eax": info});
-        this.free(info);
-        return;
+        InstanceHandle curHandle = null;
+        __pasm__("", {"%eax": obj}, {"%eax": curHandle});
+        this.free(curHandle.inst_desc.info);
     }
     
     [Runtime] _finalizeBootstrap(Class cClass, ClassDescriptor cdClass, ClassDescriptor cdRuntime) {
@@ -128,46 +108,39 @@ class Runtime extends Object {
         return this;
     }
     
-    global [__all__] _raw_instantiate(MemoryInfo instInfo, ClassDescriptor classDesc) {
-        __all__ instance = null;
-        __pasm__(<"
-            movl 8(%ebp), %ebx      // @class-desc "Runtime"
-            call _crh_instantiate   // %eax: @object-meminfo %ebx: @Class-desc "Runtime" %edx: @class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-        ">, {"%eax": instInfo, "%edx": classDesc}, {"%esi": instance});
-        return instance;
-    }
-    
-    __naked__ [] _crh_instantiate() {
-        __pasm__(<"
-        _crh_instantiate:       // %eax: @object-meminfo %ebx: @Class-desc "Runtime" %edx: @Class-desc, return %edi: @object (Type Object) %esi: @object (Type <class>)
-            addl _cr_mo_call_entry, %ebx
-            movl (%eax), %edi   // @object
-            movl %edx, %esi
-            addl _sys_core_Runtime_coi_ch_tpl(%edx), %esi         // @instance tpl
-            movl _sys_core_Runtime_coi_ch_tpl_size(%edx), %ecx    // instance size
-            .byte 0xf3; .byte 0xa4 #// rep movsb // copy template to object
-            
-            movl (%eax), %edi   // @object
-            movl %edx, (%edi)   // store @class desc in instance 
-            movl %eax, 4(%edi)  // store @meminfo in instance
-            
-            movl %edx, %eax     // @obj-class desc
-            addl _sys_core_Runtime_coi_ch_cts(%eax), %eax         // @obj-class vtabs entry
-        _crhi_loop:
-            movl _sys_core_Runtime_coi_cts_ho(%eax), %esi
-            movl _sys_core_Runtime_coi_cts_vto(%eax), %ecx
-            movl %ebx, (%edi, %esi)     // store @call-entry in handle
-            movl %edi, 4(%edi, %esi)    // store @object in handle
-            movl %ecx, 8(%edi, %esi)    // store vtab-offset in handle
-            addl _sys_core_Runtime_coi_cts_size, %eax
-            cmpl 0, _sys_core_Runtime_coi_cts_ho(%eax)
-            jne _crhi_loop
-            
-            movl %edi, %esi
-            addl _sys_core_Runtime_coi_ch_tpl_obj_handle(%edx), %edi // @object (Type Object)
-            addl _sys_core_Runtime_coi_ch_tpl_cls_handle(%edx), %esi // @object (Type <class>)
-            ret
-        ">);
+    global [__all__, Object] _initTemplate(MemoryInfo instInfo, ClassDescriptor classDesc) {
+        int call_entry = 0;
+        __pasm__("movl 8(%ebp), %eax; addl _cr_mo_call_entry, %eax", {}, {"%eax": call_entry});
+        InstanceDescriptor inst_desc = null;
+        __pasm__("", {"%eax": instInfo.buf}, {"%eax": inst_desc});
+        
+        // copy template to object
+        __pasm__(
+            "addl %eax, %esi; .byte 0xf3; .byte 0xa4 #// rep movsb",
+             {"%eax": classDesc.inst_tpl_offset, "%ecx": classDesc.inst_tpl_size, "%esi": classDesc, "%edi": inst_desc}
+        );
+        
+        inst_desc.class_desc = classDesc;
+        inst_desc.info = instInfo;
+        
+        { // init handles
+            ClassTableEntry curEntry = null;
+            InstanceHandle curHandle = null;
+            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.class_tabs_offset}, {"%eax": curEntry});
+            while (curEntry.handle_offset) {
+                __pasm__("addl %ebx, %eax", {"%eax": inst_desc, "%ebx": curEntry.handle_offset}, {"%eax": curHandle});
+                curHandle.call_entry = call_entry;
+                curHandle.inst_desc = inst_desc;
+                curHandle.vtab_offset = curEntry.vtab_offset;
+                __pasm__("addl %ebx, %eax", {"%eax": curEntry, "%ebx": ClassTableEntry:SIZEOF}, {"%eax": curEntry});
+            }
+        }
+        
+        __all__ inst = null;
+        __pasm__("addl %ebx, %eax", {"%eax": inst_desc, "%ebx": classDesc.class_handle_offset}, {"%eax": inst});
+        Object obj = null;
+        __pasm__("addl %ebx, %eax", {"%eax": inst_desc, "%ebx": classDesc.obj_handle_offset}, {"%eax": obj});
+        return [inst, obj];
     }
     
     __naked__ [] _call_entry() {
