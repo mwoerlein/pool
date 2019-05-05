@@ -88,16 +88,13 @@ class Runtime extends Object {
     }
     
     [Runtime] _finalizeBootstrap(Class cClass, ClassDescriptor cdClass, ClassDescriptor cdRuntime) {
+        // prepare for further instatiations
         this.setRt(this);
-        
-        // prepare class "Class"
         cClass.setRt(this);
         cClass.setDesc(cdClass);
         
-        // init class "Class"
+        // finalize instances
         cClass.__init();
-
-        // init Runtime
         this.__init();
         
         // create and init class for current Runtime

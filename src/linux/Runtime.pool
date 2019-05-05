@@ -36,6 +36,7 @@ class Runtime extends CoreRuntime {
         __pasm__("", {"%eax": heapHead}, {"%eax": icClass});
         icClass.buf = heapHead + MemoryInfo:SIZEOF;
         icClass.len = cdClass.inst_tpl_size;
+        icClass.flags = MemoryInfo:FLAGS_USED;
         heapHead = icClass.buf + icClass.len;
         if (!icClass) { return null; } // abort on initialization error
 
@@ -43,6 +44,7 @@ class Runtime extends CoreRuntime {
         __pasm__("", {"%eax": heapHead}, {"%eax": irt});
         irt.buf = heapHead + MemoryInfo:SIZEOF;
         irt.len = cdRuntime.inst_tpl_size;
+        irt.flags = MemoryInfo:FLAGS_USED;
         heapHead = irt.buf + irt.len;
         if (!irt) { return null; } // abort on initialization error
         
@@ -97,6 +99,7 @@ class Runtime extends CoreRuntime {
         __pasm__("", {"%eax": heapHead}, {"%eax": info});
         info.buf = heapHead + MemoryInfo:SIZEOF;
         info.len = size;
+        info.flags = MemoryInfo:FLAGS_USED;
         heapHead = info.buf + info.len;
         return info;
     }

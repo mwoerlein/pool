@@ -9,6 +9,11 @@ namespace sys::runtime;
 struct MemoryInfo {
 
     global int PAGESIZE := 4096;
+    
+    global int MAGIC := 0x3E30;
+    global int FLAGS_AVAILABLE := 0x3E300000;
+    global int FLAGS_USED := 0x3E300001;
+    global int FLAGS_RESERVED := 0x3E300002;
 
     int buf;
     int len;
