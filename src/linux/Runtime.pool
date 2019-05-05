@@ -29,33 +29,21 @@ class Runtime extends CoreRuntime {
         if (!cdRuntime) { return null; } // abort on initialization error
         
         // allocate spaces
-        // TODO: extract allocator
-        int heapStart = 0;
-        int heapSize = MemoryInfo:PAGESIZE * 1024;
-        __pasm__(<"
-            pushl 0     // offset
-            pushl -1    // fd
-            pushl 34    //flags
-            pushl 3     // prot
-            pushl %eax  // len
-            pushl 0     // addr
-            movl 90, %eax
-            movl %esp, %ebx
-            int 0x80 
-            addl 24, %esp
-        ">, {"%eax": heapSize}, {"%eax": heapStart});
+        [int heapStart, int heapSize] = Runtime:_pageAlloc(1024);
         int heapHead = heapStart;
 
         MemoryInfo icClass = null;
         __pasm__("", {"%eax": heapHead}, {"%eax": icClass});
-        icClass.buf = (heapHead += MemoryInfo:SIZEOF);
-        heapHead += (icClass.len = cdClass.inst_tpl_size);
+        icClass.buf = heapHead + MemoryInfo:SIZEOF;
+        icClass.len = cdClass.inst_tpl_size;
+        heapHead = icClass.buf + icClass.len;
         if (!icClass) { return null; } // abort on initialization error
 
         MemoryInfo irt = null;
         __pasm__("", {"%eax": heapHead}, {"%eax": irt});
-        irt.buf = (heapHead += MemoryInfo:SIZEOF);
-        heapHead += (irt.len = cdRuntime.inst_tpl_size);
+        irt.buf = heapHead + MemoryInfo:SIZEOF;
+        irt.len = cdRuntime.inst_tpl_size;
+        heapHead = irt.buf + irt.len;
         if (!irt) { return null; } // abort on initialization error
         
         [Class cClass, Object ocClass] = Runtime:_initTemplate(icClass, cdClass);
@@ -79,7 +67,6 @@ class Runtime extends CoreRuntime {
         this.heapHead = heapHead;
     }
 
-    // TODO: replace int with working class header "struct"
     [ClassDescriptor] getClassDesc(cstring name) {
         int curClass = 0;
         int classesEnd = 0;
@@ -108,13 +95,33 @@ class Runtime extends CoreRuntime {
         }
         MemoryInfo info = null;
         __pasm__("", {"%eax": heapHead}, {"%eax": info});
-        info.buf = (heapHead += MemoryInfo:SIZEOF);
-        heapHead += (info.len = size);
+        info.buf = heapHead + MemoryInfo:SIZEOF;
+        info.len = size;
+        heapHead = info.buf + info.len;
         return info;
     }
     
     [] free(MemoryInfo info) {
         // TODO: extract allocator
+    }
+    
+    // TODO: extract allocator
+    global [int, int] _pageAlloc(int pages) {
+        int size = pages * MemoryInfo:PAGESIZE;
+        int start = 0;
+        __pasm__(<"
+            pushl 0     // offset
+            pushl -1    // fd
+            pushl 34    //flags
+            pushl 3     // prot
+            pushl %eax  // len
+            pushl 0     // addr
+            movl 90, %eax
+            movl %esp, %ebx
+            int 0x80 
+            addl 24, %esp
+        ">, {"%eax": size}, {"%eax": start});
+        return [start, size];
     }
     
     global [ClassDescriptor] _getClassDesc() {
