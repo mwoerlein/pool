@@ -47,24 +47,28 @@ class OStream extends Object {
     [OStream] _printUInt(int d, int base, int pad) {
         int p = 0;
         // allocate buffer on stack
-        int buf_size := 21;
+        int buf_size = 32;
+        if (pad > buf_size) { buf_size = pad; }
+        buf_size++; // terminal \0 
         __pasm__("subl %eax, %esp", {"%eax": buf_size} , {"%esp": p});
         
         p += buf_size;          // goto end of buffer..
         this._putCharToMem(--p, 0);  // .. and terminate temporal cstring
         int padded_start = p - pad;
+        int cur = d;
+        int remainder = 0;
         
         /*  Divide D by BASE until D == 0. */
         { // TODO: use do {...} while, if available
-            int remainder = d % base;
+            __pasm__("movl 0, %edx; div %ebx", {"%eax": cur, "%ebx": base}, {"%eax": cur, "%edx": remainder});
             if (remainder < 10) {
                 this._putCharToMem(--p, remainder + '0');
             } else {
                 this._putCharToMem(--p, remainder + 'a' - 10);
             }
         }
-        while (d /= base) {
-            int remainder = d % base;
+        while (cur) {
+            __pasm__("movl 0, %edx; div %ebx", {"%eax": cur, "%ebx": base}, {"%eax": cur, "%edx": remainder});
             if (remainder < 10) {
                 this._putCharToMem(--p, remainder + '0');
             } else {

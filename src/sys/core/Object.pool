@@ -23,10 +23,16 @@ class Object {
         return self.inst_desc.class_desc.class_instance;
     }
     
+    [int] getAddress() {
+        InstanceHandle self = null;
+        __pasm__("", {"%eax": this}, {"%eax": self});
+        int addr = 0;
+        __pasm__("", {"%eax": self.inst_desc}, {"%eax": addr});
+        return addr;
+    }
+    
     [int] hash() {
-        int hash = 0;
-        __pasm__("movl 4(%eax), %eax", {"%eax": this}, {"%eax": hash});
-        return hash;
+        return this.getAddress();
     }
     
     // TODO: use generic method instead of plain Object?
@@ -43,9 +49,7 @@ class Object {
     }
     
     [OStream] printToStream(OStream stream) {
-        int addr = 0;
-        __pasm__("movl 4(%eax), %eax", {"%eax": this}, {"%eax": addr});
-        return stream.print(this.getClass().getName()).printChar('@').printPtr(addr);
+        return stream.print(this.getClass().getName()).printChar('@').printPtr(this.getAddress());
     }
     
     [Runtime] rt() {

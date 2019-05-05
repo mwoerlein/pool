@@ -20,5 +20,6 @@ class FormattedOStream extends OStream {
     
     [OStream] printChar(int c) {
         inner.printChar(0x1b).printCString("[1;31m").printChar(c).printChar(0x1b).printCString("[0;39m");
+        return self;
     }
 }

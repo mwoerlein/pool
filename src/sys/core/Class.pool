@@ -15,6 +15,12 @@ class Class extends Object {
     
     // methods
     [String] getName() {
+        if (!name) {
+            name = this.rt().createInstance(String:CLASSNAME);
+            cstring _name = "";
+            __pasm__("addl %ebx, %eax", {"%eax": desc, "%ebx": desc.classname_offset}, {"%eax": _name});
+            name.assignCString(_name);
+        }
         return name;
     }
     
@@ -26,11 +32,6 @@ class Class extends Object {
     [] setDesc(ClassDescriptor desc) {
         this.desc = desc;
         desc.class_instance = this; 
-        
-        name = this.rt().createInstance(String:CLASSNAME);
-        cstring _name = "";
-        __pasm__("addl %ebx, %eax", {"%eax": desc, "%ebx": desc.classname_offset}, {"%eax": _name});
-        name.assignCString(_name);
     }
     
     // TODO: move to destructor with implicit destruction instead of manual one
