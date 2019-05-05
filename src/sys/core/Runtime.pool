@@ -5,11 +5,11 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::memory::MemoryInfo;
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassTableEntry;
 use sys::runtime::InstanceDescriptor;
 use sys::runtime::InstanceHandle;
-use sys::runtime::MemoryInfo;
 
 class Runtime extends Object {
 

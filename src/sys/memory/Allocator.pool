@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::memory;
+
+use sys::core::Object;
+
+// TODO: convert to interface 
+class Allocator extends Object {
+    
+    // methods
+    abstract [MemoryInfo] allocate(int size);
+    abstract [] free(MemoryInfo info);
+    abstract [MemoryInfo] getInfo(int addr);
+    abstract [int] getAvailableBytes();
+}

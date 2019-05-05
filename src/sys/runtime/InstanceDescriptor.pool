@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::memory::MemoryInfo;
 
 struct InstanceDescriptor {
     ClassDescriptor class_desc;

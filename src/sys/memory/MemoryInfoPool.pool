@@ -1,0 +1,14 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::memory;
+
+
+struct MemoryInfoPool {
+    MemoryInfo self;
+    int size;
+    int used;
+    int elements;
+}

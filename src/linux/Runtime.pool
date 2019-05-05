@@ -10,9 +10,10 @@ use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Runtime as CoreRuntime;
 use sys::runtime::ClassDescriptor;
-use sys::runtime::MemoryInfo;
+use sys::memory::MemoryInfo;
+use sys::memory::PageAllocator;
 
-class Runtime extends CoreRuntime {
+class Runtime extends CoreRuntime, PageAllocator {
 
     // TODO: extract allocator
     int heapStart;
@@ -106,6 +107,16 @@ class Runtime extends CoreRuntime {
     
     [] free(MemoryInfo info) {
         // TODO: extract allocator
+    }
+    
+    [MemoryInfo] allocatePages(int pages) {
+        [int start, int size] = Runtime:_pageAlloc(pages);
+        MemoryInfo info = null;
+        __pasm__("", {"%eax": start}, {"%eax": info});
+        info.buf = start;
+        info.len = size;
+        info.flags = MemoryInfo:FLAGS_AVAILABLE;
+        return info;
     }
     
     // TODO: extract allocator

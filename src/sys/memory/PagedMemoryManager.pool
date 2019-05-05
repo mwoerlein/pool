@@ -1,0 +1,151 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::memory;
+
+use sys::core::OStream;
+
+class PagedMemoryManager extends Allocator {
+    
+    PageAllocator pageAllocator;
+    
+    MemoryInfo available;
+    MemoryInfo used;
+    MemoryInfo reserved;
+    MemoryInfoPool nonEmbeddedInfos;
+    
+    [] initEmpty(PageAllocator pageAllocator, int initialPages, int poolElements) {
+        MemoryInfo initial = pageAllocator.allocatePages(initialPages);
+        if (!initial) {
+            // bail out
+            this.rt().err().printCString("cannot allocate initial pages\n");
+            return;
+        }
+        // initialize pool
+        if (poolElements < 3) { poolElements = 3; }
+        [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(initial, poolElements);
+        
+        // init manager
+        this.pageAllocator = pageAllocator;
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
+        
+        this._appendMemoryInfo(this.available.prev, initialAvailable);
+    }
+    
+    [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
+        int poolSize = InfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        int requiredSize = MemoryInfo:SIZEOF + poolSize;
+        if (available.len < requiredSize + MemoryInfo:SIZEOF) {
+            // bail out
+            this.rt().err().printCString("too many pool elements for available space\n");
+            return;
+        }
+        // separate remaining space
+        MemoryInfo remaining = null;
+        int remainingBuf = available.buf + MemoryInfo:SIZEOF + poolSize;
+        __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
+        remaining.buf = remainingBuf;
+        remaining.len = available.len - requiredSize;
+        remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+        
+        // initiate pool
+        MemoryInfo poolInfo = null;
+        __pasm__("", {"%eax": available.buf}, {"%eax": poolInfo});
+        poolInfo.buf = available.buf + MemoryInfo:SIZEOF;
+        poolInfo.len = poolSize;
+        poolInfo.flags = MemoryInfo:FLAGS_USED;
+        InfoPool pool = null;
+        __pasm__("", {"%eax": poolInfo.buf}, {"%eax": pool});
+        pool.self = poolInfo;
+        pool.size = poolElements;
+        pool.used = 0;
+        pool.elements = poolInfo.buf + InfoPool:SIZEOF;
+        return [pool, remaining];
+    }
+    
+    [MemoryInfo] _nextNonEmbeddedInfo(int flags) {
+        MemoryInfo info = null;
+        if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
+            __pasm__("", {"%eax": nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used}, {"%eax": info});
+            info.buf=info.len=info.owner=0;
+            info.next=info.prev=info;
+            info.flags=flags;
+            nonEmbeddedInfos.used++;
+        }
+        return info;
+    }
+
+    [] _appendMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
+        newInfo.prev = info;
+        newInfo.next = info.next;
+        newInfo.prev.next = newInfo.next.prev = newInfo;
+    }
+    
+    // methods
+    [MemoryInfo] allocate(int size) {
+        return null;
+    }
+    
+    [] free(MemoryInfo info) {
+    }
+    
+    [MemoryInfo] getInfo(int addr) {
+        return null;
+    }
+    
+    [int] getAvailableBytes() {
+        return 0;
+    }
+
+    [OStream] dumpToStream(OStream stream) {
+        {
+            stream.printCString("available:\n");
+            this.dumpInfo(available, stream).printNewline();
+            MemoryInfo cur = available.next;
+            while (this._diff(cur, available)) {
+                this.dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        {
+            stream.printCString("used:\n");
+            this.dumpInfo(used, stream).printNewline();
+            MemoryInfo cur = used.next;
+            while (this._diff(cur, used)) {
+                this.dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        {
+            stream.printCString("reserved:\n");
+            this.dumpInfo(reserved, stream).printNewline();
+            MemoryInfo cur = reserved.next;
+            while (this._diff(cur, reserved)) {
+                this.dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        
+        return stream;
+    }
+
+    [OStream] dumpInfo(MemoryInfo info, OStream stream) {
+        int infoEnd = 0;
+        __pasm__("addl %ebx, %eax", {"%eax": info.buf, "%ebx": info.len}, {"%eax": infoEnd});
+        int infoPtr = 0;
+        __pasm__("", {"%eax": info}, {"%eax": infoPtr});
+        return stream.printPtr(info.buf).printChar(':').printPtr(infoEnd)
+            .printChar('[').printPtr(info.len).printChar(']')
+            .printChar('(').printPtr(infoPtr).printChar(')');
+    }
+    [int] _diff(__any__ a, __any__ b) {
+        int diff = 0;
+        __pasm__("subl %eax, %ebx", {"%eax": a, "%ebx": b}, {"%ebx": diff});
+        return diff;
+    }
+}
