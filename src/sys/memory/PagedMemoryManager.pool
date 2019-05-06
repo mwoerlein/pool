@@ -26,6 +26,10 @@ class PagedMemoryManager extends Allocator {
         // initialize pool
         if (poolElements < 3) { poolElements = 3; }
         [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(initial, poolElements);
+        if (!pool) {
+            // bail out
+            return;
+        }
         
         // init manager
         this.pageAllocator = pageAllocator;
@@ -35,15 +39,16 @@ class PagedMemoryManager extends Allocator {
         this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
         
         this._appendMemoryInfo(this.available.prev, initialAvailable);
+        this._appendMemoryInfo(this.used.prev, pool.info);
     }
     
     [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
-        int poolSize = InfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
         int requiredSize = MemoryInfo:SIZEOF + poolSize;
         if (available.len < requiredSize + MemoryInfo:SIZEOF) {
             // bail out
             this.rt().err().printCString("too many pool elements for available space\n");
-            return;
+            return [null, null];
         }
         // separate remaining space
         MemoryInfo remaining = null;
@@ -59,12 +64,12 @@ class PagedMemoryManager extends Allocator {
         poolInfo.buf = available.buf + MemoryInfo:SIZEOF;
         poolInfo.len = poolSize;
         poolInfo.flags = MemoryInfo:FLAGS_USED;
-        InfoPool pool = null;
+        MemoryInfoPool pool = null;
         __pasm__("", {"%eax": poolInfo.buf}, {"%eax": pool});
-        pool.self = poolInfo;
+        pool.info = poolInfo;
         pool.size = poolElements;
         pool.used = 0;
-        pool.elements = poolInfo.buf + InfoPool:SIZEOF;
+        pool.elements = poolInfo.buf + MemoryInfoPool:SIZEOF;
         return [pool, remaining];
     }
     
