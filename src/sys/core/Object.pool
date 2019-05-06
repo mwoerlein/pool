@@ -49,7 +49,9 @@ class Object {
     }
     
     [OStream] printToStream(OStream stream) {
-        return stream.print(this.getClass().getName()).printChar('@').printPtr(this.getAddress());
+        stream.print(this.getClass().getName()).printChar('@').printPtr(this.getAddress());
+        __pasm__("nop;nop"); // TODO: Why do I get invalid opcode/segfault without this?  
+        return stream;
     }
     
     [Runtime] rt() {
