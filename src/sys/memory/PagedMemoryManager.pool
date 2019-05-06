@@ -16,6 +16,177 @@ class PagedMemoryManager extends Allocator {
     MemoryInfo reserved;
     MemoryInfoPool nonEmbeddedInfos;
     
+    // methods
+    [MemoryInfo] allocate(int size) {
+        int required = size + MemoryInfo:SIZEOF;
+        
+        if (required < size) { // size_t overflow
+            this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
+            return null;
+        }
+        
+        // find available memory
+        MemoryInfo available = this._findInfoByLen(this.available, required);
+        if (available.len < required) {
+            // TODO: allocate additional pages
+            this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
+            return null;
+        }
+        
+        int availablePtr = 0;
+        __pasm__("", {"%eax": available}, {"%eax": availablePtr});
+        
+        if (available.len < (required + 2*MemoryInfo:SIZEOF)) {
+            // use whole info
+            available.buf = availablePtr + MemoryInfo:SIZEOF;
+            available.len -= MemoryInfo:SIZEOF;
+            
+            // remove from available
+            this._unlinkMemoryInfo(available);
+        } else {
+            // split info
+            // separate remaining space
+            MemoryInfo remaining = null;
+            int remainingBuf = availablePtr + required;
+            __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
+            remaining.buf = remainingBuf;
+            remaining.len = available.len - required;
+            remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+    
+            available.buf = availablePtr + MemoryInfo:SIZEOF;
+            available.len = size;
+    
+            // replace available by remaining in available list
+            this._replaceMemoryInfo(available, remaining);
+        }
+        
+        // append to used
+        available.flags = MemoryInfo:FLAGS_USED;
+        //MemoryInfo prev = this._findInfoByPtr(this.used, available.buf); // for sorted used-list
+        MemoryInfo prev = this.used.prev;
+        this._appendMemoryInfo(prev, available);
+        
+        return available;
+    }
+    
+    [] free(MemoryInfo info) {
+        MemoryInfo freeInfo = info; 
+        int freeInfoPtr = 0;
+        __pasm__("", {"%eax": freeInfo}, {"%eax": freeInfoPtr});
+        
+        if (!freeInfo || (freeInfo.flags != MemoryInfo:FLAGS_USED)) {
+            this.rt().err().printCString("bad free ").printPtr(freeInfoPtr).printNewline();
+            return;
+        }
+        
+        // remove from used
+        freeInfo.flags = MemoryInfo:FLAGS_AVAILABLE;
+        this._unlinkMemoryInfo(freeInfo);
+        
+        if (freeInfo.buf == freeInfoPtr + MemoryInfo:SIZEOF) {
+            // adjust embedded info
+            freeInfo.buf = freeInfoPtr;
+            freeInfo.len += MemoryInfo:SIZEOF;
+        } else {
+            MemoryInfo nonEmbeddedInfo = freeInfo;
+            
+            // create embedded info
+            __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": freeInfo});
+            freeInfo.buf = nonEmbeddedInfo.buf;
+            freeInfo.len = nonEmbeddedInfo.len;
+            freeInfo.flags = nonEmbeddedInfo.flags;
+            freeInfo.owner = nonEmbeddedInfo.owner;
+            
+            // clear non-embedded info
+            nonEmbeddedInfo.buf = 0;
+            nonEmbeddedInfo.len = 0;
+            nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+        }
+    
+        // insert into available
+        MemoryInfo prev = this._findInfoByPtr(available, freeInfo.buf);
+        this._appendMemoryInfo(prev, freeInfo);
+        MemoryInfo next = freeInfo.next;
+
+        if (((freeInfo.buf + freeInfo.len) == next.buf) && this._diff(next, available)) {
+            // merge right
+            freeInfo.len = (next.buf + next.len) - freeInfo.buf; 
+            this._unlinkMemoryInfo(next);
+            next.flags = 0;
+        }
+        if (((prev.buf + prev.len) == freeInfo.buf) && this._diff(prev, available)) {
+            // merge left
+            prev.len = (freeInfo.buf + freeInfo.len) - prev.buf;
+            this._unlinkMemoryInfo(freeInfo);
+            freeInfo.flags = 0;
+            
+            int prevPtr = 0;
+            __pasm__("", {"%eax": prev}, {"%eax": prevPtr});
+            
+            if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
+                MemoryInfo nonEmbeddedInfo = prev;
+                
+                // create embedded info
+                __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": prev});
+                prev.buf = nonEmbeddedInfo.buf;
+                prev.len = nonEmbeddedInfo.len;
+                prev.flags = nonEmbeddedInfo.flags;
+                prev.owner = nonEmbeddedInfo.owner;
+                
+                this._replaceMemoryInfo(nonEmbeddedInfo, prev);
+                // clear non-embedded info
+                nonEmbeddedInfo.buf = 0;
+                nonEmbeddedInfo.len = 0;
+                nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+            }
+        }
+        // TODO: free pages?
+    }
+    
+    [MemoryInfo] getInfo(int addr) {
+        // TODO: implement
+        return null;
+    }
+    
+    [int] getAvailableBytes() {
+        int bytes = 0;
+        MemoryInfo cur = available.next;
+        while (this._diff(cur, available)) {
+            bytes += cur.len;
+            cur = cur.next;
+        }
+        return bytes;
+    }
+
+    [OStream] dumpToStream(OStream stream) {
+        if (this._diff(available.next, available)) {
+            stream.printCString("available:\n");
+            MemoryInfo cur = available.next;
+            while (this._diff(cur, available)) {
+                this._dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        if (this._diff(used.next, used)) {
+            stream.printCString("used:\n");
+            MemoryInfo cur = used.next;
+            while (this._diff(cur, used)) {
+                this._dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        if (this._diff(reserved.next, reserved)) {
+            stream.printCString("reserved:\n");
+            MemoryInfo cur = reserved.next;
+            while (this._diff(cur, reserved)) {
+                this._dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        
+        return stream;
+    }
+
     [] initEmpty(PageAllocator pageAllocator, int initialPages, int poolElements) {
         MemoryInfo initial = pageAllocator.allocatePages(initialPages);
         if (!initial) {
@@ -42,6 +213,7 @@ class PagedMemoryManager extends Allocator {
         this._appendMemoryInfo(this.used.prev, pool.info);
     }
     
+    // private    
     [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
         int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
         int requiredSize = MemoryInfo:SIZEOF + poolSize;
@@ -77,9 +249,9 @@ class PagedMemoryManager extends Allocator {
         MemoryInfo info = null;
         if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
             __pasm__("", {"%eax": nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used}, {"%eax": info});
-            info.buf=info.len=info.owner=0;
-            info.next=info.prev=info;
-            info.flags=flags;
+            info.buf = info.len = info.owner = 0;
+            info.next = info.prev = info;
+            info.flags = flags;
             nonEmbeddedInfos.used++;
         }
         return info;
@@ -91,55 +263,32 @@ class PagedMemoryManager extends Allocator {
         newInfo.prev.next = newInfo.next.prev = newInfo;
     }
     
-    // methods
-    [MemoryInfo] allocate(int size) {
-        return null;
-    }
-    
-    [] free(MemoryInfo info) {
-    }
-    
-    [MemoryInfo] getInfo(int addr) {
-        return null;
-    }
-    
-    [int] getAvailableBytes() {
-        return 0;
+    [] _unlinkMemoryInfo(MemoryInfo info) {
+        info.next.prev = info.prev;
+        info.prev.next = info.next;
+        info.next = info.prev = info;
     }
 
-    [OStream] dumpToStream(OStream stream) {
-        {
-            stream.printCString("available:\n");
-            this.dumpInfo(available, stream).printNewline();
-            MemoryInfo cur = available.next;
-            while (this._diff(cur, available)) {
-                this.dumpInfo(cur, stream).printNewline();
-                cur = cur.next;
-            }
-        }
-        {
-            stream.printCString("used:\n");
-            this.dumpInfo(used, stream).printNewline();
-            MemoryInfo cur = used.next;
-            while (this._diff(cur, used)) {
-                this.dumpInfo(cur, stream).printNewline();
-                cur = cur.next;
-            }
-        }
-        {
-            stream.printCString("reserved:\n");
-            this.dumpInfo(reserved, stream).printNewline();
-            MemoryInfo cur = reserved.next;
-            while (this._diff(cur, reserved)) {
-                this.dumpInfo(cur, stream).printNewline();
-                cur = cur.next;
-            }
-        }
-        
-        return stream;
+    [] _replaceMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
+        newInfo.next = info.next;
+        newInfo.prev = info.prev;
+        newInfo.prev.next = newInfo.next.prev = newInfo;
+        info.next = info.prev = info;
     }
-
-    [OStream] dumpInfo(MemoryInfo info, OStream stream) {
+    
+    [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
+        MemoryInfo cur = list;
+        while (this._diff(cur.next, list) && cur.next.buf <= ptr) { cur = cur.next; }
+        return cur;
+    }
+    
+    [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
+        MemoryInfo cur = list;
+        while (this._diff(cur.next, list) && cur.len < len) { cur = cur.next; }
+        return cur;
+    }
+    
+    [OStream] _dumpInfo(MemoryInfo info, OStream stream) {
         int infoEnd = 0;
         __pasm__("addl %ebx, %eax", {"%eax": info.buf, "%ebx": info.len}, {"%eax": infoEnd});
         int infoPtr = 0;
@@ -148,6 +297,8 @@ class PagedMemoryManager extends Allocator {
             .printChar('[').printPtr(info.len).printChar(']')
             .printChar('(').printPtr(infoPtr).printChar(')');
     }
+    
+    // TODO: implement struct comparison
     [int] _diff(__any__ a, __any__ b) {
         int diff = 0;
         __pasm__("subl %eax, %ebx", {"%eax": a, "%ebx": b}, {"%ebx": diff});
