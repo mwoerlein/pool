@@ -20,7 +20,7 @@ class PagedMemoryManager extends Allocator {
     [MemoryInfo] allocate(int size) {
         int required = size + MemoryInfo:SIZEOF;
         
-        if (required < size) { // size_t overflow
+        if (required < size) { // size overflow
             this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
             return null;
         }
@@ -33,28 +33,16 @@ class PagedMemoryManager extends Allocator {
             return null;
         }
         
-        int availablePtr = 0;
-        __pasm__("", {"%eax": available}, {"%eax": availablePtr});
-        
         if (available.len < (required + 2*MemoryInfo:SIZEOF)) {
             // use whole info
-            available.buf = availablePtr + MemoryInfo:SIZEOF;
+            available.buf += MemoryInfo:SIZEOF;
             available.len -= MemoryInfo:SIZEOF;
             
             // remove from available
             this._unlinkMemoryInfo(available);
         } else {
             // split info
-            // separate remaining space
-            MemoryInfo remaining = null;
-            int remainingBuf = availablePtr + required;
-            __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
-            remaining.buf = remainingBuf;
-            remaining.len = available.len - required;
-            remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
-    
-            available.buf = availablePtr + MemoryInfo:SIZEOF;
-            available.len = size;
+            MemoryInfo remaining = this._splitAvailableMemoryInfo(available, size);
     
             // replace available by remaining in available list
             this._replaceMemoryInfo(available, remaining);
@@ -88,19 +76,7 @@ class PagedMemoryManager extends Allocator {
             freeInfo.buf = freeInfoPtr;
             freeInfo.len += MemoryInfo:SIZEOF;
         } else {
-            MemoryInfo nonEmbeddedInfo = freeInfo;
-            
-            // create embedded info
-            __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": freeInfo});
-            freeInfo.buf = nonEmbeddedInfo.buf;
-            freeInfo.len = nonEmbeddedInfo.len;
-            freeInfo.flags = nonEmbeddedInfo.flags;
-            freeInfo.owner = nonEmbeddedInfo.owner;
-            
-            // clear non-embedded info
-            nonEmbeddedInfo.buf = 0;
-            nonEmbeddedInfo.len = 0;
-            nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+            freeInfo = this._makeEmbedded(freeInfo);
         }
     
         // insert into available
@@ -124,20 +100,7 @@ class PagedMemoryManager extends Allocator {
             __pasm__("", {"%eax": prev}, {"%eax": prevPtr});
             
             if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
-                MemoryInfo nonEmbeddedInfo = prev;
-                
-                // create embedded info
-                __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": prev});
-                prev.buf = nonEmbeddedInfo.buf;
-                prev.len = nonEmbeddedInfo.len;
-                prev.flags = nonEmbeddedInfo.flags;
-                prev.owner = nonEmbeddedInfo.owner;
-                
-                this._replaceMemoryInfo(nonEmbeddedInfo, prev);
-                // clear non-embedded info
-                nonEmbeddedInfo.buf = 0;
-                nonEmbeddedInfo.len = 0;
-                nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+                prev = this._makeEmbedded(prev);
             }
         }
         // TODO: free pages?
@@ -223,25 +186,17 @@ class PagedMemoryManager extends Allocator {
             return [null, null];
         }
         // separate remaining space
-        MemoryInfo remaining = null;
-        int remainingBuf = available.buf + MemoryInfo:SIZEOF + poolSize;
-        __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
-        remaining.buf = remainingBuf;
-        remaining.len = available.len - requiredSize;
-        remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+        MemoryInfo remaining = this._splitAvailableMemoryInfo(available, poolSize);
         
         // initiate pool
-        MemoryInfo poolInfo = null;
-        __pasm__("", {"%eax": available.buf}, {"%eax": poolInfo});
-        poolInfo.buf = available.buf + MemoryInfo:SIZEOF;
-        poolInfo.len = poolSize;
-        poolInfo.flags = MemoryInfo:FLAGS_USED;
+        available.flags = MemoryInfo:FLAGS_USED;
+        
         MemoryInfoPool pool = null;
-        __pasm__("", {"%eax": poolInfo.buf}, {"%eax": pool});
-        pool.info = poolInfo;
+        __pasm__("", {"%eax": available.buf}, {"%eax": pool});
+        pool.info = available;
         pool.size = poolElements;
         pool.used = 0;
-        pool.elements = poolInfo.buf + MemoryInfoPool:SIZEOF;
+        pool.elements = available.buf + MemoryInfoPool:SIZEOF;
         return [pool, remaining];
     }
     
@@ -274,6 +229,40 @@ class PagedMemoryManager extends Allocator {
         newInfo.prev = info.prev;
         newInfo.prev.next = newInfo.next.prev = newInfo;
         info.next = info.prev = info;
+    }
+    
+    [MemoryInfo] _splitAvailableMemoryInfo(MemoryInfo available, int size) {
+        int required = size + MemoryInfo:SIZEOF;
+        
+        MemoryInfo remaining = null;
+        int remainingBuf = available.buf + required;
+        __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
+        remaining.buf = remainingBuf;
+        remaining.len = available.len - required;
+        remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+            
+        available.buf += MemoryInfo:SIZEOF;
+        available.len = size;
+        return remaining;
+    }
+    
+    [MemoryInfo] _makeEmbedded(MemoryInfo nonEmbeddedInfo) {
+        MemoryInfo info = null;
+        
+        // create embedded info
+        __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": info});
+        info.buf = nonEmbeddedInfo.buf;
+        info.len = nonEmbeddedInfo.len;
+        info.flags = nonEmbeddedInfo.flags;
+        info.owner = nonEmbeddedInfo.owner;
+        
+        this._replaceMemoryInfo(nonEmbeddedInfo, info);
+        // clear non-embedded info
+        nonEmbeddedInfo.buf = 0;
+        nonEmbeddedInfo.len = 0;
+        nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+        
+        return info;
     }
     
     [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
