@@ -1,0 +1,87 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+use sys::core::Object;
+use sys::core::Class;
+use sys::core::OStream;
+use sys::memory::MemoryManager;
+use sys::memory::MemoryInfo;
+
+class RuntimeBuilder extends Object {
+    int BS_HEAPSIZE := 0x1000;
+    
+    // methods
+    abstract [Runtime] buildRuntime(int context);
+    
+    global [Runtime] bootstrap(cstring builderName, int context) {
+        
+        // allocate buffer on stack
+        int heap = 0;
+        __pasm__("subl %eax, %esp", {"%eax": BS_HEAPSIZE}, {"%esp": heap});
+        MemoryInfo available = null;
+        __pasm__("", {"%eax": heap}, {"%eax": available});
+        available.buf = heap;
+        available.len = BS_HEAPSIZE;
+        available.flags = MemoryInfo:FLAGS_AVAILABLE;
+        
+        ClassDescriptor cdClass := Class:_getClassDesc();
+        ClassDescriptor cdRt := Runtime:_getClassDesc();
+        ClassDescriptor cdMM := MemoryManager:_getClassDesc();
+        ClassDescriptor cdSRCS := StaticResolvedClassStorage:_getClassDesc();
+        
+        MemoryInfo miClass := MemoryManager:_allocateFromBottom(available, cdClass.inst_tpl_size);
+        MemoryInfo miRt := MemoryManager:_allocateFromBottom(available, cdRt.inst_tpl_size);
+        MemoryInfo miMM := MemoryManager:_allocateFromBottom(available, cdMM.inst_tpl_size);
+        MemoryInfo miSRCS := MemoryManager:_allocateFromBottom(available, cdSRCS.inst_tpl_size);
+
+        [Class iClass, Object oClass] := Runtime:_initTemplate(miClass, cdClass);
+        [Runtime iRt, Object oRt] := Runtime:_initTemplate(miRt, cdRt);
+        [MemoryManager iMM, Object oMM] := Runtime:_initTemplate(miMM, cdMM);
+        [StaticResolvedClassStorage iSRCS, Object oSRCS] := Runtime:_initTemplate(miSRCS, cdSRCS);
+
+        iRt.setRt(iRt);
+        iRt.setAllocator(iMM.allocator());
+        iRt.setClassStorage(iSRCS.classStorage());
+        
+        iSRCS.setRt(iRt);
+        
+        iClass.setRt(iRt);
+        iClass.setDesc(cdClass);
+        
+        iMM.setRt(iRt);
+        iMM.__init();
+        iMM.initEmpty(available, 0, 0);
+        
+        iRt.__init();
+        iSRCS.__init();
+        iClass.__init();
+
+        iMM.registerUsed(miClass);
+        iMM.registerUsed(miRt);
+        iMM.registerUsed(miMM);
+        iMM.registerUsed(miSRCS);
+
+        // create and init classes
+        Class cRt := iRt.createInstance(Class:CLASSNAME);
+        if (!cRt) { return null; } // abort on initialization error
+        cRt.setDesc(cdRt);
+        Class cMM := iRt.createInstance(Class:CLASSNAME);
+        if (!cMM) { return null; } // abort on initialization error
+        cMM.setDesc(cdMM);
+        Class cSRCS := iRt.createInstance(Class:CLASSNAME);
+        if (!cSRCS) { return null; } // abort on initialization error
+        cSRCS.setDesc(cdSRCS);
+        
+        RuntimeBuilder builder := iRt.cast(RuntimeBuilder:CLASSNAME, iRt.createInstance(builderName));
+        Runtime runtime := builder.buildRuntime(context);
+
+        // free stack
+        __pasm__("addl %eax, %esp", {"%eax": BS_HEAPSIZE});
+
+        return runtime;
+    }
+}

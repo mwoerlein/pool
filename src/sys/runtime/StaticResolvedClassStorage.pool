@@ -1,0 +1,37 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+class StaticResolvedClassStorage extends ClassStorage {
+    
+    // methods
+    [ClassDescriptor] getClassDesc(cstring name) {
+        int curClass = 0;
+        int classesEnd = 0;
+        ClassDescriptor classDesc = null;
+        __pasm__("movl __classes_start, %eax", {}, {"%eax": curClass});
+        __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
+        __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
+
+        cstring descName = "";
+        while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
+            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.classname_offset}, {"%eax": descName});
+            if (sys::core::String:compareCStrings(descName, name) == 0) {
+                return classDesc;
+            }
+            curClass += classDesc.class_size;
+            __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
+        }
+        return null;
+    }
+    
+    global [ClassDescriptor] _getClassDesc() {
+        ClassDescriptor desc = null;
+        __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
+        return desc;
+    } 
+}

@@ -10,10 +10,11 @@ use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Runtime as CoreRuntime;
 use sys::runtime::ClassDescriptor;
+use sys::runtime::StaticResolvedClassStorage;
 use sys::memory::MemoryInfo;
 use sys::memory::PageAllocator;
 
-class Runtime extends CoreRuntime, PageAllocator {
+class Runtime extends CoreRuntime, PageAllocator, StaticResolvedClassStorage {
 
     // TODO: extract allocator
     int heapStart;
@@ -70,27 +71,6 @@ class Runtime extends CoreRuntime, PageAllocator {
         this.heapHead = heapHead;
     }
 
-    [ClassDescriptor] getClassDesc(cstring name) {
-        int curClass = 0;
-        int classesEnd = 0;
-        ClassDescriptor classDesc = null;
-        __pasm__("movl __classes_start, %eax", {}, {"%eax": curClass});
-        __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
-        __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
-
-        // TODO: extract ClassRegistry
-        cstring descName = "";
-        while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
-            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.classname_offset}, {"%eax": descName});
-            if (sys::core::String:compareCStrings(descName, name) == 0) {
-                return classDesc;
-            }
-            curClass += classDesc.class_size;
-            __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
-        }
-        return null;
-    }
-    
     [MemoryInfo] allocate(int size) {
         // TODO: extract allocator
         if (heapHead + MemoryInfo:SIZEOF + size > heapStart + heapSize) {

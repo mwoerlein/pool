@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::memory;
 
 use sys::core::OStream;
+use sys::runtime::ClassDescriptor;
 
 class MemoryManager extends Allocator {
     
@@ -59,10 +60,7 @@ class MemoryManager extends Allocator {
         }
         
         // append to used
-        available.flags = MemoryInfo:FLAGS_USED;
-        //MemoryInfo usedPrev = this._findInfoByPtr(this.used, available.buf); // for sorted used-list
-        MemoryInfo usedPrev = this.used.prev;
-        this._appendMemoryInfo(usedPrev, available);
+        this.registerUsed(available);
         
         return available;
     }
@@ -157,6 +155,13 @@ class MemoryManager extends Allocator {
         this._appendMemoryInfo(this.used.prev, pool.info);
     }
 
+    [] registerUsed(MemoryInfo used) {
+        used.flags = MemoryInfo:FLAGS_USED;
+        //MemoryInfo usedPrev = this._findInfoByPtr(this.used, available.buf); // for sorted used-list
+        MemoryInfo usedPrev = this.used.prev;
+        this._appendMemoryInfo(usedPrev, used);
+    }
+    
     // private    
     [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
         int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
@@ -239,29 +244,22 @@ class MemoryManager extends Allocator {
     }
     
     [MemoryInfo, MemoryInfo] _splitAvailableMemoryInfo(MemoryInfo available, int size) {
-        int required = size + MemoryInfo:SIZEOF;
-        
-        if (this.allocateIncreasing) {
-            MemoryInfo remaining = null;
-            int remainingBuf = available.buf + required;
-            __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
-            remaining.buf = remainingBuf;
-            remaining.len = available.len - required;
-            remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
-                
-            available.buf += MemoryInfo:SIZEOF;
-            available.len = size;
-            return [available, remaining];
-        } else {
-            MemoryInfo bottom = null;
-            int bottomBuf = available.buf + available.len - required;
-            __pasm__("", {"%eax": bottomBuf}, {"%eax": bottom});
-            bottom.buf = bottomBuf + MemoryInfo:SIZEOF;
-            bottom.len = size;
-                
-            available.len -= required;
-            return [bottom, available];
+        if (!this.allocateIncreasing) {
+            MemoryInfo info = MemoryManager:_allocateFromBottom(available, size);
+            return [info, available];
         }
+        
+        int required = size + MemoryInfo:SIZEOF;
+        MemoryInfo remaining = null;
+        int remainingBuf = available.buf + required;
+        __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
+        remaining.buf = remainingBuf;
+        remaining.len = available.len - required;
+        remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+            
+        available.buf += MemoryInfo:SIZEOF;
+        available.len = size;
+        return [available, remaining];
     }
     
     [MemoryInfo] _makeEmbedded(MemoryInfo nonEmbeddedInfo) {
@@ -311,4 +309,22 @@ class MemoryManager extends Allocator {
         __pasm__("subl %eax, %ebx", {"%eax": a, "%ebx": b}, {"%ebx": diff});
         return diff;
     }
+    
+    global [MemoryInfo] _allocateFromBottom(MemoryInfo available, int size) {
+        int required = size + MemoryInfo:SIZEOF;
+        MemoryInfo bottom = null;
+        int bottomBuf = available.buf + available.len - required;
+        __pasm__("", {"%eax": bottomBuf}, {"%eax": bottom});
+        bottom.buf = bottomBuf + MemoryInfo:SIZEOF;
+        bottom.len = size;
+            
+        available.len -= required;
+        return bottom;
+    }
+    
+    global [ClassDescriptor] _getClassDesc() {
+        ClassDescriptor desc = null;
+        __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
+        return desc;
+    } 
 }

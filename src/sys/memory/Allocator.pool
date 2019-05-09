@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::memory;
 
 use sys::core::Object;
+use sys::core::OStream;
 
 // TODO: convert to interface 
 class Allocator extends Object {
@@ -15,4 +16,10 @@ class Allocator extends Object {
     abstract [] free(MemoryInfo info);
     abstract [MemoryInfo] getInfo(int addr);
     abstract [int] getAvailableBytes();
+    
+    // debug
+    abstract [OStream] dumpToStream(OStream stream);
+    
+    // TODO: remove with implicit cast
+    [Allocator] allocator() { return this; }
 }

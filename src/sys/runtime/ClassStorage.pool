@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+use sys::core::Object;
+
+// TODO: convert to interface 
+class ClassStorage extends Object {
+    
+    // methods
+    abstract [ClassDescriptor] getClassDesc(cstring name);
+    
+    // TODO: remove with implicit cast
+    [ClassStorage] classStorage() { return this; }
+}
