@@ -1,0 +1,314 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::memory;
+
+use sys::core::OStream;
+
+class MemoryManager extends Allocator {
+    
+    MemoryInfo available;
+    MemoryInfo used;
+    MemoryInfo reserved;
+    MemoryInfoPool nonEmbeddedInfos;
+    int allocateIncreasing;
+    
+    [MemoryInfo] sizeOverflow(int size) {
+        this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
+        return null;
+    }
+    
+    [MemoryInfo] outOfAvailable(int size) {
+        this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
+        return null;
+    }
+    
+    // methods
+    [MemoryInfo] allocate(int size) {
+        int required = size + MemoryInfo:SIZEOF;
+        
+        if (required < size) {
+            return this.sizeOverflow(size);
+        }
+        
+        // find available memory
+        MemoryInfo available = this._findInfoByLen(this.available, required);
+        if (available.len < required) {
+            return this.outOfAvailable(size);
+        }
+        
+        if (available.len < (required + 2*MemoryInfo:SIZEOF)) {
+            // use whole info
+            available.buf += MemoryInfo:SIZEOF;
+            available.len -= MemoryInfo:SIZEOF;
+            
+            // remove from available
+            this._unlinkMemoryInfo(available);
+        } else {
+            // split info
+            [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, size);
+    
+            if (this._diff(available, remaining)) {
+                // replace available by remaining in available list
+                this._replaceMemoryInfo(available, remaining);
+            } else {
+                available = used;
+            }
+        }
+        
+        // append to used
+        available.flags = MemoryInfo:FLAGS_USED;
+        //MemoryInfo usedPrev = this._findInfoByPtr(this.used, available.buf); // for sorted used-list
+        MemoryInfo usedPrev = this.used.prev;
+        this._appendMemoryInfo(usedPrev, available);
+        
+        return available;
+    }
+    
+    [] free(MemoryInfo info) {
+        MemoryInfo freeInfo = info; 
+        int freeInfoPtr = 0;
+        __pasm__("", {"%eax": freeInfo}, {"%eax": freeInfoPtr});
+        
+        if (!freeInfo || (freeInfo.flags != MemoryInfo:FLAGS_USED)) {
+            this.rt().err().printCString("bad free ").printPtr(freeInfoPtr).printNewline();
+            return;
+        }
+        
+        // remove from used
+        freeInfo.flags = MemoryInfo:FLAGS_AVAILABLE;
+        this._unlinkMemoryInfo(freeInfo);
+        
+        if (freeInfo.buf == freeInfoPtr + MemoryInfo:SIZEOF) {
+            // adjust embedded info
+            freeInfo.buf = freeInfoPtr;
+            freeInfo.len += MemoryInfo:SIZEOF;
+        } else {
+            freeInfo = this._makeEmbedded(freeInfo);
+        }
+    
+        // insert into available
+        this._mergeMemoryInfoInto(freeInfo, available);
+    }
+    
+    [MemoryInfo] getInfo(int addr) {
+        // TODO: implement
+        return null;
+    }
+    
+    [int] getAvailableBytes() {
+        int bytes = 0;
+        MemoryInfo cur = available.next;
+        while (this._diff(cur, available)) {
+            bytes += cur.len;
+            cur = cur.next;
+        }
+        return bytes;
+    }
+
+    [OStream] dumpToStream(OStream stream) {
+        if (this._diff(available.next, available)) {
+            stream.printCString("available:\n");
+            MemoryInfo cur = available.next;
+            while (this._diff(cur, available)) {
+                this._dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        if (this._diff(used.next, used)) {
+            stream.printCString("used:\n");
+            MemoryInfo cur = used.next;
+            while (this._diff(cur, used)) {
+                this._dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        if (this._diff(reserved.next, reserved)) {
+            stream.printCString("reserved:\n");
+            MemoryInfo cur = reserved.next;
+            while (this._diff(cur, reserved)) {
+                this._dumpInfo(cur, stream).printNewline();
+                cur = cur.next;
+            }
+        }
+        
+        return stream;
+    }
+    
+    [] initEmpty(MemoryInfo available, int allocateIncreasing, int poolElements) {
+        this.allocateIncreasing = allocateIncreasing;
+        
+        // initialize pool
+        [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(available, 3 + poolElements);
+        if (!pool) {
+            // bail out
+            return;
+        }
+        
+        // init manager
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
+        
+        this._appendMemoryInfo(this.available.prev, initialAvailable);
+        this._appendMemoryInfo(this.used.prev, pool.info);
+    }
+
+    // private    
+    [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
+        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        int requiredSize = MemoryInfo:SIZEOF + poolSize;
+        if (available.len < requiredSize + MemoryInfo:SIZEOF) {
+            // bail out
+            this.rt().err().printCString("too many pool elements for available space\n");
+            return [null, null];
+        }
+        // separate remaining space
+        [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, poolSize);
+        
+        // initiate pool
+        used.flags = MemoryInfo:FLAGS_USED;
+        
+        MemoryInfoPool pool = null;
+        __pasm__("", {"%eax": used.buf}, {"%eax": pool});
+        pool.info = used;
+        pool.size = poolElements;
+        pool.used = 0;
+        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
+        return [pool, remaining];
+    }
+    
+    [MemoryInfo] _nextNonEmbeddedInfo(int flags) {
+        MemoryInfo info = null;
+        if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
+            __pasm__("", {"%eax": nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used}, {"%eax": info});
+            info.buf = info.len = info.owner = 0;
+            info.next = info.prev = info;
+            info.flags = flags;
+            nonEmbeddedInfos.used++;
+        }
+        return info;
+    }
+
+    [] _mergeMemoryInfoInto(MemoryInfo info, MemoryInfo list) {
+        MemoryInfo prev = this._findInfoByPtr(list, info.buf);
+        this._appendMemoryInfo(prev, info);
+        MemoryInfo next = info.next;
+
+        if (((info.buf + info.len) == next.buf) && this._diff(next, list)) {
+            // merge right
+            info.len = (next.buf + next.len) - info.buf; 
+            this._unlinkMemoryInfo(next);
+            next.flags = 0;
+        }
+        if (((prev.buf + prev.len) == info.buf) && this._diff(prev, list)) {
+            // merge left
+            prev.len = (info.buf + info.len) - prev.buf;
+            this._unlinkMemoryInfo(info);
+            info.flags = 0;
+            
+            int prevPtr = 0;
+            __pasm__("", {"%eax": prev}, {"%eax": prevPtr});
+            
+            if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
+                prev = this._makeEmbedded(prev);
+            }
+        }
+    }
+    
+    [] _appendMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
+        newInfo.prev = info;
+        newInfo.next = info.next;
+        newInfo.prev.next = newInfo.next.prev = newInfo;
+    }
+    
+    [] _unlinkMemoryInfo(MemoryInfo info) {
+        info.next.prev = info.prev;
+        info.prev.next = info.next;
+        info.next = info.prev = info;
+    }
+
+    [] _replaceMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
+        newInfo.next = info.next;
+        newInfo.prev = info.prev;
+        newInfo.prev.next = newInfo.next.prev = newInfo;
+        info.next = info.prev = info;
+    }
+    
+    [MemoryInfo, MemoryInfo] _splitAvailableMemoryInfo(MemoryInfo available, int size) {
+        int required = size + MemoryInfo:SIZEOF;
+        
+        if (this.allocateIncreasing) {
+            MemoryInfo remaining = null;
+            int remainingBuf = available.buf + required;
+            __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
+            remaining.buf = remainingBuf;
+            remaining.len = available.len - required;
+            remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+                
+            available.buf += MemoryInfo:SIZEOF;
+            available.len = size;
+            return [available, remaining];
+        } else {
+            MemoryInfo bottom = null;
+            int bottomBuf = available.buf + available.len - required;
+            __pasm__("", {"%eax": bottomBuf}, {"%eax": bottom});
+            bottom.buf = bottomBuf + MemoryInfo:SIZEOF;
+            bottom.len = size;
+                
+            available.len -= required;
+            return [bottom, available];
+        }
+    }
+    
+    [MemoryInfo] _makeEmbedded(MemoryInfo nonEmbeddedInfo) {
+        MemoryInfo info = null;
+        
+        // create embedded info
+        __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": info});
+        info.buf = nonEmbeddedInfo.buf;
+        info.len = nonEmbeddedInfo.len;
+        info.flags = nonEmbeddedInfo.flags;
+        info.owner = nonEmbeddedInfo.owner;
+        
+        this._replaceMemoryInfo(nonEmbeddedInfo, info);
+        // clear non-embedded info
+        nonEmbeddedInfo.buf = 0;
+        nonEmbeddedInfo.len = 0;
+        nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+        
+        return info;
+    }
+    
+    [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
+        MemoryInfo cur = list;
+        while (this._diff(cur.next, list) && cur.next.buf <= ptr) { cur = cur.next; }
+        return cur;
+    }
+    
+    [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
+        MemoryInfo cur = list;
+        while (this._diff(cur.next, list) && cur.len < len) { cur = cur.next; }
+        return cur;
+    }
+    
+    [OStream] _dumpInfo(MemoryInfo info, OStream stream) {
+        int infoEnd = 0;
+        __pasm__("addl %ebx, %eax", {"%eax": info.buf, "%ebx": info.len}, {"%eax": infoEnd});
+        int infoPtr = 0;
+        __pasm__("", {"%eax": info}, {"%eax": infoPtr});
+        return stream.printPtr(info.buf).printChar(':').printPtr(infoEnd)
+            .printChar('[').printPtr(info.len).printChar(']')
+            .printChar(' ').printChar('(').printPtr(infoPtr).printChar(')');
+    }
+    
+    // TODO: implement struct comparison
+    [int] _diff(__any__ a, __any__ b) {
+        int diff = 0;
+        __pasm__("subl %eax, %ebx", {"%eax": a, "%ebx": b}, {"%ebx": diff});
+        return diff;
+    }
+}

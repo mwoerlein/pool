@@ -116,7 +116,12 @@ class Runtime extends CoreRuntime, PageAllocator {
         info.buf = start;
         info.len = size;
         info.flags = MemoryInfo:FLAGS_AVAILABLE;
+        info.next = info.prev = info;
         return info;
+    }
+    
+    [int] isIncreasing() {
+        return 0;
     }
     
     // TODO: extract allocator
