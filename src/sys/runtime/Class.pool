@@ -3,9 +3,10 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core;
+namespace sys::runtime;
 
-use sys::runtime::ClassDescriptor;
+use sys::core::Object;
+use sys::core::String;
 
 class Class extends Object {
     

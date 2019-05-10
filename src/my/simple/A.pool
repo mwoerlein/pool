@@ -7,7 +7,7 @@ namespace my::simple;
 
 use sys::core::Object;
 use sys::core::OStream;
-use sys::core::Runtime;
+use sys::runtime::Runtime;
 
 class A extends Object {
     

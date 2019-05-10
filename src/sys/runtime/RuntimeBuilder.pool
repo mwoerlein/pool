@@ -6,7 +6,6 @@ version = 0.1.0
 namespace sys::runtime;
 
 use sys::core::Object;
-use sys::core::Class;
 use sys::core::OStream;
 use sys::memory::MemoryManager;
 use sys::memory::MemoryInfo;

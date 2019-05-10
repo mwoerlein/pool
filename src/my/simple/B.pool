@@ -7,8 +7,8 @@ namespace my::simple;
 
 use sys::core::Object;
 use sys::core::OStream;
-use sys::core::Runtime;
 use sys::core::Thread as myThread;
+use sys::runtime::Runtime;
 
 class B extends myThread, my::simple::A {
     

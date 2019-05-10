@@ -8,7 +8,6 @@ namespace sys::runtime;
 use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Thread;
-use sys::core::Class;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
 
@@ -80,6 +79,9 @@ class Runtime extends Object {
         __pasm__("", {"%eax": obj}, {"%eax": curHandle});
         allocator.free(curHandle.inst_desc.info);
     }
+    
+    // TODO: remove with implicit cast
+    [Runtime] runtime() { return this; }
     
     global [ClassDescriptor] _getClassDesc() {
         ClassDescriptor desc = null;
