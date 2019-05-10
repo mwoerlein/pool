@@ -16,7 +16,7 @@
         re2c:define:YYCTXMARKER = ctxmarker;
         re2c:define:YYLIMIT = limit;
         re2c:yyfill:enable = 1;
-        re2c:define:YYFILL = "if (fillBuffer(@@, *input)) token = current; else return 0;";
+        re2c:define:YYFILL = "if (!fillBuffer(@@, *input)) return 0;";
         re2c:define:YYFILL:naked = 1;
         
         end         = "\x00";
