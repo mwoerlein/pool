@@ -154,6 +154,14 @@ class MemoryManager extends Allocator {
         this._appendMemoryInfo(this.available.prev, initialAvailable);
         this._appendMemoryInfo(this.used.prev, pool.info);
     }
+    
+    [] initFromMemoryManager(MemoryManager src) {
+        this.allocateIncreasing = src.allocateIncreasing;
+        this.nonEmbeddedInfos = src.nonEmbeddedInfos;
+        this.available = src.available;
+        this.used = src.used;
+        this.reserved = src.reserved;
+    }
 
     [] registerUsed(MemoryInfo used) {
         used.flags = MemoryInfo:FLAGS_USED;

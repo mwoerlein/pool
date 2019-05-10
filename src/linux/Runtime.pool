@@ -5,127 +5,57 @@ version = 0.1.0
 */
 namespace linux;
 
-use sys::core::Class;
-use sys::core::Object;
 use sys::core::OStream;
-use sys::core::Runtime as CoreRuntime;
-use sys::runtime::ClassDescriptor;
-use sys::runtime::StaticResolvedClassStorage;
-use sys::memory::MemoryInfo;
+use sys::memory::Allocator;
 use sys::memory::PageAllocator;
+use sys::memory::PagedMemoryManager;
+use sys::runtime::Runtime as SysRuntime;
+use sys::runtime::StaticResolvedClassStorage;
 
-class Runtime extends CoreRuntime, PageAllocator, StaticResolvedClassStorage {
-
-    // TODO: extract allocator
-    int heapStart;
-    int heapSize;
-    int heapHead;
+class Runtime extends sys::runtime::RuntimeBuilder {
     
     // methods
-    global [CoreRuntime] buildRuntime() {
-        // get class descriptors
-        ClassDescriptor cdClass = Class:_getClassDesc();
-        if (!cdClass) { return null; } // abort on initialization error
+    global [SysRuntime] buildRuntime() {
+        return Runtime:_bootstrap(Runtime:CLASSNAME, 0);
+    }
+    
+    [SysRuntime] _buildRuntime(int context) {
+        SysRuntime bsRt := this.rt();
+        LinuxOStream bsLOut := this.rt().createInstance(LinuxOStream:CLASSNAME);
+        OStream debug := bsLOut.initOStream(1);
+        bsRt.setOut(debug);
+        bsRt.setErr(debug);
+        Allocator bsAllocator := bsRt.getAllocator();
         
-        ClassDescriptor cdRuntime = Runtime:_getClassDesc();
-        if (!cdRuntime) { return null; } // abort on initialization error
+        PageAllocator bsPA := bsRt.cast(PageAllocator:CLASSNAME, bsRt.createInstance(LinuxPageAllocator:CLASSNAME));
+        PagedMemoryManager bsPMM := bsRt.createInstance(PagedMemoryManager:CLASSNAME);
+        bsPMM.initFromPageAllocator(bsPA, 10);
         
-        // allocate spaces
-        [int heapStart, int heapSize] = Runtime:_pageAlloc(1024);
-        int heapHead = heapStart;
-
-        MemoryInfo icClass = null;
-        __pasm__("", {"%eax": heapHead}, {"%eax": icClass});
-        icClass.buf = heapHead + MemoryInfo:SIZEOF;
-        icClass.len = cdClass.inst_tpl_size;
-        icClass.flags = MemoryInfo:FLAGS_USED;
-        heapHead = icClass.buf + icClass.len;
-        if (!icClass) { return null; } // abort on initialization error
-
-        MemoryInfo irt = null;
-        __pasm__("", {"%eax": heapHead}, {"%eax": irt});
-        irt.buf = heapHead + MemoryInfo:SIZEOF;
-        irt.len = cdRuntime.inst_tpl_size;
-        irt.flags = MemoryInfo:FLAGS_USED;
-        heapHead = irt.buf + irt.len;
-        if (!irt) { return null; } // abort on initialization error
+        SysRuntime rt = bsRt.createInstance(SysRuntime:CLASSNAME);
+        rt.setRt(rt);
+        rt.setClassStorage(bsRt.getClassStorage());
+        rt.setAllocator(bsPMM.allocator());
         
-        [Class cClass, Object ocClass] = Runtime:_initTemplate(icClass, cdClass);
-        [Runtime rt, Object ort] = Runtime:_initTemplate(irt, cdRuntime);
-        rt.initHeap(heapStart, heapSize, heapHead);
-        return rt._finalizeBootstrap(cClass, cdClass, cdRuntime);
-    }
-    
-    [] __init() {
-        LinuxOStream ls1 = this.createInstance(LinuxOStream:CLASSNAME);
-        this.setOut(ls1.initOStream(1));
-        LinuxOStream ls2 = this.createInstance(LinuxOStream:CLASSNAME);
-        FormattedOStream f2 = this.createInstance(FormattedOStream:CLASSNAME);
-        this.setErr(f2.initOStream(ls2.initOStream(2)));
-    }
-    
-    [] initHeap(int heapStart, int heapSize, int heapHead) {
-        // TODO: extract allocator
-        this.heapStart = heapStart;
-        this.heapSize = heapSize;
-        this.heapHead = heapHead;
-    }
+        StaticResolvedClassStorage crcs = rt.createInstance(StaticResolvedClassStorage:CLASSNAME);
+        rt.setClassStorage(crcs.classStorage());
+        crcs.rebuildClasses();
+        
+        PageAllocator pa := rt.cast(PageAllocator:CLASSNAME, rt.createInstance(LinuxPageAllocator:CLASSNAME));
+        PagedMemoryManager pmm := rt.createInstance(PagedMemoryManager:CLASSNAME);
+        pmm.initFromPagedMemoryManager(pa, bsPMM);
+        rt.setAllocator(pmm.allocator());
 
-    [MemoryInfo] allocate(int size) {
-        // TODO: extract allocator
-        if (heapHead + MemoryInfo:SIZEOF + size > heapStart + heapSize) {
-            return null;
-        }
-        MemoryInfo info = null;
-        __pasm__("", {"%eax": heapHead}, {"%eax": info});
-        info.buf = heapHead + MemoryInfo:SIZEOF;
-        info.len = size;
-        info.flags = MemoryInfo:FLAGS_USED;
-        heapHead = info.buf + info.len;
-        return info;
+        LinuxOStream ls1 = rt.createInstance(LinuxOStream:CLASSNAME);
+        rt.setOut(ls1.initOStream(1));
+        LinuxOStream ls2 = rt.createInstance(LinuxOStream:CLASSNAME);
+        FormattedOStream f2 = rt.createInstance(FormattedOStream:CLASSNAME);
+        rt.setErr(f2.initOStream(ls2.initOStream(2)));
+        
+        bsLOut.destroy();
+        bsPA.destroy();
+        bsPMM.destroy();
+        
+        return rt;
     }
     
-    [] free(MemoryInfo info) {
-        // TODO: extract allocator
-    }
-    
-    [MemoryInfo] allocatePages(int pages) {
-        [int start, int size] = Runtime:_pageAlloc(pages);
-        MemoryInfo info = null;
-        __pasm__("", {"%eax": start}, {"%eax": info});
-        info.buf = start;
-        info.len = size;
-        info.flags = MemoryInfo:FLAGS_AVAILABLE;
-        info.next = info.prev = info;
-        return info;
-    }
-    
-    [int] isIncreasing() {
-        return 0;
-    }
-    
-    // TODO: extract allocator
-    global [int, int] _pageAlloc(int pages) {
-        int size = pages * MemoryInfo:PAGESIZE;
-        int start = 0;
-        __pasm__(<"
-            pushl 0     // offset
-            pushl -1    // fd
-            pushl 34    //flags
-            pushl 3     // prot
-            pushl %eax  // len
-            pushl 0     // addr
-            movl 90, %eax
-            movl %esp, %ebx
-            int 0x80 
-            addl 24, %esp
-        ">, {"%eax": size}, {"%eax": start});
-        return [start, size];
-    }
-    
-    global [ClassDescriptor] _getClassDesc() {
-        ClassDescriptor desc = null;
-        __pasm__("movl 8(%ebp), %eax", {}, {"%eax": desc});
-        return desc;
-    } 
 }

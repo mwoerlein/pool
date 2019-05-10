@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::runtime::Runtime;
 use sys::runtime::InstanceHandle;
 
 class Object {

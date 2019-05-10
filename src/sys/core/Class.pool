@@ -36,7 +36,7 @@ class Class extends Object {
     
     // TODO: move to destructor with implicit destruction instead of manual one
     [] __destruct() {
-        name.destroy();
+        if (name) { name.destroy(); }
     }
     
     global [ClassDescriptor] _getClassDesc() {

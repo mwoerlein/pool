@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::core::Class;
 
 class StaticResolvedClassStorage extends ClassStorage {
     
@@ -27,6 +28,27 @@ class StaticResolvedClassStorage extends ClassStorage {
             __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
         }
         return null;
+    }
+    
+    [] rebuildClasses() {
+        Runtime rt = this.rt();
+        int curClass = 0;
+        int classesEnd = 0;
+        ClassDescriptor classDesc = null;
+        __pasm__("movl __classes_start, %eax", {}, {"%eax": curClass});
+        __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
+        __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
+
+        cstring descName = "";
+        while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
+            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.classname_offset}, {"%eax": descName});
+            if (classDesc.class_instance && !rt.equals(classDesc.class_instance.rt())) {
+                classDesc.class_instance.destroy();
+                rt._createClass(classDesc);
+            }
+            curClass += classDesc.class_size;
+            __pasm__("", {"%eax": curClass}, {"%eax": classDesc});
+        }
     }
     
     global [ClassDescriptor] _getClassDesc() {

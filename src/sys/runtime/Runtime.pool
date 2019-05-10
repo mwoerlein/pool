@@ -68,6 +68,12 @@ class Runtime extends Object {
         return instance;
     }
     
+    [Class] _createClass(ClassDescriptor classDesc) {
+        Class cl = this.createInstance(Class:CLASSNAME);
+        if (cl) { cl.setDesc(classDesc); }
+        return cl;
+    }
+    
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
         InstanceHandle curHandle = null;

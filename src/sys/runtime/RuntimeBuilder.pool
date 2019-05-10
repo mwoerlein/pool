@@ -15,9 +15,9 @@ class RuntimeBuilder extends Object {
     int BS_HEAPSIZE := 0x1000;
     
     // methods
-    abstract [Runtime] buildRuntime(int context);
+    abstract [Runtime] _buildRuntime(int context);
     
-    global [Runtime] bootstrap(cstring builderName, int context) {
+    global [Runtime] _bootstrap(cstring builderName, int context) {
         
         // allocate buffer on stack
         int heap = 0;
@@ -77,7 +77,8 @@ class RuntimeBuilder extends Object {
         cSRCS.setDesc(cdSRCS);
         
         RuntimeBuilder builder := iRt.cast(RuntimeBuilder:CLASSNAME, iRt.createInstance(builderName));
-        Runtime runtime := builder.buildRuntime(context);
+        Runtime runtime := builder._buildRuntime(context);
+        builder.destroy();
 
         // free stack
         __pasm__("addl %eax, %esp", {"%eax": BS_HEAPSIZE});

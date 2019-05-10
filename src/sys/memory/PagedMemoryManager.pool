@@ -31,4 +31,9 @@ class PagedMemoryManager extends MemoryManager {
         this.initEmpty(initial, pageAllocator.isIncreasing(), 0);
     }
     
+    [] initFromPagedMemoryManager(PageAllocator pageAllocator, PagedMemoryManager src) {
+        this.pageAllocator = pageAllocator;
+        this.initFromMemoryManager(this.rt().cast(MemoryManager:CLASSNAME, src));
+    }
+    
 }
