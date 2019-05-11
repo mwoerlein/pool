@@ -65,15 +65,9 @@ class RuntimeBuilder extends Object {
         iMM.registerUsed(miSRCS);
 
         // create and init classes
-        Class cRt := iRt.createInstance(Class:CLASSNAME);
-        if (!cRt) { return null; } // abort on initialization error
-        cRt.setDesc(cdRt);
-        Class cMM := iRt.createInstance(Class:CLASSNAME);
-        if (!cMM) { return null; } // abort on initialization error
-        cMM.setDesc(cdMM);
-        Class cSRCS := iRt.createInstance(Class:CLASSNAME);
-        if (!cSRCS) { return null; } // abort on initialization error
-        cSRCS.setDesc(cdSRCS);
+        if (!iRt._createClass(cdRt)) { return null; } // abort on initialization error
+        if (!iRt._createClass(cdMM)) { return null; } // abort on initialization error
+        if (!iRt._createClass(cdSRCS)) { return null; } // abort on initialization error
         
         RuntimeBuilder builder := iRt.cast(RuntimeBuilder:CLASSNAME, iRt.createInstance(builderName));
         Runtime runtime := builder._buildRuntime(context);
