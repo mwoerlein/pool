@@ -301,6 +301,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     elem() << "\n// method definitions";
     curClass->methods.acceptAll(*this);
     
+    elem() << "\n";
     LABEL(classEnd());
     
     finalizeElement();
