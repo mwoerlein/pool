@@ -95,12 +95,21 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
         it.destroy();
     }
     
+    HashMap<VariableExprNode, PIRLocation> &outSet = env().create<HashMap<VariableExprNode, PIRLocation>>();
     HashMap<String, PIRLocation> &out = env().create<HashMap<String, PIRLocation>>();
     {
         Iterator<String> &it = pasmInst.out.keys();
         while (it.hasNext()) {
             String &reg = it.next();
             ExpressionNode &ex = pasmInst.out.get(reg);
+            if (VariableExprNode *variable = ex.isVariable()) {
+                if (variable->context) {
+                    PIRLocation &tmp = curMethod->newTemp(*variable->resolvedType);
+                    out.set(reg, tmp);
+                    outSet.set(*variable, tmp);
+                    continue;
+                }
+            }
             ex.accept(*this);
             if ((lastLocations.size() == 1) && (lastLocations.first()->kind == loc_temp)) {
                 out.set(reg, *lastLocations.first());
@@ -114,6 +123,25 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
     }
 
     curBlock->addAsm(pasmInst.pasm, in, out);
+    {
+        Iterator<VariableExprNode> &it = outSet.keys();
+        while (it.hasNext()) {
+            VariableExprNode &variable = it.next();
+            PIRLocation &tmp = outSet.get(variable);
+            
+            PIRLocation *ctx = 0;
+            variable.context->accept(*this);
+            if (lastLocations.size() == 1) {
+                ctx = &curMethod->asTemp(*lastLocations.first());
+                lastLocations.clear();
+            } else {
+                crit() << "unexpected context " << *variable.context << " " << lastLocations.size() << " in " << pasmInst << "\n";
+                return false;
+            }
+            curBlock->addSet(*ctx, *variable.resolvedVariable, tmp);
+        }
+        it.destroy();
+    }
     return true;
 }
 
