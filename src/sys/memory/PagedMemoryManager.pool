@@ -14,7 +14,7 @@ class PagedMemoryManager extends MemoryManager {
         if (!newAvailable) {
             // TODO #7: return "parent":outOfAvailable(size);
             this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
-            return null;
+            return Address:cast(MemoryInfo:NONE);
         }
         this._mergeMemoryInfoInto(newAvailable, available);
         return this.allocate(size);

@@ -18,12 +18,12 @@ class MemoryManager extends Allocator {
     
     [MemoryInfo] sizeOverflow(int size) {
         this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
-        return null;
+        return Address:cast(MemoryInfo:NONE);
     }
     
     [MemoryInfo] outOfAvailable(int size) {
         this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
-        return null;
+        return Address:cast(MemoryInfo:NONE);
     }
     
     // methods
@@ -92,7 +92,7 @@ class MemoryManager extends Allocator {
     
     [MemoryInfo] getInfo(int addr) {
         // TODO: implement
-        return null;
+        return Address:cast(MemoryInfo:NONE);
     }
     
     [int] getAvailableBytes() {
@@ -141,10 +141,7 @@ class MemoryManager extends Allocator {
         
         // initialize pool
         [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(available, 3 + poolElements);
-        if (!pool) {
-            // bail out
-            return;
-        }
+        if (Address:from(pool) == MemoryInfo:NONE) { return; } // bail out
         
         // init manager
         this.nonEmbeddedInfos = pool;
@@ -178,7 +175,7 @@ class MemoryManager extends Allocator {
         if (available.len < requiredSize + MemoryInfo:SIZEOF) {
             // bail out
             this.rt().err().printCString("too many pool elements for available space\n");
-            return [null, null];
+            return [Address:cast(MemoryInfo:NONE), Address:cast(MemoryInfo:NONE)];
         }
         // separate remaining space
         [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, poolSize);
@@ -195,7 +192,7 @@ class MemoryManager extends Allocator {
     }
     
     [MemoryInfo] _nextNonEmbeddedInfo(int flags) {
-        MemoryInfo info = null;
+        MemoryInfo info = Address:cast(MemoryInfo:NONE);
         if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
             info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used);
             info.buf = info.len = info.owner = 0;

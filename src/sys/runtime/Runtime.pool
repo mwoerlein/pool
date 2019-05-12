@@ -60,7 +60,7 @@ class Runtime extends Object {
         
         // allocate memory for instance
         MemoryInfo instInfo = allocator.allocate(classDesc.inst_tpl_size);
-        if (!instInfo) { return null; } // abort on initialization error
+        if (Address:from(instInfo) == MemoryInfo:NONE) { return null; } // abort on initialization error
 
         [__all__ instance, Object oinstance] = Runtime:_initTemplate(instInfo, classDesc);
         oinstance.setRt(this); // TODO: adjust Object

@@ -59,7 +59,7 @@ class MemoryRegistry extends MemoryManager {
         // initialize pool
         int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
         MemoryInfo used = allocator.allocate(poolSize);
-        if (!used) { return; }// bail out
+        if (Address:from(used) == MemoryInfo:NONE) { return; } // bail out
         
         MemoryInfoPool pool = Address:cast(used.buf);
         pool.info = used;
