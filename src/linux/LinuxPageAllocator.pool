@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace linux;
 
+use sys::memory::Address;
 use sys::memory::MemoryInfo;
 use sys::memory::PageAllocator;
 
@@ -14,8 +15,7 @@ class LinuxPageAllocator extends PageAllocator {
     
     [MemoryInfo] allocatePages(int pages) {
         [int start, int size] = LinuxPageAllocator:_pageAlloc(pages);
-        MemoryInfo info = null;
-        __pasm__("", {"%eax": start}, {"%eax": info});
+        MemoryInfo info = Address:cast(start);
         info.buf = start;
         info.len = size;
         info.flags = MemoryInfo:FLAGS_AVAILABLE;
@@ -29,7 +29,7 @@ class LinuxPageAllocator extends PageAllocator {
         __pasm__(<"
             pushl 0     // offset
             pushl -1    // fd
-            pushl 34    //flags
+            pushl 34    // flags
             pushl 3     // prot
             pushl %eax  // len
             pushl 0     // addr

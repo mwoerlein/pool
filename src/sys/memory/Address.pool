@@ -1,0 +1,49 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::memory;
+
+class Address {
+    
+    // methods
+    global [int] from(__any__ a) {
+        int addr = 0;
+        __pasm__("", {"%eax": a}, {"%eax": addr});
+        return addr;
+    }
+    
+    global [__all__] cast(int addr) {
+        __all__ a = null;
+        __pasm__("", {"%eax": addr}, {"%eax": a});
+        return a;
+    }
+    
+    global [int] equals(__any__ a, __any__ b) {
+        return !Address:compareAddress(Address:from(a), Address:from(b));
+    }
+    
+    global [int] compare(__any__ a, __any__ b) {
+        return Address:compareAddress(Address:from(a), Address:from(b));
+    }
+    
+    global [int] compareAddress(int a, int b) {
+        int cmp = 0;
+        __pasm__(<"
+            cmpl %ebx, %eax
+            ja _address_ca_above
+            jb _address_ca_below
+        _address_ca_equal:
+            movl 0, %ebx
+            jmp _address_ca_ret
+        _address_ca_above:
+            movl 1, %ebx
+            jmp _address_ca_ret
+        _address_ca_below:
+            movl -1, %ebx
+        _address_ca_ret:
+        ">, {"%eax": a, "%ebx": b}, {"%ebx": cmp});
+        return cmp;
+    }
+}

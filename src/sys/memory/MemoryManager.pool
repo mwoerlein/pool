@@ -51,7 +51,7 @@ class MemoryManager extends Allocator {
             // split info
             [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, size);
     
-            if (this._diff(available, remaining)) {
+            if (Address:compare(available, remaining)) {
                 // replace available by remaining in available list
                 this._replaceMemoryInfo(available, remaining);
             } else {
@@ -67,8 +67,7 @@ class MemoryManager extends Allocator {
     
     [] free(MemoryInfo info) {
         MemoryInfo freeInfo = info; 
-        int freeInfoPtr = 0;
-        __pasm__("", {"%eax": freeInfo}, {"%eax": freeInfoPtr});
+        int freeInfoPtr = Address:from(freeInfo);
         
         if (!freeInfo || (freeInfo.flags != MemoryInfo:FLAGS_USED)) {
             this.rt().err().printCString("bad free ").printPtr(freeInfoPtr).printNewline();
@@ -99,7 +98,7 @@ class MemoryManager extends Allocator {
     [int] getAvailableBytes() {
         int bytes = 0;
         MemoryInfo cur = available.next;
-        while (this._diff(cur, available)) {
+        while (Address:compare(cur, available)) {
             bytes += cur.len;
             cur = cur.next;
         }
@@ -107,27 +106,27 @@ class MemoryManager extends Allocator {
     }
 
     [OStream] dumpToStream(OStream stream, int all) {
-        if (this._diff(available.next, available)) {
+        if (Address:compare(available.next, available)) {
             stream.printCString("available:\n");
             MemoryInfo cur = available.next;
-            while (this._diff(cur, available)) {
+            while (Address:compare(cur, available)) {
                 this._dumpInfo(cur, stream).printNewline();
                 cur = cur.next;
             }
         }
         if (all) {
-            if (this._diff(reserved.next, reserved)) {
+            if (Address:compare(reserved.next, reserved)) {
                 stream.printCString("reserved:\n");
                 MemoryInfo cur = reserved.next;
-                while (this._diff(cur, reserved)) {
+                while (Address:compare(cur, reserved)) {
                     this._dumpInfo(cur, stream).printNewline();
                     cur = cur.next;
                 }
             }
-            if (this._diff(used.next, used)) {
+            if (Address:compare(used.next, used)) {
                 stream.printCString("used:\n");
                 MemoryInfo cur = used.next;
-                while (this._diff(cur, used)) {
+                while (Address:compare(cur, used)) {
                     this._dumpInfo(cur, stream).printNewline();
                     cur = cur.next;
                 }
@@ -187,8 +186,7 @@ class MemoryManager extends Allocator {
         // initiate pool
         used.flags = MemoryInfo:FLAGS_USED;
         
-        MemoryInfoPool pool = null;
-        __pasm__("", {"%eax": used.buf}, {"%eax": pool});
+        MemoryInfoPool pool = Address:cast(used.buf);
         pool.info = used;
         pool.size = poolElements;
         pool.used = 0;
@@ -199,7 +197,7 @@ class MemoryManager extends Allocator {
     [MemoryInfo] _nextNonEmbeddedInfo(int flags) {
         MemoryInfo info = null;
         if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
-            __pasm__("", {"%eax": nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used}, {"%eax": info});
+            info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used);
             info.buf = info.len = info.owner = 0;
             info.next = info.prev = info;
             info.flags = flags;
@@ -213,20 +211,19 @@ class MemoryManager extends Allocator {
         this._appendMemoryInfo(prev, info);
         MemoryInfo next = info.next;
 
-        if (((info.buf + info.len) == next.buf) && this._diff(next, list)) {
+        if (((info.buf + info.len) == next.buf) && Address:compare(next, list)) {
             // merge right
             info.len = (next.buf + next.len) - info.buf; 
             this._unlinkMemoryInfo(next);
             next.flags = 0;
         }
-        if (((prev.buf + prev.len) == info.buf) && this._diff(prev, list)) {
+        if (((prev.buf + prev.len) == info.buf) && Address:compare(prev, list)) {
             // merge left
             prev.len = (info.buf + info.len) - prev.buf;
             this._unlinkMemoryInfo(info);
             info.flags = 0;
             
-            int prevPtr = 0;
-            __pasm__("", {"%eax": prev}, {"%eax": prevPtr});
+            int prevPtr = Address:from(prev);
             
             if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
                 prev = this._makeEmbedded(prev);
@@ -260,9 +257,8 @@ class MemoryManager extends Allocator {
         }
         
         int required = size + MemoryInfo:SIZEOF;
-        MemoryInfo remaining = null;
         int remainingBuf = available.buf + required;
-        __pasm__("", {"%eax": remainingBuf}, {"%eax": remaining});
+        MemoryInfo remaining = Address:cast(remainingBuf);
         remaining.buf = remainingBuf;
         remaining.len = available.len - required;
         remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
@@ -273,10 +269,8 @@ class MemoryManager extends Allocator {
     }
     
     [MemoryInfo] _makeEmbedded(MemoryInfo nonEmbeddedInfo) {
-        MemoryInfo info = null;
-        
         // create embedded info
-        __pasm__("", {"%eax": nonEmbeddedInfo.buf}, {"%eax": info});
+        MemoryInfo info = Address:cast(nonEmbeddedInfo.buf);
         info.buf = nonEmbeddedInfo.buf;
         info.len = nonEmbeddedInfo.len;
         info.flags = nonEmbeddedInfo.flags;
@@ -293,57 +287,28 @@ class MemoryManager extends Allocator {
     
     [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
         MemoryInfo cur = list;
-        while (this._diff(cur.next, list) && this._diffPtr(cur.next.buf, ptr) <= 0) { cur = cur.next; }
+        while (Address:compare(cur.next, list) && Address:compareAddress(cur.next.buf, ptr) <= 0) { cur = cur.next; }
         return cur;
     }
     
     [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
         MemoryInfo cur = list;
-        while (this._diff(cur.next, list) && (cur.len < len)) { cur = cur.next; }
+        while (Address:compare(cur.next, list) && (cur.len < len)) { cur = cur.next; }
         return cur;
     }
     
     [OStream] _dumpInfo(MemoryInfo info, OStream stream) {
-        int infoEnd = 0;
-        __pasm__("addl %ebx, %eax", {"%eax": info.buf, "%ebx": info.len}, {"%eax": infoEnd});
-        int infoPtr = 0;
-        __pasm__("", {"%eax": info}, {"%eax": infoPtr});
+        int infoEnd = info.buf + info.len;
+        int infoPtr = Address:from(info);
         return stream.printPtr(info.buf).printChar(':').printPtr(infoEnd)
             .printChar('[').printPtr(info.len).printChar(']')
             .printChar(' ').printChar('(').printPtr(infoPtr).printChar(')');
     }
     
-    // TODO: implement struct comparison
-    [int] _diff(__any__ a, __any__ b) {
-        int diff = 0;
-        __pasm__("subl %eax, %ebx", {"%eax": a, "%ebx": b}, {"%ebx": diff});
-        return diff;
-    }
-    
-    [int] _diffPtr(int a, int b) {
-        int diff = 0;
-        __pasm__(<"
-            cmpl %ebx, %eax
-            ja _dp_above
-            jb _dp_below
-        _dp_equal:
-            movl 0, %ebx
-            jmp _dp_ret
-        _dp_above:
-            movl 1, %ebx
-            jmp _dp_ret
-        _dp_below:
-            movl -1, %ebx
-        _dp_ret:
-        ">, {"%eax": a, "%ebx": b}, {"%ebx": diff});
-        return diff;
-    }
-    
     global [MemoryInfo] _allocateFromBottom(MemoryInfo available, int size) {
         int required = size + MemoryInfo:SIZEOF;
-        MemoryInfo bottom = null;
         int bottomBuf = available.buf + available.len - required;
-        __pasm__("", {"%eax": bottomBuf}, {"%eax": bottom});
+        MemoryInfo bottom = Address:cast(bottomBuf);
         bottom.buf = bottomBuf + MemoryInfo:SIZEOF;
         bottom.len = size;
             

@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::memory::Address;
 use sys::runtime::Class;
 use sys::runtime::InstanceHandle;
 use sys::runtime::Runtime;
@@ -20,17 +21,13 @@ class Object {
     
     // methods
     [Class] getClass() {
-        InstanceHandle self = null;
-        __pasm__("", {"%eax": this}, {"%eax": self});
+        InstanceHandle self = Address:cast(Address:from(this));
         return self.inst_desc.class_desc.class_instance;
     }
     
     [int] getAddress() {
-        InstanceHandle self = null;
-        __pasm__("", {"%eax": this}, {"%eax": self});
-        int addr = 0;
-        __pasm__("", {"%eax": self.inst_desc}, {"%eax": addr});
-        return addr;
+        InstanceHandle self = Address:cast(Address:from(this));
+        return Address:from(self.inst_desc);
     }
     
     [int] hash() {

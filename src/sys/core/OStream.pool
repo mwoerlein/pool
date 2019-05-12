@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::memory::Address;
+
 class OStream extends Object {
     
     abstract [OStream] printChar(int c);
@@ -22,9 +24,7 @@ class OStream extends Object {
     }
     
     [OStream] printAddr(__any__ i) {
-        int addr = 0;
-        __pasm__("", {"%eax": i}, {"%eax": addr});
-        return this._printUHex(addr, 8);
+        return this._printUHex(Address:from(i), 8);
     }
     
     [OStream] printCString(cstring s) {

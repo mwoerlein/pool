@@ -7,6 +7,7 @@ namespace sys::runtime;
 
 use sys::core::Object;
 use sys::core::OStream;
+use sys::memory::Address;
 use sys::memory::MemoryManager;
 use sys::memory::MemoryInfo;
 
@@ -20,8 +21,7 @@ class RuntimeBuilder extends Object {
         // allocate buffer on stack
         int heap = 0;
         __pasm__("subl %eax, %esp", {"%eax": heapsize}, {"%esp": heap});
-        MemoryInfo available = null;
-        __pasm__("", {"%eax": heap}, {"%eax": available});
+        MemoryInfo available = Address:cast(heap);
         available.buf = heap;
         available.len = heapsize;
         available.flags = MemoryInfo:FLAGS_AVAILABLE;

@@ -8,6 +8,7 @@ namespace sys::runtime;
 use sys::core::Object;
 use sys::core::OStream;
 use sys::core::Thread;
+use sys::memory::Address;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
 
@@ -75,8 +76,7 @@ class Runtime extends Object {
     
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
-        InstanceHandle curHandle = null;
-        __pasm__("", {"%eax": obj}, {"%eax": curHandle});
+        InstanceHandle curHandle = Address:cast(Address:from(obj));
         allocator.free(curHandle.inst_desc.info);
     }
     
@@ -91,21 +91,18 @@ class Runtime extends Object {
     
     // TODO: move to I386Runtime
     global [__all__] _castTo(ClassDescriptor classDesc, __any__ obj) {
-        InstanceHandle curHandle = null;
-        __pasm__("", {"%eax": obj}, {"%eax": curHandle});
-        ClassDescriptor objDesc = curHandle.inst_desc.class_desc;
         if (classDesc) {
-            ClassTableEntry curEntry = null;
-            __pasm__("addl %ebx, %eax", {"%eax": objDesc, "%ebx": objDesc.class_tabs_offset}, {"%eax": curEntry});
+            InstanceHandle curHandle = Address:cast(Address:from(obj));
+            ClassDescriptor objDesc = curHandle.inst_desc.class_desc;
+            int curAddress = Address:from(objDesc) + objDesc.class_tabs_offset;
+            ClassTableEntry curEntry = Address:cast(curAddress);
             while (curEntry.handle_offset) {
                 int diff = 0;
-                __pasm__("subl %ebx, %eax", {"%eax": curEntry.class_desc, "%ebx": classDesc}, {"%eax": diff});
-                if (!diff) {
-                    __all__ newHandle = null;
-                    __pasm__("addl %ebx, %eax", {"%eax": curHandle.inst_desc, "%ebx": curEntry.handle_offset}, {"%eax": newHandle});
-                    return newHandle;
+                if (Address:equals(classDesc, curEntry.class_desc)) {
+                    return Address:cast(Address:from(curHandle.inst_desc) + curEntry.handle_offset);
                 }
-                __pasm__("addl %ebx, %eax", {"%eax": curEntry, "%ebx": ClassTableEntry:SIZEOF}, {"%eax": curEntry});
+                curAddress += ClassTableEntry:SIZEOF;
+                curEntry = Address:cast(curAddress);
             }
         }
         return null;
@@ -114,8 +111,8 @@ class Runtime extends Object {
     global [__all__, Object] _initTemplate(MemoryInfo instInfo, ClassDescriptor classDesc) {
         int call_entry = 0;
         __pasm__("movl 8(%ebp), %eax; addl _cr_mo_call_entry, %eax", {}, {"%eax": call_entry});
-        InstanceDescriptor inst_desc = null;
-        __pasm__("", {"%eax": instInfo.buf}, {"%eax": inst_desc});
+        int instAddress = instInfo.buf;
+        InstanceDescriptor inst_desc = Address:cast(instAddress);
         
         // copy template to object
         __pasm__(
@@ -127,22 +124,22 @@ class Runtime extends Object {
         inst_desc.info = instInfo;
         
         { // init handles
-            ClassTableEntry curEntry = null;
-            InstanceHandle curHandle = null;
-            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.class_tabs_offset}, {"%eax": curEntry});
+            
+            int curAddress = Address:from(classDesc) + classDesc.class_tabs_offset;
+            ClassTableEntry curEntry = Address:cast(curAddress);
             while (curEntry.handle_offset) {
-                __pasm__("addl %ebx, %eax", {"%eax": inst_desc, "%ebx": curEntry.handle_offset}, {"%eax": curHandle});
+                InstanceHandle curHandle = Address:cast(instAddress + curEntry.handle_offset);
                 curHandle.call_entry = call_entry;
                 curHandle.inst_desc = inst_desc;
                 curHandle.vtab_offset = curEntry.vtab_offset;
-                __pasm__("addl %ebx, %eax", {"%eax": curEntry, "%ebx": ClassTableEntry:SIZEOF}, {"%eax": curEntry});
+                
+                curAddress += ClassTableEntry:SIZEOF;
+                curEntry = Address:cast(curAddress);
             }
         }
         
-        __all__ inst = null;
-        __pasm__("addl %ebx, %eax", {"%eax": inst_desc, "%ebx": classDesc.class_handle_offset}, {"%eax": inst});
-        Object obj = null;
-        __pasm__("addl %ebx, %eax", {"%eax": inst_desc, "%ebx": classDesc.obj_handle_offset}, {"%eax": obj});
+        __all__ inst = Address:cast(instAddress + classDesc.class_handle_offset);
+        Object obj = Address:cast(instAddress + classDesc.obj_handle_offset);
         return [inst, obj];
     }
     
