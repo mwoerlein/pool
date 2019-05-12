@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace sys::memory;
 
+use sys::runtime::ClassDescriptor;
+
 class Address {
     
     // methods
@@ -18,6 +20,12 @@ class Address {
         __all__ a = null;
         __pasm__("", {"%eax": addr}, {"%eax": a});
         return a;
+    }
+    
+    global [cstring] string(ClassDescriptor desc, int offset) {
+        cstring s = "";
+        __pasm__("addl %ebx, %eax", {"%eax": desc, "%ebx": offset}, {"%eax": s});
+        return s;
     }
     
     global [int] equals(__any__ a, __any__ b) {

@@ -7,6 +7,7 @@ namespace sys::runtime;
 
 use sys::core::Object;
 use sys::core::String;
+use sys::memory::Address;
 
 class Class extends Object {
     
@@ -18,9 +19,7 @@ class Class extends Object {
     [String] getName() {
         if (!name) {
             name = this.rt().createInstance(String:CLASSNAME);
-            cstring _name = "";
-            __pasm__("addl %ebx, %eax", {"%eax": desc, "%ebx": desc.classname_offset}, {"%eax": _name});
-            name.assignCString(_name);
+            name.assignCString(Address:string(desc, desc.classname_offset));
         }
         return name;
     }

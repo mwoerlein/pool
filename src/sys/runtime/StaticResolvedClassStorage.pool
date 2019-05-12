@@ -17,9 +17,8 @@ class StaticResolvedClassStorage extends ClassStorage {
         __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
         ClassDescriptor classDesc = Address:cast(curClass);
 
-        cstring descName = "";
         while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
-            __pasm__("addl %ebx, %eax", {"%eax": classDesc, "%ebx": classDesc.classname_offset}, {"%eax": descName});
+            cstring descName = Address:string(classDesc, classDesc.classname_offset);
             if (sys::core::String:compareCStrings(descName, name) == 0) {
                 return classDesc;
             }
