@@ -31,7 +31,9 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         PagedMemoryManager bsPMM := bsRt.createInstance(PagedMemoryManager:CLASSNAME);
         bsPMM.initFromPageAllocator(bsPA, 10);
         
+        bsRt.setAllocator(bsPMM.allocator());
         SysRuntime rt = bsRt.createInstance(SysRuntime:CLASSNAME);
+        bsRt.setAllocator(bsAllocator);
         rt.setRt(rt);
         rt.setClassStorage(bsRt.getClassStorage());
         rt.setAllocator(bsPMM.allocator());
