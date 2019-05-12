@@ -44,7 +44,24 @@ class MemoryRegistry extends MemoryManager {
     }
     
     [MemoryInfo] allocate(int size) {
-        return null;
+        int required = size + MemoryInfo:SIZEOF;
+        
+        // find splittable available memory
+        MemoryInfo avail = this._findInfoByLen(available, required + MemoryInfo:SIZEOF);
+        if (avail.len < required) {
+            return this.outOfAvailable(size);
+        }
+        
+        // create embedded info
+        MemoryInfo ret = Address:cast(avail.buf);
+        ret.buf = avail.buf + MemoryInfo:SIZEOF;
+        ret.len = size;
+        ret.flags = MemoryInfo:FLAGS_USED;
+        
+        // mark as used
+        this.registerUsedMemory(avail.buf, required);
+        
+        return ret;
     }
     
     [] free(MemoryInfo info) {
@@ -53,26 +70,69 @@ class MemoryRegistry extends MemoryManager {
     }
     
     [] transferTo(MemoryManager memoryManager) {
+        
+        // create buffer for non-embedded infos
+        int nonEmbeddedCount = 3 + this._countNonEmbeddedInfos(reserved) + this._countNonEmbeddedInfos(used);
+        // count available blocks, that are too small for embedded memory management
+        MemoryInfo cur = available.next;
+        while (Address:compare(cur, available)) {
+            if (cur.len < MemoryInfo:SIZEOF) { nonEmbeddedCount++;}
+            cur = cur.next;
+        }
+        
+        memoryManager.initEmptyFromAllocator(this.allocator(), allocateIncreasing, nonEmbeddedCount);
+    
+        // transfer registered lists to memory manager
+        this._transferMemoryList(available, memoryManager.available, memoryManager.nonEmbeddedInfos);
+        this._transferMemoryList(reserved, memoryManager.reserved, memoryManager.nonEmbeddedInfos);
+        this._transferMemoryList(used, memoryManager.used, memoryManager.nonEmbeddedInfos);
+        
+        // clear registry
+        available.next = available.prev = available;
+        reserved.next = reserved.prev = reserved;
+        used.next = used.prev = used;
     }
     
-    [] initEmptyFromAllocator(Allocator allocator, int allocateIncreasing, int poolElements) {
-        // initialize pool
-        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
-        MemoryInfo used = allocator.allocate(poolSize);
-        if (Address:from(used) == MemoryInfo:NONE) { return; } // bail out
+    [int] _countNonEmbeddedInfos(MemoryInfo list) {
+        int count = 0;
+        MemoryInfo cur = list.next;
+        while (Address:compare(cur, list)) {
+            MemoryInfo embedded = Address:cast(cur.buf);
+            if (
+                (Address:compareAddress(cur.len, MemoryInfo:SIZEOF) < 0)                // !canEmbedInfo
+                || ((embedded.flags / 256) != MemoryInfo:MAGIC)                         // !isMemoryInfo
+                || Address:compareAddress(embedded.buf, cur.buf + MemoryInfo:SIZEOF)    // !hasFollowingBuffer
+            ) { count++; }
+            cur = cur.next;
+        }
+        return count;
+    }
+    
+    [] _transferMemoryList(MemoryInfo srcList, MemoryInfo destList, MemoryInfoPool nonEmbeddedInfos) {
+        int isAvailable = Address:equals(srcList, available);
         
-        MemoryInfoPool pool = Address:cast(used.buf);
-        pool.info = used;
-        pool.size = poolElements;
-        pool.used = 0;
-        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
-        
-        // init manager
-        this.allocateIncreasing = allocateIncreasing;
-        this.nonEmbeddedInfos = pool;
-        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
-        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
-        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
+        MemoryInfo cur = srcList.next;
+        while (Address:compare(cur, srcList)) {
+            int cannotEmbedInfo = (Address:compareAddress(cur.len, MemoryInfo:SIZEOF) < 0);
+            MemoryInfo info = Address:cast(cur.buf);
+            if (
+                isAvailable
+                || cannotEmbedInfo
+                || ((info.flags / 256) != MemoryInfo:MAGIC)                         // !isMemoryInfo
+                || Address:compareAddress(info.buf, cur.buf + MemoryInfo:SIZEOF)    // !hasFollowingBuffer
+            ) {
+                if (!isAvailable || cannotEmbedInfo) {
+                    // initialize info from buffer (reserved, used, small available)
+                    info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*(nonEmbeddedInfos.used++));
+                } // else initialize embedded info (available)
+                info.buf = cur.buf;
+                info.len = cur.len;
+                info.flags = cur.flags;
+                info.owner = cur.owner;
+            } // else use pre-initialized info as-is (used by allocate)
+            this._appendMemoryInfo(destList.prev, info);
+            cur = cur.next;
+        }
     }
     
     [] _mergeIntoList(MemoryInfo list, int mem, int len, int flags) {

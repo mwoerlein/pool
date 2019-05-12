@@ -153,6 +153,26 @@ class MemoryManager extends Allocator {
         this._appendMemoryInfo(this.used.prev, pool.info);
     }
     
+    [] initEmptyFromAllocator(Allocator allocator, int allocateIncreasing, int poolElements) {
+        // initialize pool
+        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        MemoryInfo used = allocator.allocate(poolSize);
+        if (Address:from(used) == MemoryInfo:NONE) { return; } // bail out
+        
+        MemoryInfoPool pool = Address:cast(used.buf);
+        pool.info = used;
+        pool.size = poolElements;
+        pool.used = 0;
+        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
+        
+        // init manager
+        this.allocateIncreasing = allocateIncreasing;
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
+    }
+    
     [] initFromMemoryManager(MemoryManager src) {
         this.allocateIncreasing = src.allocateIncreasing;
         this.nonEmbeddedInfos = src.nonEmbeddedInfos;
@@ -194,11 +214,10 @@ class MemoryManager extends Allocator {
     [MemoryInfo] _nextNonEmbeddedInfo(int flags) {
         MemoryInfo info = Address:cast(MemoryInfo:NONE);
         if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
-            info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*nonEmbeddedInfos.used);
+            info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*(nonEmbeddedInfos.used++));
             info.buf = info.len = info.owner = 0;
             info.next = info.prev = info;
             info.flags = flags;
-            nonEmbeddedInfos.used++;
         }
         return info;
     }
