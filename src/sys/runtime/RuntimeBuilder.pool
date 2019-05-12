@@ -11,20 +11,19 @@ use sys::memory::MemoryManager;
 use sys::memory::MemoryInfo;
 
 class RuntimeBuilder extends Object {
-    int BS_HEAPSIZE := 0x1000;
     
     // methods
     abstract [Runtime] _buildRuntime(int context);
     
-    global [Runtime] _bootstrap(cstring builderName, int context) {
+    global [Runtime] _bootstrap(cstring builderName, int heapsize, int context) {
         
         // allocate buffer on stack
         int heap = 0;
-        __pasm__("subl %eax, %esp", {"%eax": BS_HEAPSIZE}, {"%esp": heap});
+        __pasm__("subl %eax, %esp", {"%eax": heapsize}, {"%esp": heap});
         MemoryInfo available = null;
         __pasm__("", {"%eax": heap}, {"%eax": available});
         available.buf = heap;
-        available.len = BS_HEAPSIZE;
+        available.len = heapsize;
         available.flags = MemoryInfo:FLAGS_AVAILABLE;
         
         ClassDescriptor cdClass := Class:_getClassDesc();
@@ -74,7 +73,7 @@ class RuntimeBuilder extends Object {
         builder.destroy();
 
         // free stack
-        __pasm__("addl %eax, %esp", {"%eax": BS_HEAPSIZE});
+        __pasm__("addl %eax, %esp", {"%eax": heapsize});
 
         return runtime;
     }

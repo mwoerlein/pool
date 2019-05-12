@@ -16,7 +16,7 @@ class Runtime extends sys::runtime::RuntimeBuilder {
     
     // methods
     global [SysRuntime] buildRuntime() {
-        return Runtime:_bootstrap(Runtime:CLASSNAME, 0);
+        return Runtime:_bootstrap(Runtime:CLASSNAME, 0x1000, 0);
     }
     
     [SysRuntime] _buildRuntime(int context) {

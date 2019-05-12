@@ -17,12 +17,12 @@ class MemoryManager extends Allocator {
     int allocateIncreasing;
     
     [MemoryInfo] sizeOverflow(int size) {
-        this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
+        this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
         return null;
     }
     
     [MemoryInfo] outOfAvailable(int size) {
-        this.rt().err().printCString("bad allocate ").printInt(size).printNewline();
+        this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
         return null;
     }
     
@@ -106,7 +106,7 @@ class MemoryManager extends Allocator {
         return bytes;
     }
 
-    [OStream] dumpToStream(OStream stream) {
+    [OStream] dumpToStream(OStream stream, int all) {
         if (this._diff(available.next, available)) {
             stream.printCString("available:\n");
             MemoryInfo cur = available.next;
@@ -115,20 +115,22 @@ class MemoryManager extends Allocator {
                 cur = cur.next;
             }
         }
-        if (this._diff(used.next, used)) {
-            stream.printCString("used:\n");
-            MemoryInfo cur = used.next;
-            while (this._diff(cur, used)) {
-                this._dumpInfo(cur, stream).printNewline();
-                cur = cur.next;
+        if (all) {
+            if (this._diff(reserved.next, reserved)) {
+                stream.printCString("reserved:\n");
+                MemoryInfo cur = reserved.next;
+                while (this._diff(cur, reserved)) {
+                    this._dumpInfo(cur, stream).printNewline();
+                    cur = cur.next;
+                }
             }
-        }
-        if (this._diff(reserved.next, reserved)) {
-            stream.printCString("reserved:\n");
-            MemoryInfo cur = reserved.next;
-            while (this._diff(cur, reserved)) {
-                this._dumpInfo(cur, stream).printNewline();
-                cur = cur.next;
+            if (this._diff(used.next, used)) {
+                stream.printCString("used:\n");
+                MemoryInfo cur = used.next;
+                while (this._diff(cur, used)) {
+                    this._dumpInfo(cur, stream).printNewline();
+                    cur = cur.next;
+                }
             }
         }
         
@@ -291,13 +293,13 @@ class MemoryManager extends Allocator {
     
     [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
         MemoryInfo cur = list;
-        while (this._diff(cur.next, list) && cur.next.buf <= ptr) { cur = cur.next; }
+        while (this._diff(cur.next, list) && this._diffPtr(cur.next.buf, ptr) <= 0) { cur = cur.next; }
         return cur;
     }
     
     [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
         MemoryInfo cur = list;
-        while (this._diff(cur.next, list) && cur.len < len) { cur = cur.next; }
+        while (this._diff(cur.next, list) && (cur.len < len)) { cur = cur.next; }
         return cur;
     }
     
@@ -315,6 +317,25 @@ class MemoryManager extends Allocator {
     [int] _diff(__any__ a, __any__ b) {
         int diff = 0;
         __pasm__("subl %eax, %ebx", {"%eax": a, "%ebx": b}, {"%ebx": diff});
+        return diff;
+    }
+    
+    [int] _diffPtr(int a, int b) {
+        int diff = 0;
+        __pasm__(<"
+            cmpl %ebx, %eax
+            ja _dp_above
+            jb _dp_below
+        _dp_equal:
+            movl 0, %ebx
+            jmp _dp_ret
+        _dp_above:
+            movl 1, %ebx
+            jmp _dp_ret
+        _dp_below:
+            movl -1, %ebx
+        _dp_ret:
+        ">, {"%eax": a, "%ebx": b}, {"%ebx": diff});
         return diff;
     }
     

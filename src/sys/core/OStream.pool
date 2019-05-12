@@ -21,6 +21,12 @@ class OStream extends Object {
         return this._printUHex(i, 8);
     }
     
+    [OStream] printAddr(__any__ i) {
+        int addr = 0;
+        __pasm__("", {"%eax": i}, {"%eax": addr});
+        return this._printUHex(addr, 8);
+    }
+    
     [OStream] printCString(cstring s) {
         return this._printCStringBuffer(this._getCStringBuffer(s));
     }

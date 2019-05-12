@@ -18,7 +18,7 @@ class Allocator extends Object {
     abstract [int] getAvailableBytes();
     
     // debug
-    abstract [OStream] dumpToStream(OStream stream);
+    abstract [OStream] dumpToStream(OStream stream, int all);
     
     // TODO: remove with implicit cast
     [Allocator] allocator() { return this; }

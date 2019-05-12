@@ -1,0 +1,173 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::memory;
+
+// TODO: convert to interface 
+class MemoryRegistry extends MemoryManager {
+    
+    // methods
+    [] registerAvailableMemory(int mem, int len) {
+        if (len == 0) {
+            return;
+        }
+        if (this._diff(reserved, reserved.next) || this._diff(used, used.next)) {
+            this.rt().out().printCString("Ignore available ").printPtr(mem).printChar(':').printPtr(len).printNewline();
+            return;
+        }
+        
+        this._mergeIntoList(available, mem, len, MemoryInfo:FLAGS_AVAILABLE);
+    }
+    
+    [] registerReservedMemory(int mem, int len) {
+        if (len == 0) {
+            return;
+        }
+        
+        this._removeFromList(available, mem, len);
+        this._mergeIntoList(reserved, mem, len, MemoryInfo:FLAGS_RESERVED);
+    }
+    
+    [] registerUsedMemory(int mem, int len) {
+        if (len == 0) {
+            return;
+        }
+        
+        this._removeFromList(available, mem, len);
+        
+        MemoryInfo n = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
+        n.buf = mem;
+        n.len = len;
+        this._appendMemoryInfo(used.prev, n);
+    }
+    
+    [MemoryInfo] allocate(int size) {
+        return null;
+    }
+    
+    [] free(MemoryInfo info) {
+        // no static free available
+        this.rt().err().printCString("bad static free").printNewline();
+    }
+    
+    [] transferTo(MemoryManager memoryManager) {
+    }
+    
+    [] initEmptyFromAllocator(Allocator allocator, int allocateIncreasing, int poolElements) {
+        // initialize pool
+        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        MemoryInfo used = allocator.allocate(poolSize);
+        if (!used) { return; }// bail out
+        
+        MemoryInfoPool pool = null;
+        __pasm__("", {"%eax": used.buf}, {"%eax": pool});
+        pool.info = used;
+        pool.size = poolElements;
+        pool.used = 0;
+        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
+        
+        // init manager
+        this.allocateIncreasing = allocateIncreasing;
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
+    }
+    
+    [] _mergeIntoList(MemoryInfo list, int mem, int len, int flags) {
+        MemoryInfo info = this._findInfoByPtr(list, mem);
+        if (this._diff(info, list) && (this._diffPtr((info.buf + info.len), mem) >= 0)) {
+            // merge into prev
+            info.len = mem + len - info.buf;
+        } else {
+            // insert new
+            MemoryInfo n = this._nextNonEmbeddedInfo(flags);
+            n.buf = mem;
+            n.len = len;
+            this._appendMemoryInfo(info, n);
+            info = n;
+        }
+        // merge with next
+        while (this._diff(info.next, list) && (this._diffPtr((info.buf + info.len), info.next.buf) >= 0)) {
+            MemoryInfo merged = info.next;
+            info.len = merged.buf + merged.len - info.buf;
+            this._unlinkMemoryInfo(merged);
+            merged.flags = 0;
+        }
+    }
+    
+    [] _removeFromList(MemoryInfo list, int mem, int len) {
+        if (!this._diff(list, list.next)) {
+            return;
+        }
+        
+        int memEnd = mem + len;
+        MemoryInfo firstInfo = this._findInfoByPtr(list, mem);
+        MemoryInfo lastInfo = this._findInfoByPtr(list, memEnd);
+        
+        if (this._diff(firstInfo, lastInfo)) {
+            // area covers multiple infos
+    
+            // remove fully covered infos    
+            while(this._diff(firstInfo.next, lastInfo)) {
+                MemoryInfo remove = firstInfo.next; 
+                this._unlinkMemoryInfo(remove);
+                remove.flags = 0;
+            }
+            
+            if (this._diff(firstInfo, list)) {
+                int firstInfoEnd = firstInfo.buf + firstInfo.len;
+                if (this._diffPtr(firstInfoEnd, mem) < 0) {
+                    // area fully after firstInfo
+                } else if (firstInfo.buf == mem) {
+                    // area fully covers firstInfo
+                    this._unlinkMemoryInfo(firstInfo);
+                    firstInfo.flags = 0;
+                } else {
+                    // area is end of first Info
+                    firstInfo.len = mem - firstInfo.buf;
+                }
+            }
+            
+            int lastInfoEnd = lastInfo.buf + lastInfo.len;
+            if (lastInfoEnd == memEnd) {
+                // area fully covers lastInfo
+                this._unlinkMemoryInfo(lastInfo);
+                lastInfo.flags = 0;
+            } else {
+                // area is begin of lastInfo
+                lastInfo.buf = memEnd;
+                lastInfo.len = lastInfoEnd - memEnd;
+            }
+        } else if (this._diff(firstInfo, list)) {
+            int firstInfoEnd = firstInfo.buf + firstInfo.len;
+            if (this._diffPtr(firstInfoEnd, mem) < 0) {
+                // area fully after firstInfo
+            } else if (firstInfo.buf == mem) {
+                if (firstInfo.len <= len) {
+                    // area fully covers firstInfo
+                    this._unlinkMemoryInfo(firstInfo);
+                    firstInfo.flags = 0;
+                } else {
+                    // area is begin of firstInfo
+                    firstInfo.buf = memEnd;
+                    firstInfo.len = firstInfoEnd - memEnd;
+                }
+            } else if (this._diffPtr(firstInfoEnd, memEnd) <= 0) {
+                // area is end of first Info
+                firstInfo.len = mem - firstInfo.buf;
+            } else {
+                // area is inside of firstInfo
+                firstInfo.len = mem - firstInfo.buf;
+                MemoryInfo n = this._nextNonEmbeddedInfo(firstInfo.flags);
+                n.buf = memEnd;
+                n.len = firstInfoEnd - memEnd;
+                this._appendMemoryInfo(firstInfo, n);
+            }
+        } else {
+            // area fully before whole list
+        }
+    }
+}
