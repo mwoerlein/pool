@@ -22,9 +22,27 @@ class Address {
         return a;
     }
     
-    global [cstring] string(ClassDescriptor desc, int offset) {
+    global [__all__] convert(__any__ src) {
+        __all__ a = null;
+        __pasm__("", {"%eax": src}, {"%eax": a});
+        return a;
+    }
+    
+    global [__all__] offset(__any__ base, int offset) {
+        __all__ a = null;
+        __pasm__("addl %ebx, %eax", {"%eax": base, "%ebx": offset}, {"%eax": a});
+        return a;
+    }
+    
+    global [int] offsetAddress(__any__ base, int offset) {
+        int addr = 0;
+        __pasm__("addl %ebx, %eax", {"%eax": base, "%ebx": offset}, {"%eax": addr});
+        return addr;
+    }
+    
+    global [cstring] string(__any__ base, int offset) {
         cstring s = "";
-        __pasm__("addl %ebx, %eax", {"%eax": desc, "%ebx": offset}, {"%eax": s});
+        __pasm__("addl %ebx, %eax", {"%eax": base, "%ebx": offset}, {"%eax": s});
         return s;
     }
     
@@ -53,5 +71,17 @@ class Address {
         _address_ca_ret:
         ">, {"%eax": a, "%ebx": b}, {"%ebx": cmp});
         return cmp;
+    }
+    
+    global [int] sumOverflow(int a, int b) {
+        int diff = 0;
+        __pasm__(<"
+            movl 1, %ecx
+            addl %ebx, %eax
+            jb _address_so_ret
+            movl 0, %ecx
+        _address_so_ret:
+        ">, {"%eax": a, "%ebx": b}, {"%ecx": diff});
+        return diff;
     }
 }

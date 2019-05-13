@@ -9,41 +9,36 @@ use sys::memory::Address;
 
 class StaticResolvedClassStorage extends ClassStorage {
     
+    int classesStart;
+    int classesEnd;
+    
     // methods
-    [ClassDescriptor] getClassDesc(cstring name) {
-        int curClass = 0;
-        int classesEnd = 0;
-        __pasm__("movl __classes_start, %eax", {}, {"%eax": curClass});
+    [] __init() {
+        __pasm__("movl __classes_start, %eax", {}, {"%eax": classesStart});
         __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
-        ClassDescriptor classDesc = Address:cast(curClass);
-
-        while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
+    }
+    
+    [ClassDescriptor] getClassDesc(cstring name) {
+        ClassDescriptor classDesc = Address:cast(classesStart);
+        while ((Address:from(classDesc) < classesEnd) && (classDesc.magic == ClassDescriptor:MAGIC)) {
             cstring descName = Address:string(classDesc, classDesc.classname_offset);
             if (sys::core::String:compareCStrings(descName, name) == 0) {
                 return classDesc;
             }
-            curClass += classDesc.class_size;
-            classDesc = Address:cast(curClass);
+            classDesc = Address:offset(classDesc, classDesc.class_size);
         }
         return null;
     }
     
     [] rebuildClasses() {
         Runtime rt = this.rt();
-        int curClass = 0;
-        int classesEnd = 0;
-        ClassDescriptor classDesc = null;
-        __pasm__("movl __classes_start, %eax", {}, {"%eax": curClass});
-        __pasm__("movl __classes_end, %eax", {}, {"%eax": classesEnd});
-        ClassDescriptor classDesc = Address:cast(curClass);
-
-        while ((curClass < classesEnd) && (classDesc.magic == 0x15AC1A55)) {
+        ClassDescriptor classDesc = Address:cast(classesStart);
+        while ((Address:from(classDesc) < classesEnd) && (classDesc.magic == ClassDescriptor:MAGIC)) {
             if (classDesc.class_instance && !rt.equals(classDesc.class_instance.rt())) {
                 classDesc.class_instance.destroy();
                 rt._createClass(classDesc);
             }
-            curClass += classDesc.class_size;
-            classDesc = Address:cast(curClass);
+            classDesc = Address:offset(classDesc, classDesc.class_size);
         }
     }
     

@@ -32,6 +32,10 @@ class Class extends Object {
     [] setDesc(ClassDescriptor desc) {
         this.desc = desc;
         desc.class_instance = this; 
+        if (name) {
+            name.destroy();
+            name = null;
+        }
     }
     
     // TODO: move to destructor with implicit destruction instead of manual one

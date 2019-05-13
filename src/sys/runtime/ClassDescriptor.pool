@@ -7,6 +7,8 @@ namespace sys::runtime;
 
 
 struct ClassDescriptor {
+    global int MAGIC := 0x15AC1A55;
+    
     int magic;
     Class class_instance;
     int classname_offset;

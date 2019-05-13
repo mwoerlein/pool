@@ -76,7 +76,7 @@ class Runtime extends Object {
     
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
-        InstanceHandle curHandle = Address:cast(Address:from(obj));
+        InstanceHandle curHandle = Address:convert(obj);
         allocator.free(curHandle.inst_desc.info);
     }
     
@@ -92,17 +92,15 @@ class Runtime extends Object {
     // TODO: move to I386Runtime
     global [__all__] _castTo(ClassDescriptor classDesc, __any__ obj) {
         if (classDesc) {
-            InstanceHandle curHandle = Address:cast(Address:from(obj));
+            InstanceHandle curHandle = Address:convert(obj);
             ClassDescriptor objDesc = curHandle.inst_desc.class_desc;
-            int curAddress = Address:from(objDesc) + objDesc.class_tabs_offset;
-            ClassTableEntry curEntry = Address:cast(curAddress);
+            ClassTableEntry curEntry = Address:offset(objDesc, objDesc.class_tabs_offset);
             while (curEntry.handle_offset) {
                 int diff = 0;
                 if (Address:equals(classDesc, curEntry.class_desc)) {
                     return Address:cast(Address:from(curHandle.inst_desc) + curEntry.handle_offset);
                 }
-                curAddress += ClassTableEntry:SIZEOF;
-                curEntry = Address:cast(curAddress);
+                curEntry = Address:offset(curEntry, ClassTableEntry:SIZEOF);
             }
         }
         return null;
@@ -111,13 +109,12 @@ class Runtime extends Object {
     global [__all__, Object] _initTemplate(MemoryInfo instInfo, ClassDescriptor classDesc) {
         int call_entry = 0;
         __pasm__("movl 8(%ebp), %eax; addl _cr_mo_call_entry, %eax", {}, {"%eax": call_entry});
-        int instAddress = instInfo.buf;
-        InstanceDescriptor inst_desc = Address:cast(instAddress);
+        InstanceDescriptor inst_desc = Address:cast(instInfo.buf);
         
         // copy template to object
         __pasm__(
-            "addl %eax, %esi; .byte 0xf3; .byte 0xa4 #// rep movsb",
-             {"%eax": classDesc.inst_tpl_offset, "%ecx": classDesc.inst_tpl_size, "%esi": classDesc, "%edi": inst_desc}
+            ".byte 0xf3; .byte 0xa4 #// rep movsb",
+             {"%ecx": classDesc.inst_tpl_size, "%esi": Address:offset(classDesc, classDesc.inst_tpl_offset), "%edi": inst_desc}
         );
         
         inst_desc.class_desc = classDesc;
@@ -125,21 +122,19 @@ class Runtime extends Object {
         
         { // init handles
             
-            int curAddress = Address:from(classDesc) + classDesc.class_tabs_offset;
-            ClassTableEntry curEntry = Address:cast(curAddress);
+            ClassTableEntry curEntry = Address:offset(classDesc, classDesc.class_tabs_offset);
             while (curEntry.handle_offset) {
-                InstanceHandle curHandle = Address:cast(instAddress + curEntry.handle_offset);
+                InstanceHandle curHandle = Address:offset(inst_desc, curEntry.handle_offset);
                 curHandle.call_entry = call_entry;
                 curHandle.inst_desc = inst_desc;
                 curHandle.vtab_offset = curEntry.vtab_offset;
                 
-                curAddress += ClassTableEntry:SIZEOF;
-                curEntry = Address:cast(curAddress);
+                curEntry = Address:offset(curEntry, ClassTableEntry:SIZEOF);
             }
         }
         
-        __all__ inst = Address:cast(instAddress + classDesc.class_handle_offset);
-        Object obj = Address:cast(instAddress + classDesc.obj_handle_offset);
+        __all__ inst = Address:offset(inst_desc, classDesc.class_handle_offset);
+        Object obj = Address:offset(inst_desc, classDesc.obj_handle_offset);
         return [inst, obj];
     }
     

@@ -21,12 +21,12 @@ class Object {
     
     // methods
     [Class] getClass() {
-        InstanceHandle self = Address:cast(Address:from(this));
+        InstanceHandle self = Address:convert(this);
         return self.inst_desc.class_desc.class_instance;
     }
     
     [int] getAddress() {
-        InstanceHandle self = Address:cast(Address:from(this));
+        InstanceHandle self = Address:convert(this);
         return Address:from(self.inst_desc);
     }
     
