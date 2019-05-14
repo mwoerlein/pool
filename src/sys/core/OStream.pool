@@ -65,22 +65,14 @@ class OStream extends Object {
         int remainder = 0;
         
         /*  Divide D by BASE until D == 0. */
-        { // TODO: use do {...} while, if available
+        do {
             __pasm__("movl 0, %edx; div %ebx", {"%eax": cur, "%ebx": base}, {"%eax": cur, "%edx": remainder});
             if (remainder < 10) {
                 this._putCharToMem(--p, remainder + '0');
             } else {
                 this._putCharToMem(--p, remainder + 'a' - 10);
             }
-        }
-        while (cur) {
-            __pasm__("movl 0, %edx; div %ebx", {"%eax": cur, "%ebx": base}, {"%eax": cur, "%edx": remainder});
-            if (remainder < 10) {
-                this._putCharToMem(--p, remainder + '0');
-            } else {
-                this._putCharToMem(--p, remainder + 'a' - 10);
-            }
-        }
+        } while (cur);
         while (p > padded_start) {
             this._putCharToMem(--p, '0');
         }
