@@ -34,6 +34,7 @@ int Parser::makeAnglebracketcloseEqual() { return ANGLEBRACKETCLOSE_EQUAL; }
 int Parser::makeAbstract()  { return ABSTRACT; }
 int Parser::makeAs()        { return AS; }
 int Parser::makeClass()     { return CLASS; }
+int Parser::makeDo()        { return DO; }
 int Parser::makeElse()      { return ELSE; }
 int Parser::makeExtends()   { return EXTENDS; }
 int Parser::makeGlobal()    { return GLOBAL; }

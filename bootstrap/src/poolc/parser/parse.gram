@@ -37,6 +37,7 @@
 %token ABSTRACT
 %token AS
 %token CLASS
+%token DO
 %token ELSE
 %token EXTENDS
 %token GLOBAL
@@ -1142,12 +1143,21 @@ inline_pasm_inst:
 loop_inst:
     WHILE '(' expression ')' '{' instruction_block '}'
     {
-        $$ = &driver.env().create<WhileInstNode, ExpressionNode&, BlockInstNode&>(*$3, *$6);
+        $$ = &driver.env().create<WhileInstNode, ExpressionNode&, BlockInstNode&, bool>(*$3, *$6, false);
         
         $$->first_line = @1.first_line;
         $$->first_column = @1.first_column;
         $$->last_line = @7.last_line;
         $$->last_column = @7.last_column;
+    }
+|   DO '{' instruction_block '}' WHILE '(' expression ')' ';'
+    {
+        $$ = &driver.env().create<WhileInstNode, ExpressionNode&, BlockInstNode&, bool>(*$7, *$3, true);
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @8.last_line;
+        $$->last_column = @8.last_column;
     }
 ;
 

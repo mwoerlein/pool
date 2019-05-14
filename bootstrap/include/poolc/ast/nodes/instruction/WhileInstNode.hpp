@@ -10,8 +10,9 @@ class WhileInstNode: public InstructionNode {
     public:
     ExpressionNode &condition;
     BlockInstNode &block;
+    bool postTest;
     
-    WhileInstNode(Environment &env, MemoryInfo &mi, ExpressionNode &condition, BlockInstNode &block);
+    WhileInstNode(Environment &env, MemoryInfo &mi, ExpressionNode &condition, BlockInstNode &block, bool postTest);
     virtual ~WhileInstNode();
     
     virtual bool accept(Visitor & visitor) override;

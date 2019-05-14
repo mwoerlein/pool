@@ -55,6 +55,7 @@ class Parser: public ParserBase
         int makeAbstract();
         int makeAs();
         int makeClass();
+        int makeDo();
         int makeElse();
         int makeExtends();
         int makeGlobal();

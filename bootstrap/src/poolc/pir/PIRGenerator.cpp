@@ -214,7 +214,7 @@ bool PIRGenerator::visit(WhileInstNode & whileInst) {
     PIRBasicBlock *next = &curMethod->newBasicBlock();
     PIRBasicBlock *body = &curMethod->newBasicBlock();
     PIRBasicBlock *test = &curMethod->newBasicBlock();
-    curBlock->next = test;
+    curBlock->next = whileInst.postTest ? body : test;
     
     curBlock = test;
     branch(whileInst.condition, *body, *next);

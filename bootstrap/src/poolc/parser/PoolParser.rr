@@ -191,6 +191,7 @@ int PoolParser::lex()
         "abstract"      { setLocation(); return parser->makeAbstract(); }
         "as"            { setLocation(); return parser->makeAs(); }
         "class"         { setLocation(); return parser->makeClass(); }
+        "do"            { setLocation(); return parser->makeDo(); }
         "extends"       { setLocation(); return parser->makeExtends(); }
         "else"          { setLocation(); return parser->makeElse(); }
         "global"        { setLocation(); return parser->makeGlobal(); }

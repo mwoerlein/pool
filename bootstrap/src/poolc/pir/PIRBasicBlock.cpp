@@ -154,7 +154,7 @@ void PIRBasicBlock::addSet(PIRLocation &context, VariableScope &var, PIRLocation
     }
     // TODO: handle type conversion?
     if (!isAssignable(src.type, *decl.resolvedType)) {
-        error() << "incompatible source " << src << " for variable " << decl << " " << decl.resolvedType << "\n";
+        error() << "incompatible source " << src << " for variable " << decl << " " << *decl.resolvedType << "\n";
         return;
     }
     _statements.add(env().create<PIRSet, PIRLocation &, VariableScope &, PIRLocation &>(context, var, src));
