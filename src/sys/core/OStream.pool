@@ -28,7 +28,7 @@ class OStream extends Object {
     }
     
     [OStream] printCString(cstring s) {
-        return this._printCStringBuffer(this._getCStringBuffer(s));
+        return this._printCString(Address:fromString(s));
     }
     
     // TODO: use generic method instead of plain Object?
@@ -85,7 +85,7 @@ class OStream extends Object {
             this._putCharToMem(--p, '0');
         }
     
-        this._printCStringBuffer(p);
+        this._printCString(p);
         
         // free stack
         __pasm__("addl %eax, %esp", {"%eax": buf_size});
@@ -104,27 +104,21 @@ class OStream extends Object {
         return this.printChar('0').printChar('x')._printUInt(d, 16, pad);
     }
     
-    [int] _getCStringBuffer(cstring s) {
-        int buf = 0;
-        __pasm__("", {"%eax": s} , {"%eax": buf});
-        return buf;
-    }
-    
-    [OStream] _printCStringBuffer(int buffer) {
+    [OStream] _printCString(int stringAddress) {
         int c = 0;
-        while (c = this._getCharFromMem(buffer++)) {
+        while (c = this._getCharFromMem(stringAddress++)) {
             this.printChar(c);
         }
         return this;
     }
     
-    [] _putCharToMem(int pointer, int c) {
-        __pasm__("movb %bl, (%eax)", {"%eax": pointer, "%ebx": c});
+    [] _putCharToMem(int address, int c) {
+        __pasm__("movb %bl, (%eax)", {"%eax": address, "%ebx": c});
     }
     
-    [int] _getCharFromMem(int pointer) {
+    [int] _getCharFromMem(int address) {
         int c = 0;
-        __pasm__("movb (%eax), %bl", {"%eax": pointer, "%ebx": c} , {"%ebx": c});
+        __pasm__("movb (%eax), %bl", {"%eax": address, "%ebx": c} , {"%ebx": c});
         return c;
     }
     

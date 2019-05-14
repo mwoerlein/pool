@@ -58,10 +58,10 @@ class RuntimeBuilder extends Object {
         iSRCS.__init();
         iClass.__init();
 
-        iMM.registerUsed(miClass);
-        iMM.registerUsed(miRt);
-        iMM.registerUsed(miMM);
-        iMM.registerUsed(miSRCS);
+        iMM._appendToUsed(miClass);
+        iMM._appendToUsed(miRt);
+        iMM._appendToUsed(miMM);
+        iMM._appendToUsed(miSRCS);
 
         // create and init classes
         if (!iRt._createClass(cdRt)) { return null; } // abort on initialization error

@@ -10,6 +10,8 @@ use sys::core::Object;
 // TODO: convert to interface 
 class PageAllocator extends Object {
     
+    global int PAGESIZE := 4096;
+
     // methods
     abstract [MemoryInfo] allocatePages(int pages);
     abstract [int] isIncreasing();

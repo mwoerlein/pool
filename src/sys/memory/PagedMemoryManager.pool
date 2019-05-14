@@ -10,13 +10,13 @@ class PagedMemoryManager extends MemoryManager {
     PageAllocator pageAllocator;
     
     [MemoryInfo] outOfAvailable(int size) {
-        MemoryInfo newAvailable = pageAllocator.allocatePages(1 + size / MemoryInfo:PAGESIZE);
+        MemoryInfo newAvailable = pageAllocator.allocatePages(1 + size / PageAllocator:PAGESIZE);
         if (!newAvailable) {
             // TODO #7: return "parent":outOfAvailable(size);
             this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
             return Address:cast(MemoryInfo:NONE);
         }
-        this._mergeMemoryInfoInto(newAvailable, available);
+        this._mergeMemoryInfoInto(available, newAvailable);
         return this.allocate(size);
     }
     

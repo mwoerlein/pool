@@ -40,6 +40,12 @@ class Address {
         return addr;
     }
     
+    global [int] fromString(cstring s) {
+        int addr = 0;
+        __pasm__("", {"%eax": s}, {"%eax": addr});
+        return addr;
+    }
+    
     global [cstring] string(__any__ base, int offset) {
         cstring s = "";
         __pasm__("addl %ebx, %eax", {"%eax": base, "%ebx": offset}, {"%eax": s});

@@ -5,44 +5,10 @@ version = 0.1.0
 */
 namespace sys::memory;
 
-// TODO: convert to interface 
+
 class MemoryRegistry extends MemoryManager {
     
     // methods
-    [] registerAvailableMemory(int mem, int len) {
-        if (len == 0) {
-            return;
-        }
-        if (Address:compare(reserved, reserved.next) || Address:compare(used, used.next)) {
-            this.rt().out().printCString("Ignore available ").printPtr(mem).printChar(':').printPtr(len).printNewline();
-            return;
-        }
-        
-        this._mergeIntoList(available, mem, len, MemoryInfo:FLAGS_AVAILABLE);
-    }
-    
-    [] registerReservedMemory(int mem, int len) {
-        if (len == 0) {
-            return;
-        }
-        
-        this._removeFromList(available, mem, len);
-        this._mergeIntoList(reserved, mem, len, MemoryInfo:FLAGS_RESERVED);
-    }
-    
-    [] registerUsedMemory(int mem, int len) {
-        if (len == 0) {
-            return;
-        }
-        
-        this._removeFromList(available, mem, len);
-        
-        MemoryInfo n = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
-        n.buf = mem;
-        n.len = len;
-        this._appendMemoryInfo(used.prev, n);
-    }
-    
     [MemoryInfo] allocate(int size) {
         int required = size + MemoryInfo:SIZEOF;
         
@@ -69,13 +35,135 @@ class MemoryRegistry extends MemoryManager {
         this.rt().err().printCString("bad static free").printNewline();
     }
     
-    [] transferTo(MemoryManager memoryManager) {
+    // registration
+    [] registerAvailableMemory(int mem, int len) {
+        if (len == 0) {
+            return;
+        }
+        if (Address:compare(reserved, reserved.next) || Address:compare(used, used.next)) {
+            this.rt().out().printCString("Ignore available ").printPtr(mem).printChar(':').printPtr(len).printNewline();
+            return;
+        }
         
+        this._registerToList(available, mem, len, MemoryInfo:FLAGS_AVAILABLE);
+    }
+    
+    [] registerReservedMemory(int mem, int len) {
+        if (len == 0) {
+            return;
+        }
+        
+        this._removeFromList(available, mem, len);
+        this._registerToList(reserved, mem, len, MemoryInfo:FLAGS_RESERVED);
+    }
+    
+    [] registerUsedMemory(int mem, int len) {
+        if (len == 0) {
+            return;
+        }
+        
+        this._removeFromList(available, mem, len);
+        this._appendMemoryInfo(used.prev, this._nextNonEmbeddedInfo(mem, len, MemoryInfo:FLAGS_USED));
+    }
+    
+    [] _registerToList(MemoryInfo list, int mem, int len, int flags) {
+        MemoryInfo info = this._findInfoByPtr(list, mem);
+        if (!Address:equals(info, list) && (Address:compareAddress((info.buf + info.len), mem) >= 0)) {
+            // merge into prev
+            if (Address:compareAddress((mem + len), (info.buf + info.len)) > 0) {
+                info.len = mem + len - info.buf;
+            }
+        } else {
+            // insert new
+            this._appendMemoryInfo(info, this._nextNonEmbeddedInfo(mem, len, flags));
+            info = info.next;
+        }
+        // merge with next
+        while (!Address:equals(info.next, list) && (Address:compareAddress((info.buf + info.len), info.next.buf) >= 0)) {
+            MemoryInfo merged = info.next;
+            info.len = merged.buf + merged.len - info.buf;
+            this._unlinkMemoryInfo(merged);
+            merged.flags = 0;
+        }
+    }
+    
+    [] _removeFromList(MemoryInfo list, int mem, int len) {
+        if (Address:equals(list, list.next)) {
+            return;
+        }
+        
+        int memEnd = mem + len;
+        MemoryInfo first = this._findInfoByPtr(list, mem);
+        MemoryInfo last = this._findInfoByPtr(list, memEnd);
+        
+        if (!Address:equals(first, last)) {
+            // area covers multiple infos
+    
+            // remove fully covered infos    
+            while(!Address:equals(first.next, last)) {
+                MemoryInfo remove = first.next; 
+                this._unlinkMemoryInfo(remove);
+                remove.flags = 0;
+            }
+            
+            if (!Address:equals(first, list)) {
+                int firstEnd = first.buf + first.len;
+                if (Address:compareAddress(firstEnd, mem) < 0) {
+                    // area fully after first info
+                } else if (first.buf == mem) {
+                    // area fully covers first info
+                    this._unlinkMemoryInfo(first);
+                    first.flags = 0;
+                } else {
+                    // area is end of first info
+                    first.len = mem - first.buf;
+                }
+            }
+            
+            int lastEnd = last.buf + last.len;
+            if (lastEnd <= memEnd) {
+                // area fully covers last info
+                this._unlinkMemoryInfo(last);
+                last.flags = 0;
+            } else {
+                // area is begin of last info
+                last.buf = memEnd;
+                last.len = lastEnd - memEnd;
+            }
+        } else if (!Address:equals(first, list)) {
+            int firstEnd = first.buf + first.len;
+            if (Address:compareAddress(firstEnd, mem) < 0) {
+                // area fully after first info
+            } else if (first.buf == mem) {
+                if (first.len <= len) {
+                    // area fully covers first info
+                    this._unlinkMemoryInfo(first);
+                    first.flags = 0;
+                } else {
+                    // area is begin of first info
+                    first.buf = memEnd;
+                    first.len = firstEnd - memEnd;
+                }
+            } else if (Address:compareAddress(firstEnd, memEnd) <= 0) {
+                // area is end of first info
+                first.len = mem - first.buf;
+            } else {
+                // area is inside of first info
+                first.len = mem - first.buf;
+                this._appendMemoryInfo(first, this._nextNonEmbeddedInfo(memEnd, firstEnd - memEnd, first.flags));
+            }
+        } else {
+            // area fully before whole list
+        }
+    }
+    
+    // transfer
+    [] transferTo(MemoryManager memoryManager) {
         // create buffer for non-embedded infos
         int nonEmbeddedCount = 3 + this._countNonEmbeddedInfos(reserved) + this._countNonEmbeddedInfos(used);
         // count available blocks, that are too small for embedded memory management
         MemoryInfo cur = available.next;
-        while (Address:compare(cur, available)) {
+        while (!Address:equals(cur, available)) {
             if (cur.len < MemoryInfo:SIZEOF) { nonEmbeddedCount++;}
             cur = cur.next;
         }
@@ -96,12 +184,13 @@ class MemoryRegistry extends MemoryManager {
     [int] _countNonEmbeddedInfos(MemoryInfo list) {
         int count = 0;
         MemoryInfo cur = list.next;
-        while (Address:compare(cur, list)) {
-            MemoryInfo embedded = Address:cast(cur.buf);
+        while (!Address:equals(cur, list)) {
+            int cannotEmbedInfo = (Address:compareAddress(cur.len, MemoryInfo:SIZEOF) < 0);
+            MemoryInfo info = Address:cast(cur.buf);
             if (
-                (Address:compareAddress(cur.len, MemoryInfo:SIZEOF) < 0)                // !canEmbedInfo
-                || ((embedded.flags / 256) != MemoryInfo:MAGIC)                         // !isMemoryInfo
-                || Address:compareAddress(embedded.buf, cur.buf + MemoryInfo:SIZEOF)    // !hasFollowingBuffer
+                cannotEmbedInfo
+                || ((info.flags / 0x10000) != MemoryInfo:MAGIC)                     // !isMemoryInfo
+                || Address:compareAddress(info.buf, cur.buf + MemoryInfo:SIZEOF)    // !hasFollowingBuffer
             ) { count++; }
             cur = cur.next;
         }
@@ -112,13 +201,13 @@ class MemoryRegistry extends MemoryManager {
         int isAvailable = Address:equals(srcList, available);
         
         MemoryInfo cur = srcList.next;
-        while (Address:compare(cur, srcList)) {
+        while (!Address:equals(cur, srcList)) {
             int cannotEmbedInfo = (Address:compareAddress(cur.len, MemoryInfo:SIZEOF) < 0);
             MemoryInfo info = Address:cast(cur.buf);
             if (
                 isAvailable
                 || cannotEmbedInfo
-                || ((info.flags / 256) != MemoryInfo:MAGIC)                         // !isMemoryInfo
+                || ((info.flags / 0x10000) != MemoryInfo:MAGIC)                     // !isMemoryInfo
                 || Address:compareAddress(info.buf, cur.buf + MemoryInfo:SIZEOF)    // !hasFollowingBuffer
             ) {
                 if (!isAvailable || cannotEmbedInfo) {
@@ -132,101 +221,6 @@ class MemoryRegistry extends MemoryManager {
             } // else use pre-initialized info as-is (used by allocate)
             this._appendMemoryInfo(destList.prev, info);
             cur = cur.next;
-        }
-    }
-    
-    [] _mergeIntoList(MemoryInfo list, int mem, int len, int flags) {
-        MemoryInfo info = this._findInfoByPtr(list, mem);
-        if (Address:compare(info, list) && (Address:compareAddress((info.buf + info.len), mem) >= 0)) {
-            // merge into prev
-            info.len = mem + len - info.buf;
-        } else {
-            // insert new
-            MemoryInfo n = this._nextNonEmbeddedInfo(flags);
-            n.buf = mem;
-            n.len = len;
-            this._appendMemoryInfo(info, n);
-            info = n;
-        }
-        // merge with next
-        while (Address:compare(info.next, list) && (Address:compareAddress((info.buf + info.len), info.next.buf) >= 0)) {
-            MemoryInfo merged = info.next;
-            info.len = merged.buf + merged.len - info.buf;
-            this._unlinkMemoryInfo(merged);
-            merged.flags = 0;
-        }
-    }
-    
-    [] _removeFromList(MemoryInfo list, int mem, int len) {
-        if (!Address:compare(list, list.next)) {
-            return;
-        }
-        
-        int memEnd = mem + len;
-        MemoryInfo firstInfo = this._findInfoByPtr(list, mem);
-        MemoryInfo lastInfo = this._findInfoByPtr(list, memEnd);
-        
-        if (Address:compare(firstInfo, lastInfo)) {
-            // area covers multiple infos
-    
-            // remove fully covered infos    
-            while(Address:compare(firstInfo.next, lastInfo)) {
-                MemoryInfo remove = firstInfo.next; 
-                this._unlinkMemoryInfo(remove);
-                remove.flags = 0;
-            }
-            
-            if (Address:compare(firstInfo, list)) {
-                int firstInfoEnd = firstInfo.buf + firstInfo.len;
-                if (Address:compareAddress(firstInfoEnd, mem) < 0) {
-                    // area fully after firstInfo
-                } else if (firstInfo.buf == mem) {
-                    // area fully covers firstInfo
-                    this._unlinkMemoryInfo(firstInfo);
-                    firstInfo.flags = 0;
-                } else {
-                    // area is end of first Info
-                    firstInfo.len = mem - firstInfo.buf;
-                }
-            }
-            
-            int lastInfoEnd = lastInfo.buf + lastInfo.len;
-            if (lastInfoEnd == memEnd) {
-                // area fully covers lastInfo
-                this._unlinkMemoryInfo(lastInfo);
-                lastInfo.flags = 0;
-            } else {
-                // area is begin of lastInfo
-                lastInfo.buf = memEnd;
-                lastInfo.len = lastInfoEnd - memEnd;
-            }
-        } else if (Address:compare(firstInfo, list)) {
-            int firstInfoEnd = firstInfo.buf + firstInfo.len;
-            if (Address:compareAddress(firstInfoEnd, mem) < 0) {
-                // area fully after firstInfo
-            } else if (firstInfo.buf == mem) {
-                if (firstInfo.len <= len) {
-                    // area fully covers firstInfo
-                    this._unlinkMemoryInfo(firstInfo);
-                    firstInfo.flags = 0;
-                } else {
-                    // area is begin of firstInfo
-                    firstInfo.buf = memEnd;
-                    firstInfo.len = firstInfoEnd - memEnd;
-                }
-            } else if (Address:compareAddress(firstInfoEnd, memEnd) <= 0) {
-                // area is end of first Info
-                firstInfo.len = mem - firstInfo.buf;
-            } else {
-                // area is inside of firstInfo
-                firstInfo.len = mem - firstInfo.buf;
-                MemoryInfo n = this._nextNonEmbeddedInfo(firstInfo.flags);
-                n.buf = memEnd;
-                n.len = firstInfoEnd - memEnd;
-                this._appendMemoryInfo(firstInfo, n);
-            }
-        } else {
-            // area fully before whole list
         }
     }
 }

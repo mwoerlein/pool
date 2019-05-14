@@ -8,15 +8,13 @@ namespace sys::memory;
 
 struct MemoryInfo {
 
-    global int PAGESIZE := 4096;
+    global int NONE := -1;
     
     global int MAGIC := 0x3E30;
     global int FLAGS_AVAILABLE := 0x3E300000;
     global int FLAGS_USED := 0x3E300001;
     global int FLAGS_RESERVED := 0x3E300002;
     
-    global int NONE := -1;
-
     int buf;
     int len;
     int flags;

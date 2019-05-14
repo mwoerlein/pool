@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::memory::Address;
 
 class String extends OStream {
 
@@ -63,7 +64,7 @@ class String extends OStream {
     
     [int] compareCString(cstring s) {
         StringElement e1 = _first;
-        int p2 = this._getCStringBuffer(s);
+        int p2 = Address:fromString(s);
         int c2 = 0;
         while (e1 && (c2 = this._getCharFromMem(p2++))) {
             int diff = e1.getChar() - c2;

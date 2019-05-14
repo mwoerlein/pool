@@ -7,7 +7,7 @@ namespace sys::memory;
 
 
 struct MemoryInfoPool {
-    MemoryInfo info;
+    MemoryInfo self;
     int size;
     int used;
     int elements;

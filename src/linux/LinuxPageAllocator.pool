@@ -24,7 +24,7 @@ class LinuxPageAllocator extends PageAllocator {
     }
     
     global [int, int] _pageAlloc(int pages) {
-        int size = pages * MemoryInfo:PAGESIZE;
+        int size = pages * PageAllocator:PAGESIZE;
         int start = 0;
         __pasm__(<"
             pushl 0     // offset

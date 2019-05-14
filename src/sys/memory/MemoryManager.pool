@@ -16,16 +16,6 @@ class MemoryManager extends Allocator {
     MemoryInfoPool nonEmbeddedInfos;
     int allocateIncreasing;
     
-    [MemoryInfo] sizeOverflow(int size) {
-        this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
-        return Address:cast(MemoryInfo:NONE);
-    }
-    
-    [MemoryInfo] outOfAvailable(int size) {
-        this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
-        return Address:cast(MemoryInfo:NONE);
-    }
-    
     // methods
     [MemoryInfo] allocate(int size) {
         int required = size + MemoryInfo:SIZEOF;
@@ -60,7 +50,7 @@ class MemoryManager extends Allocator {
         }
         
         // append to used
-        this.registerUsed(available);
+        this._appendToUsed(available);
         
         return available;
     }
@@ -87,7 +77,7 @@ class MemoryManager extends Allocator {
         }
     
         // insert into available
-        this._mergeMemoryInfoInto(freeInfo, available);
+        this._mergeMemoryInfoInto(available, freeInfo);
     }
     
     [MemoryInfo] getInfo(int addr) {
@@ -104,7 +94,202 @@ class MemoryManager extends Allocator {
         }
         return bytes;
     }
-
+    
+    // errors
+    [MemoryInfo] sizeOverflow(int size) {
+        this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
+        return Address:cast(MemoryInfo:NONE);
+    }
+    
+    [MemoryInfo] outOfAvailable(int size) {
+        this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
+        return Address:cast(MemoryInfo:NONE);
+    }
+    
+    // initializations
+    [] initEmpty(MemoryInfo available, int allocateIncreasing, int poolElements) {
+        this.allocateIncreasing = allocateIncreasing;
+        
+        // initialize pool
+        [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(available, 3 + poolElements);
+        if (Address:from(pool) == MemoryInfo:NONE) { return; } // bail out
+        
+        // init manager
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_RESERVED);
+        
+        this._appendMemoryInfo(this.available.prev, initialAvailable);
+        this._appendMemoryInfo(this.used.prev, pool.self);
+    }
+    
+    [] initEmptyFromAllocator(Allocator allocator, int allocateIncreasing, int poolElements) {
+        // initialize pool
+        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        MemoryInfo used = allocator.allocate(poolSize);
+        if (Address:from(used) == MemoryInfo:NONE) { return; } // bail out
+        
+        MemoryInfoPool pool = Address:cast(used.buf);
+        pool.self = used;
+        pool.size = poolElements;
+        pool.used = 0;
+        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
+        
+        // init manager
+        this.allocateIncreasing = allocateIncreasing;
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_RESERVED);
+    }
+    
+    [] initFromMemoryManager(MemoryManager src) {
+        this.allocateIncreasing = src.allocateIncreasing;
+        this.nonEmbeddedInfos = src.nonEmbeddedInfos;
+        this.available = src.available;
+        this.used = src.used;
+        this.reserved = src.reserved;
+    }
+    
+    [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
+        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
+        int requiredSize = MemoryInfo:SIZEOF + poolSize;
+        if (available.len < requiredSize + MemoryInfo:SIZEOF) {
+            // bail out
+            this.rt().err().printCString("too many pool elements for available space\n");
+            return [Address:cast(MemoryInfo:NONE), Address:cast(MemoryInfo:NONE)];
+        }
+        // separate remaining space
+        [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, poolSize);
+        
+        // initiate pool
+        used.flags = MemoryInfo:FLAGS_USED;
+        
+        MemoryInfoPool pool = Address:cast(used.buf);
+        pool.self = used;
+        pool.size = poolElements;
+        pool.used = 0;
+        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
+        return [pool, remaining];
+    }
+    
+    // pool handling
+    [MemoryInfo] _nextNonEmbeddedInfo(int buf, int len, int flags) {
+        MemoryInfo info = Address:cast(MemoryInfo:NONE);
+        if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
+            info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*(nonEmbeddedInfos.used++));
+            info.buf = buf;
+            info.len = len;
+            info.flags = flags;
+            info.owner = 0;
+            info.next = info.prev = info;
+        }
+        return info;
+    }
+    
+    [MemoryInfo] _makeEmbedded(MemoryInfo nonEmbeddedInfo) {
+        // create embedded info
+        MemoryInfo info = Address:cast(nonEmbeddedInfo.buf);
+        info.buf = nonEmbeddedInfo.buf;
+        info.len = nonEmbeddedInfo.len;
+        info.flags = nonEmbeddedInfo.flags;
+        info.owner = nonEmbeddedInfo.owner;
+        
+        this._replaceMemoryInfo(nonEmbeddedInfo, info);
+        // clear non-embedded info
+        nonEmbeddedInfo.buf = 0;
+        nonEmbeddedInfo.len = 0;
+        nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
+        
+        return info;
+    }
+    
+    [MemoryInfo, MemoryInfo] _splitAvailableMemoryInfo(MemoryInfo available, int size) {
+        if (!this.allocateIncreasing) {
+            MemoryInfo info = MemoryManager:_allocateFromBottom(available, size);
+            return [info, available];
+        }
+        
+        int required = size + MemoryInfo:SIZEOF;
+        int remainingBuf = available.buf + required;
+        MemoryInfo remaining = Address:cast(remainingBuf);
+        remaining.buf = remainingBuf;
+        remaining.len = available.len - required;
+        remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
+            
+        available.buf += MemoryInfo:SIZEOF;
+        available.len = size;
+        return [available, remaining];
+    }
+    
+    // memory info list handling    
+    [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
+        MemoryInfo cur = list;
+        while (Address:compare(cur.next, list) && Address:compareAddress(cur.next.buf, ptr) <= 0) { cur = cur.next; }
+        return cur;
+    }
+    
+    [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
+        MemoryInfo cur = list;
+        while (Address:compare(cur.next, list) && (cur.len < len)) { cur = cur.next; }
+        //while (Address:compare(cur.next, list) && Address:compareAddress(cur.len, len) < 0) { cur = cur.next; }
+        return cur;
+    }
+    
+    [] _mergeMemoryInfoInto(MemoryInfo list, MemoryInfo info) {
+        MemoryInfo prev = this._findInfoByPtr(list, info.buf);
+        this._appendMemoryInfo(prev, info);
+        MemoryInfo next = info.next;
+        
+        if (((info.buf + info.len) == next.buf) && Address:compare(next, list)) {
+            // merge right
+            info.len = (next.buf + next.len) - info.buf; 
+            this._unlinkMemoryInfo(next);
+            next.flags = 0;
+        }
+        if (((prev.buf + prev.len) == info.buf) && Address:compare(prev, list)) {
+            // merge left
+            prev.len = (info.buf + info.len) - prev.buf;
+            this._unlinkMemoryInfo(info);
+            info.flags = 0;
+            
+            int prevPtr = Address:from(prev);
+            
+            if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
+                prev = this._makeEmbedded(prev);
+            }
+        }
+    }
+    
+    [] _appendToUsed(MemoryInfo used) {
+        used.flags = MemoryInfo:FLAGS_USED;
+        //MemoryInfo usedPrev = this._findInfoByPtr(this.used, available.buf); // for sorted used-list
+        MemoryInfo usedPrev = this.used.prev;
+        this._appendMemoryInfo(usedPrev, used);
+    }
+    
+    // generic info list handling    
+    [] _appendMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
+        newInfo.prev = info;
+        newInfo.next = info.next;
+        newInfo.prev.next = newInfo.next.prev = newInfo;
+    }
+    
+    [] _unlinkMemoryInfo(MemoryInfo info) {
+        info.next.prev = info.prev;
+        info.prev.next = info.next;
+        info.next = info.prev = info;
+    }
+    
+    [] _replaceMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
+        newInfo.next = info.next;
+        newInfo.prev = info.prev;
+        newInfo.prev.next = newInfo.next.prev = newInfo;
+        info.next = info.prev = info;
+    }
+    
+    // debug
     [OStream] dumpToStream(OStream stream, int all) {
         if (Address:compare(available.next, available)) {
             stream.printCString("available:\n");
@@ -136,183 +321,6 @@ class MemoryManager extends Allocator {
         return stream;
     }
     
-    [] initEmpty(MemoryInfo available, int allocateIncreasing, int poolElements) {
-        this.allocateIncreasing = allocateIncreasing;
-        
-        // initialize pool
-        [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(available, 3 + poolElements);
-        if (Address:from(pool) == MemoryInfo:NONE) { return; } // bail out
-        
-        // init manager
-        this.nonEmbeddedInfos = pool;
-        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
-        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
-        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
-        
-        this._appendMemoryInfo(this.available.prev, initialAvailable);
-        this._appendMemoryInfo(this.used.prev, pool.info);
-    }
-    
-    [] initEmptyFromAllocator(Allocator allocator, int allocateIncreasing, int poolElements) {
-        // initialize pool
-        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
-        MemoryInfo used = allocator.allocate(poolSize);
-        if (Address:from(used) == MemoryInfo:NONE) { return; } // bail out
-        
-        MemoryInfoPool pool = Address:cast(used.buf);
-        pool.info = used;
-        pool.size = poolElements;
-        pool.used = 0;
-        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
-        
-        // init manager
-        this.allocateIncreasing = allocateIncreasing;
-        this.nonEmbeddedInfos = pool;
-        this.available = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_AVAILABLE);
-        this.used      = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_USED);
-        this.reserved  = this._nextNonEmbeddedInfo(MemoryInfo:FLAGS_RESERVED);
-    }
-    
-    [] initFromMemoryManager(MemoryManager src) {
-        this.allocateIncreasing = src.allocateIncreasing;
-        this.nonEmbeddedInfos = src.nonEmbeddedInfos;
-        this.available = src.available;
-        this.used = src.used;
-        this.reserved = src.reserved;
-    }
-
-    [] registerUsed(MemoryInfo used) {
-        used.flags = MemoryInfo:FLAGS_USED;
-        //MemoryInfo usedPrev = this._findInfoByPtr(this.used, available.buf); // for sorted used-list
-        MemoryInfo usedPrev = this.used.prev;
-        this._appendMemoryInfo(usedPrev, used);
-    }
-    
-    // private    
-    [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
-        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
-        int requiredSize = MemoryInfo:SIZEOF + poolSize;
-        if (available.len < requiredSize + MemoryInfo:SIZEOF) {
-            // bail out
-            this.rt().err().printCString("too many pool elements for available space\n");
-            return [Address:cast(MemoryInfo:NONE), Address:cast(MemoryInfo:NONE)];
-        }
-        // separate remaining space
-        [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, poolSize);
-        
-        // initiate pool
-        used.flags = MemoryInfo:FLAGS_USED;
-        
-        MemoryInfoPool pool = Address:cast(used.buf);
-        pool.info = used;
-        pool.size = poolElements;
-        pool.used = 0;
-        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
-        return [pool, remaining];
-    }
-    
-    [MemoryInfo] _nextNonEmbeddedInfo(int flags) {
-        MemoryInfo info = Address:cast(MemoryInfo:NONE);
-        if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
-            info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*(nonEmbeddedInfos.used++));
-            info.buf = info.len = info.owner = 0;
-            info.next = info.prev = info;
-            info.flags = flags;
-        }
-        return info;
-    }
-
-    [] _mergeMemoryInfoInto(MemoryInfo info, MemoryInfo list) {
-        MemoryInfo prev = this._findInfoByPtr(list, info.buf);
-        this._appendMemoryInfo(prev, info);
-        MemoryInfo next = info.next;
-
-        if (((info.buf + info.len) == next.buf) && Address:compare(next, list)) {
-            // merge right
-            info.len = (next.buf + next.len) - info.buf; 
-            this._unlinkMemoryInfo(next);
-            next.flags = 0;
-        }
-        if (((prev.buf + prev.len) == info.buf) && Address:compare(prev, list)) {
-            // merge left
-            prev.len = (info.buf + info.len) - prev.buf;
-            this._unlinkMemoryInfo(info);
-            info.flags = 0;
-            
-            int prevPtr = Address:from(prev);
-            
-            if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
-                prev = this._makeEmbedded(prev);
-            }
-        }
-    }
-    
-    [] _appendMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
-        newInfo.prev = info;
-        newInfo.next = info.next;
-        newInfo.prev.next = newInfo.next.prev = newInfo;
-    }
-    
-    [] _unlinkMemoryInfo(MemoryInfo info) {
-        info.next.prev = info.prev;
-        info.prev.next = info.next;
-        info.next = info.prev = info;
-    }
-
-    [] _replaceMemoryInfo(MemoryInfo info, MemoryInfo newInfo) {
-        newInfo.next = info.next;
-        newInfo.prev = info.prev;
-        newInfo.prev.next = newInfo.next.prev = newInfo;
-        info.next = info.prev = info;
-    }
-    
-    [MemoryInfo, MemoryInfo] _splitAvailableMemoryInfo(MemoryInfo available, int size) {
-        if (!this.allocateIncreasing) {
-            MemoryInfo info = MemoryManager:_allocateFromBottom(available, size);
-            return [info, available];
-        }
-        
-        int required = size + MemoryInfo:SIZEOF;
-        int remainingBuf = available.buf + required;
-        MemoryInfo remaining = Address:cast(remainingBuf);
-        remaining.buf = remainingBuf;
-        remaining.len = available.len - required;
-        remaining.flags = MemoryInfo:FLAGS_AVAILABLE;
-            
-        available.buf += MemoryInfo:SIZEOF;
-        available.len = size;
-        return [available, remaining];
-    }
-    
-    [MemoryInfo] _makeEmbedded(MemoryInfo nonEmbeddedInfo) {
-        // create embedded info
-        MemoryInfo info = Address:cast(nonEmbeddedInfo.buf);
-        info.buf = nonEmbeddedInfo.buf;
-        info.len = nonEmbeddedInfo.len;
-        info.flags = nonEmbeddedInfo.flags;
-        info.owner = nonEmbeddedInfo.owner;
-        
-        this._replaceMemoryInfo(nonEmbeddedInfo, info);
-        // clear non-embedded info
-        nonEmbeddedInfo.buf = 0;
-        nonEmbeddedInfo.len = 0;
-        nonEmbeddedInfo.next = nonEmbeddedInfo.prev = nonEmbeddedInfo;
-        
-        return info;
-    }
-    
-    [MemoryInfo] _findInfoByPtr(MemoryInfo list, int ptr) {
-        MemoryInfo cur = list;
-        while (Address:compare(cur.next, list) && Address:compareAddress(cur.next.buf, ptr) <= 0) { cur = cur.next; }
-        return cur;
-    }
-    
-    [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
-        MemoryInfo cur = list;
-        while (Address:compare(cur.next, list) && (cur.len < len)) { cur = cur.next; }
-        return cur;
-    }
-    
     [OStream] _dumpInfo(MemoryInfo info, OStream stream) {
         int infoEnd = info.buf + info.len;
         int infoPtr = Address:from(info);
@@ -321,6 +329,7 @@ class MemoryManager extends Allocator {
             .printChar(' ').printChar('(').printPtr(infoPtr).printChar(')');
     }
     
+    // global
     global [MemoryInfo] _allocateFromBottom(MemoryInfo available, int size) {
         int required = size + MemoryInfo:SIZEOF;
         int bottomBuf = available.buf + available.len - required;
