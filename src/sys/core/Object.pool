@@ -12,10 +12,6 @@ use sys::runtime::Runtime;
 
 class Object {
     
-    // constants
-    // TODO: remove with working ClassHeader "struct"
-    int ch_inst_handle := 4;
-    
     // variables
     Runtime runtime;
     
@@ -34,7 +30,7 @@ class Object {
         return this.getAddress();
     }
     
-    // TODO: use generic method instead of plain Object?
+    // TODO: use generic method instead of __any__?
     [int] equals(__any__ obj) {
         int eq = 0;
         __pasm__(<"
@@ -71,5 +67,4 @@ class Object {
         this.__destruct();
         this.rt().destroyInstance(this);
     }
-    
 }
