@@ -1,0 +1,29 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::collection;
+
+
+class AnyListIterator extends AnyIterator {
+
+    AnyListElement _next;
+    
+    [] setNext(AnyListElement next) {
+        this._next = next;
+    }
+    
+    [int] hasNext() {
+        return !!_next;
+    }
+    
+    [__all__] next() {
+        if (!_next) {
+            return null;
+        }
+        __all__ val = _next.getValue();
+        _next = _next.getNext();
+        return val;
+    }
+}

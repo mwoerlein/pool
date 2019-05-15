@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::collection;
+
+use sys::core::Object;
+use sys::memory::Address;
+
+class AnyListElement extends Object {
+
+    __any__ value;
+    AnyListElement next;
+    
+    [__all__] getValue() { return Address:convert(this.value); }
+    [] setValue(__any__ value) { this.value = value; }
+    [AnyListElement] getNext() { return this.next; }
+    [] setNext(AnyListElement next) { this.next = next; }
+    
+}

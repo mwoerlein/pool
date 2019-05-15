@@ -1,0 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::collection;
+
+use sys::core::Object;
+
+class AnyIterator extends Object {
+    abstract [int] hasNext();
+    abstract [__all__] next();
+}

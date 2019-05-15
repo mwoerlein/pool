@@ -1,0 +1,118 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::collection;
+
+use sys::core::Object;
+use sys::memory::Address;
+use sys::runtime::Runtime;
+
+class AnyList extends Object {
+
+    AnyListElement _first;
+    AnyListElement _last;
+    
+    int _size;
+
+    [] __destruct() {
+        this.clear();
+    }
+
+    [int] isEmpty() {
+        return _size == 0;
+    }
+    
+    [] clear() {
+        AnyListElement cur = _first;
+        while (cur) {
+            AnyListElement kill = cur;
+            cur = cur.getNext();
+            kill.destroy();
+        }
+        _last = _first = null;
+        _size = 0;
+    }
+    
+    [int] size() {
+        return _size;
+    }
+    
+    [int] add(__any__ o) {
+        AnyListElement newElem = this.rt().createInstance(AnyListElement:CLASSNAME);
+        newElem.setValue(o);
+        if (_size) {
+            _last.setNext(newElem);
+            _last = newElem;
+        } else {
+            _first = _last = newElem;
+        }
+        _size++;
+        return 1;
+    }
+    
+    [int] contains(__any__ o) {
+        AnyListElement cur = _first;
+        while (cur) {
+            if (Address:equals(o, cur.getValue())) {
+                return 1;
+            }
+            cur = cur.getNext();
+        }
+        return 0;
+    }
+    
+    [int] remove(__any__ o) {
+        if (_size) {
+            if (Address:equals(o, _first.getValue())) {
+                AnyListElement found = _first;
+                _first = found.getNext();
+                if (Address:equals(_last, found)) {
+                    _last = null;
+                }
+                --_size;
+                found.destroy();
+                return 1;
+            }
+            
+            AnyListElement cur = _first;
+            while (cur.getNext()) {
+                if (Address:equals(o, cur.getNext().getValue())) {
+                    AnyListElement found = cur.getNext();
+                    cur.setNext(found.getNext());
+                    if (Address:equals(_last, found)) {
+                        _last = cur;
+                    }
+                    --_size;
+                    found.destroy();
+                    return 1;
+                }
+                cur = cur.getNext();
+            }
+        }        
+        return 0;
+    }
+    
+    [AnyIterator] iterator() {
+        Runtime rt = this.rt();
+        AnyListIterator it = rt.createInstance(AnyListIterator:CLASSNAME);
+        it.setNext(_first);
+        return rt.cast(AnyIterator:CLASSNAME, it);
+    }
+    
+    [__all__] first() {
+        if (_first) { return _first.getValue(); } else { return null; }
+    }
+    
+    [__all__] last() {
+        if (_last) { return _last.getValue(); } else { return null; }
+    }
+    
+    [__all__] at(int idx) {
+        if (idx < 0 || idx >= _size) { return null; }
+        AnyListElement e = _first;
+        while (e && idx--) { e = e.getNext(); }
+        if (e) { return e.getValue(); } else { return null; }
+    }
+}
