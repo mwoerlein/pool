@@ -14,9 +14,9 @@ use sys::memory::MemoryInfo;
 class RuntimeBuilder extends Object {
     
     // methods
-    abstract [Runtime] _buildRuntime(int context);
+    abstract [Runtime] _buildRuntime(__any__ context);
     
-    global [Runtime] _bootstrap(cstring builderName, int heapsize, int context) {
+    global [Runtime] _bootstrap(cstring builderName, int heapsize, __any__ context) {
         
         // allocate buffer on stack
         int heap = 0;

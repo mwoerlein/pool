@@ -16,10 +16,10 @@ class Runtime extends sys::runtime::RuntimeBuilder {
     
     // methods
     global [SysRuntime] buildRuntime() {
-        return Runtime:_bootstrap(Runtime:CLASSNAME, 0x1000, 0);
+        return Runtime:_bootstrap(Runtime:CLASSNAME, 0x1000, null);
     }
     
-    [SysRuntime] _buildRuntime(int context) {
+    [SysRuntime] _buildRuntime(__any__ context) {
         SysRuntime bsRt := this.rt();
         LinuxOStream bsLOut := this.rt().createInstance(LinuxOStream:CLASSNAME);
         OStream debug := bsLOut.initOStream(1);
