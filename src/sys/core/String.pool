@@ -106,7 +106,7 @@ class String extends OStream {
     [int] equals(__any__ obj) {
         String s = this.rt().cast(String:CLASSNAME, obj);
         if (s) {
-            return this.compareString(s) != 0;
+            return this.compareString(s) == 0;
         }
         return 0;
     }

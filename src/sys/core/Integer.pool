@@ -39,7 +39,7 @@ class Integer extends Object {
     [int] equals(__any__ obj) {
         Integer n = this.rt().cast(Integer:CLASSNAME, obj);
         if (n) {
-            return this.compareInteger(n) != 0;
+            return this.compareInteger(n) == 0;
         }
         return 0;
     }

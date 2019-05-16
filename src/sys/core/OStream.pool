@@ -33,6 +33,9 @@ class OStream extends Object {
     
     // TODO: use generic method instead of plain Object?
     [OStream] print(__any__ o) {
+        if (!o) {
+            return this.printCString("NULL");
+        }
         Object obj = this.rt().cast(Object:CLASSNAME, o);
         return obj.printToStream(this);
     }

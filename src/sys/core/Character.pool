@@ -24,7 +24,7 @@ class Character extends Object {
     [int] equals(__any__ obj) {
         Character c = this.rt().cast(Character:CLASSNAME, obj);
         if (c) {
-            return this.compareCharacter(c) != 0;
+            return this.compareCharacter(c) == 0;
         }
         return 0;
     }
