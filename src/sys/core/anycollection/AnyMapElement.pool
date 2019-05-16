@@ -8,7 +8,7 @@ namespace sys::core::anycollection;
 use sys::core::Object;
 use sys::memory::Address;
 
-class AnyMapElement extends Object {
+class AnyMapElement extends AnyMapEntry {
 
     __any__ key;
     __any__ value;

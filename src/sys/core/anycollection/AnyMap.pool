@@ -163,6 +163,13 @@ class AnyMap extends AnyCollection {
         return rt.cast(AnyIterator:CLASSNAME, it);
     }
     
+    [AnyMapEntryIterator] entries() {
+        Runtime rt = this.rt();
+        AnyMapEntryIterator it = rt.createInstance(AnyMapEntryIterator:CLASSNAME);
+        it.setNext(_first);
+        return it;
+    }
+    
     [AnyIterator] iterator() { return this.values(); }
     
     [__all__] first() {
