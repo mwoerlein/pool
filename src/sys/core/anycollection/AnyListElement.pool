@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core::collection;
+namespace sys::core::anycollection;
 
 use sys::core::Object;
 use sys::memory::Address;

@@ -3,13 +3,12 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core::collection;
+namespace sys::core::anycollection;
 
-use sys::core::Object;
 use sys::memory::Address;
 use sys::runtime::Runtime;
 
-class AnyList extends Object {
+class AnyList extends AnyCollection {
 
     AnyListElement _first;
     AnyListElement _last;
@@ -20,10 +19,6 @@ class AnyList extends Object {
         this.clear();
     }
 
-    [int] isEmpty() {
-        return _size == 0;
-    }
-    
     [] clear() {
         AnyListElement cur = _first;
         while (cur) {
@@ -49,18 +44,18 @@ class AnyList extends Object {
             _first = _last = newElem;
         }
         _size++;
-        return 1;
+        return true;
     }
     
     [int] contains(__any__ o) {
         AnyListElement cur = _first;
         while (cur) {
             if (Address:equals(o, cur.getValue())) {
-                return 1;
+                return true;
             }
             cur = cur.getNext();
         }
-        return 0;
+        return false;
     }
     
     [int] remove(__any__ o) {
@@ -73,7 +68,7 @@ class AnyList extends Object {
                 }
                 --_size;
                 found.destroy();
-                return 1;
+                return true;
             }
             
             AnyListElement cur = _first;
@@ -86,12 +81,12 @@ class AnyList extends Object {
                     }
                     --_size;
                     found.destroy();
-                    return 1;
+                    return true;
                 }
                 cur = cur.getNext();
             }
         }        
-        return 0;
+        return false;
     }
     
     [AnyIterator] iterator() {

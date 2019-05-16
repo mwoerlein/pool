@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core::collection;
+namespace sys::core::anycollection;
 
 
 class AnyListIterator extends AnyIterator {
@@ -22,8 +22,8 @@ class AnyListIterator extends AnyIterator {
         if (!_next) {
             return null;
         }
-        __all__ val = _next.getValue();
+        __all__ value = _next.getValue();
         _next = _next.getNext();
-        return val;
+        return value;
     }
 }

@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Object;
+
+class AnyCollection extends Object {
+
+    abstract [int] size();
+    abstract [int] contains(__any__ o);
+    [int] isEmpty() {
+        return this.size() == 0;
+    }
+}
