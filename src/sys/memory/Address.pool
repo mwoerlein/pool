@@ -8,6 +8,7 @@ namespace sys::memory;
 use sys::runtime::ClassDescriptor;
 
 class Address {
+    global int SIZE := 4;
     
     // methods
     global [int] from(__any__ a) {

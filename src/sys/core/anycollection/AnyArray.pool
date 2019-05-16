@@ -1,0 +1,63 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Object;
+use sys::memory::Address;
+use sys::memory::MemoryInfo;
+
+class AnyArray extends Object {
+    
+    MemoryInfo buffer;
+    int _size;
+    
+    [] init(int size) {
+        this._size = size;
+        this.buffer = this.rt().getAllocator().allocate(size * Address:SIZE);
+        this.clear();
+    }
+    
+    [] __destruct() {
+        this.rt().getAllocator().free(buffer);
+    }
+    
+    [] clear() {
+        int size = _size;
+        while (size--) {
+            this.set(size, null);
+        }
+    }
+    
+    [int] size() {
+        return _size;
+    }
+    
+    [__all__] set(int index, __any__ value) {
+        if (index < 0 || index >= _size) {
+            return null;
+        }
+        __all__ old = null;
+        __pasm__(
+            "movl (%eax), %ecx; movl %ebx, (%eax)",
+             {"%eax": buffer.buf + index * Address:SIZE, "%ebx": value},
+             {"%ecx": old}
+        );
+        return old;
+    }
+    
+    [__all__] get(int index) {
+        if (index < 0 || index >= _size) {
+            return null;
+        }
+        __all__ ret = null;
+        __pasm__(
+            "movl (%eax), %ebx",
+             {"%eax": buffer.buf + index * Address:SIZE},
+             {"%ebx": ret}
+        );
+        return ret;
+    }
+}
