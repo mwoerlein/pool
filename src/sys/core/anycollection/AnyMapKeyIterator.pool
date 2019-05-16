@@ -1,0 +1,29 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+
+class AnyMapKeyIterator extends AnyIterator {
+
+    AnyMapElement _next;
+    
+    [] setNext(AnyMapElement next) {
+        this._next = next;
+    }
+    
+    [int] hasNext() {
+        return !!_next;
+    }
+    
+    [__all__] next() {
+        if (!_next) {
+            return null;
+        }
+        __all__ key = _next.getKey();
+        _next = _next.getOrderedNext();
+        return key;
+    }
+}

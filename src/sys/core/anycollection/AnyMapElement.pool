@@ -1,0 +1,40 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Object;
+use sys::memory::Address;
+
+class AnyMapElement extends Object {
+
+    __any__ key;
+    __any__ value;
+    AnyMapElement orderedPrev;
+    AnyMapElement orderedNext;
+    AnyMapElement bucketNext;
+    
+    [__all__] getValue() { return Address:convert(this.value); }
+    [] setValue(__any__ value) { this.value = value; }
+    [int] equalsValue(__any__ value) {
+        Object o = this.rt().cast(Object:CLASSNAME, this.value);
+        return o.equals(value);
+    }
+    
+    [__all__] getKey() { return Address:convert(this.key); }
+    [] setKey(__any__ key) { this.key = key; }
+    [int] equalsKey(__any__ key) {
+        Object o = this.rt().cast(Object:CLASSNAME, this.key);
+        return o.equals(key);
+    }
+    
+    [AnyMapElement] getOrderedPrev() { return this.orderedPrev; }
+    [] setOrderedPrev(AnyMapElement orderedPrev) { this.orderedPrev = orderedPrev; }
+    [AnyMapElement] getOrderedNext() { return this.orderedNext; }
+    [] setOrderedNext(AnyMapElement orderedNext) { this.orderedNext = orderedNext; }
+    [AnyMapElement] getBucketNext() { return this.bucketNext; }
+    [] setBucketNext(AnyMapElement bucketNext) { this.bucketNext = bucketNext; }
+    
+}

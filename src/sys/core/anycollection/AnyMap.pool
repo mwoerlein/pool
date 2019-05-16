@@ -1,0 +1,218 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Object;
+use sys::memory::Address;
+use sys::runtime::Runtime;
+
+class AnyMap extends AnyCollection {
+
+    AnyMapElement _first;
+    AnyMapElement _last;
+    AnyArray buckets;
+    int initialBucketsCount;
+    int _size;
+    
+    [] init(int bucketsCount) {
+        this.initialBucketsCount = bucketsCount;
+        this._size = 0;
+        this._first = this._last = null;
+        this.buckets = this.rt().createInstance(AnyArray:CLASSNAME);
+        this.buckets.init(bucketsCount);
+    }
+    
+    [] __destruct() {
+        this._destroyAllElements();
+        buckets.destroy();
+    }
+    
+    [] clear() {
+        this._destroyAllElements();
+        _last = _first = null;
+        _size = 0;
+        if (buckets.size() != initialBucketsCount) {
+            // shrink, if required
+            this._resize(initialBucketsCount);
+        } else {
+            buckets.clear();
+        }
+    }
+    
+    [int] size() {
+        return _size;
+    }
+    
+    [__all__] set(__any__ key, __any__ value) {
+        // grow, if required
+        if ((2 * _size) > buckets.size()) {
+            this._resize(2*buckets.size() + 1);
+            this._rehash();
+        }
+        int bucketNumber = this._getBucketNumber(key);
+        AnyMapElement e = this._findInBucket(buckets.get(bucketNumber), key);
+        if (e) {
+            // replace value
+            __all__ ret = e.getValue();
+            e.setValue(value);
+            return ret;
+        }
+        
+        AnyMapElement newElem = this.rt().createInstance(AnyMapElement:CLASSNAME);
+        newElem.setKey(key);
+        newElem.setValue(value);
+        if (_last) {
+            newElem.setOrderedPrev(_last);
+            _last.setOrderedNext(newElem);
+            _last = newElem;
+        } else {
+            _first = _last = newElem;
+        }
+        newElem.setBucketNext(buckets.set(bucketNumber, newElem));
+        _size++;
+        return null;
+    }
+    
+    [__all__] unset(__any__ key) {
+        int bucketNumber = this._getBucketNumber(key);
+        AnyMapElement e = buckets.get(bucketNumber);
+        AnyMapElement found = null;
+         
+        // search and remove from bucket list
+        if (e) {
+            if (e.equalsKey(key)) {
+                // found as first of bucket list
+                buckets.set(bucketNumber, e.getBucketNext());
+                found = e;
+            } else {
+                do {
+                    AnyMapElement prev = e;
+                    e = e.getBucketNext();
+                    if (e.equalsKey(key)) {
+                        // found in bucket list
+                        prev.setBucketNext(e.getBucketNext());
+                        found = e;
+                    }
+                } while (e && !found);
+            }
+        }
+        
+        __all__ ret = null;
+        
+        // remove from ordered list
+        if (found) {
+            __all__ ret = found.getValue();
+            if (found.getOrderedPrev()) {
+                found.getOrderedPrev().setOrderedNext(found.getOrderedNext());
+            } else { // first element
+                _first = found.getOrderedNext();
+            }
+            if (found.getOrderedNext()) {
+                found.getOrderedNext().setOrderedPrev(found.getOrderedPrev());
+            } else { // last element
+                _last = found.getOrderedPrev();
+            }
+            found.destroy();
+            _size--;
+            
+            // shrink, if required
+            int bucketsCount = buckets.size();
+            if (((4 * _size) < bucketsCount) && bucketsCount > initialBucketsCount) {
+                this._resize((bucketsCount-1) / 2);
+                this._rehash();
+            }
+        }
+        return ret;
+    }
+    
+    [__all__] get(__any__ key) {
+        AnyMapElement e = this._findInBucket(buckets.get(this._getBucketNumber(key)), key);
+        if (e) { return e.getValue(); } else { return null; }
+    }
+    
+    [int] has(__any__ key) {
+        AnyMapElement e = this._findInBucket(buckets.get(this._getBucketNumber(key)), key);
+        return !!e;
+    }
+    
+    [int] contains(__any__ value) {
+        AnyMapElement cur = _first;
+        while (cur) {
+            if (cur.equalsValue(value)) {
+                return true;
+            }
+            cur = cur.getOrderedNext();
+        }
+        return false;
+    }
+    
+    [AnyIterator] keys() {
+        Runtime rt = this.rt();
+        AnyMapKeyIterator it = rt.createInstance(AnyMapKeyIterator:CLASSNAME);
+        it.setNext(_first);
+        return rt.cast(AnyIterator:CLASSNAME, it);
+    }
+    
+    [AnyIterator] values() {
+        Runtime rt = this.rt();
+        AnyMapValueIterator it = rt.createInstance(AnyMapValueIterator:CLASSNAME);
+        it.setNext(_first);
+        return rt.cast(AnyIterator:CLASSNAME, it);
+    }
+    
+    [AnyIterator] iterator() { return this.values(); }
+    
+    [__all__] first() {
+        if (_first) { return _first.getValue(); } else { return null; }
+    }
+    
+    [__all__] last() {
+        if (_last) { return _last.getValue(); } else { return null; }
+    }
+    
+    // private
+    [int] _getBucketNumber(__any__ key) {
+        Object o = this.rt().cast(Object:CLASSNAME, key);
+        int number = 0;
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": o.hash(), "%ebx": buckets.size()}, {"%edx": number});
+        return number;
+    }
+    
+    [AnyMapElement] _findInBucket(AnyMapElement bucket, __any__ key) {
+        while (bucket) {
+            if (bucket.equalsKey(key)) {
+                return bucket;
+            }
+            bucket = bucket.getBucketNext();
+        }
+        return null;
+    }
+    
+    [] _resize(int bucketsCount) {
+        this.buckets.destroy();
+        this.buckets = this.rt().createInstance(AnyArray:CLASSNAME);
+        this.buckets.init(bucketsCount);
+    }
+    
+    [] _rehash() {
+        this.buckets.clear();
+        AnyMapElement cur = _first;
+        while (cur) {
+            cur.setBucketNext(buckets.set(this._getBucketNumber(cur.getKey()), cur));
+            cur = cur.getOrderedNext();
+        }
+    }
+    
+    [] _destroyAllElements() {
+        AnyMapElement cur = _first;
+        while (cur) {
+            AnyMapElement kill = cur;
+            cur = cur.getOrderedNext();
+            kill.destroy();
+        }
+    }
+
+}
