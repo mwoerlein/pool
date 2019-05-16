@@ -217,6 +217,8 @@ int PoolParser::lex()
         @o1 [1-9][0-9]* @o2             { setLocation(); return parser->makeNumber(parseIntegerValue(o1, o2, 10)); } 
         "0"[xX] @o1 [0-9a-fA-F]+ @o2    { setLocation(); return parser->makeNumber(parseIntegerValue(o1, o2, 16)); }
         "0"                             { setLocation(); return parser->makeNumber(0); }
+        "true"                          { setLocation(); return parser->makeNumber(1); }
+        "false"                         { setLocation(); return parser->makeNumber(0); }
         
         @o1 id ("::" id)+ @o2  {
                         String &s = env().create<String, char *, char *>(o1, o2);
