@@ -1,6 +1,7 @@
 bin
 lib
 obj
+/src/pasm/i386/Parser.cpp
 /src/poolc/parser/Parserbase.*
 /src/poolc/parser/parse.cc
 /src/poolc/parser/PoolParser.cc
