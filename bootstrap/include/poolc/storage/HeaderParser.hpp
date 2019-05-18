@@ -1,7 +1,7 @@
 #ifndef POOLC_STORAGE_HEADERPARSER_HPP_LOCK
 #define POOLC_STORAGE_HEADERPARSER_HPP_LOCK
 
-#include "poolc/parser/ParseBuffer.hpp"
+#include "sys/re2c/ParseBuffer.hpp"
 
 #include "sys/stream/IStream.hpp"
 #include "sys/collection/PropertyContainer.hpp"

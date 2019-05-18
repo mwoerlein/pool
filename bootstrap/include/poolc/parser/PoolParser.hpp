@@ -2,11 +2,11 @@
 #define POOLC_PARSER_POOLPARSER_HPP_LOCK
 
 #include "sys/Object.hpp"
-#include "sys/stream/IStream.hpp"
 #include "sys/log/LoggerAware.hpp"
+#include "sys/re2c/ParseBuffer.hpp"
+#include "sys/stream/IStream.hpp"
 
 #include "poolc/ast/nodes/TranslationUnitNode.hpp"
-#include "poolc/parser/ParseBuffer.hpp"
 #include "poolc/storage/StorageElement.hpp"
 
 class Parser;

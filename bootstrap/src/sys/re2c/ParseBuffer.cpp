@@ -1,4 +1,4 @@
-#include "poolc/parser/ParseBuffer.hpp"
+#include "sys/re2c/ParseBuffer.hpp"
 
 #include "memory/MemoryInfoHelper.hpp"
 

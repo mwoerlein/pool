@@ -27,78 +27,21 @@
 #include "pasm/i386/Operand/Number.hpp"
 #include "pasm/i386/Operand/Register.hpp"
 
-/*!stags:re2c format = 'char *@@;'; */
-/*!max:re2c*/
 #define SIZE 5000
 
-Parser::Parser(Environment &env, MemoryInfo &mi):
-    Object(env, mi),
-    buffersInfo(env.getAllocator().allocate((SIZE + YYMAXFILL) * (sizeof(char) + sizeof(int) + sizeof(int)))),
-    buffer((char*) buffersInfo.buf),
-    linesBuffer((int*) memoryEnd(buffersInfo.buf, (SIZE + YYMAXFILL) * sizeof(char))),
-    columnsBuffer((int*) memoryEnd(buffersInfo.buf, (SIZE + YYMAXFILL) * (sizeof(char) + sizeof(int)))),
-    currentLine(1),
-    currentColumn(1) {
-}
-
-Parser::~Parser() {
-    env().getAllocator().free(buffersInfo);
-}
-
-bool Parser::freeBuffer(size_t need) {
-    const size_t free = token - buffer;
-    const size_t filled = limit - token;
-    if (free < need) {
-        return false;
-    }
-    for (int i = 0; i < filled; i++) {
-        buffer[i] = buffer[i + free];
-        linesBuffer[i] = linesBuffer[i + free];
-        columnsBuffer[i] = columnsBuffer[i + free];
-    }
-    limit -= free;
-    current -= free;
-    token -= free;
-    marker -= free;
-    ctxmarker -= free;
-    /*!stags:re2c format = "@@ -= free;\n"; */
-    return true;
-}
-
-bool Parser::fillBuffer(size_t need, IStream & input)
-{
-    if (input.isEmpty() || !freeBuffer(need)) {
-        return false;
-    }
-    char current;
-    while (!input.isEmpty() && (limit < buffer + SIZE)) {
-        input >> current;
-        linesBuffer[limit - buffer] = currentLine;
-        columnsBuffer[limit - buffer] = currentColumn++;
-        *limit++ = current;
-        if (current == '\n') {
-            currentLine++;
-            currentColumn = 1;
-        }
-    }
-    if (input.isEmpty()) {
-        // clear lookahead after end of stream
-        char * maxfill = limit + YYMAXFILL;
-        while (limit < maxfill) {
-            linesBuffer[limit - buffer] = 0;
-            columnsBuffer[limit - buffer] = 0;
-            *limit++ = (char) 0;
-        }
-    }
-    return true;
-};
-
-// protected
+/*!stags:re2c format = 'char *@@;'; */
+/*!max:re2c*/
 /*!re2c
         re2c:flags:T = 1;
         re2c:define:YYCTYPE = char;
-        re2c:yyfill:enable = 0;
-
+        re2c:define:YYCURSOR = current;
+        re2c:define:YYMARKER = marker;
+        re2c:define:YYCTXMARKER = ctxmarker;
+        re2c:define:YYLIMIT = limit;
+        re2c:yyfill:enable = 1;
+        re2c:define:YYFILL = "if (!fillBuffer(@@, input)) break;";
+        re2c:define:YYFILL:naked = 1;
+        
         end         = "\x00";
         eol         = "\r"? "\n" | "\r";
         wsp         = [ \t]*;
@@ -122,6 +65,123 @@ bool Parser::fillBuffer(size_t need, IStream & input)
         numeric     = id | number | formula;
         id_num      = id | number;
 */
+Parser::Parser(Environment &env, MemoryInfo &mi): ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi) { }
+Parser::~Parser() {}
+
+// public
+ASMInstructionList & Parser::parse(IStream & input, OStream & error, int line, int column, bool silent) {
+    list = &env().create<ASMInstructionList, OStream&, bool>(error, silent);
+    resetBuffer();
+    char *o1, *o2, *o3, *o4, *o5, *o6, *o7, *o8;
+    
+    for (;;) {
+        BitWidth data = bit_auto, addr = bit_auto;
+        bool global = false;
+detect_instruction:
+        token = current;
+/*!re2c
+        inst        = id | "."[bB][yY][tT][eE] | "."[wW][oO][rR][dD] | "."[lL][oO][nN][gG] | "."[oO][rR][gG] | "."[aA][lL][iI][gG][nN];
+        operand     = register | id | number | formula
+                        | "(" wsp (number | id ) wsp ")"
+                        | ((number | id) wsp)? "(" (wsp register)? ( wsp comma wsp register ( wsp comma wsp (id | number) )? )? wsp ")"
+                    ;
+        eoinst      = semicolon | eol | end | "//" | "#" | "/*";
+
+        end       { break; }
+        eol       { continue; }
+        wsp       { continue; }
+        semicolon { continue; }
+        ( "//" | "#" ) @o1 [^\n]* @o2 eol { continue; }
+        "/*" @o1 ([^*] | ("*" [^/]))* @o2 "*""/" { continue; }
+
+        "."[cC][oO][dD][eE]"16" wsp / eoinst { list->setMode(bit_16); continue; }
+        "."[cC][oO][dD][eE]"32" wsp / eoinst { list->setMode(bit_32); continue; }
+        "."[dD][aA][tT][aA]"16" wsp { data = bit_16; goto detect_instruction; }
+        "."[dD][aA][tT][aA]"32" wsp { data = bit_32; goto detect_instruction; }
+        "."[aA][dD][dD][rR]"16" wsp { addr = bit_16; goto detect_instruction; }
+        "."[aA][dD][dD][rR]"32" wsp { addr = bit_32; goto detect_instruction; }
+        "."[gG][lL][oO][bB][aA][lL] wsp { global = true; goto detect_instruction; }
+        
+        "."[aA][sS][cC][iI] @o1 [iIzZ] wsp @o2 ['"] {
+                     // read *o1 *before* parseString, because fillBuffer inside might invalidate *o1
+                    bool terminalZero = (*o1 == 'z' || *o1 == 'Z');
+                    String *s = readString(input, *o2);
+                    if (!s) break;
+                    list->addInstruction(env().create<Ascii, String&, bool>(*s, terminalZero), data, addr);
+                    continue;
+                  }
+ 
+        @o1 id @o2 wsp colon {
+                    list->addLabel(parseStringValue(o1, o2));
+                    continue;
+                  }
+        @o1 id @o2 wsp assign wsp @o3 numeric @o4 wsp / eoinst {
+                    list->addDefinition(parseStringValue(o1, o2), *parseNumericOperand(o3, o4), global);
+                    continue;
+                  }
+        @o1 inst @o2 wsp / eoinst {
+                    ASMInstruction * inst = parseInstruction(o1, o2, o2);
+                    if (inst) {
+                        list->addInstruction(*inst, data, addr);
+                    }
+                    continue;
+                  }
+        @o1 inst @o2 wsp @o3 operand @o4 wsp / eoinst {
+                    ASMInstruction * inst = parseInstruction(o1, o2, o4, parseOperand(o3, o4));
+                    if (inst) {
+                        list->addInstruction(*inst, data, addr);
+                    }
+                    continue;
+                  }
+        @o1 inst @o2 wsp @o3 operand @o4 wsp comma wsp @o5 operand @o6 wsp / eoinst {
+                    ASMInstruction * inst = parseInstruction(o1, o2, o6, parseOperand(o3, o4), parseOperand(o5, o6));
+                    if (inst) {
+                        list->addInstruction(*inst, data, addr);
+                    }
+                    continue;
+                  }
+        @o1 inst @o2 wsp @o3 operand @o4 wsp comma wsp @o5 operand @o6 wsp comma wsp @o7 operand @o8 wsp / eoinst {
+                    ASMInstruction * inst = parseInstruction(o1, o2, o8, parseOperand(o3, o4), parseOperand(o5, o6), parseOperand(o7, o8));
+                    if (inst) {
+                        list->addInstruction(*inst, data, addr);
+                    }
+                    continue;
+                  }
+        *         { 
+                    list->err << "unexpected character : " << *token << " line: " << getLine(token) << " column: "  << getColumn(token) << '\n';
+                    break;
+                  }
+*/
+    }
+    return *list;
+}
+
+// protected
+void Parser::shift(size_t freed) {
+    /*!stags:re2c format = "@@ -= freed;\n"; */
+}
+
+String * Parser::readString(IStream & input, char enclosure) {
+    String &s = env().create<String>();
+    int startLine = getLine(current);
+    int startColumn = getColumn(current);
+    for (;;) {
+        token = current;
+/*!re2c
+        *           { break; }
+        [^\r\n\\]   { if (enclosure == *token) { return &s; }; s << *token; continue; }
+        "\\n"       { s << '\n'; continue; }
+        "\\r"       { s << '\r'; continue; }
+        "\\t"       { s << '\t'; continue; }
+        "\\\\"      { s << '\\'; continue; }
+        "\\'"       { s << '\''; continue; }
+        "\\\""      { s << '"';  continue; }
+*/
+    }
+    list->err << "unterminated string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
+    s.destroy();
+    return 0;
+}
 
 String & Parser::parseStringValue(char * start, char * end) {
     return env().create<String, char*, char*>(start, end);
@@ -146,6 +206,7 @@ Number * Parser::parseNumber(char * start, char * end) {
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
 
         "0" [bB] @o1 [01]+ @o2          { if (cur != end) break; return &env().create<Number, int>( parseIntegerValue(o1, o2,  2)); }
         "-0" [bB] @o1 [01]+ @o2         { if (cur != end) break; return &env().create<Number, int>(-parseIntegerValue(o1, o2,  2)); }
@@ -170,6 +231,7 @@ InstructionCondition Parser::parseInstructionCondition(char * start, char * end)
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
 
         [aA]          { if (cur != end) break; return cond_above; }
         [aA][eE]      { if (cur != end) break; return cond_above_or_equal; }
@@ -209,7 +271,7 @@ InstructionCondition Parser::parseInstructionCondition(char * start, char * end)
     }
     
     String s(env(), *notAnInfo, start, end);
-    list->err << "unknown condition '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+    list->err << "unknown condition '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
     return cond_above;
 }
 
@@ -221,6 +283,7 @@ Register * Parser::parseRegister(char * start, char * end) {
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
 
         "%"[aA][hH]          { if (cur != end) break; return &env().create<Register, RegisterName>(reg_ah); }
         "%"[bB][hH]          { if (cur != end) break; return &env().create<Register, RegisterName>(reg_bh); }
@@ -261,7 +324,7 @@ Register * Parser::parseRegister(char * start, char * end) {
     }
     
     String s(env(), *notAnInfo, start, end);
-    list->err << "unknown register '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+    list->err << "unknown register '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
     return 0;
 }
 
@@ -277,6 +340,7 @@ Formula * Parser::parseFormula(char * start, char * end) {
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
 
         "(" wsp @o1 numeric @o2 wsp "+" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
@@ -311,7 +375,7 @@ Formula * Parser::parseFormula(char * start, char * end) {
 */
     }
     String s(env(), *notAnInfo, start, end);
-    list->err << "unknown formula '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+    list->err << "unknown formula '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
     return 0;
 }
 
@@ -344,6 +408,7 @@ ASMOperand * Parser::parseOperand(char * start, char * end) {
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
         
         @o1 register @o2    { if (cur != end) break; return parseRegister(o1, o2); }
         @o1 number @o2      { if (cur != end) break; return parseNumber(o1, o2); }
@@ -436,7 +501,7 @@ ASMOperand * Parser::parseOperand(char * start, char * end) {
     }
     
     String s(env(), *notAnInfo, start, end);
-    list->err << "unknown operand '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+    list->err << "unknown operand '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
     return 0;
 }
 
@@ -448,6 +513,7 @@ Numeric * Parser::parseNumericOperand(char * start, char * end) {
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
         
         @o1 number @o2      { if (cur != end) break; return parseNumber(o1, o2); }
         @o1 id @o2          { if (cur != end) break; return parseIdentifier(o1, o2); }
@@ -458,7 +524,7 @@ Numeric * Parser::parseNumericOperand(char * start, char * end) {
     }
     
     String s(env(), *notAnInfo, start, end);
-    list->err << "unknown numeric operand '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+    list->err << "unknown numeric operand '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
     return 0;
 }
 
@@ -470,6 +536,7 @@ ASMInstruction * Parser::parseInstruction(char * start, char * end, char * opera
         re2c:define:YYMARKER = mark;
         re2c:define:YYCTXMARKER = ctx;
         re2c:define:YYLIMIT = end;
+        re2c:yyfill:enable = 0;
 
         [mM][oO][vV] @o1 bitwidth? @o2 {
             if (!op1 || !op2 || op3) return 0;
@@ -521,7 +588,7 @@ ASMInstruction * Parser::parseInstruction(char * start, char * end, char * opera
         }
         [iI]?[mM][uU][lL] @o1 bitwidth? @o2 {
             String s(env(), *notAnInfo, start, operandsEnd);
-            list->err << "not yet supported instruction '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+            list->err << "not yet supported instruction '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
             return 0;
         }
         [iI][nN] @o1 bitwidth? @o2 {
@@ -657,136 +724,6 @@ ASMInstruction * Parser::parseInstruction(char * start, char * end, char * opera
     }
     
     String s(env(), *notAnInfo, start, operandsEnd);
-    list->err << "unknown instruction '" << s << "' at line: " << linesBuffer[start-buffer] << " column: "  << columnsBuffer[start-buffer]<< '\n';
+    list->err << "unknown instruction '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
     return 0;
-}
-
-String * Parser::parseString(IStream & input, char enclosure) {
-    String &s = env().create<String>();
-    int startLine = linesBuffer[current-buffer];
-    int startColumn = columnsBuffer[current-buffer];
-    for (;;) {
-        token = current;
-/*!re2c
-        re2c:define:YYCURSOR = current;
-        re2c:define:YYMARKER = marker;
-        re2c:define:YYCTXMARKER = ctxmarker;
-        re2c:define:YYLIMIT = limit;
-        re2c:yyfill:enable = 1;
-        re2c:define:YYFILL = "if (!fillBuffer(@@, input)) break;";
-        re2c:define:YYFILL:naked = 1;
-        
-        *                    { break; }
-        [^\n\\]              { if (enclosure == *token) { return &s; }; s << *token; continue; }
-        "\\n"                { s << '\n'; continue; }
-        "\\r"                { s << '\r'; continue; }
-        "\\t"                { s << '\t'; continue; }
-        "\\\\"               { s << '\\'; continue; }
-        "\\'"                { s << '\''; continue; }
-        "\\\""               { s << '"';  continue; }
-*/
-    }
-    list->err << "unterminated string '" << s << "' at line: " << startLine << " column: "  << startColumn << '\n';
-    s.destroy();
-    return 0;
-}
-
-// public
-ASMInstructionList & Parser::parse(IStream & input, OStream & error, int line, int column, bool silent) {
-    list = &env().create<ASMInstructionList, OStream&, bool>(error, silent);
-    
-    // reset parsing buffer
-    token = current = marker = ctxmarker = limit = buffer + SIZE;
-    currentLine = line;
-    currentColumn = column;
-    
-    char *o1, *o2, *o3, *o4, *o5, *o6, *o7, *o8;
-    for (;;) {
-        BitWidth data = bit_auto, addr = bit_auto;
-        bool global = false;
-detect_instruction:
-        token = current;
-/*!re2c
-        re2c:define:YYCURSOR = current;
-        re2c:define:YYMARKER = marker;
-        re2c:define:YYCTXMARKER = ctxmarker;
-        re2c:define:YYLIMIT = limit;
-        re2c:yyfill:enable = 1;
-        re2c:define:YYFILL = "if (!fillBuffer(@@, input)) break;";
-        re2c:define:YYFILL:naked = 1;
-        
-        inst        = id | "."[bB][yY][tT][eE] | "."[wW][oO][rR][dD] | "."[lL][oO][nN][gG] | "."[oO][rR][gG] | "."[aA][lL][iI][gG][nN];
-        operand     = register | id | number | formula
-                        | "(" wsp (number | id ) wsp ")"
-                        | ((number | id) wsp)? "(" (wsp register)? ( wsp comma wsp register ( wsp comma wsp (id | number) )? )? wsp ")"
-                    ;
-        eoinst      = semicolon | eol | end | "//" | "#" | "/*";
-
-        end       { break; }
-        eol       { continue; }
-        wsp       { continue; }
-        semicolon { continue; }
-        ( "//" | "#" ) @o1 [^\n]* @o2 eol { continue; }
-        "/*" @o1 ([^*] | ("*" [^/]))* @o2 "*""/" { continue; }
-
-        "."[cC][oO][dD][eE]"16" wsp / eoinst { list->setMode(bit_16); continue; }
-        "."[cC][oO][dD][eE]"32" wsp / eoinst { list->setMode(bit_32); continue; }
-        "."[dD][aA][tT][aA]"16" wsp { data = bit_16; goto detect_instruction; }
-        "."[dD][aA][tT][aA]"32" wsp { data = bit_32; goto detect_instruction; }
-        "."[aA][dD][dD][rR]"16" wsp { addr = bit_16; goto detect_instruction; }
-        "."[aA][dD][dD][rR]"32" wsp { addr = bit_32; goto detect_instruction; }
-        "."[gG][lL][oO][bB][aA][lL] wsp { global = true; goto detect_instruction; }
-        
-        "."[aA][sS][cC][iI] @o1 [iIzZ] wsp @o2 ['"] {
-                     // read *o1 *before* parseString, because fillBuffer inside might invalidate *o1
-                    bool terminalZero = (*o1 == 'z' || *o1 == 'Z');
-                    String *s = parseString(input, *o2);
-                    if (!s) break;
-                    list->addInstruction(env().create<Ascii, String&, bool>(*s, terminalZero), data, addr);
-                    continue;
-                  }
- 
-        @o1 id @o2 wsp colon {
-                    list->addLabel(parseStringValue(o1, o2));
-                    continue;
-                  }
-        @o1 id @o2 wsp assign wsp @o3 numeric @o4 wsp / eoinst {
-                    list->addDefinition(parseStringValue(o1, o2), *parseNumericOperand(o3, o4), global);
-                    continue;
-                  }
-        @o1 inst @o2 wsp / eoinst {
-                    ASMInstruction * inst = parseInstruction(o1, o2, o2);
-                    if (inst) {
-                        list->addInstruction(*inst, data, addr);
-                    }
-                    continue;
-                  }
-        @o1 inst @o2 wsp @o3 operand @o4 wsp / eoinst {
-                    ASMInstruction * inst = parseInstruction(o1, o2, o4, parseOperand(o3, o4));
-                    if (inst) {
-                        list->addInstruction(*inst, data, addr);
-                    }
-                    continue;
-                  }
-        @o1 inst @o2 wsp @o3 operand @o4 wsp comma wsp @o5 operand @o6 wsp / eoinst {
-                    ASMInstruction * inst = parseInstruction(o1, o2, o6, parseOperand(o3, o4), parseOperand(o5, o6));
-                    if (inst) {
-                        list->addInstruction(*inst, data, addr);
-                    }
-                    continue;
-                  }
-        @o1 inst @o2 wsp @o3 operand @o4 wsp comma wsp @o5 operand @o6 wsp comma wsp @o7 operand @o8 wsp / eoinst {
-                    ASMInstruction * inst = parseInstruction(o1, o2, o8, parseOperand(o3, o4), parseOperand(o5, o6), parseOperand(o7, o8));
-                    if (inst) {
-                        list->addInstruction(*inst, data, addr);
-                    }
-                    continue;
-                  }
-        *         { 
-                    list->err << "unexpected character : " << *token << " line: " << linesBuffer[token-buffer] << " column: "  << columnsBuffer[token-buffer] << '\n';
-                    break;
-                  }
-*/
-    }
-    return *list;
 }

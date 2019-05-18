@@ -1,5 +1,5 @@
-#ifndef POOLC_PARSER_PARSEBUFFER_HPP_LOCK
-#define POOLC_PARSER_PARSEBUFFER_HPP_LOCK
+#ifndef SYS_RE2C_PARSEBUFFER_HPP_LOCK
+#define SYS_RE2C_PARSEBUFFER_HPP_LOCK
 
 #include "sys/Object.hpp"
 #include "sys/stream/IStream.hpp"
@@ -42,4 +42,4 @@ class ParseBuffer: virtual public Object {
     inline int getColumn(char *ptr) { return columnsBuffer[ptr - buffer]; }
 };
 
-#endif //POOLC_PARSER_PARSEBUFFER_HPP_LOCK
+#endif //SYS_RE2C_PARSEBUFFER_HPP_LOCK
