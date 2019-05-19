@@ -9,7 +9,6 @@ Writer::Writer(Environment &env, MemoryInfo &mi, PoolStorage &ps, const char * m
 Writer::~Writer() {
     finalizeElement();
     mime.destroy();
-    ps.destroy();
 }
 
 bool Writer::startElement(String & classname) {

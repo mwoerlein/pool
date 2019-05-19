@@ -97,8 +97,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         Visitor &generatePIR = env().create<PIRGenerator, TypeManager&>(types);
         generatePIR.setLogger(logger);
         DirectoryPoolStorage &outPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("output"));
-        Visitor &dump = env().create<X86Writer, PoolStorage &, bool>(outPS, hasProperty("resolveClasses"));
-        dump.setLogger(logger);
+        Visitor &generatePASM = env().create<X86Writer, PoolStorage &, bool>(outPS, hasProperty("resolveClasses"));
+        generatePASM.setLogger(logger);
         
         {
             Iterator<String> *it = &arguments();
@@ -130,7 +130,8 @@ class PoolBootstrapCompilerCommand: public CommandLine {
             it->destroy();
         }
         
-        dump.destroy();
+        generatePASM.destroy();
+        outPS.destroy();
         generatePIR.destroy();
         resolveTypes.destroy();
         resolveMethods.destroy();
