@@ -1,7 +1,7 @@
 #include "linux/LinuxBootstrap.hpp"
 #include "linux/CommandLine.hpp"
 
-#include "pasm/i386/Parser.hpp"
+#include "pasm/i386/PasmParser.hpp"
 
 static const char PROGRAM[] = "pbasm";
 static const char VERSION[] = "0.2.0";
@@ -25,11 +25,11 @@ R"(Pool Bootstrap Assembler.
 
 class PasmCommand: public CommandLine {
     private:
-    Parser &parser;
+    PasmParser &parser;
     
     public:
     PasmCommand(Environment & env, MemoryInfo & mi = *notAnInfo)
-            :CommandLine(env, mi), Object(env, mi), parser(env.create<Parser>()) {
+            :CommandLine(env, mi), Object(env, mi), parser(env.create<PasmParser>()) {
         registerOptionAlias("help", "h");
         registerOptionAlias("output", "o");
         registerOptionAlias("binary", "b");

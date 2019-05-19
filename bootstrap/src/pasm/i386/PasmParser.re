@@ -1,4 +1,4 @@
-#include "pasm/i386/Parser.hpp"
+#include "pasm/i386/PasmParser.hpp"
 
 #include "sys/String.hpp"
 #include "sys/Digit.hpp"
@@ -33,6 +33,8 @@
 /*!max:re2c*/
 /*!re2c
         re2c:flags:T = 1;
+        re2c:tags:prefix = 'pasm_yyt';
+        
         re2c:define:YYCTYPE = char;
         re2c:define:YYCURSOR = current;
         re2c:define:YYMARKER = marker;
@@ -65,11 +67,11 @@
         numeric     = id | number | formula;
         id_num      = id | number;
 */
-Parser::Parser(Environment &env, MemoryInfo &mi): ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi) { }
-Parser::~Parser() {}
+PasmParser::PasmParser(Environment &env, MemoryInfo &mi): ParseBuffer(env, mi, SIZE, YYMAXFILL), Object(env, mi) { }
+PasmParser::~PasmParser() {}
 
 // public
-ASMInstructionList & Parser::parse(IStream & input, OStream & error, int line, int column, bool silent) {
+ASMInstructionList & PasmParser::parse(IStream & input, OStream & error, int line, int column, bool silent) {
     list = &env().create<ASMInstructionList, OStream&, bool>(error, silent);
     resetBuffer();
     char *o1, *o2, *o3, *o4, *o5, *o6, *o7, *o8;
@@ -157,11 +159,11 @@ detect_instruction:
 }
 
 // protected
-void Parser::shift(size_t freed) {
+void PasmParser::shift(size_t freed) {
     /*!stags:re2c format = "@@ -= freed;\n"; */
 }
 
-String * Parser::readString(IStream & input, char enclosure) {
+String * PasmParser::readString(IStream & input, char enclosure) {
     String &s = env().create<String>();
     int startLine = getLine(current);
     int startColumn = getColumn(current);
@@ -183,11 +185,11 @@ String * Parser::readString(IStream & input, char enclosure) {
     return 0;
 }
 
-String & Parser::parseStringValue(char * start, char * end) {
+String & PasmParser::parseStringValue(char * start, char * end) {
     return env().create<String, char*, char*>(start, end);
 }
 
-int Parser::parseIntegerValue(char * start, char * end, int base) {
+int PasmParser::parseIntegerValue(char * start, char * end, int base) {
     int result = 0;
     Digit d(env());
     while (start < end) {
@@ -198,7 +200,7 @@ int Parser::parseIntegerValue(char * start, char * end, int base) {
     return result;
 }
 
-Number * Parser::parseNumber(char * start, char * end) {
+Number * PasmParser::parseNumber(char * start, char * end) {
     char *o1, *o2, *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c
@@ -223,7 +225,7 @@ Number * Parser::parseNumber(char * start, char * end) {
     return &env().create<Number, int>(0); 
 }
 
-InstructionCondition Parser::parseInstructionCondition(char * start, char * end) {
+InstructionCondition PasmParser::parseInstructionCondition(char * start, char * end) {
     char *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c
@@ -275,7 +277,7 @@ InstructionCondition Parser::parseInstructionCondition(char * start, char * end)
     return cond_above;
 }
 
-Register * Parser::parseRegister(char * start, char * end) {
+Register * PasmParser::parseRegister(char * start, char * end) {
     char *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c
@@ -328,11 +330,11 @@ Register * Parser::parseRegister(char * start, char * end) {
     return 0;
 }
 
-Identifier * Parser::parseIdentifier(char * start, char * end) {
+Identifier * PasmParser::parseIdentifier(char * start, char * end) {
     return &env().create<Identifier, String&>(parseStringValue(start, end));
 }
 
-Formula * Parser::parseFormula(char * start, char * end) {
+Formula * PasmParser::parseFormula(char * start, char * end) {
     char *o1, *o2, *o3, *o4, *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c
@@ -344,31 +346,31 @@ Formula * Parser::parseFormula(char * start, char * end) {
 
         "(" wsp @o1 numeric @o2 wsp "+" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_add, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_add, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
         "(" wsp @o1 numeric @o2 wsp "-" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_sub, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_sub, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
         "(" wsp @o1 numeric @o2 wsp "*" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_mul, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_mul, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
         "(" wsp @o1 numeric @o2 wsp "/" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_div, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_div, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
         "(" wsp @o1 numeric @o2 wsp "%" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_mod, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_mod, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
         "(" wsp @o1 numeric @o2 wsp ">>" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_shr, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_shr, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
         "(" wsp @o1 numeric @o2 wsp "<<" wsp @o3 numeric @o4 wsp ")" {
             if (cur != end) break;
-            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(op_shl, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
+            return &env().create<Formula, FormulaOperation, Numeric&, Numeric&>(fop_shl, *parseNumericOperand(o1, o2), *parseNumericOperand(o3, o4));
         }
 
         * { break; }
@@ -379,7 +381,7 @@ Formula * Parser::parseFormula(char * start, char * end) {
     return 0;
 }
 
-BitWidth Parser::parseOperandSize(char * start, char * end, BitWidth defaultWidth) {
+BitWidth PasmParser::parseOperandSize(char * start, char * end, BitWidth defaultWidth) {
     if (end - start != 1) {
         return defaultWidth;
     }
@@ -400,7 +402,7 @@ BitWidth Parser::parseOperandSize(char * start, char * end, BitWidth defaultWidt
     }
 }
 
-ASMOperand * Parser::parseOperand(char * start, char * end) {
+ASMOperand * PasmParser::parseOperand(char * start, char * end) {
     char *o1, *o2, *o3, *o4, *o5, *o6, *o7, *o8, *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c
@@ -505,7 +507,7 @@ ASMOperand * Parser::parseOperand(char * start, char * end) {
     return 0;
 }
 
-Numeric * Parser::parseNumericOperand(char * start, char * end) {
+Numeric * PasmParser::parseNumericOperand(char * start, char * end) {
     char *o1, *o2, *o3, *o4, *o5, *o6, *o7, *o8, *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c
@@ -528,7 +530,7 @@ Numeric * Parser::parseNumericOperand(char * start, char * end) {
     return 0;
 }
 
-ASMInstruction * Parser::parseInstruction(char * start, char * end, char * operandsEnd, ASMOperand *op1, ASMOperand *op2, ASMOperand *op3) {
+ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * operandsEnd, ASMOperand *op1, ASMOperand *op2, ASMOperand *op3) {
     char *o1, *o2, *mark, *ctx, *cur = start;
     for (;;) {
 /*!re2c

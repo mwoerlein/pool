@@ -1,5 +1,5 @@
-#ifndef PASM_I386_PARSER_HPP_LOCK
-#define PASM_I386_PARSER_HPP_LOCK
+#ifndef PASM_I386_PASMPARSER_HPP_LOCK
+#define PASM_I386_PASMPARSER_HPP_LOCK
 
 #include "sys/Object.hpp"
 #include "sys/re2c/ParseBuffer.hpp"
@@ -14,7 +14,7 @@
 #include "pasm/i386/Operand/Identifier.hpp"
 #include "pasm/i386/Operand/Register.hpp"
 
-class Parser: public ParseBuffer {
+class PasmParser: public ParseBuffer {
     private:
     ASMInstructionList * list;
     
@@ -36,10 +36,10 @@ class Parser: public ParseBuffer {
     virtual ASMInstruction * parseInstruction(char * start, char * end, char * operandsEnd, ASMOperand *op1 = 0, ASMOperand *op2 = 0, ASMOperand *op3 = 0);
     
     public:
-    Parser(Environment &env, MemoryInfo &mi);
-    virtual ~Parser();
+    PasmParser(Environment &env, MemoryInfo &mi);
+    virtual ~PasmParser();
     
     virtual ASMInstructionList & parse(IStream & input, OStream & error, int line = 1, int column = 1, bool silent = false);
 };
 
-#endif //PASM_I386_PARSER_HPP_LOCK
+#endif //PASM_I386_PASMPARSER_HPP_LOCK

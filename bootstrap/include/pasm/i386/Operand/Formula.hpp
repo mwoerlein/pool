@@ -3,7 +3,7 @@
 
 #include "pasm/i386/Operand/Numeric.hpp"
 
-enum FormulaOperation { op_add, op_sub, op_mul, op_div, op_mod, op_shr, op_shl };
+enum FormulaOperation { fop_add, fop_sub, fop_mul, fop_div, fop_mod, fop_shr, fop_shl };
 
 class Formula: public Numeric {
     private:

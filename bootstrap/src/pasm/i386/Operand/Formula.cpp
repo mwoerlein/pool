@@ -60,13 +60,13 @@ bool Formula::equals(Object &o) {
 // protected
 int Formula::compute(int v1, int v2) {
     switch (_op) {
-        case op_add: return v1 + v2;
-        case op_sub: return v1 - v2;
-        case op_mul: return v1 * v2;
-        case op_div: return v1 / v2;
-        case op_mod: return v1 % v2;
-        case op_shr: return v1 >> v2;
-        case op_shl: return v1 << v2;
+        case fop_add: return v1 + v2;
+        case fop_sub: return v1 - v2;
+        case fop_mul: return v1 * v2;
+        case fop_div: return v1 / v2;
+        case fop_mod: return v1 % v2;
+        case fop_shr: return v1 >> v2;
+        case fop_shl: return v1 << v2;
     }
     return 0;
 }
@@ -74,13 +74,13 @@ int Formula::compute(int v1, int v2) {
 // private
 const char* Formula::getOperation(FormulaOperation op) {
     switch (_op) {
-        case op_add: return "+";
-        case op_sub: return "-";
-        case op_mul: return "*";
-        case op_div: return "/";
-        case op_mod: return "%";
-        case op_shr: return ">>";
-        case op_shl: return "<<";
+        case fop_add: return "+";
+        case fop_sub: return "-";
+        case fop_mul: return "*";
+        case fop_div: return "/";
+        case fop_mod: return "%";
+        case fop_shr: return ">>";
+        case fop_shl: return "<<";
     }
     return "?";
 }
