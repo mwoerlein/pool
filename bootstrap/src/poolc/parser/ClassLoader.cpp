@@ -7,8 +7,9 @@
 #include "poolc/ast/scopes/StructScope.hpp"
 
 // public
-ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi, TypeManager & types)
-        :ClassPathStorage(env, mi), LoggerAware(env, mi), HashMap(env, mi), Object(env, mi),
+ClassLoader::ClassLoader(Environment & env, MemoryInfo & mi, ClassPathStorage & classPath, TypeManager & types)
+        :LoggerAware(env, mi), HashMap(env, mi), Object(env, mi),
+         classPath(classPath),
          parser(env.create<PoolParser>()),
          resolve(env.create<ClassResolver, ClassLoader &, TypeManager &>(*this, types)),
          classes(env.create<HashMap<String, ClassDeclNode>>()),
@@ -82,17 +83,14 @@ NamedType * ClassLoader::getNamedType(String & fullQualifiedName) {
 
 
 bool ClassLoader::initialize(String & fullQualifiedName) {
-    StorageElement *e = ClassPathStorage::getElement(fullQualifiedName);
+    StorageElement *e = classPath.getElement(fullQualifiedName);
     if (!e) {
         error() << "declaration of '" << fullQualifiedName << "' not found!\n";
         return false;
     }
     
     debug() << "load and parse " << fullQualifiedName << "\n";
-    
-    IStream &in = e->getContent();
     TranslationUnitNode * unit = parser.parse(*e, fullQualifiedName);
-    in.destroy();
     if (!unit) {
         return false;
     }

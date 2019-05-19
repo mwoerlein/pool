@@ -71,15 +71,17 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         if (hasProperty("error")) ll = log_error; 
         Logger &logger = env().create<Logger, log_level>(ll);
         TypeManager &types = env().create<TypeManager>();
-        ClassLoader &loader = env().create<ClassLoader, TypeManager&>(types);
-        loader.setLogger(logger);
+        ClassPathStorage &classPath = env().create<ClassPathStorage>();
         {
             Iterator<String> &it = optionSet("classpath");
             while (it.hasNext()) {
-                loader.addStore(env().create<DirectoryPoolStorage, String&>(it.next()));
+                classPath.addStore(env().create<DirectoryPoolStorage, String&>(it.next()));
             }
             it.destroy();
         }
+        ClassLoader &loader = env().create<ClassLoader, ClassPathStorage&, TypeManager&>(classPath, types);
+        loader.setLogger(logger);
+        
         PrettyPrinter *pretty = 0;
         if (hasStringProperty("prettyprint")) {
             DirectoryPoolStorage &prettyPS = env().create<DirectoryPoolStorage, String&>(getStringProperty("prettyprint"));
@@ -134,6 +136,7 @@ class PoolBootstrapCompilerCommand: public CommandLine {
         resolveMethods.destroy();
         if (pretty) { pretty->destroy(); }
         loader.destroy();
+        classPath.destroy();
         types.destroy();
         logger.destroy();
         

@@ -14,8 +14,9 @@
 
 class ClassResolver;
 class PrettyPrinter;
-class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private HashMap<String, ClassDeclNode> {
+class ClassLoader: virtual public LoggerAware, private HashMap<String, ClassDeclNode> {
     private:
+    ClassPathStorage & classPath;
     PoolParser & parser;
     ClassResolver & resolve;
     PrettyPrinter * pretty;
@@ -25,7 +26,7 @@ class ClassLoader: public ClassPathStorage, virtual public LoggerAware, private 
     bool initialize(String & fullQualifiedName);
     
     public:
-    ClassLoader(Environment &env, MemoryInfo &mi, TypeManager &types);
+    ClassLoader(Environment &env, MemoryInfo &mi, ClassPathStorage &classPath, TypeManager &types);
     virtual ~ClassLoader();
     
     virtual void setLogger(Logger &logger) override;
