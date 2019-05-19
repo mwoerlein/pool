@@ -5,34 +5,21 @@ version = 0.1.0
 */
 namespace my::simple;
 
-use sys::core::Object;
-use sys::core::OStream;
 use sys::runtime::Runtime;
 
-class TestCommand extends Object { //extends linux::CommandLine {
+class TestCommand extends linux::Command {
 
     // TODO #7: move to constructor with (implicit) parent calls
-    [] initCommand() {}
+    [] configure() {
+        this.rt().err().printCString("Hello pool!").print(this).printNewline();
+    }
 
-    [int] run(int argc, int argv) {
-        // this.parse(argc, argv);
+    [int] run() {
         // do fancy stuff
         Runtime rt = this.rt();
-        rt.err().printCString("Hello pool!").printNewline();
-        
-        while (argc--) {
-            rt.out().printCString("# ").printCString(this.readArg(argv)).printNewline();
-            argv += 4;
-        }
         
         rt.err().printCString("Byebye pool!").printNewline();
         return 0;
-    }
-    
-    [cstring] readArg(int argv) {
-        cstring arg = "";
-        __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
-        return arg;
     }
     
     // methods
@@ -44,7 +31,6 @@ _entry_global_func  := _491d8eb7_md___entry__
         ">);
         
         TestCommand command = linux::Runtime:buildRuntime().createInstance(TestCommand:CLASSNAME);
-        command.initCommand();
-        return command.run(argc, argv);
+        return command.execute(argc, argv);
     }
 }

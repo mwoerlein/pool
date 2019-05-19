@@ -1,0 +1,34 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::core::Object;
+
+class Command extends Object {
+
+    // methods
+    abstract [] configure();
+    abstract [int] run();
+    
+    [int] execute(int argc, int argv) {
+        this.configure();
+        this.parseCommandLine(argc, argv);
+        return this.run();
+    }
+    
+    [] parseCommandLine(int argc, int argv) {
+        while (argc--) {
+            this.rt().out().printCString("# ").printCString(this.readArg(argv)).printNewline();
+            argv += 4;
+        }
+    }
+    
+    [cstring] readArg(int argv) {
+        cstring arg = "";
+        __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
+        return arg;
+    }
+}
