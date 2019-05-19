@@ -7,7 +7,7 @@ STOREBLIBS  = linux.a sys.a
 
 .PHONY: all clean
 
-all: clean $(BINDIR)/pbasm $(BINDIR)/poolbc $(BINDIR)/poolbsc
+all: clean $(BINDIR)/pbasm $(BINDIR)/poolbc $(BINDIR)/poolbsc $(BINDIR)/storeb
 
 clean:
 	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc $(SRCDIR)/pasm/i386/PasmParser.cpp
@@ -25,5 +25,5 @@ $(BINDIR)/poolbsc: $(SRCDIR)/commands/poolbsc.cpp $(POOLBSCLIBS:%=$(LIBDIR)/%) $
 	@$(CC) $(CFLAGS) -I$(INCDIR) -o $@ $< $(POOLBSCLIBS:%=$(LIBDIR)/%)
 
 $(BINDIR)/storeb: $(SRCDIR)/commands/store.cpp $(STOREBLIBS:%=$(LIBDIR)/%) $(BINDIR)
-	@echo "build poolbsc"
+	@echo "build storeb"
 	@$(CC) $(CFLAGS) -I$(INCDIR) -o $@ $< $(STOREBLIBS:%=$(LIBDIR)/%)
