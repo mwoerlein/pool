@@ -9,7 +9,7 @@ PBASMLIBS   = linux.a pasm.a sys.a
 all: clean $(BINDIR)/pbasm $(BINDIR)/poolbc $(BINDIR)/poolbsc
 
 clean:
-	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc $(SRCDIR)/pasm/i386/PasmParser.cpp
+	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc $(SRCDIR)/pasm/i386/PasmParser.cpp /tmp/poolbsc
 
 $(BINDIR)/pbasm: $(SRCDIR)/commands/pbasm.cpp $(PBASMLIBS:%=$(LIBDIR)/%) $(BINDIR)
 	@echo "build pbasm"

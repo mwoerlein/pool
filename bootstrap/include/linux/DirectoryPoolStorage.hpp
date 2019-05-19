@@ -18,6 +18,8 @@ class DirectoryPoolStorage: public PoolStorage {
     
     virtual StorageElement * getElement(String & classname, String & mimetype) override;
     virtual OStream & writeElement(String & classname, String & mimetype) override;
+    
+    virtual String &getTemporaryClassname(const char * prefix = "pool");
 };
 
 #endif //LINUX_DIRECTORYPOOLSTORAGE_HPP_LOCK

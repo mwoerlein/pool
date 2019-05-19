@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include "poolc/storage/Types.hpp"
@@ -150,4 +151,10 @@ String & DirectoryPoolStorage::buildFilePath(String & classname, String & mimety
         filePath << ".pasm";
     }
     return filePath;
+}
+
+String & DirectoryPoolStorage::getTemporaryClassname(const char * prefix) {
+    String & classname = env().create<String, const char *>(prefix);
+    classname << "::temp_" << getpid();
+    return classname;
 }

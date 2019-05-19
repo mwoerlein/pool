@@ -91,7 +91,7 @@ class PoolBootstrapStaticCompilerCommand: public CommandLine {
         }
         
         DirectoryPoolStorage &tmp = env().create<DirectoryPoolStorage, const char *>("/tmp");
-        String &tmpString = env().create<String, const char *>("poolbsc::tmp");
+        String &tmpString = tmp.getTemporaryClassname(PROGRAM);
         String &tmpMime = env().create<String, const char *>(MIMETYPE_PASM);
         OStream &tmpOut = tmp.writeElement(tmpString, tmpMime);
         {
