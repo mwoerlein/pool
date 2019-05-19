@@ -3,6 +3,7 @@ include ./Makefile.inc
 POOLBCLIBS  = linux.a poolc.a sys.a
 POOLBSCLIBS = linux.a poolc.a pasm.a sys.a
 PBASMLIBS   = linux.a pasm.a sys.a
+STOREBLIBS  = linux.a sys.a
 
 .PHONY: all clean
 
@@ -22,3 +23,7 @@ $(BINDIR)/poolbc: $(SRCDIR)/commands/poolbc.cpp $(POOLBCLIBS:%=$(LIBDIR)/%) $(BI
 $(BINDIR)/poolbsc: $(SRCDIR)/commands/poolbsc.cpp $(POOLBSCLIBS:%=$(LIBDIR)/%) $(BINDIR)
 	@echo "build poolbsc"
 	@$(CC) $(CFLAGS) -I$(INCDIR) -o $@ $< $(POOLBSCLIBS:%=$(LIBDIR)/%)
+
+$(BINDIR)/storeb: $(SRCDIR)/commands/store.cpp $(STOREBLIBS:%=$(LIBDIR)/%) $(BINDIR)
+	@echo "build poolbsc"
+	@$(CC) $(CFLAGS) -I$(INCDIR) -o $@ $< $(STOREBLIBS:%=$(LIBDIR)/%)

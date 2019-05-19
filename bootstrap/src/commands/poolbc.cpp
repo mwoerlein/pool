@@ -11,7 +11,7 @@
 #include "poolc/backend/x86/X86Writer.hpp"
 
 static const char PROGRAM[] = "poolbc";
-static const char VERSION[] = "0.1.0";
+static const char VERSION[] = "0.2.0";
 static const char USAGE[] =
 R"(Pool Bootstrap Compiler.
 
