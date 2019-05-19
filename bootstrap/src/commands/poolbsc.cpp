@@ -128,6 +128,7 @@ class PoolBootstrapStaticCompilerCommand: public CommandLine {
         out.destroy();
         in.destroy();
         tmpElement->destroy();
+        tmp.removeElement(tmpString, tmpMime);
         tmpString.destroy();
         tmpMime.destroy();
         tmp.destroy();

@@ -158,3 +158,11 @@ String & DirectoryPoolStorage::getTemporaryClassname(const char * prefix) {
     classname << "::temp_" << getpid();
     return classname;
 }
+
+void DirectoryPoolStorage::removeElement(String & classname, String & mimetype) {
+    String & filePath = buildFilePath(classname, mimetype, true);
+    char buffer[FILENAME_MAX];
+    filePath >> buffer;
+    filePath.destroy();
+    unlink(buffer);
+}
