@@ -18,7 +18,9 @@ class Command extends CommandLine {
     
     [int] execute(int argc, int argv) {
         this.configure();
-        this.parseCommandLine(argc, argv);
+        if (!this.parseCommandLine(argc, argv)) {
+            return -1;
+        }
         return this.run();
     }
 

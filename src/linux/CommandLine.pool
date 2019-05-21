@@ -14,14 +14,15 @@ use sys::core::anycollection::AnyListIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntry;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::runtime::Runtime;
 
 class CommandLine extends StringOwner {
 
+    String _calledCommand;
     AnyList _arguments;     // LinkedList<String>
     AnyMap _options;        // HashMap<String, String>
     AnyMap _optionAliases;  // HashMap<String, String>
     AnyMap _listOptions;    // HashMap<String, LinkedList<String>>
-    String _calledCommand;
     
     [] _initCommandLine() {
         _arguments = this.rt().createInstance(AnyList:CLASSNAME);
@@ -111,58 +112,6 @@ class CommandLine extends StringOwner {
     [int] getArgumentsSize() { return this._arguments.size(); }
     [AnyIterator] getArguments() { return this._arguments.iterator(); }
     
-    [] parseCommandLine(int argc, int argv) {
-        _calledCommand = this.createOwnStringFromCString(this.readArg(argv));
-        while (--argc) {
-            this._arguments.add(this.createOwnStringFromCString(this.readArg(argv += 4)));
-        }
-    }
-    
-    // private
-    [] setOption(String option) {
-        this._options.set(this._getOwnOptionName(option), null);
-    }
-    
-    [] setValueOption(String option, String value) {
-        String optionName = this._getOwnOptionName(option);
-        if (this._listOptions.has(optionName)) {
-            AnyList listOption = this._listOptions.get(optionName);
-            listOption.add(this.createOwnStringFromString(value));
-        } else {
-            this._options.set(
-                this._getOwnOptionName(option),
-                this.createOwnStringFromString(value)
-            );
-        }
-    }
-    
-    [] addArgument(String value) {
-        this._arguments.add(this.createOwnStringFromString(value));
-    }
-    
-    [String] _getOwnOptionName(String option) {
-        if (this._optionAliases.has(option)) {
-            return this._optionAliases.get(option);
-        }
-        return this.createOwnStringFromString(option);
-    }
-    
-    [String] _getOptionNameFromCString(cstring option) {
-        String optionName = this.createStringFromCString(option);
-        if (this._optionAliases.has(optionName)) {
-            String alias = this._optionAliases.get(optionName);
-            optionName.destroy();
-            optionName = this.createStringFromString(alias);
-        }
-        return optionName;
-    }
-    
-    [cstring] readArg(int argv) {
-        cstring arg = "";
-        __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
-        return arg;
-    }
-    
     [OStream] dumpCLToStream(OStream stream) {
         stream.printCString("called command: ").print(this._calledCommand).printNewline();
         stream.printCString("options:").printNewline();
@@ -207,5 +156,199 @@ class CommandLine extends StringOwner {
             it.destroy();
         }
         return stream;
+    }
+    
+    [int] parseCommandLine(int argc, int argv) {
+        _calledCommand = this.createOwnStringFromCString(this._getStringFromMem(argv));
+        
+        Runtime rt = this.rt();
+        String arg = rt.createInstance(String:CLASSNAME);
+        String opt = rt.createInstance(String:CLASSNAME);
+        String value = rt.createInstance(String:CLASSNAME);
+        
+        int ret = this._parseCommandLine(argc, argv, arg, opt, value);
+        
+        value.destroy();
+        opt.destroy();
+        arg.destroy();
+        return ret;
+    }
+    
+    // private
+    int MODE_START      := 0;
+    int MODE_ARG        := 1;
+    int MODE_SHORT_OPT  := 2;
+    int MODE_LONG_OPT   := 3;
+    int MODE_OPT_VALUE  := 4;
+        
+    [int] _parseCommandLine(int argc, int argv, String arg, String opt, String value) {
+        OStream err = this.rt().err();
+        int mode = MODE_START;
+        while (--argc) {
+            int current = this._getAddressFromMem(argv += 4);
+            int c = this._getCharFromMem(current++);
+            if (c == '-') {
+                if (mode == MODE_ARG) {
+                    if (!this._pushArgument(arg)) { return false; }
+                } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
+                    if (!this._pushOption(opt)) { return false; }
+                } else if (mode == MODE_OPT_VALUE) {
+                    if (!this._pushValueOption(opt, value)) { return false; }
+                }
+                mode = MODE_SHORT_OPT;
+            } else {
+                if (mode == MODE_START) {
+                    mode = MODE_ARG;
+                    arg.printChar(c);
+                } else if (mode == MODE_ARG) {
+                    if (!this._pushArgument(arg)) { return false; }
+                    arg.printChar(c);
+                } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
+                    mode = MODE_OPT_VALUE;
+                    value.printChar(c);
+                } else if (mode == MODE_OPT_VALUE) {
+                    if (!this._pushValueOption(opt, value)) { return false; }
+                    mode = MODE_ARG;
+                    arg.printChar(c);
+                }
+            }
+            while (c = this._getCharFromMem(current++)) {
+                if (c == '-') {
+                    if (mode == MODE_ARG) {
+                        arg.printChar(c);
+                    } else if (mode == MODE_SHORT_OPT) {
+                        if (opt.length()) {
+                            err.printCString("'-' within short option list").printNewline();
+                            return false;
+                        }
+                        mode = MODE_LONG_OPT;
+                    } else if (mode == MODE_LONG_OPT) {
+                        if (!opt.length()) {
+                            err.printCString("'-' at start of long option").printNewline();
+                            return false;
+                        }
+                        opt.printChar(c);
+                    } else if (mode == MODE_OPT_VALUE) {
+                        value.printChar(c);
+                    }
+                } else if (c == '=') {
+                    if (mode == MODE_ARG) {
+                        arg.printChar(c);
+                    } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
+                        mode = MODE_OPT_VALUE;
+                    } else if (mode == MODE_OPT_VALUE) {
+                        value.printChar(c);
+                    }
+                } else {
+                    if (mode == MODE_ARG) {
+                        arg.printChar(c);
+                    } else if (mode == MODE_SHORT_OPT) {
+                        if (opt.length()) { 
+                            if (!this._pushOption(opt)) { return false; }
+                        }
+                        opt.printChar(c);
+                    } else if (mode == MODE_LONG_OPT) {
+                        opt.printChar(c);
+                    } else if (mode == MODE_OPT_VALUE) {
+                        value.printChar(c);
+                    }
+                }
+            }
+        }
+        if (mode == MODE_ARG) {
+            if (!this._pushArgument(arg)) { return false; }
+        } else if (mode == MODE_SHORT_OPT) {
+            if (opt.length()) {
+                if (!this._pushOption(opt)) { return false; }
+            } else {
+                arg.printChar('-');
+                if (!this._pushArgument(arg)) { return false; }
+            }
+        } else if (mode == MODE_LONG_OPT) {
+            if (opt.length()) {
+                if (!this._pushOption(opt)) { return false; }
+            } else {
+                arg.printChar('-').printChar('-');
+                if (!this._pushArgument(arg)) { return false; }
+            }
+        } else if (mode == MODE_OPT_VALUE) {
+            if (!this._pushValueOption(opt, value)) { return false; }
+        }
+        return true;
+    }
+    
+    [int] _pushArgument(String arg) {
+        if (!arg.length()) {
+            this.rt().err().printCString("no argument to push").printNewline();
+            return false;
+        }
+        String argument = this.createOwnStringFromString(arg); arg.clear();
+        this._arguments.add(argument);
+        return true;
+    }
+    
+    [int] _pushOption(String opt) {
+        if (!opt.length()) {
+            this.rt().err().printCString("no option to push").printNewline();
+            return false;
+        }
+        String optionName = this._getOwnOptionName(opt); opt.clear();
+        if (this._listOptions.has(optionName)) {
+            this.rt().err().printCString("list option without value to push").printNewline();
+            return false;
+        }
+        this._options.set(optionName, null);
+        return true;
+    }
+    
+    [int] _pushValueOption(String opt, String val) {
+        if (!opt.length() || !val.length()) {
+            this.rt().err().printCString("no option with value to push").printNewline();
+            return false;
+        }
+        String optionName = this._getOwnOptionName(opt); opt.clear();
+        String value = this.createOwnStringFromString(val); val.clear();
+        if (this._listOptions.has(optionName)) {
+            AnyList listOption = this._listOptions.get(optionName);
+            listOption.add(value);
+        } else {
+            this._options.set(optionName, value);
+        }
+        return true;
+    }
+    
+    [String] _getOwnOptionName(String option) {
+        if (this._optionAliases.has(option)) {
+            return this._optionAliases.get(option);
+        }
+        return this.createOwnStringFromString(option);
+    }
+    
+    [String] _getOptionNameFromCString(cstring option) {
+        String optionName = this.createStringFromCString(option);
+        if (this._optionAliases.has(optionName)) {
+            String alias = this._optionAliases.get(optionName);
+            optionName.destroy();
+            optionName = this.createStringFromString(alias);
+        }
+        return optionName;
+    }
+    
+    [cstring] _getStringFromMem(int address) {
+        cstring s = "";
+        __pasm__("movl (%eax), %eax;", {"%eax": address}, {"%eax": s});
+        return s;
+    }
+    
+    [int] _getAddressFromMem(int address) {
+        int addr = 0;
+        __pasm__("movl (%eax), %eax;", {"%eax": address}, {"%eax": addr});
+        return addr;
+    }
+    
+    [int] _getCharFromMem(int address) {
+        int c = 0;
+        __pasm__("movb (%eax), %bl", {"%eax": address, "%ebx": c} , {"%ebx": c});
+        return c;
     }
 }
