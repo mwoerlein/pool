@@ -1,0 +1,211 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::core::utils::StringOwner;
+use sys::core::String;
+use sys::core::OStream;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyListIterator;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntry;
+use sys::core::anycollection::AnyMapEntryIterator;
+
+class CommandLine extends StringOwner {
+
+    AnyList _arguments;     // LinkedList<String>
+    AnyMap _options;        // HashMap<String, String>
+    AnyMap _optionAliases;  // HashMap<String, String>
+    AnyMap _listOptions;    // HashMap<String, LinkedList<String>>
+    String _calledCommand;
+    
+    [] _initCommandLine() {
+        _arguments = this.rt().createInstance(AnyList:CLASSNAME);
+        _options = this.rt().createInstance(AnyMap:CLASSNAME);
+        _options.init(13);
+        _optionAliases = this.rt().createInstance(AnyMap:CLASSNAME);
+        _optionAliases.init(13);
+        _listOptions = this.rt().createInstance(AnyMap:CLASSNAME);
+        _listOptions.init(13);
+        this._initStringOwner();
+    }
+    
+    [] _destructCommandLine() {
+        _arguments.destroy();
+        _options.destroy();
+        _optionAliases.destroy();
+        _listOptions.destroy();
+        this._destructStringOwner();
+    }
+
+    // TODO: implement usage parsing (see http://docopt.org/)
+    [CommandLine] registerOptionAlias(int alias, cstring option) {
+        _optionAliases.set(
+            this.createOwnStringFromChar(alias),
+            this.createOwnStringFromCString(option)
+        );
+        return this;
+    }
+    
+    // TODO: implement usage parsing (see http://docopt.org/)
+    [CommandLine] registerOptionList(cstring option) {
+        _listOptions.set(
+            this.createOwnStringFromCString(option),
+            this.rt().createInstance(AnyList:CLASSNAME)
+        );
+        return this;
+    }
+    
+    [int] hasOption(cstring option) {
+        if (this.hasListOption(option)) { return true; }
+        String optionName = this._getOptionNameFromCString(option);
+        int ret = this._options.has(optionName);
+        optionName.destroy();
+        return ret;
+    }
+    
+    [int] hasValueOption(cstring option) {
+        if (this.getValueOption(option)) { return true; }
+        return false;
+    }
+    
+    [String] getValueOption(cstring option) {
+        String optionName = this._getOptionNameFromCString(option);
+        String ret = this._options.get(optionName);
+        optionName.destroy();
+        return ret;
+    }
+    
+    [int] hasListOption(cstring option) {
+        return this.getListOptionSize(option) > 0;
+    }
+    
+    [int] getListOptionSize(cstring option) {
+        int ret = 0;
+        String optionName = this._getOptionNameFromCString(option);
+        if (this._listOptions.has(optionName)) {
+            AnyList list = this._listOptions.get(optionName);
+            ret = list.size();
+        }
+        optionName.destroy();
+        return ret;
+    }
+    
+    [AnyIterator] getListOption(cstring option) {
+        AnyIterator ret = null;
+        String optionName = this._getOptionNameFromCString(option);
+        if (this._listOptions.has(optionName)) {
+            AnyList list = this._listOptions.get(optionName);
+            ret = list.iterator();
+        } else {
+            ret = this.rt().cast(AnyIterator:CLASSNAME, this.rt().createInstance(AnyListIterator:CLASSNAME));
+        }
+        optionName.destroy();
+        return ret;
+    }
+    
+    [int] getArgumentsSize() { return this._arguments.size(); }
+    [AnyIterator] getArguments() { return this._arguments.iterator(); }
+    
+    [] parseCommandLine(int argc, int argv) {
+        _calledCommand = this.createOwnStringFromCString(this.readArg(argv));
+        while (--argc) {
+            this._arguments.add(this.createOwnStringFromCString(this.readArg(argv += 4)));
+        }
+    }
+    
+    // private
+    [] setOption(String option) {
+        this._options.set(this._getOwnOptionName(option), null);
+    }
+    
+    [] setValueOption(String option, String value) {
+        String optionName = this._getOwnOptionName(option);
+        if (this._listOptions.has(optionName)) {
+            AnyList listOption = this._listOptions.get(optionName);
+            listOption.add(this.createOwnStringFromString(value));
+        } else {
+            this._options.set(
+                this._getOwnOptionName(option),
+                this.createOwnStringFromString(value)
+            );
+        }
+    }
+    
+    [] addArgument(String value) {
+        this._arguments.add(this.createOwnStringFromString(value));
+    }
+    
+    [String] _getOwnOptionName(String option) {
+        if (this._optionAliases.has(option)) {
+            return this._optionAliases.get(option);
+        }
+        return this.createOwnStringFromString(option);
+    }
+    
+    [String] _getOptionNameFromCString(cstring option) {
+        String optionName = this.createStringFromCString(option);
+        if (this._optionAliases.has(optionName)) {
+            String alias = this._optionAliases.get(optionName);
+            optionName.destroy();
+            optionName = this.createStringFromString(alias);
+        }
+        return optionName;
+    }
+    
+    [cstring] readArg(int argv) {
+        cstring arg = "";
+        __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
+        return arg;
+    }
+    
+    [OStream] dumpCLToStream(OStream stream) {
+        stream.printCString("called command: ").print(this._calledCommand).printNewline();
+        stream.printCString("options:").printNewline();
+        {
+            AnyMapEntryIterator it = this._options.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                String key = e.getKey();
+                String value = e.getValue();
+                stream.printChar('-').printChar(' ').print(key);
+                if (e.getValue()) {
+                    stream.printChar(' ').printChar('=').printChar(' ').print(value);
+                }
+                stream.printNewline();
+            }
+            it.destroy();
+        }
+        {
+            AnyMapEntryIterator it = this._listOptions.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                String key = e.getKey();
+                AnyList list = e.getValue();
+                stream.printChar('-').printChar(' ').print(key).printChar(' ').printChar('[');
+                AnyIterator lit = list.iterator();
+                while (lit.hasNext()) {
+                    String value = lit.next();
+                    stream.printChar(' ').print(value);
+                }
+                lit.destroy();
+                stream.printChar(' ').printChar(']').printNewline();
+            }
+            it.destroy();
+        }
+        stream.printCString("arguments:").printNewline();
+        {
+            AnyIterator it = this._arguments.iterator();
+            while (it.hasNext()) {
+                String arg = it.next();
+                stream.printChar('-').printChar(' ').print(arg).printNewline();
+            }
+            it.destroy();
+        }
+        return stream;
+    }
+}

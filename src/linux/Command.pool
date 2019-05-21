@@ -5,10 +5,13 @@ version = 0.1.0
 */
 namespace linux;
 
-use sys::core::Object;
 
-class Command extends Object {
+class Command extends CommandLine {
 
+    cstring name;
+    cstring version;
+    cstring usage;
+    
     // methods
     abstract [] configure();
     abstract [int] run();
@@ -18,17 +21,29 @@ class Command extends Object {
         this.parseCommandLine(argc, argv);
         return this.run();
     }
-    
-    [] parseCommandLine(int argc, int argv) {
-        while (argc--) {
-            this.rt().out().printCString("# ").printCString(this.readArg(argv)).printNewline();
-            argv += 4;
-        }
+
+    // protected
+    [Command] setName(cstring name) {
+        this.name = name;
+        return this;
     }
     
-    [cstring] readArg(int argv) {
-        cstring arg = "";
-        __pasm__("movl (%eax), %eax;", {"%eax": argv}, {"%eax": arg});
-        return arg;
+    [Command] setVersion(cstring version) {
+        this.version = version;
+        return this;
+    }
+    
+    [Command] setUsage(cstring usage) {
+        this.usage = usage;
+        // TODO: implement usage parsing (see http://docopt.org/)
+        return this;
+    }
+    
+    [] _initCommand() {
+        this._initCommandLine();
+    }
+    
+    [] _destructCommand() {
+        this._destructCommandLine();
     }
 }

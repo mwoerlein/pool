@@ -1,0 +1,66 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+
+// TODO: implement ownership correctly
+class StringOwner extends Object {
+
+    AnyList _ownedStrings;  // LinkedList<String>
+
+    [String] createOwnStringFromString(String value) {
+        String s = this.rt().createInstance(String:CLASSNAME);
+        s.assignString(value);
+        _ownedStrings.add(s);
+        return s;
+    }
+    
+    [String] createOwnStringFromCString(cstring value) {
+        String s = this.rt().createInstance(String:CLASSNAME);
+        s.assignCString(value);
+        _ownedStrings.add(s);
+        return s;
+    }
+
+    [String] createOwnStringFromChar(int value) {
+        String s = this.rt().createInstance(String:CLASSNAME);
+        s.printChar(value);
+        _ownedStrings.add(s);
+        return s;
+    }
+
+    [String] createStringFromString(String value) {
+        String s = this.rt().createInstance(String:CLASSNAME);
+        s.assignString(value);
+        return s;
+    }
+    
+    [String] createStringFromCString(cstring value) {
+        String s = this.rt().createInstance(String:CLASSNAME);
+        s.assignCString(value);
+        return s;
+    }
+
+    [] _initStringOwner() {
+        _ownedStrings = this.rt().createInstance(AnyList:CLASSNAME);
+    }
+    
+    [] _destructStringOwner() {
+        {
+            AnyIterator it = _ownedStrings.iterator();
+            while (it.hasNext()) {
+                String s = it.next();
+                s.destroy();
+            }
+            it.destroy();
+        }
+        _ownedStrings.destroy();
+    }
+}

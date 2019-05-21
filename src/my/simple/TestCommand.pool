@@ -9,8 +9,41 @@ use sys::runtime::Runtime;
 
 class TestCommand extends linux::Command {
 
-    // TODO #7: move to constructor with (implicit) parent calls
+    [] __init() {
+        this._initCommand();
+    }
+    
+    [] __destruct() {
+        this._destructCommand();
+    }
+    
     [] configure() {
+        this.setName("pooltest")
+            .setVersion("0.1.0")
+            .setUsage(<"
+Pool Test Command.
+
+    Usage:
+      pooltest [options] -l <val> [-l <val>]... <arg>...
+
+    Options:
+      -h --help                 Show this screen.
+      --version                 Show version.
+      -d --debug                Set debug.
+      -v --verbose              Set verbose.
+      --warning                 Set warning.
+      --error                   Set error.
+      -a <val>                  An optional value.
+      -b <val> --blub <val>     Another optional value.
+      -l <val> --list <val>     A required option list.
+        ">);
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('d', "debug")
+            .registerOptionAlias('v', "verbose")
+            .registerOptionAlias('b', "blub")
+            .registerOptionAlias('l', "list")
+            .registerOptionList("list");
+        
         this.rt().err().printCString("Hello pool!").print(this).printNewline();
     }
 
@@ -18,6 +51,8 @@ class TestCommand extends linux::Command {
         // do fancy stuff
         Runtime rt = this.rt();
         
+        rt.out().printCString(name).printChar(' ').printCString(version).printNewline();
+        rt.out().printCString(usage).printNewline();
         rt.err().printCString("Byebye pool!").printNewline();
         return 0;
     }
