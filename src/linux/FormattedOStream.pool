@@ -10,16 +10,14 @@ use sys::stream::OStream;
 class FormattedOStream extends OStream {
     
     OStream inner;
-    // TODO: replace with this, after implicit casts are implemented
-    OStream self;
     
     [OStream] initOStream(OStream inner) {
         this.inner = inner;
-        return self = this.rt().cast(OStream:CLASSNAME, this);
+        return this.ostream();
     }
     
     [OStream] printChar(int c) {
         inner.printChar(0x1b).printCString("[1;31m").printChar(c).printChar(0x1b).printCString("[0;39m");
-        return self;
+        return this.ostream();
     }
 }

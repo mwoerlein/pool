@@ -107,4 +107,7 @@ class OStream extends Object {
         }
         return this;
     }
+    
+    // TODO: remove with implicit cast
+    [OStream] ostream() { return this;}
 }

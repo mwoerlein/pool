@@ -17,12 +17,9 @@ class String extends OStream {
     
     int _length;
     int _hash;
-    // TODO: replace with this, after implicit casts are implemented
-    OStream self;
     
     // TODO #7: move to constructor with (implicit) parent calls
     [] __init() {
-        self = this.rt().cast(OStream:CLASSNAME, this);
         _first = _last = null;
         _length = _hash = 0;
     }
@@ -62,7 +59,7 @@ class String extends OStream {
         _hash *= 33;
         _hash += c;
         
-        return self;
+        return this.ostream();
     }
     
     [int] compareCString(cstring s) {

@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::stream;
+
+
+class SeekableIOStream extends OStream, IStream {
+    
+    abstract [int] length();
+    abstract [int] pos();
+    abstract [] seek(int pos);
+    
+    [] rewind() { this.seek(0); }
+
+}
