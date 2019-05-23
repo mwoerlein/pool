@@ -6,7 +6,7 @@ version = 0.1.0
 namespace sys::memory;
 
 use sys::core::Object;
-use sys::core::OStream;
+use sys::stream::OStream;
 
 // TODO: convert to interface 
 class Allocator extends Object {

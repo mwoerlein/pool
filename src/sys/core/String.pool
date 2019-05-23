@@ -7,6 +7,8 @@ namespace sys::core;
 
 use sys::memory::Address;
 use sys::runtime::Runtime;
+use sys::stream::IStream;
+use sys::stream::OStream;
 
 class String extends OStream {
 

@@ -5,12 +5,12 @@ version = 0.1.0
 */
 namespace sys::core::utils;
 
-use sys::core::IStream;
 use sys::core::Object;
-use sys::core::OStream;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::runtime::Runtime;
+use sys::stream::IStream;
+use sys::stream::OStream;
 
 class CommandLineParser extends Object {
 

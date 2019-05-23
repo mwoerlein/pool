@@ -5,7 +5,7 @@ version = 0.1.0
 */
 namespace linux;
 
-use sys::core::OStream;
+use sys::stream::OStream;
 
 class FormattedOStream extends OStream {
     

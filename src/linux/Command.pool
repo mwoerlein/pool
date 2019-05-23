@@ -6,7 +6,6 @@ version = 0.1.0
 namespace linux;
 
 use sys::core::String;
-use sys::core::OStream;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntry;
@@ -15,6 +14,7 @@ use sys::core::utils::CommandLine;
 use sys::core::utils::CommandLineParser;
 use sys::memory::Address;
 use sys::runtime::Runtime;
+use sys::stream::OStream;
 
 class Command extends CommandLine {
 

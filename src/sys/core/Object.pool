@@ -9,6 +9,7 @@ use sys::memory::Address;
 use sys::runtime::Class;
 use sys::runtime::InstanceHandle;
 use sys::runtime::Runtime;
+use sys::stream::OStream;
 
 class Object {
     

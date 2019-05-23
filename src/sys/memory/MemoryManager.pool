@@ -5,8 +5,8 @@ version = 0.1.0
 */
 namespace sys::memory;
 
-use sys::core::OStream;
 use sys::runtime::ClassDescriptor;
+use sys::stream::OStream;
 
 class MemoryManager extends Allocator {
     

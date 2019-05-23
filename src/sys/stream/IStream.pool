@@ -3,8 +3,9 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core;
+namespace sys::stream;
 
+use sys::core::Object;
 
 class IStream extends Object {
     

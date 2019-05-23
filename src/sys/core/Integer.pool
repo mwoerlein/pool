@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::stream::OStream;
 
 // TODO: extends Comparable<Integer> for compare operator support, if available
 class Integer extends Object {

@@ -5,12 +5,12 @@ version = 0.1.0
 */
 namespace linux;
 
-use sys::core::OStream;
 use sys::memory::Allocator;
 use sys::memory::PageAllocator;
 use sys::memory::PagedMemoryManager;
 use sys::runtime::Runtime as SysRuntime;
 use sys::runtime::StaticResolvedClassStorage;
+use sys::stream::OStream;
 
 class Runtime extends sys::runtime::RuntimeBuilder {
     

@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::stream::IStream;
 
 class StringIStream extends IStream {
     

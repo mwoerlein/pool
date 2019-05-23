@@ -6,11 +6,11 @@ version = 0.1.0
 namespace sys::runtime;
 
 use sys::core::Object;
-use sys::core::OStream;
 use sys::core::Thread;
 use sys::memory::Address;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
+use sys::stream::OStream;
 
 class Runtime extends Object {
 
