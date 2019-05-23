@@ -1,0 +1,20 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+
+class IStream extends Object {
+    
+    abstract [int] isEmpty();
+    abstract [int] readChar();
+    
+    [OStream] printToStream(OStream stream) {
+        while (!this.isEmpty()) {
+            stream.printChar(this.readChar());
+        }
+        return stream;
+    }
+}

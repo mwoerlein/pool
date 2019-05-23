@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::core;
 
 use sys::memory::Address;
+use sys::runtime::Runtime;
 
 class String extends OStream {
 
@@ -118,6 +119,13 @@ class String extends OStream {
             cur = cur.getNext();
         }
         return stream;
+    }
+    
+    [IStream] toIStream() {
+        Runtime rt = this.rt();
+        StringIStream s = rt.createInstance(StringIStream:CLASSNAME);
+        s.setNext(_first);
+        return rt.cast(IStream:CLASSNAME, s);
     }
     
     global [int] compareCStrings(cstring a, cstring b) {
