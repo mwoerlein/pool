@@ -15,6 +15,7 @@ use sys::core::utils::CommandLineParser;
 use sys::memory::Address;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
 
 class Command extends CommandLine {
 
@@ -59,6 +60,19 @@ class Command extends CommandLine {
     
     [] _destructCommand() {
         this._destructCommandLine();
+    }
+    
+    [SeekableIOStream] openFile(String filename, int mode) {
+        File f = this.rt().createInstance(File:CLASSNAME);
+        int buf = 0;
+        __pasm__("subl %eax, %esp", {"%eax": filename.length() + 1}, {"%esp": buf});
+        int r = f._init(filename.toCString(buf), mode);
+        __pasm__("addl %eax, %esp", {"%eax": filename.length() + 1});
+        if (r < 0) {
+            f.destroy();
+            return null;
+        }
+        return this.rt().cast(SeekableIOStream:CLASSNAME, f);
     }
     
     // debug

@@ -120,6 +120,17 @@ class String extends OStream {
         return stream;
     }
     
+    [cstring] toCString(int buffer) {
+        int p = buffer;
+        StringElement cur = _first;
+        while (cur) {
+            Address:storeChar(p++, cur.getChar());
+            cur = cur.getNext();
+        }
+        Address:storeChar(p++, 0);
+        return Address:string(null, buffer);
+    }
+    
     [IStream] toIStream() {
         Runtime rt = this.rt();
         StringIStream s = rt.createInstance(StringIStream:CLASSNAME);

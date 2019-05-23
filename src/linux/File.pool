@@ -1,0 +1,121 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::core::String;
+use sys::stream::SeekableIOStream;
+use sys::stream::OStream;
+
+class File extends SeekableIOStream {
+    
+    int MODE_READ   := 00002; // O_RDWR
+    int MODE_WRITE  := 01102; // O_RDWR + O_CREAT + O_TRUNC
+    int MODE_APPEND := 02102; // O_RDWR + O_CREAT + O_APPEND
+    
+    int fd;
+    
+    [int] _init(cstring filename, int mode) {
+        this._open(filename, mode);
+        if (fd < 0) {
+            this.rt().err().printCString("failed to open file: ").printCString(filename).printNewline();
+        }
+        return fd;
+    }
+    
+    [] __destruct() {
+        if (fd >= 0) {
+            this._close();
+        }
+    }
+    
+    [int] isEmpty() {
+        int p = this._seek(0, _SEEK_CUR);
+        int len = this._seek(0, _SEEK_END);
+        this._seek(p, _SEEK_SET);
+        return p == len;
+    }
+    
+    [int] length() {
+        int p = this._seek(0, _SEEK_CUR);
+        int len = this._seek(0, _SEEK_END);
+        this._seek(p, _SEEK_SET);
+        return len;
+    }
+    
+    [int] pos() {
+        return this._seek(0, _SEEK_CUR);
+    }
+    
+    [int] readChar() {
+        return this._read();
+    }
+    
+    [OStream] printChar(int c) {
+        this._write(c);
+        return this.ostream();
+    }
+    
+    [] seek(int pos) {
+        this._seek(pos, _SEEK_SET);
+    }
+    
+    // private
+    int _SEEK_SET := 0;   /* set file offset to offset */
+    int _SEEK_CUR := 1;   /* set file offset to current plus offset */
+    int _SEEK_END := 2;   /* set file offset to EOF plus offset */
+/*        
+    int O_ACCMODE  :=     0003;
+    int O_RDONLY   :=       00;
+    int O_WRONLY   :=       01;
+    int O_RDWR     :=       02;
+    int O_CREAT    :=     0100;
+    int O_EXCL     :=     0200;
+    int O_NOCTTY   :=     0400;
+    int O_TRUNC    :=    01000;
+    int O_APPEND   :=    02000;
+*/    
+
+    [int] _read() {
+        int ret = 0;
+        __pasm__(<"
+            subl 4, %esp;
+            movl %esp, %ecx; int 0x80
+            movb (%esp), %cl;
+            addl 4, %esp
+        ">, {"%eax": 3, "%ebx": fd, "%ecx": ret, "%edx": 1}, {"%ecx": ret});
+        return ret;
+    }
+    
+    [] _write(int c) {
+        __pasm__(<"
+            subl 4, %esp;
+            movb %cl, (%esp); movl %esp, %ecx; int 0x80
+            addl 4, %esp
+        ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1});
+    }
+    
+    [] _open(cstring filename, int mode) {
+        __pasm__(
+            "int 0x80",
+            {"%eax": 5, "%ebx": filename, "%ecx": mode, "%edx": 0666},
+            {"%eax": fd}
+        );
+    }
+    
+    [] _close() {
+        __pasm__("int 0x80", {"%eax": 6, "%ebx": fd});
+    }
+    
+    [int] _seek(int offset, int whence) {
+        int _offset = 0;
+        __pasm__(
+            "int 0x80",
+            {"%eax": 19, "%ebx": fd, "%ecx": offset, "%edx": whence}, // lseek
+            {"%eax": _offset}
+        );
+        return _offset;
+    }
+}
