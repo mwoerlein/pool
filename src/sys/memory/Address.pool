@@ -91,4 +91,44 @@ class Address {
         ">, {"%eax": a, "%ebx": b}, {"%ecx": diff});
         return diff;
     }
+    
+    global [__all__] load(int addr) {
+        __all__ a = null;
+        __pasm__("movl (%eax), %eax", {"%eax": addr}, {"%eax": a});
+        return a;
+    }
+    
+    global [int] loadAddress(int addr) {
+        int a = 0;
+        __pasm__("movl (%eax), %eax", {"%eax": addr}, {"%eax": a});
+        return a;
+    }
+    
+    global [cstring] loadString(int addr) {
+        cstring s = "";
+        __pasm__("movl (%eax), %eax", {"%eax": addr}, {"%eax": s});
+        return s;
+    }
+    
+    global [int] loadChar(int addr) {
+        int c = 0;
+        __pasm__("movb (%eax), %bl", {"%eax": addr, "%ebx": c} , {"%ebx": c});
+        return c;
+    }
+    
+    global [] store(int addr, __any__ a) {
+        __pasm__("movl %ebx, (%eax)", {"%eax": addr, "%ebx": a});
+    }
+    
+    global [] storeAddress(int addr, int a) {
+        __pasm__("movl %ebx, (%eax)", {"%eax": addr, "%ebx": a});
+    }
+    
+    global [] storeString(int addr, cstring s) {
+        __pasm__("movl %ebx, (%eax)", {"%eax": addr, "%ebx": s});
+    }
+    
+    global [] storeChar(int addr, int c) {
+        __pasm__("movb %bl, (%eax)", {"%eax": addr, "%ebx": c});
+    }
 }

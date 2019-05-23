@@ -14,6 +14,7 @@ use sys::core::anycollection::AnyListIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntry;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::memory::Address;
 use sys::runtime::Runtime;
 
 class CommandLine extends StringOwner {
@@ -159,7 +160,7 @@ class CommandLine extends StringOwner {
     }
     
     [int] parseCommandLine(int argc, int argv) {
-        _calledCommand = this.createOwnStringFromCString(this._getStringFromMem(argv));
+        _calledCommand = this.createOwnStringFromCString(Address:loadString(argv));
         
         Runtime rt = this.rt();
         String arg = rt.createInstance(String:CLASSNAME);
@@ -185,8 +186,8 @@ class CommandLine extends StringOwner {
         OStream err = this.rt().err();
         int mode = MODE_START;
         while (--argc) {
-            int current = this._getAddressFromMem(argv += 4);
-            int c = this._getCharFromMem(current++);
+            int current = Address:loadAddress(argv += 4);
+            int c = Address:loadChar(current++);
             if (c == '-') {
                 if (mode == MODE_ARG) {
                     if (!this._pushArgument(arg)) { return false; }
@@ -212,7 +213,7 @@ class CommandLine extends StringOwner {
                     arg.printChar(c);
                 }
             }
-            while (c = this._getCharFromMem(current++)) {
+            while (c = Address:loadChar(current++)) {
                 if (c == '-') {
                     if (mode == MODE_ARG) {
                         arg.printChar(c);
@@ -332,23 +333,5 @@ class CommandLine extends StringOwner {
             optionName = this.createStringFromString(alias);
         }
         return optionName;
-    }
-    
-    [cstring] _getStringFromMem(int address) {
-        cstring s = "";
-        __pasm__("movl (%eax), %eax;", {"%eax": address}, {"%eax": s});
-        return s;
-    }
-    
-    [int] _getAddressFromMem(int address) {
-        int addr = 0;
-        __pasm__("movl (%eax), %eax;", {"%eax": address}, {"%eax": addr});
-        return addr;
-    }
-    
-    [int] _getCharFromMem(int address) {
-        int c = 0;
-        __pasm__("movb (%eax), %bl", {"%eax": address, "%ebx": c} , {"%ebx": c});
-        return c;
     }
 }

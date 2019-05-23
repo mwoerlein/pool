@@ -62,7 +62,7 @@ class OStream extends Object {
         __pasm__("subl %eax, %esp", {"%eax": buf_size} , {"%esp": p});
         
         p += buf_size;          // goto end of buffer..
-        this._putCharToMem(--p, 0);  // .. and terminate temporal cstring
+        Address:storeChar(--p, 0);  // .. and terminate temporal cstring
         int padded_start = p - pad;
         int cur = d;
         int remainder = 0;
@@ -71,13 +71,13 @@ class OStream extends Object {
         do {
             __pasm__("movl 0, %edx; div %ebx", {"%eax": cur, "%ebx": base}, {"%eax": cur, "%edx": remainder});
             if (remainder < 10) {
-                this._putCharToMem(--p, remainder + '0');
+                Address:storeChar(--p, remainder + '0');
             } else {
-                this._putCharToMem(--p, remainder + 'a' - 10);
+                Address:storeChar(--p, remainder + 'a' - 10);
             }
         } while (cur);
         while (p > padded_start) {
-            this._putCharToMem(--p, '0');
+            Address:storeChar(--p, '0');
         }
     
         this._printCString(p);
@@ -101,20 +101,9 @@ class OStream extends Object {
     
     [OStream] _printCString(int stringAddress) {
         int c = 0;
-        while (c = this._getCharFromMem(stringAddress++)) {
+        while (c = Address:loadChar(stringAddress++)) {
             this.printChar(c);
         }
         return this;
     }
-    
-    [] _putCharToMem(int address, int c) {
-        __pasm__("movb %bl, (%eax)", {"%eax": address, "%ebx": c});
-    }
-    
-    [int] _getCharFromMem(int address) {
-        int c = 0;
-        __pasm__("movb (%eax), %bl", {"%eax": address, "%ebx": c} , {"%ebx": c});
-        return c;
-    }
-    
 }

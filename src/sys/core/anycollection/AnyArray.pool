@@ -39,12 +39,9 @@ class AnyArray extends Object {
         if (index < 0 || index >= _size) {
             return null;
         }
-        __all__ old = null;
-        __pasm__(
-            "movl (%eax), %ecx; movl %ebx, (%eax)",
-             {"%eax": buffer.buf + index * Address:SIZE, "%ebx": value},
-             {"%ecx": old}
-        );
+        int addr = buffer.buf + index * Address:SIZE;
+        __all__ old = Address:load(addr);
+        Address:store(addr, value);
         return old;
     }
     
@@ -52,12 +49,7 @@ class AnyArray extends Object {
         if (index < 0 || index >= _size) {
             return null;
         }
-        __all__ ret = null;
-        __pasm__(
-            "movl (%eax), %ebx",
-             {"%eax": buffer.buf + index * Address:SIZE},
-             {"%ebx": ret}
-        );
-        return ret;
+        int addr = buffer.buf + index * Address:SIZE;
+        return Address:load(addr);
     }
 }
