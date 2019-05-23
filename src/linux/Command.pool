@@ -5,6 +5,16 @@ version = 0.1.0
 */
 namespace linux;
 
+use sys::core::String;
+use sys::core::OStream;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMapEntry;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::utils::CommandLine;
+use sys::core::utils::CommandLineParser;
+use sys::memory::Address;
+use sys::runtime::Runtime;
 
 class Command extends CommandLine {
 
@@ -12,16 +22,18 @@ class Command extends CommandLine {
     cstring version;
     cstring usage;
     
+    cstring _calledCommand;
+    
     // methods
     abstract [] configure();
     abstract [int] run();
     
     [int] execute(int argc, int argv) {
         this.configure();
-        if (!this.parseCommandLine(argc, argv)) {
-            return -1;
+        if (this._parseArgv(argc, argv)) {
+            return this.run();
         }
-        return this.run();
+        return -1;
     }
 
     // protected
@@ -47,5 +59,74 @@ class Command extends CommandLine {
     
     [] _destructCommand() {
         this._destructCommandLine();
+    }
+    
+    // debug
+    [OStream] dumpCLToStream(OStream stream) {
+        stream.printCString("called command: ").printCString(this._calledCommand).printNewline();
+        stream.printCString("options:").printNewline();
+        {
+            AnyMapEntryIterator it = this._options.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                String key = e.getKey();
+                String value = e.getValue();
+                stream.printChar('-').printChar(' ').print(key);
+                if (e.getValue()) {
+                    stream.printChar(' ').printChar('=').printChar(' ').print(value);
+                }
+                stream.printNewline();
+            }
+            it.destroy();
+        }
+        {
+            AnyMapEntryIterator it = this._listOptions.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                String key = e.getKey();
+                AnyList list = e.getValue();
+                stream.printChar('-').printChar(' ').print(key).printChar(' ').printChar('[');
+                AnyIterator lit = list.iterator();
+                while (lit.hasNext()) {
+                    String value = lit.next();
+                    stream.printChar(' ').print(value);
+                }
+                lit.destroy();
+                stream.printChar(' ').printChar(']').printNewline();
+            }
+            it.destroy();
+        }
+        stream.printCString("arguments:").printNewline();
+        {
+            AnyIterator it = this._arguments.iterator();
+            while (it.hasNext()) {
+                String arg = it.next();
+                stream.printChar('-').printChar(' ').print(arg).printNewline();
+            }
+            it.destroy();
+        }
+        return stream;
+    }
+    
+    // private
+    [int] _parseArgv(int argc, int argv) {
+        Runtime rt = this.rt();
+        
+        _calledCommand = Address:loadString(argv);
+        
+        // convert argv to List<String>
+        AnyList args = rt.createInstance(AnyList:CLASSNAME);
+        while (--argc) {
+            args.add(this.createOwnStringFromCString(Address:loadString(argv += 4)));
+        }
+        
+        // parse argument list
+        CommandLineParser p = rt.createInstance(CommandLineParser:CLASSNAME);
+        AnyIterator ai = args.iterator();
+        int ret = p.parse(ai, rt.cast(CommandLine:CLASSNAME, this));
+        ai.destroy();
+        p.destroy();
+        args.destroy();
+        return ret;
     }
 }

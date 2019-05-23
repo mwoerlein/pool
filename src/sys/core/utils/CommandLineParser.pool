@@ -1,0 +1,158 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::IStream;
+use sys::core::Object;
+use sys::core::OStream;
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::runtime::Runtime;
+
+class CommandLineParser extends Object {
+
+    int MODE_START      := 0;
+    int MODE_ARG        := 1;
+    int MODE_SHORT_OPT  := 2;
+    int MODE_LONG_OPT   := 3;
+    int MODE_OPT_VALUE  := 4;
+    
+    String arg;
+    String opt;
+    String value;
+    int mode;
+    CommandLine cl;
+    
+    [] __init() {
+        Runtime rt = this.rt();
+        arg = rt.createInstance(String:CLASSNAME);
+        opt = rt.createInstance(String:CLASSNAME);
+        value = rt.createInstance(String:CLASSNAME);
+    }
+        
+    [] __destruct() {
+        value.destroy();
+        opt.destroy();
+        arg.destroy();
+    }
+        
+    [int] parse(AnyIterator args, CommandLine commandline) {
+        mode = MODE_START;
+        cl = commandline;
+        while (args.hasNext()) {
+            String cur = args.next();
+            IStream current = cur.toIStream();
+            if (!this.parseFirstChar(current.readChar())) {
+                current.destroy();
+                return false;
+            }
+            while (!current.isEmpty()) {
+                if (!this.parseChar(current.readChar())) {
+                    current.destroy();
+                    return false;
+                }
+            }
+            current.destroy();
+        }
+        return this.parseFinalize();
+    }
+    
+    [int] parseFirstChar(int c) {
+        if (c == '-') {
+            if (mode == MODE_ARG) {
+                if (!cl._pushArgument(arg)) { return false; }
+            } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
+                if (!cl._pushOption(opt)) { return false; }
+            } else if (mode == MODE_OPT_VALUE) {
+                if (!cl._pushValueOption(opt, value)) { return false; }
+            }
+            mode = MODE_SHORT_OPT;
+        } else {
+            if (mode == MODE_START) {
+                mode = MODE_ARG;
+                arg.printChar(c);
+            } else if (mode == MODE_ARG) {
+                if (!cl._pushArgument(arg)) { return false; }
+                arg.printChar(c);
+            } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
+                mode = MODE_OPT_VALUE;
+                value.printChar(c);
+            } else if (mode == MODE_OPT_VALUE) {
+                if (!cl._pushValueOption(opt, value)) { return false; }
+                mode = MODE_ARG;
+                arg.printChar(c);
+            }
+        }
+        return true;
+    }
+    
+    [int] parseChar(int c) {
+        if (c == '-') {
+            if (mode == MODE_ARG) {
+                arg.printChar(c);
+            } else if (mode == MODE_SHORT_OPT) {
+                if (opt.length()) {
+                    this.rt().err().printCString("'-' within short option list").printNewline();
+                    return false;
+                }
+                mode = MODE_LONG_OPT;
+            } else if (mode == MODE_LONG_OPT) {
+                if (!opt.length()) {
+                    this.rt().err().printCString("'-' at start of long option").printNewline();
+                    return false;
+                }
+                opt.printChar(c);
+            } else if (mode == MODE_OPT_VALUE) {
+                value.printChar(c);
+            }
+        } else if (c == '=') {
+            if (mode == MODE_ARG) {
+                arg.printChar(c);
+            } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
+                mode = MODE_OPT_VALUE;
+            } else if (mode == MODE_OPT_VALUE) {
+                value.printChar(c);
+            }
+        } else {
+            if (mode == MODE_ARG) {
+                arg.printChar(c);
+            } else if (mode == MODE_SHORT_OPT) {
+                if (opt.length()) { 
+                    if (!cl._pushOption(opt)) { return false; }
+                }
+                opt.printChar(c);
+            } else if (mode == MODE_LONG_OPT) {
+                opt.printChar(c);
+            } else if (mode == MODE_OPT_VALUE) {
+                value.printChar(c);
+            }
+        }
+        return true;
+    }
+    
+    [int] parseFinalize() {
+        if (mode == MODE_ARG) {
+            if (!cl._pushArgument(arg)) { return false; }
+        } else if (mode == MODE_SHORT_OPT) {
+            if (opt.length()) {
+                if (!cl._pushOption(opt)) { return false; }
+            } else {
+                arg.printChar('-');
+                if (!cl._pushArgument(arg)) { return false; }
+            }
+        } else if (mode == MODE_LONG_OPT) {
+            if (opt.length()) {
+                if (!cl._pushOption(opt)) { return false; }
+            } else {
+                arg.printChar('-').printChar('-');
+                if (!cl._pushArgument(arg)) { return false; }
+            }
+        } else if (mode == MODE_OPT_VALUE) {
+            if (!cl._pushValueOption(opt, value)) { return false; }
+        }
+        return true;
+    }
+}
