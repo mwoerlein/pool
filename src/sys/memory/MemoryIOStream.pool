@@ -37,10 +37,13 @@ class MemoryIOStream extends SeekableIOStream {
     [int] length() { return _mem.len; }
     [int] pos() { return _pos; }
     
+    [int] peekChar() {
+        if (_pos >= _mem.len) { return 0; }
+        return Address:loadChar(_mem.buf + _pos);
+    }
+    
     [int] readChar() {
-        if (_pos >= _mem.len) {
-            return 0;
-        }
+        if (_pos >= _mem.len) { return 0; }
         return Address:loadChar(_mem.buf + _pos++);
     }
     

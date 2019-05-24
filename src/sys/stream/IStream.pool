@@ -10,7 +10,55 @@ use sys::core::Object;
 class IStream extends Object {
     
     abstract [int] isEmpty();
+    abstract [int] peekChar();
     abstract [int] readChar();
+    
+    [int] peekDigit() {
+        int c = this.peekChar();
+        if (c >= '0' && c <= '9') { return c - '0'; }
+        if (c >= 'a' && c <= 'z') { return c - 'a' + 10; }
+        if (c >= 'A' && c <= 'Z') { return c - 'A' + 10; }
+        return -1;
+    }
+    
+    [int] readInt() {
+        if (this.isEmpty()) { return 0; }
+        
+        int sign = 1;
+        int base = 10;
+        
+        if (this.peekChar() == '-') {
+            sign = -1;
+            this.readChar();
+        }
+        
+        if (this.peekDigit() == 0) {
+            this.readChar();
+            if (this.isEmpty()) { return 0; }
+            int d = this.peekDigit();
+            if (d == 11) { // 'b' or 'B'
+                base = 2;
+                this.readChar();
+            } else if (d == 34) { // 'x' or 'X'
+                base = 16;
+                this.readChar();
+            } else if (c >= 0 && c < 8) {
+                base = 8;
+            } else {
+                return 0;
+            }
+        }
+        
+        int result = 0;
+        int digit = this.peekDigit();
+        while (!this.isEmpty() && (digit >= 0 && digit < base)) {
+            result *= base;
+            result += digit;
+            this.readChar();
+            digit = this.peekDigit();
+        }
+        return sign * result;
+    }
     
     [OStream] printToStream(OStream stream) {
         while (!this.isEmpty()) {

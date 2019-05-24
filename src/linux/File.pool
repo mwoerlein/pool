@@ -49,6 +49,12 @@ class File extends SeekableIOStream {
         return this._seek(0, _SEEK_CUR);
     }
     
+    [int] peekChar() {
+        int c = this._read();
+        this._seek(-1, _SEEK_CUR);
+        return c;
+    }
+    
     [int] readChar() {
         return this._read();
     }

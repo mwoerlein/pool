@@ -120,6 +120,13 @@ class String extends OStream {
         return stream;
     }
     
+    [int] toInt() {
+        IStream is = this.toIStream();
+        int i = is.readInt();
+        is.destroy();
+        return i;
+    }
+    
     [cstring] toCString(int buffer) {
         int p = buffer;
         StringElement cur = _first;
