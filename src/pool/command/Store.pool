@@ -1,0 +1,114 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::command;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
+
+
+
+class Store extends linux::Command {
+
+    [] __init() {
+        this._initCommand();
+    }
+    
+    [] __destruct() {
+        this._destructCommand();
+    }
+    
+    [] configure() {
+        this.setName("store")
+            .setVersion("0.3.0")
+            .setUsage(<"
+Storage Bootstrap Builder.
+
+    Usage:
+      store [options] -o <file> <file>...
+
+    Options:
+      -h --help                     Show this screen.
+      --version                     Show version.
+      -o <file> --output <file>     Place the store into <file>.
+      -a <align> --align <align>    Ensure that storage size is a multiple of align.
+">);
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('o', "output")
+            .registerOptionAlias('a', "align")
+        ;
+    }
+
+    [int] run() {
+        // do fancy stuff
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (!this.hasValueOption("output") || this.getArgumentsSize() == 0) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+        
+        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::File:MODE_WRITE);
+        outfile.printCString("/*[meta]").printNewline();
+        outfile.printCString("mimetype = application/grid-store").printNewline();
+        outfile.printCString("*/").printNewline();
+
+        int index = outfile.pos();
+        int i = this.getArgumentsSize() + 1; // index terminator entry
+        while (i--) {
+            outfile.printRawInt(0).printRawInt(0);
+        }
+        
+        {
+            AnyIterator argIt = this.getArguments();
+            while (argIt.hasNext()) {
+                String name = argIt.next();
+                SeekableIOStream infile = this.openFile(name, linux::File:MODE_READ);
+                int start = outfile.pos();
+                int size = infile.length();
+//                out.printCString("store ").print(name).printCString(" at ").printInt(start).printChar(':').printInt(size).printChar(' ').printInt(index).printNewline();
+                outfile.seek(index);
+                outfile.printRawInt(start).printRawInt(size);
+                index = outfile.pos();
+                outfile.seek(start);
+                outfile.print(infile);
+                infile.destroy();
+            }
+            argIt.destroy();
+        }
+        
+        if (this.hasValueOption("align")) {
+            String option = this.getValueOption("align");
+            int align = option.toInt();
+            while (outfile.pos() % align) {
+                outfile.printChar(0);
+            }
+        }
+
+        outfile.destroy();
+        return 0;
+    }
+    
+    // methods
+    global [int] __entry__(int argc, int argv) {
+        // TODO: generate automatically via new __entry__ flag for method or via naming convention? 
+        __pasm__(<"
+_entry_class_desc   := _pool_command_Store
+_entry_global_func  := _c304b04e_md___entry__
+        ">);
+        
+        Store store = linux::Runtime:buildRuntime().createInstance(Store:CLASSNAME);
+        return store.execute(argc, argv);
+    }
+}
