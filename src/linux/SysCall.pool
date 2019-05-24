@@ -1,0 +1,74 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::memory::PageAllocator;
+
+class SysCall {
+    
+    int SEEK_SET := 0;   /* set file offset to offset */
+    int SEEK_CUR := 1;   /* set file offset to current plus offset */
+    int SEEK_END := 2;   /* set file offset to EOF plus offset */
+
+    global [int] readChar(int fd) {
+        int ret = 0;
+        __pasm__(<"
+            subl 4, %esp
+            movl %esp, %ecx; int 0x80; movb (%esp), %cl
+            addl 4, %esp
+        ">, {"%eax": 3, "%ebx": fd, "%ecx": ret, "%edx": 1}, {"%ecx": ret});
+        return ret;
+    }
+    
+    global [] writeChar(int fd, int c) {
+        __pasm__(<"
+            subl 4, %esp
+            movb %cl, (%esp); movl %esp, %ecx; int 0x80
+            addl 4, %esp
+        ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1});
+    }
+    
+    global [int] open(cstring filename, int mode) {
+        int fd = 0;
+        __pasm__(
+            "int 0x80",
+            {"%eax": 5, "%ebx": filename, "%ecx": mode, "%edx": 0666},
+            {"%eax": fd}
+        );
+        return fd;
+    }
+    
+    global [] close(int fd) {
+        __pasm__("int 0x80", {"%eax": 6, "%ebx": fd});
+    }
+    
+    global [int] seek(int fd, int offset, int whence) {
+        int _offset = 0;
+        __pasm__(
+            "int 0x80",
+            {"%eax": 19, "%ebx": fd, "%ecx": offset, "%edx": whence}, // lseek
+            {"%eax": _offset}
+        );
+        return _offset;
+    }
+    
+    global [int, int] pageAlloc(int pages) {
+        int size = pages * PageAllocator:PAGESIZE;
+        int start = 0;
+        __pasm__(<"
+            pushl 0     // offset
+            pushl -1    // fd
+            pushl 34    // flags
+            pushl 3     // prot
+            pushl %ebx  // len
+            pushl 0     // addr
+            movl %esp, %ebx
+            int 0x80 
+            addl 24, %esp
+        ">, {"%eax": 90, "%ebx": size}, {"%eax": start});
+        return [start, size];
+    }
+}

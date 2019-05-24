@@ -14,7 +14,7 @@ class LinuxPageAllocator extends PageAllocator {
     [int] isIncreasing() { return 0; }
     
     [MemoryInfo] allocatePages(int pages) {
-        [int start, int size] = LinuxPageAllocator:_pageAlloc(pages);
+        [int start, int size] = SysCall:pageAlloc(pages);
         MemoryInfo info = Address:cast(start);
         info.buf = start;
         info.len = size;
@@ -22,23 +22,4 @@ class LinuxPageAllocator extends PageAllocator {
         info.next = info.prev = info;
         return info;
     }
-    
-    global [int, int] _pageAlloc(int pages) {
-        int size = pages * PageAllocator:PAGESIZE;
-        int start = 0;
-        __pasm__(<"
-            pushl 0     // offset
-            pushl -1    // fd
-            pushl 34    // flags
-            pushl 3     // prot
-            pushl %eax  // len
-            pushl 0     // addr
-            movl 90, %eax
-            movl %esp, %ebx
-            int 0x80 
-            addl 24, %esp
-        ">, {"%eax": size}, {"%eax": start});
-        return [start, size];
-    }
-    
 }

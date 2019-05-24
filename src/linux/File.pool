@@ -14,64 +14,6 @@ class File extends SeekableIOStream {
     int MODE_READ   := 00002; // O_RDWR
     int MODE_WRITE  := 01102; // O_RDWR + O_CREAT + O_TRUNC
     int MODE_APPEND := 02102; // O_RDWR + O_CREAT + O_APPEND
-    
-    int fd;
-    
-    [int] _init(cstring filename, int mode) {
-        this._open(filename, mode);
-        if (fd < 0) {
-            this.rt().err().printCString("failed to open file: ").printCString(filename).printNewline();
-        }
-        return fd;
-    }
-    
-    [] __destruct() {
-        if (fd >= 0) {
-            this._close();
-        }
-    }
-    
-    [int] isEmpty() {
-        int p = this._seek(0, _SEEK_CUR);
-        int len = this._seek(0, _SEEK_END);
-        this._seek(p, _SEEK_SET);
-        return p == len;
-    }
-    
-    [int] length() {
-        int p = this._seek(0, _SEEK_CUR);
-        int len = this._seek(0, _SEEK_END);
-        this._seek(p, _SEEK_SET);
-        return len;
-    }
-    
-    [int] pos() {
-        return this._seek(0, _SEEK_CUR);
-    }
-    
-    [int] peekChar() {
-        int c = this._read();
-        this._seek(-1, _SEEK_CUR);
-        return c;
-    }
-    
-    [int] readChar() {
-        return this._read();
-    }
-    
-    [OStream] printChar(int c) {
-        this._write(c);
-        return this.ostream();
-    }
-    
-    [] seek(int pos) {
-        this._seek(pos, _SEEK_SET);
-    }
-    
-    // private
-    int _SEEK_SET := 0;   /* set file offset to offset */
-    int _SEEK_CUR := 1;   /* set file offset to current plus offset */
-    int _SEEK_END := 2;   /* set file offset to EOF plus offset */
 /*        
     int O_ACCMODE  :=     0003;
     int O_RDONLY   :=       00;
@@ -83,45 +25,57 @@ class File extends SeekableIOStream {
     int O_TRUNC    :=    01000;
     int O_APPEND   :=    02000;
 */    
-
-    [int] _read() {
-        int ret = 0;
-        __pasm__(<"
-            subl 4, %esp;
-            movl %esp, %ecx; int 0x80
-            movb (%esp), %cl;
-            addl 4, %esp
-        ">, {"%eax": 3, "%ebx": fd, "%ecx": ret, "%edx": 1}, {"%ecx": ret});
-        return ret;
+    
+    int fd;
+    
+    [int] _init(cstring filename, int mode) {
+        fd = SysCall:open(filename, mode);
+        if (fd < 0) {
+            this.rt().err().printCString("failed to open file: ").printCString(filename).printNewline();
+        }
+        return fd;
     }
     
-    [] _write(int c) {
-        __pasm__(<"
-            subl 4, %esp;
-            movb %cl, (%esp); movl %esp, %ecx; int 0x80
-            addl 4, %esp
-        ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1});
+    [] __destruct() {
+        if (fd >= 0) {
+            SysCall:close(fd);
+        }
     }
     
-    [] _open(cstring filename, int mode) {
-        __pasm__(
-            "int 0x80",
-            {"%eax": 5, "%ebx": filename, "%ecx": mode, "%edx": 0666},
-            {"%eax": fd}
-        );
+    [int] isEmpty() {
+        int p = SysCall:seek(fd, 0, SysCall:SEEK_CUR);
+        int len = SysCall:seek(fd, 0, SysCall:SEEK_END);
+        SysCall:seek(fd, p, SysCall:SEEK_SET);
+        return p == len;
     }
     
-    [] _close() {
-        __pasm__("int 0x80", {"%eax": 6, "%ebx": fd});
+    [int] length() {
+        int p = SysCall:seek(fd, 0, SysCall:SEEK_CUR);
+        int len = SysCall:seek(fd, 0, SysCall:SEEK_END);
+        SysCall:seek(fd, p, SysCall:SEEK_SET);
+        return len;
     }
     
-    [int] _seek(int offset, int whence) {
-        int _offset = 0;
-        __pasm__(
-            "int 0x80",
-            {"%eax": 19, "%ebx": fd, "%ecx": offset, "%edx": whence}, // lseek
-            {"%eax": _offset}
-        );
-        return _offset;
+    [int] pos() {
+        return SysCall:seek(fd, 0, SysCall:SEEK_CUR);
+    }
+    
+    [int] peekChar() {
+        int c = SysCall:readChar(fd);
+        SysCall:seek(fd, -1, SysCall:SEEK_CUR);
+        return c;
+    }
+    
+    [int] readChar() {
+        return SysCall:readChar(fd);
+    }
+    
+    [OStream] printChar(int c) {
+        SysCall:writeChar(fd, c);
+        return this.ostream();
+    }
+    
+    [] seek(int pos) {
+        SysCall:seek(fd, pos, SysCall:SEEK_SET);
     }
 }

@@ -17,11 +17,7 @@ class LinuxOStream extends OStream {
     }
     
     [OStream] printChar(int c) {
-        __pasm__(<"
-            subl 4, %esp;
-            movb %cl, (%esp); movl %esp, %ecx; int 0x80
-            addl 4, %esp
-        ">, {"%eax": 4, "%ebx": stream, "%ecx": c, "%edx": 1});
+        SysCall:writeChar(stream, c);
         return this.ostream();
     }
 }
