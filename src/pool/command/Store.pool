@@ -10,8 +10,6 @@ use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
-
-
 class Store extends linux::Command {
 
     [] __init() {
@@ -44,7 +42,6 @@ Storage Bootstrap Builder.
     }
 
     [int] run() {
-        // do fancy stuff
         OStream out = this.rt().out();
         if (this.hasOption("help")) {
             out.printCString(usage).printNewline();
