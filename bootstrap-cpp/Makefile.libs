@@ -27,24 +27,24 @@ $(LIB): $(LIBOBJS)
 	$(AR) rcs $@ $(LIBOBJS)
 
 $(SRCDIR)/$(LIBNAME)/%.cpp: $(SRCDIR)/$(LIBNAME)/%.re 
-	echo "creating $@"
+	#echo "creating $@"
 	re2c -bo $@ $<
 
 $(SRCDIR)/$(LIBNAME)/%.cc: $(SRCDIR)/$(LIBNAME)/%.rr 
-	echo "creating $@"
+	#echo "creating $@"
 	re2c -bo $@ $<
 
 $(SRCDIR)/$(LIBNAME)/%.cc: $(SRCDIR)/$(LIBNAME)/%.gram 
-	echo "creating $@"
+	#echo "creating $@"
 	bisonc++ --target-directory=$(dir $@) -p $(@:$(dir $@)%=%) $<
 
 $(OBJDIR)/$(LIBNAME)/%.o: $(SRCDIR)/$(LIBNAME)/%.cpp $(OBJDIR)/$(LIBNAME) 
-	echo "creating $@"
+	#echo "creating $@"
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c -o $@ $<
 	
 $(OBJDIR)/$(LIBNAME)/%.o: $(SRCDIR)/$(LIBNAME)/%.cc $(OBJDIR)/$(LIBNAME) 
-	echo "creating $@"
+	#echo "creating $@"
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -fexceptions -I$(dir $@) -c -o $@ $<
 	

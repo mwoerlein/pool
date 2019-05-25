@@ -166,7 +166,7 @@ class PoolBootstrapStaticCompilerCommand: public CommandLine {
             Iterator<String> *it = &loader.classNames();
             while (!logger.has(log_error) && it->hasNext()) {
                 String &name = it->next();
-                logger.note() << "compile " << name << "\n";
+                logger.info() << "compile " << name << "\n";
                 
                 ClassDeclNode * classDef = loader.getClass(name);
                 if (!classDef || logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
