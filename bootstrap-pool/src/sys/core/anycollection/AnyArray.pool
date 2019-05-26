@@ -20,6 +20,15 @@ class AnyArray extends Object {
         this.clear();
     }
     
+    [] initWith(int size, __any__ value) {
+        this._size = size;
+        this.buffer = this.rt().getAllocator().allocate(size * Address:SIZE);
+        int s = _size;
+        while (s--) {
+            this.set(s, value);
+        }
+    }
+    
     [] __destruct() {
         this.rt().getAllocator().free(buffer);
     }

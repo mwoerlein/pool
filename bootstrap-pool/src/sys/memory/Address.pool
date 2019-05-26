@@ -116,6 +116,12 @@ class Address {
         return c;
     }
     
+    global [int] loadWord(int addr) {
+        int c = 0;
+        __pasm__("movw (%eax), %bx", {"%eax": addr, "%ebx": c} , {"%ebx": c});
+        return c;
+    }
+    
     global [] store(int addr, __any__ a) {
         __pasm__("movl %ebx, (%eax)", {"%eax": addr, "%ebx": a});
     }
@@ -130,5 +136,21 @@ class Address {
     
     global [] storeChar(int addr, int c) {
         __pasm__("movb %bl, (%eax)", {"%eax": addr, "%ebx": c});
+    }
+    
+    global [] storeWord(int addr, int c) {
+        __pasm__("movw %bx, (%eax)", {"%eax": addr, "%ebx": c});
+    }
+    
+    global [] copy(int srcAddr, int destAddr) {
+        __pasm__("movl (%esi), %eax; movl %eax, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
+    }
+    
+    global [] copyChar(int srcAddr, int destAddr) {
+        __pasm__("movb (%esi), %al; movb %al, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
+    }
+    
+    global [] copyWord(int srcAddr, int destAddr) {
+        __pasm__("movw (%esi), %ax; movw %ax, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
     }
 }
