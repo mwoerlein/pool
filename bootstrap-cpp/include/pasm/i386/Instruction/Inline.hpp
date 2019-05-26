@@ -4,6 +4,9 @@
 #include "pasm/i386/ASMInstruction.hpp"
 
 class Inline: public ASMInstruction {
+    private:
+    bool validateAddressSize;
+    
     protected:
     virtual size_t approximateSizeInBytes() override;
     virtual void checkOperands() override;
@@ -12,8 +15,8 @@ class Inline: public ASMInstruction {
     virtual void writeOperandsToStream(OStream &stream) override;
     
     public:
-    Inline(Environment &env, MemoryInfo &mi, ASMOperand *o1, BitWidth operandSize = bit_auto)
-        :ASMInstruction(env, mi, "INLINE", operandSize, o1), Object(env, mi) {}
+    Inline(Environment &env, MemoryInfo &mi, ASMOperand *o1, BitWidth operandSize = bit_auto, bool validateAddressSize = true)
+        :ASMInstruction(env, mi, "INLINE", operandSize, o1), Object(env, mi), validateAddressSize(validateAddressSize) {}
     virtual ~Inline() {}
     
     virtual void writeToStream(OStream &stream) override;

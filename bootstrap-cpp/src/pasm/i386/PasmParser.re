@@ -82,7 +82,7 @@ ASMInstructionList & PasmParser::parse(IStream & input, OStream & error, int lin
 detect_instruction:
         token = current;
 /*!re2c
-        inst        = id | "."[bB][yY][tT][eE] | "."[wW][oO][rR][dD] | "."[lL][oO][nN][gG] | "."[oO][rR][gG] | "."[aA][lL][iI][gG][nN];
+        inst        = id | "."[bB][yY][tT][eE] | "."[bB][yY][tT][eE][tT] | "."[wW][oO][rR][dD] | "."[wW][oO][rR][dD][tT] | "."[lL][oO][nN][gG] | "."[oO][rR][gG] | "."[aA][lL][iI][gG][nN];
         operand     = register | id | number | formula
                         | "(" wsp (number | id ) wsp ")"
                         | ((number | id) wsp)? "(" (wsp register)? ( wsp comma wsp register ( wsp comma wsp (id | number) )? )? wsp ")"
@@ -707,6 +707,14 @@ ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * o
         "."[wW][oO][rR][dD] {
             if (!op1 || op2 || op3) return 0;
             return &env().create<Inline, ASMOperand*, BitWidth>(op1, bit_16);
+        }
+        "."[bB][yY][tT][eE][tT] {
+            if (!op1 || op2 || op3) return 0;
+            return &env().create<Inline, ASMOperand*, BitWidth, bool>(op1, bit_8, false);
+        }
+        "."[wW][oO][rR][dD][tT] {
+            if (!op1 || op2 || op3) return 0;
+            return &env().create<Inline, ASMOperand*, BitWidth, bool>(op1, bit_16, false);
         }
         "."[lL][oO][nN][gG] {
             if (!op1 || op2 || op3) return 0;

@@ -28,7 +28,7 @@ void Inline::validateOperands() {
                 list->err<<"value '"<<value<<"' does not match "<<(operandSize*8)<<" bit operand size\n";
             }
         } else {
-            if ((int) ctx->addr > (int) operandSize) {
+            if (validateAddressSize && ((int) ctx->addr > (int) operandSize)) {
                 list->warn<<"address size "<<(ctx->addr*8)<<" bit does not match "<<(operandSize*8)<<" bit operand size: " << *this <<"\n";
             }
         }
