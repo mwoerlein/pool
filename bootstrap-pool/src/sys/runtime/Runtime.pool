@@ -51,19 +51,14 @@ class Runtime extends Object {
     [__all__] createInstance(cstring name) {
         ClassDescriptor classDesc = classStorage.getClassDesc(name);
         if (!classDesc) { return null; } // abort on initialization error
-        
-        if (!classDesc.class_instance) {
-            Class cl = this.createInstance(Class:CLASSNAME);
-            if (!cl) { return null; } // abort on initialization error
-            cl.setDesc(classDesc);
-        }
+        if (!classDesc.class_instance && !this._createClass(classDesc)) { return null; } // abort on initialization error
         
         // allocate memory for instance
         MemoryInfo instInfo = allocator.allocate(classDesc.inst_tpl_size);
         if (Address:from(instInfo) == MemoryInfo:NONE) { return null; } // abort on initialization error
 
         [__all__ instance, Object oinstance] = Runtime:_initTemplate(instInfo, classDesc);
-        oinstance.setRt(this); // TODO: adjust Object
+        oinstance.setRt(this);
         oinstance.__init();
         return instance;
     }
@@ -96,9 +91,8 @@ class Runtime extends Object {
             ClassDescriptor objDesc = curHandle.inst_desc.class_desc;
             ClassTableEntry curEntry = Address:offset(objDesc, objDesc.class_tabs_offset);
             while (curEntry.handle_offset) {
-                int diff = 0;
                 if (Address:equals(classDesc, curEntry.class_desc)) {
-                    return Address:cast(Address:from(curHandle.inst_desc) + curEntry.handle_offset);
+                    return Address:offset(curHandle.inst_desc, curEntry.handle_offset);
                 }
                 curEntry = Address:offset(curEntry, ClassTableEntry:SIZEOF);
             }
