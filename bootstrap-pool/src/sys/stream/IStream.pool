@@ -39,7 +39,7 @@ class IStream extends Object {
             if (d == 11) { // 'b' or 'B'
                 base = 2;
                 this.readChar();
-            } else if (d == 34) { // 'x' or 'X'
+            } else if (d == 33) { // 'x' or 'X'
                 base = 16;
                 this.readChar();
             } else if (d >= 0 && d < 8) {
