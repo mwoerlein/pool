@@ -98,13 +98,7 @@ Storage Bootstrap Builder.
     }
     
     // methods
-    global [int] __entry__(int argc, int argv) {
-        // TODO: generate automatically via new __entry__ flag for method or via naming convention? 
-        __pasm__(<"
-_entry_class_desc   := _pool_command_Store
-_entry_global_func  := _c304b04e_md___entry__
-        ">);
-        
+    __entry__ [int] entry(int argc, int argv) {
         Store store = linux::Runtime:buildRuntime().createInstance(Store:CLASSNAME);
         return store.execute(argc, argv);
     }

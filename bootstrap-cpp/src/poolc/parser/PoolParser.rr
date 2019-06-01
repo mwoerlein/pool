@@ -209,6 +209,7 @@ int PoolParser::lex()
         "cstring"       { setLocation(); return parser->makeCString(); }
         "int"           { setLocation(); return parser->makeInt(); }
         
+        "__entry__"     { setLocation(); return parser->makeEntry(); }
         "__naked__"     { setLocation(); return parser->makeNaked(); }
         "__pasm__"      { setLocation(); return parser->makePasm(); }
         

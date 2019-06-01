@@ -52,6 +52,7 @@ int Parser::makeAny()       { return ANY; }
 int Parser::makeCString()   { return CSTRING; }
 int Parser::makeInt()       { return INT; }
 
+int Parser::makeEntry()     { return ENTRY; }
 int Parser::makeNaked()     { return NAKED; }
 int Parser::makePasm()      { return PASM; }
 

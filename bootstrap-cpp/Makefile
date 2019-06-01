@@ -10,7 +10,7 @@ STOREBLIBS  = linux.a sys.a
 all: clean $(BINDIR)/pbasm $(BINDIR)/poolbc $(BINDIR)/poolbsc $(BINDIR)/storeb
 
 clean:
-	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc $(SRCDIR)/pasm/i386/PasmParser.cpp
+	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/Parserbase.h $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc $(SRCDIR)/pasm/i386/PasmParser.cpp
 
 $(BINDIR)/pbasm: $(SRCDIR)/commands/pbasm.cpp $(PBASMLIBS:%=$(LIBDIR)/%) $(BINDIR)
 	@echo "build pbasm (cpp)"

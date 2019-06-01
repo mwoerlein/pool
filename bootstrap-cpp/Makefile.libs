@@ -10,11 +10,11 @@ LIBRE2CSRC2=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.rr')
 LIBCCSRC=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.cc')
 LIBBISONSRC=$(shell find $(SRCDIR)/$(LIBNAME)/ -type f -name '*.gram')
 LIBOBJS=\
-    $(patsubst $(SRCDIR)/$(LIBNAME)/%.cpp,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBSRC))\
+    $(patsubst $(SRCDIR)/$(LIBNAME)/%.gram,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBBISONSRC))\
     $(patsubst $(SRCDIR)/$(LIBNAME)/%.re,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBRE2CSRC))\
     $(patsubst $(SRCDIR)/$(LIBNAME)/%.rr,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBRE2CSRC2))\
-    $(patsubst $(SRCDIR)/$(LIBNAME)/%.gram,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBBISONSRC))\
-    $(patsubst $(SRCDIR)/$(LIBNAME)/%.cc,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBCCSRC))
+    $(patsubst $(SRCDIR)/$(LIBNAME)/%.cc,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBCCSRC))\
+    $(patsubst $(SRCDIR)/$(LIBNAME)/%.cpp,$(OBJDIR)/$(LIBNAME)/%.o,$(LIBSRC))
 
 .PHONY: all none
 

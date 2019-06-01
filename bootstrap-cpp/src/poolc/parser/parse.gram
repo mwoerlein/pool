@@ -55,6 +55,7 @@
 %token CSTRING
 %token INT
 
+%token ENTRY
 %token NAKED
 %token PASM
 
@@ -448,6 +449,20 @@ method_decl:
         $3->destroy();
         $7->destroy();
     }
+|   ENTRY '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
+    {
+        $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$10, *$3, *$7);
+        $$->global = true;
+        $$->kind = entry;
+        
+        $$->first_line = @1.first_line;
+        $$->first_column = @1.first_column;
+        $$->last_line = @11.last_line;
+        $$->last_column = @11.last_column;
+        
+        $3->destroy();
+        $7->destroy();
+    }
 |   NAKED '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'
     {
         $$ = &driver.env().create<MethodDeclNode, String&, BlockInstNode&, MutableCollection<TypeRefNode> &, MutableCollection<VariableDeclNode> &>(*$5, *$10, *$3, *$7);
@@ -477,6 +492,7 @@ method_decl:
     }
 |   '[' error '}'
 |   GLOBAL '[' error '}'
+|   ENTRY '[' error '}'
 |   NAKED '[' error '}'
 |   ABSTRACT '[' error ';'
 ;

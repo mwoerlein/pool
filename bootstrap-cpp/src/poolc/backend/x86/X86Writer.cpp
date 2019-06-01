@@ -317,6 +317,9 @@ bool X86Writer::visit(MethodDeclNode & methodDef) {
     switch (methodDef.kind) {
         case abstract:
             break;
+        case entry:
+            elem() << "_entry_class_desc   := " << classStart() << "\n";
+            elem() << "_entry_global_func  := " << methodDecl(&methodDef) << "\n";
         case normal:
             LABEL(methodDecl(&methodDef));
         default:
@@ -378,7 +381,7 @@ void X86Writer::write(PIRBasicBlock &block) {
     MethodDeclNode *methodDecl = block.method.scope().getMethodDeclNode();
     switch (block.kind) {
         case bb_entry: {
-            if (methodDecl->kind == normal) {
+            if (methodDecl->kind == normal || methodDecl->kind == entry) {
                 code() << "pushl %ebp; movl %esp, %ebp\n";
                 int localVariables = curMethod->tempCount() + curMethod->spillCount();
                 if (localVariables) {
@@ -401,7 +404,7 @@ void X86Writer::write(PIRBasicBlock &block) {
             break;
         }
         case bb_exit: {
-            if (methodDecl->kind == normal) {
+            if (methodDecl->kind == normal || methodDecl->kind == entry) {
                 LABEL(methodDeclBlock(methodDecl, &block));
                 // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
                 code() << "popad\n";
@@ -422,7 +425,7 @@ void X86Writer::write(PIRBasicBlock &block) {
             if (block.cond) {
                 write(*block.cond, *block.condNext);
             }
-            if (methodDecl->kind == normal || block.next->kind == bb_block) {
+            if (methodDecl->kind == normal || methodDecl->kind == entry || block.next->kind == bb_block) {
                 code() << "jmp " << methodDeclBlock(methodDecl, block.next) << "\n";
             }
         }

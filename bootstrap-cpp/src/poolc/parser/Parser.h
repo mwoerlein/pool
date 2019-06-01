@@ -73,6 +73,7 @@ class Parser: public ParserBase
         int makeCString();
         int makeInt();
         
+        int makeEntry();
         int makeNaked();
         int makePasm();
         

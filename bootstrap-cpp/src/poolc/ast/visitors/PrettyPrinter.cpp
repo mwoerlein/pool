@@ -112,6 +112,9 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDecl) {
         case abstract:
             line << "abstract ";
             break;
+        case entry:
+            line << "__entry__ ";
+            break;
         case naked:
             line << "__naked__ ";
             break;
