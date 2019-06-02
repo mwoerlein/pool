@@ -18,9 +18,9 @@
  * +----------------------+
  * | Classes-Tab-Offset
  * +----------------------+
- * | V-Tabs-Offset
+ * | Virt-Method-Tabs-Offset
  * +----------------------+
- * | Methods-Tab-Offset
+ * | Method-Decl-Tab-Offset
  * +----------------------+
  * | instance-template-Offset
  * +----------------------+
@@ -41,7 +41,7 @@
  * +----------------------+
  * | Class-classname-Offset
  * +----------------------+
- * | Class-VTab-Offset
+ * | Class-Virt-Method-Tab-Offset
  * +----------------------+
  * | Class-Handle-Offset
  * +----------------------+
@@ -49,7 +49,7 @@
  * +----------------------+
  * | Super1-classname-Offset
  * +----------------------+
- * | Super1-VTab-Offset
+ * | Super1-Virt-Method-Tab-Offset
  * +----------------------+
  * | Super1-Handle-Offset
  * +----------------------+
@@ -59,7 +59,7 @@
  * +----------------------+
  * | SuperN-classname-Offset
  * +----------------------+
- * | SuperN-VTab-Offset
+ * | SuperN-Virt-Method-Tab-Offset
  * +----------------------+
  * | SuperN-Handle-Offset
  * +----------------------+
@@ -72,21 +72,21 @@
  * | 0
  * +----------------------+
  */
-/* ******** V Tabs ********
+/* *** Virt Method Tabs ***
  * 31                     0
  * +----------------------+
- * | Meth 0 - Methods Tab Offset
+ * | Meth 0 - Method Decl Tab Offset
  * +----------------------+
  * | Meth 0 - Class-Desc-Offset
  * +----------------------+
- * | Meth 1 - Methods Tab Offset
+ * | Meth 1 - Method Decl Tab Offset
  * +----------------------+
  * | Meth 0 - Class-Desc-Offset
  * +----------------------+
  * | ...
  * +----------------------+
  */
-/* ****** Methods Tab *****
+/* **** Method Decl Tab ***
  * 31                     0
  * +----------------------+
  * | Meth 0 - Method Offset

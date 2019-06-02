@@ -30,8 +30,8 @@
 #define methodDecl(m) localClsPrefix((m)->scope->getClassDeclNode()) << "_md_" << (m)->name
 #define methodDeclOffset(m) manualClsPrefix((m)->scope->getClassDeclNode()) << "_mdo_" << (m)->name
 #define methodDeclBlock(m, b) localClsPrefix(curClass) << "_md_" << (m)->name << "_bb_" << (b)->idx
-#define methodTabs() localClsPrefix(curClass) << "_mts"
-#define methodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
+#define virtMethodTabs() localClsPrefix(curClass) << "_mts"
+#define virtMethodTab(cls) localClsPrefix(curClass) << "_mt" << localClsPrefix(cls)
 
 #define instanceStart() localClsPrefix(curClass) << "_tpl"
 #define instanceEnd() localClsPrefix(curClass) << "_tpl_end"
@@ -106,8 +106,8 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     LONG("0");
     LONG(constStringOffset(classScope->stringId(curClass->fullQualifiedName)));
     LONG(CLASS_OFFSET(classTabs()));      // class tabs offset
-    LONG(CLASS_OFFSET(methodTabs()));     // method tabs offset
-    LONG(CLASS_OFFSET(methodDeclTab()));  // methods tab offset
+    LONG(CLASS_OFFSET(virtMethodTabs())); // virt method tabs offset
+    LONG(CLASS_OFFSET(methodDeclTab()));  // method decl tab offset
     LONG(CLASS_OFFSET(instanceStart()));  // instance template offset
     LONG(INSTANCE_OFFSET(instanceEnd())); // instance size
     LONG(INSTANCE_OFFSET(instanceHandle(classScope->firstSuper()->getClassDeclNode()))); // Object handle offset in instance
@@ -132,7 +132,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
                 LONG("0"); // @class-desc filled on class loading
             }
             LONG(constStringOffset(classScope->stringId(superDecl->fullQualifiedName)));
-            LONG(CLASS_OFFSET(methodTab(superDecl))); //  vtab offset in description
+            LONG(CLASS_OFFSET(virtMethodTab(superDecl)));     // virt method tab offset in description
             LONG(INSTANCE_OFFSET(instanceHandle(superDecl))); // handle offset in instance
         }
         it.destroy();
@@ -168,8 +168,8 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     LONG("0");
 
     // vtabs
-    elem() << "\n// method tabs\n";
-    LABEL(methodTabs());
+    elem() << "\n// virtual method tabs\n";
+    LABEL(virtMethodTabs());
     {
         Iterator<ClassScope> &it = classScope->supers();
         while (it.hasNext()) {
@@ -177,36 +177,23 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
             ClassDeclNode *superClassDecl = superClassScope.getClassDeclNode();
             InstanceScope *superInstanceScope = superClassDecl->instanceScope;
             
-            LABEL(methodTab(superClassDecl));
+            LABEL(virtMethodTab(superClassDecl));
             {
                 Iterator<MethodScope> &mit = superInstanceScope->methods();
                 while (mit.hasNext()) {
                     MethodScope & superMethodScope = mit.next();
                     MethodDeclNode * methodDecl = instanceScope->getMethod(superMethodScope)->getMethodDeclNode();
-                    if (methodDecl->kind == naked) { continue; }
                     LONG(4 * methodDecl->index);
                     LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
                 }
                 mit.destroy();
             }
-            {
-                Iterator<MethodScope> &mit = superClassScope.methods();
-                while (mit.hasNext()) {
-                    MethodScope & superMethodScope = mit.next();
-                    MethodDeclNode * methodDecl = classScope->getMethod(superMethodScope)->getMethodDeclNode();
-                    if (methodDecl->kind == naked) { continue; }
-                    LONG(4 * methodDecl->index);
-                    LONG(classTabOffset(methodDecl->scope->getClassDeclNode()));
-                }
-                mit.destroy();
-            }
-            
         }
         it.destroy();
     }
     
     // methods tab
-    elem() << "\n// methods tab\n";
+    elem() << "\n// method decl tab\n";
     LABEL(methodDeclTab());
     {
         Iterator<MethodDeclNode> &it = curClass->methods.iterator();
