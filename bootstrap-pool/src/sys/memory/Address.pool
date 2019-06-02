@@ -54,7 +54,14 @@ class Address {
     }
     
     global [int] equals(__any__ a, __any__ b) {
-        return !Address:compareAddress(Address:from(a), Address:from(b));
+        int eq = 0;
+        __pasm__(<"
+            cmpl %ebx, %eax
+            jne _address_equals_ret
+            movl 1, %ecx        // return true
+        _address_equals_ret:
+        ">, {"%eax": a, "%ebx": b, "%ecx": eq}, {"%ecx": eq});
+        return eq;
     }
     
     global [int] compare(__any__ a, __any__ b) {

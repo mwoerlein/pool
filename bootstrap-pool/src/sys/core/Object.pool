@@ -33,15 +33,9 @@ class Object {
     
     // TODO: use generic method instead of __any__?
     [int] equals(__any__ obj) {
-        int eq = 0;
-        __pasm__(<"
-            movl 4(%eax), %eax  // @this
-            cmpl %eax, 4(%ebx)  // @obj
-            jne _come_ret
-            movl 1, %ecx        // return true
-            _come_ret:
-        ">, {"%eax": this, "%ebx": obj, "%ecx": eq}, {"%ecx": eq});
-        return eq;
+        InstanceHandle self = Address:convert(this);
+        InstanceHandle other = Address:convert(obj);
+        return Address:equals(self.inst_desc, other.inst_desc);
     }
     
     [OStream] printToStream(OStream stream) {
