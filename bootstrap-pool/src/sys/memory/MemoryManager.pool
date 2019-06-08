@@ -20,17 +20,17 @@ class MemoryManager extends Allocator {
     [MemoryInfo] allocate(int size) {
         int required = size + MemoryInfo:SIZEOF;
         
-        if (required < size) {
+        if (Address:compareAddress(required, size) < 0) {
             return this.sizeOverflow(size);
         }
         
         // find available memory
         MemoryInfo available = this._findInfoByLen(this.available, required);
-        if (available.len < required) {
+        if (Address:compareAddress(available.len, required) < 0) {
             return this.outOfAvailable(size);
         }
         
-        if (available.len < (required + 2*MemoryInfo:SIZEOF)) {
+        if (Address:compareAddress(available.len, required + 2*MemoryInfo:SIZEOF) < 0) {
             // use whole info
             available.buf += MemoryInfo:SIZEOF;
             available.len -= MemoryInfo:SIZEOF;
@@ -155,7 +155,7 @@ class MemoryManager extends Allocator {
     [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
         int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
         int requiredSize = MemoryInfo:SIZEOF + poolSize;
-        if (available.len < requiredSize + MemoryInfo:SIZEOF) {
+        if (Address:compareAddress(available.len, requiredSize + MemoryInfo:SIZEOF) < 0) {
             // bail out
             this.rt().err().printCString("too many pool elements for available space\n");
             return [Address:cast(MemoryInfo:NONE), Address:cast(MemoryInfo:NONE)];
@@ -232,8 +232,7 @@ class MemoryManager extends Allocator {
     
     [MemoryInfo] _findInfoByLen(MemoryInfo list, int len) {
         MemoryInfo cur = list;
-        while (Address:compare(cur.next, list) && (cur.len < len)) { cur = cur.next; }
-        //while (Address:compare(cur.next, list) && Address:compareAddress(cur.len, len) < 0) { cur = cur.next; }
+        while (Address:compare(cur.next, list) && Address:compareAddress(cur.len, len) < 0) { cur = cur.next; }
         return cur;
     }
     
@@ -256,7 +255,7 @@ class MemoryManager extends Allocator {
             
             int prevPtr = Address:from(prev);
             
-            if ((prev.buf != prevPtr) && (prev.len > MemoryInfo:SIZEOF)) {
+            if ((prev.buf != prevPtr) && (Address:compareAddress(prev.len, MemoryInfo:SIZEOF) > 0)) {
                 prev = this._makeEmbedded(prev);
             }
         }

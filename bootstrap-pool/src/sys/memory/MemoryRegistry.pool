@@ -14,7 +14,7 @@ class MemoryRegistry extends MemoryManager {
         
         // find splittable available memory
         MemoryInfo avail = this._findInfoByLen(available, required + MemoryInfo:SIZEOF);
-        if (avail.len < required) {
+        if (Address:compareAddress(avail.len, required) < 0) {
             return this.outOfAvailable(size);
         }
         
@@ -121,7 +121,7 @@ class MemoryRegistry extends MemoryManager {
             }
             
             int lastEnd = last.buf + last.len;
-            if (lastEnd <= memEnd) {
+            if (Address:compareAddress(lastEnd, memEnd) <= 0) {
                 // area fully covers last info
                 this._unlinkMemoryInfo(last);
                 last.flags = 0;
@@ -135,7 +135,7 @@ class MemoryRegistry extends MemoryManager {
             if (Address:compareAddress(firstEnd, mem) < 0) {
                 // area fully after first info
             } else if (first.buf == mem) {
-                if (first.len <= len) {
+                if (Address:compareAddress(first.len, len) <= 0) {
                     // area fully covers first info
                     this._unlinkMemoryInfo(first);
                     first.flags = 0;
@@ -164,7 +164,7 @@ class MemoryRegistry extends MemoryManager {
         // count available blocks, that are too small for embedded memory management
         MemoryInfo cur = available.next;
         while (!Address:equals(cur, available)) {
-            if (cur.len < MemoryInfo:SIZEOF) { nonEmbeddedCount++;}
+            if (Address:compareAddress(cur.len, MemoryInfo:SIZEOF) < 0) { nonEmbeddedCount++;}
             cur = cur.next;
         }
         
