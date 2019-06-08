@@ -12,44 +12,56 @@ use sys::stream::SeekableIOStream;
 class MemoryIOStream extends SeekableIOStream {
     
     int _pos;
-    int _owned;
-    MemoryInfo _mem;
+    int _buf;
+    int _len;
+    MemoryInfo _owned;
     
     [] _init(int size) {
-        _mem = this.rt().getAllocator().allocate(size);
-        _owned = true;
-        _pos = 0;
+        _owned = this.rt().getAllocator().allocate(size);
+        this._initBuf(_owned.buf, _owned.len);
     }
     
     [] _initMem(MemoryInfo mem) {
-        _mem = mem;
-        _owned = false;
+        this._initBuf(mem.buf, mem.len);
+    }
+    
+    [] _initBuf(int buf, int len) {
+        _buf = buf;
+        _len = len;
         _pos = 0;
     }
     
     [] __destruct() {
         if (_owned) {
-            this.rt().getAllocator().free(_mem);
+            this.rt().getAllocator().free(_owned);
         }
     }
      
-    [int] isEmpty() { return _pos == _mem.len; }
-    [int] length() { return _mem.len; }
-    [int] pos() { return _pos; }
+    [int] isEmpty() {
+        return _pos == _len;
+    }
+    
+    [int] length() {
+        return _len;
+    }
+    
+    [int] pos() {
+        return _pos;
+    }
     
     [int] peekChar() {
-        if (_pos >= _mem.len) { return 0; }
-        return Address:loadChar(_mem.buf + _pos);
+        if (_pos >= _len) { return 0; }
+        return Address:loadChar(_buf + _pos);
     }
     
     [int] readChar() {
-        if (_pos >= _mem.len) { return 0; }
-        return Address:loadChar(_mem.buf + _pos++);
+        if (_pos >= _len) { return 0; }
+        return Address:loadChar(_buf + _pos++);
     }
     
     [OStream] printChar(int c) {
-        if (_pos < _mem.len) {
-            Address:storeChar(_mem.buf + _pos++, c);
+        if (_pos < _len) {
+            Address:storeChar(_buf + _pos++, c);
         }
         return this.ostream();
     }
@@ -57,8 +69,8 @@ class MemoryIOStream extends SeekableIOStream {
     [] seek(int pos) {
         if (pos <= 0) {
             _pos = 0;
-        } else if (pos >= _mem.len) {
-            _pos = _mem.len;
+        } else if (pos >= _len) {
+            _pos = _len;
         } else {
             _pos = pos;
         }
