@@ -1,0 +1,76 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+
+class Bitset {
+    
+    global [int] or(int a, int b) {
+        int ret = 0;
+        __pasm__("orl %ebx, %eax", {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] xor(int a, int b) {
+        int ret = 0;
+        __pasm__("xorl %ebx, %eax", {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] and(int a, int b) {
+        int ret = 0;
+        __pasm__("andl %ebx, %eax", {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] not(int a) {
+        int ret = 0;
+        __pasm__(".byte 0xF7; .byte 0xD0  #// notl %eax", {"%eax": a}, {"%eax": ret});
+        //__pasm__("notl %eax", {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] has(int a, int flags) {
+        return this.and(a, flags) == flags;
+    }
+    
+    global [int] set(int a, int bit) {
+        int mask = a;
+        __pasm__(<"
+            movl 1, %ebx
+            .byte 0xD3; .byte 0xE3  #// shll %ebx, %cl
+            orl %ebx, %eax
+        ">, {"%eax": mask, "%ecx": bit}, {"%eax": mask});
+        return mask;
+    }
+    
+    global [int] unset(int a, int bit) {
+        int mask = a;
+        __pasm__(<"
+            movl 1, %ebx
+            .byte 0xD3; .byte 0xE3  #// shll %ebx, %cl
+            .byte 0xF7; .byte 0xD3  #// notl %ebx
+            and %ebx, %eax
+        ">, {"%eax": mask, "%ecx": bit}, {"%eax": mask});
+        return mask;
+    }
+    
+    global [int] isset(int a, int bit) {
+        return this.has(a, this.lshift(1, bit));
+    }
+    
+    global [int] rshift(int a, int bits) {
+        int ret = 0;
+        __pasm__(".byte 0xD3; .byte 0xE8  #// shrl %eax, %cl", {"%eax": a, "%ecx": bits}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] lshift(int a, int bits) {
+        int ret = 0;
+        __pasm__(".byte 0xD3; .byte 0xE0  #// shll %eax, %cl", {"%eax": a, "%ecx": bits}, {"%eax": ret});
+        return ret;
+    }
+}
