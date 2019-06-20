@@ -60,6 +60,10 @@ class IStream extends Object {
         return sign * result;
     }
     
+    [int] readRawInt() {
+        return this.readChar() + this.readChar() * 0x100 + this.readChar() * 0x10000 + this.readChar() * 0x1000000;
+    }
+    
     [OStream] printToStream(OStream stream) {
         while (!this.isEmpty()) {
             stream.printChar(this.readChar());

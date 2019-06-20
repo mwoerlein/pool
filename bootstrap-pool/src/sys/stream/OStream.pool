@@ -48,13 +48,13 @@ class OStream extends Object {
     [OStream] printRawInt(int i) {
         int c = 0;
         int n = i;
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 256}, {"%eax": n, "%edx": c});
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
         this.printChar(c);
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 256}, {"%eax": n, "%edx": c});
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
         this.printChar(c);
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 256}, {"%eax": n, "%edx": c});
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
         this.printChar(c);
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 256}, {"%eax": n, "%edx": c});
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
         this.printChar(c);
         return this;
     }
