@@ -15,6 +15,9 @@ class LinuxPageAllocator extends PageAllocator {
     
     [MemoryInfo] allocatePages(int pages) {
         [int start, int size] = SysCall:pageAlloc(pages);
+        if (start == -1) {
+            return Address:cast(MemoryInfo:NONE);
+        }
         MemoryInfo info = Address:cast(start);
         info.buf = start;
         info.len = size;

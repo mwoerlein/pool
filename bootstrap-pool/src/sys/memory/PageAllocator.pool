@@ -15,4 +15,7 @@ class PageAllocator extends Object {
     // methods
     abstract [MemoryInfo] allocatePages(int pages);
     abstract [int] isIncreasing();
+    
+    // TODO: remove with implicit cast
+    [PageAllocator] pageAllocator() { return this;}
 }

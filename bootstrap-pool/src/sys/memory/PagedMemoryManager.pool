@@ -11,7 +11,7 @@ class PagedMemoryManager extends MemoryManager {
     
     [MemoryInfo] outOfAvailable(int size) {
         MemoryInfo newAvailable = pageAllocator.allocatePages(1 + size / PageAllocator:PAGESIZE);
-        if (!newAvailable) {
+        if (Address:from(newAvailable) == MemoryInfo:NONE) {
             // TODO #7: return "parent":outOfAvailable(size);
             this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
             return Address:cast(MemoryInfo:NONE);
@@ -22,7 +22,7 @@ class PagedMemoryManager extends MemoryManager {
     
     [] initFromPageAllocator(PageAllocator pageAllocator, int initialPages) {
         MemoryInfo initial = pageAllocator.allocatePages(initialPages);
-        if (!initial) {
+        if (Address:from(initial) == MemoryInfo:NONE) {
             // bail out
             this.rt().err().printCString("cannot allocate initial pages\n");
             return;
