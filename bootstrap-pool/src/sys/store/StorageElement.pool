@@ -1,0 +1,22 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::store;
+
+use sys::core::utils::PropertyContainer;
+use sys::stream::IStream;
+
+class StorageElement extends PropertyContainer {
+    
+    [] _initStorageElement() {
+        this._initPropertyContainer();
+    }
+    [] _destructStorageElement() {
+        this._destructPropertyContainer();
+    }
+    
+    abstract [IStream] getContent();
+    abstract [int] getContentSize();
+}

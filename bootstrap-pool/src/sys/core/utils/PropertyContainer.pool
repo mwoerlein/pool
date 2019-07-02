@@ -1,0 +1,84 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::String;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntry;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::OStream;
+
+// TODO: add Object/Integer/Bool/... value handling
+class PropertyContainer extends StringOwner {
+    
+    AnyMap _properties;  // HashMap<(own)String, (own?)String>
+
+    [] _initPropertyContainer() {
+        _properties = this.rt().createInstance(AnyMap:CLASSNAME);
+        _properties.init(13);
+        this._initStringOwner();
+    }
+    [] _destructPropertyContainer() {
+        _properties.destroy();
+        this._destructStringOwner();
+    }
+
+    [int] hasStringProperty(String name) {
+        return _properties.has(name);
+    }
+    [int] isStringProperty(String name, String value) {
+        return _properties.has(name) && value.equals(_properties.get(name));
+    }
+    [String] getStringProperty(String name) {
+        return _properties.get(name);
+    }
+    [String] unsetStringProperty(String name) {
+        return _properties.unset(name);
+    }
+    [String] setStringProperty(String name, String value) {
+        return _properties.set(this.createOwnStringFromString(name), this.createOwnStringFromString(value));
+    }
+
+    [int] hasCStringProperty(cstring name) {
+        String tmp = this.createStringFromCString(name); 
+        int ret = this.hasStringProperty(tmp);
+        tmp.destroy();
+        return ret;
+    }
+    [int] isCStringProperty(cstring name, cstring value) {
+        String tmp = this.createStringFromCString(name); 
+        int ret = this.hasStringProperty(tmp) && (this.getStringProperty(tmp).compareCString(value) == 0);
+        tmp.destroy();
+        return ret;
+    }
+    [String] getCStringProperty(cstring name) {
+        String tmp = this.createStringFromCString(name); 
+        String ret = this.getStringProperty(tmp);
+        tmp.destroy();
+        return ret;
+    }
+    [String] unsetCStringProperty(cstring name) {
+        String tmp = this.createStringFromCString(name); 
+        String ret = this.unsetStringProperty(tmp);
+        tmp.destroy();
+        return ret;
+    }
+    [String] setCStringProperty(cstring name, cstring value) {
+        return _properties.set(this.createOwnStringFromCString(name), this.createOwnStringFromCString(value));
+    }
+    
+    [OStream] dumpPropertiesToStream(OStream stream) {
+        {
+            AnyMapEntryIterator it = this._properties.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                stream.print(e.getKey()).printChar('=').print(e.getValue()).printNewline();
+            }
+            it.destroy();
+        }
+        return stream;
+    }
+}

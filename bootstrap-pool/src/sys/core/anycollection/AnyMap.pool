@@ -18,6 +18,10 @@ class AnyMap extends AnyCollection {
     int _size;
     
     [] init(int bucketsCount) {
+        this._initAnyMap(bucketsCount);
+    }
+    
+    [] _initAnyMap(int bucketsCount) {
         this.initialBucketsCount = bucketsCount;
         this._size = 0;
         this._first = this._last = null;
@@ -26,6 +30,10 @@ class AnyMap extends AnyCollection {
     }
     
     [] __destruct() {
+        this._destructAnyMap();
+    }
+    
+    [] _destructAnyMap() {
         this._destroyAllElements();
         buckets.destroy();
     }
