@@ -70,4 +70,7 @@ class IStream extends Object {
         }
         return stream;
     }
+    
+    // TODO: remove with implicit cast
+    [IStream] istream() { return this;}
 }
