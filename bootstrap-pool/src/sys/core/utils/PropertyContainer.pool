@@ -39,7 +39,7 @@ class PropertyContainer extends StringOwner {
         return _properties.unset(name);
     }
     [String] setStringProperty(String name, String value) {
-        return _properties.set(this.createOwnStringFromString(name), this.createOwnStringFromString(value));
+        return _properties.set(this.createOwnStringFromString(name), value);
     }
 
     [int] hasCStringProperty(cstring name) {
