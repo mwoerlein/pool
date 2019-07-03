@@ -1,0 +1,19 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::Object;
+use sys::core::String;
+
+// TODO: convert to interface 
+class CommandLineParserTarget extends Object {
+
+    abstract [int] pushCLArgument(String arg);
+    
+    abstract [int] pushCLOption(String opt);
+    
+    abstract [int] pushCLValueOption(String opt, String val);
+}

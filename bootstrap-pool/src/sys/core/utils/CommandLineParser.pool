@@ -24,7 +24,7 @@ class CommandLineParser extends Object {
     String opt;
     String value;
     int mode;
-    CommandLine cl;
+    CommandLineParserTarget cl;
     
     [] __init() {
         Runtime rt = this.rt();
@@ -38,8 +38,8 @@ class CommandLineParser extends Object {
         opt.destroy();
         arg.destroy();
     }
-        
-    [int] parse(AnyIterator args, CommandLine commandline) {
+    
+    [int] parse(AnyIterator args, CommandLineParserTarget commandline) {
         mode = MODE_START;
         cl = commandline;
         while (args.hasNext()) {
@@ -63,11 +63,11 @@ class CommandLineParser extends Object {
     [int] parseFirstChar(int c) {
         if (c == '-') {
             if (mode == MODE_ARG) {
-                if (!cl._pushArgument(arg)) { return false; }
+                if (!this._pushArgument(arg)) { return false; }
             } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
-                if (!cl._pushOption(opt)) { return false; }
+                if (!this._pushOption(opt)) { return false; }
             } else if (mode == MODE_OPT_VALUE) {
-                if (!cl._pushValueOption(opt, value)) { return false; }
+                if (!this._pushValueOption(opt, value)) { return false; }
             }
             mode = MODE_SHORT_OPT;
         } else {
@@ -75,13 +75,13 @@ class CommandLineParser extends Object {
                 mode = MODE_ARG;
                 arg.printChar(c);
             } else if (mode == MODE_ARG) {
-                if (!cl._pushArgument(arg)) { return false; }
+                if (!this._pushArgument(arg)) { return false; }
                 arg.printChar(c);
             } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
                 mode = MODE_OPT_VALUE;
                 value.printChar(c);
             } else if (mode == MODE_OPT_VALUE) {
-                if (!cl._pushValueOption(opt, value)) { return false; }
+                if (!this._pushValueOption(opt, value)) { return false; }
                 mode = MODE_ARG;
                 arg.printChar(c);
             }
@@ -121,7 +121,7 @@ class CommandLineParser extends Object {
                 arg.printChar(c);
             } else if (mode == MODE_SHORT_OPT) {
                 if (opt.length()) { 
-                    if (!cl._pushOption(opt)) { return false; }
+                    if (!this._pushOption(opt)) { return false; }
                 }
                 opt.printChar(c);
             } else if (mode == MODE_LONG_OPT) {
@@ -135,24 +135,56 @@ class CommandLineParser extends Object {
     
     [int] parseFinalize() {
         if (mode == MODE_ARG) {
-            if (!cl._pushArgument(arg)) { return false; }
+            if (!this._pushArgument(arg)) { return false; }
         } else if (mode == MODE_SHORT_OPT) {
             if (opt.length()) {
-                if (!cl._pushOption(opt)) { return false; }
+                if (!this._pushOption(opt)) { return false; }
             } else {
                 arg.printChar('-');
-                if (!cl._pushArgument(arg)) { return false; }
+                if (!this._pushArgument(arg)) { return false; }
             }
         } else if (mode == MODE_LONG_OPT) {
             if (opt.length()) {
-                if (!cl._pushOption(opt)) { return false; }
+                if (!this._pushOption(opt)) { return false; }
             } else {
                 arg.printChar('-').printChar('-');
-                if (!cl._pushArgument(arg)) { return false; }
+                if (!this._pushArgument(arg)) { return false; }
             }
         } else if (mode == MODE_OPT_VALUE) {
-            if (!cl._pushValueOption(opt, value)) { return false; }
+            if (!this._pushValueOption(opt, value)) { return false; }
         }
         return true;
     }
+    
+    [int] _pushArgument(String arg) {
+        if (!arg.length()) {
+            this.rt().err().printCString("no argument to push").printNewline();
+            return false;
+        }
+        int ret = cl.pushCLArgument(arg);
+        arg.clear();
+        return ret;
+    }
+    
+    [int] _pushOption(String opt) {
+        if (!opt.length()) {
+            this.rt().err().printCString("no option to push").printNewline();
+            return false;
+        }
+        int ret = cl.pushCLOption(opt);
+        opt.clear();
+        return ret;
+    }
+    
+    [int] _pushValueOption(String opt, String val) {
+        if (!opt.length() || !val.length()) {
+            this.rt().err().printCString("no option with value to push").printNewline();
+            return false;
+        }
+        int ret = cl.pushCLValueOption(opt, val);
+        opt.clear();
+        val.clear();
+        return ret;
+    }
+
 }

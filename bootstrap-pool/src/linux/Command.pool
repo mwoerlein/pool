@@ -12,6 +12,7 @@ use sys::core::anycollection::AnyMapEntry;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::CommandLine;
 use sys::core::utils::CommandLineParser;
+use sys::core::utils::CommandLineParserTarget;
 use sys::memory::Address;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
@@ -137,7 +138,7 @@ class Command extends CommandLine {
         // parse argument list
         CommandLineParser p = rt.createInstance(CommandLineParser:CLASSNAME);
         AnyIterator ai = args.iterator();
-        int ret = p.parse(ai, rt.cast(CommandLine:CLASSNAME, this));
+        int ret = p.parse(ai, rt.cast(CommandLineParserTarget:CLASSNAME, this));
         ai.destroy();
         p.destroy();
         args.destroy();
