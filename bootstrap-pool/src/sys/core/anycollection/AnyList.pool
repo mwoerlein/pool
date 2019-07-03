@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core::anycollection;
 
+use sys::core::Object;
 use sys::memory::Address;
 use sys::runtime::Runtime;
 
@@ -17,6 +18,21 @@ class AnyList extends AnyCollection {
 
     [] __destruct() {
         this.clear();
+    }
+
+    [] destroyAll() {
+        AnyListElement cur = _first;
+        while (cur) {
+            AnyListElement kill = cur;
+            cur = cur.getNext();
+            Object o = this.rt().cast(Object:CLASSNAME, kill.getValue());
+            if (o) {
+                o.destroy();
+            }
+            kill.destroy();
+        }
+        _last = _first = null;
+        _size = 0;
     }
 
     [] clear() {
