@@ -8,6 +8,7 @@ namespace sys::core::utils;
 use sys::core::Object;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 use sys::runtime::Runtime;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -32,11 +33,44 @@ class CommandLineParser extends Object {
         opt = rt.createInstance(String:CLASSNAME);
         value = rt.createInstance(String:CLASSNAME);
     }
-        
+    
     [] __destruct() {
         value.destroy();
         opt.destroy();
         arg.destroy();
+    }
+    
+    [AnyList /*List<String>*/] split(cstring line) {
+        Runtime rt = this.rt();
+        AnyList list = rt.createInstance(AnyList:CLASSNAME);
+        String tmp = rt.createInstance(String:CLASSNAME);
+        String l = rt.createInstance(String:CLASSNAME);
+        l.assignCString(line);
+        IStream input = l.toIStream();
+        // TODO: handle ".."- and '..'-sequences with space correctly 
+        while (!input.isEmpty()) {
+            int c = input.readChar();
+            if (c == ' ') {
+                if (tmp.length()) {
+                    String s = rt.createInstance(String:CLASSNAME);
+                    s.assignString(tmp);
+                    list.add(s);
+                    tmp.clear();
+                }
+            } else {
+                tmp.printChar(c);
+            }
+        }
+        if (tmp.length()) {
+            String s = rt.createInstance(String:CLASSNAME);
+            s.assignString(tmp);
+            list.add(s);
+            tmp.clear();
+        }
+        input.destroy();
+        l.destroy();
+        tmp.destroy();
+        return list;
     }
     
     [int] parse(AnyIterator args, CommandLineParserTarget commandline) {
