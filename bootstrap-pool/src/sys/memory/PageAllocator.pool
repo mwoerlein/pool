@@ -12,6 +12,10 @@ class PageAllocator extends Object {
     
     global int PAGESIZE := 4096;
 
+    global [int] bytes2pages(int bytes) {
+        return (bytes + PAGESIZE - 1) / PAGESIZE;
+    }
+    
     // methods
     abstract [MemoryInfo] allocatePages(int pages);
     abstract [int] isIncreasing();
