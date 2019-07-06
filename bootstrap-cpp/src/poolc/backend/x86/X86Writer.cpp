@@ -113,6 +113,15 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     LONG(INSTANCE_OFFSET(instanceHandle(classScope->firstSuper()->getClassDeclNode()))); // Object handle offset in instance
     LONG(INSTANCE_OFFSET(instanceHandle(curClass))); // <class> handle offset in instance
     LONG(CLASS_OFFSET(classEnd()));       // <class> size
+    if (resolveClasses) {
+        LONG("1");                        // resolved
+    } else {
+        LONG("0");                        // resolved
+    }
+    LONG("0");                            // dynamic memory info
+    LONG("0");                            // dynamic next class desc
+    LONG("0");                            // reserved
+    LONG("0");                            // reserved
 
     // dependent classes
     elem() << "\n// class tab\n";

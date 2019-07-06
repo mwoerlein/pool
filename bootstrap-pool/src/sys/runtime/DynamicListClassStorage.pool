@@ -1,0 +1,65 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+use sys::memory::Address;
+use sys::memory::Allocator;
+
+class DynamicListClassStorage extends ClassStorage {
+    
+    ClassDescriptor classes;
+    
+    // methods
+    [] transferClasses(DynamicListClassStorage store, Allocator allocator) {
+        ClassDescriptor classDesc = classes;
+        while (classDesc) {
+            // transferClass might reuse classDesc.next_desc
+            ClassDescriptor next = classDesc.next_desc;
+            this.transferClass(classDesc, store, allocator);
+            classDesc = next;
+        }
+    }
+    
+    [] addClassDesc(ClassDescriptor desc) {
+        desc.next_desc = classes;
+        classes = desc;
+    }
+    
+    [ClassDescriptor] getClassDesc(cstring name) {
+        //this.rt().out().printCString("get class ").printCString(name).printNewline();
+        ClassDescriptor classDesc = classes;
+        while (classDesc) {
+            cstring descName = Address:string(classDesc, classDesc.classname_offset);
+            if (sys::core::String:compareCStrings(descName, name) == 0) {
+                if (!classDesc.resolved && !this._resolve(classDesc)) { return null; }
+                return classDesc;
+            }
+            classDesc = classDesc.next_desc;
+        }
+        return null;
+    }
+    
+    [int] _resolve(ClassDescriptor desc) {
+        //this.rt().out().printCString("resolve ").printCString(Address:string(desc, desc.classname_offset)).printNewline();
+        ClassTableEntry cte = Address:offset(desc, desc.class_tabs_offset);
+        while (cte.classname_offset) {
+            if (cte.classname_offset == desc.classname_offset) {
+                cte.class_desc = desc;
+            } else {
+                cstring classname = Address:string(desc, cte.classname_offset);
+                ClassDescriptor sDesc = this.getClassDesc(classname);
+                if (!sDesc) {
+                    this.rt().err().printCString("unknown class ").printCString(classname).printNewline();
+                    return false;
+                } 
+                cte.class_desc = sDesc;
+            }
+            cte = Address:offset(cte, ClassTableEntry:SIZEOF);
+        }
+        desc.resolved = true;
+        return true;
+    } 
+}

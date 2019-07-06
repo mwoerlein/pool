@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::memory::MemoryInfo;
 
 struct ClassDescriptor {
     global int MAGIC := 0x15AC1A55;
@@ -20,4 +21,9 @@ struct ClassDescriptor {
     int obj_handle_offset;
     int class_handle_offset;
     int class_size;
+    int resolved;
+    MemoryInfo mem_info;
+    ClassDescriptor next_desc;
+    int reserved_1;
+    int reserved_2;
 }

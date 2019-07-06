@@ -69,6 +69,23 @@ class Runtime extends Object {
         return cl;
     }
     
+    [Class] _createClassClass() {
+        ClassDescriptor classDesc = classStorage.getClassDesc(Class:CLASSNAME);
+        if (!classDesc) { return null; } // abort on initialization error
+        
+        // allocate memory for instance
+        MemoryInfo instInfo = allocator.allocate(classDesc.inst_tpl_size);
+        if (Address:from(instInfo) == MemoryInfo:NONE) { return null; } // abort on initialization error
+
+        [Class cl, Object oinstance] = Runtime:_initTemplate(instInfo, classDesc);
+        if (cl) {
+            cl.setRt(this);
+            cl.__init();
+            cl.setDesc(classDesc);
+        }
+        return cl;
+    }
+    
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
         InstanceHandle curHandle = Address:convert(obj);

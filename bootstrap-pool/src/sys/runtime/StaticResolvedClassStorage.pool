@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::runtime;
 
 use sys::memory::Address;
+use sys::memory::Allocator;
 
 class StaticResolvedClassStorage extends ClassStorage {
     
@@ -28,6 +29,14 @@ class StaticResolvedClassStorage extends ClassStorage {
             classDesc = Address:offset(classDesc, classDesc.class_size);
         }
         return null;
+    }
+    
+    [] transferClasses(DynamicListClassStorage store, Allocator allocator) {
+        ClassDescriptor classDesc = Address:cast(classesStart);
+        while ((Address:from(classDesc) < classesEnd) && (classDesc.magic == ClassDescriptor:MAGIC)) {
+            this.transferClass(classDesc, store, allocator);
+            classDesc = Address:offset(classDesc, classDesc.class_size);
+        }
     }
     
     [] rebuildClasses() {

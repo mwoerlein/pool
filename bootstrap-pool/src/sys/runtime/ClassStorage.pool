@@ -6,12 +6,37 @@ version = 0.1.0
 namespace sys::runtime;
 
 use sys::core::Object;
+use sys::memory::Address;
+use sys::memory::Allocator;
+use sys::memory::MemoryInfo;
+use sys::memory::MemoryIOStream;
 
-// TODO: convert to interface 
 class ClassStorage extends Object {
     
     // methods
     abstract [ClassDescriptor] getClassDesc(cstring name);
+    abstract [] transferClasses(DynamicListClassStorage store, Allocator allocator);
+    
+    [] transferClass(ClassDescriptor classDesc, DynamicListClassStorage store, Allocator allocator) {
+        ClassDescriptor desc = classDesc;
+        if (allocator) {
+            MemoryInfo info = allocator.allocate(classDesc.class_size);
+            { // memory copy
+                MemoryIOStream source = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+                MemoryIOStream target = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+                source._initBuf(Address:from(classDesc), classDesc.class_size);
+                target._initMem(info);
+                target.print(source);
+                source.destroy();
+                target.destroy();
+            }
+            desc = Address:cast(info.buf);
+            desc.mem_info = info;
+            desc.class_instance = null;
+            desc.resolved = false;
+        }
+        store.addClassDesc(desc);
+    }
     
     // TODO: remove with implicit cast
     [ClassStorage] classStorage() { return this; }
