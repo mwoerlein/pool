@@ -92,6 +92,12 @@ class Runtime extends Object {
         allocator.free(curHandle.inst_desc.info);
     }
     
+    [] refreshInstance(__any__ obj) {
+        InstanceHandle curHandle = Address:convert(obj);
+        Object o = Runtime:_initHandles(curHandle.inst_desc);
+        o.setRt(this);
+    }
+    
     // TODO: remove with implicit cast
     [Runtime] runtime() { return this; }
     
@@ -118,35 +124,40 @@ class Runtime extends Object {
     }
     
     global [__all__, Object] _initTemplate(MemoryInfo instInfo, ClassDescriptor classDesc) {
-        int call_entry = 0;
-        __pasm__("movl 8(%ebp), %eax; addl _cr_mo_call_entry, %eax", {}, {"%eax": call_entry});
-        InstanceDescriptor inst_desc = Address:cast(instInfo.buf);
+        InstanceDescriptor instDesc = Address:cast(instInfo.buf);
         
         // copy template to object
         __pasm__(
             ".byte 0xf3; .byte 0xa4 #// rep movsb",
-             {"%ecx": classDesc.inst_tpl_size, "%esi": Address:offset(classDesc, classDesc.inst_tpl_offset), "%edi": inst_desc}
+             {
+                "%ecx": classDesc.inst_tpl_size,
+                "%esi": Address:offset(classDesc, classDesc.inst_tpl_offset),
+                "%edi": instDesc
+             }
         );
         
-        inst_desc.class_desc = classDesc;
-        inst_desc.info = instInfo;
-        
-        { // init handles
-            
-            ClassTableEntry curEntry = Address:offset(classDesc, classDesc.class_tabs_offset);
-            while (curEntry.handle_offset) {
-                InstanceHandle curHandle = Address:offset(inst_desc, curEntry.handle_offset);
-                curHandle.call_entry = call_entry;
-                curHandle.inst_desc = inst_desc;
-                curHandle.vtab_offset = curEntry.vtab_offset;
-                
-                curEntry = Address:offset(curEntry, ClassTableEntry:SIZEOF);
-            }
-        }
-        
-        __all__ inst = Address:offset(inst_desc, classDesc.class_handle_offset);
-        Object obj = Address:offset(inst_desc, classDesc.obj_handle_offset);
+        instDesc.class_desc = classDesc;
+        instDesc.info = instInfo;
+        Object obj = Runtime:_initHandles(instDesc);
+        __all__ inst = Address:offset(instDesc, classDesc.class_handle_offset);
         return [inst, obj];
+    }
+    
+    global [Object] _initHandles(InstanceDescriptor instDesc) {
+        int call_entry = 0;
+        __pasm__("movl 8(%ebp), %eax; addl _cr_mo_call_entry, %eax", {}, {"%eax": call_entry});
+        ClassDescriptor classDesc = instDesc.class_desc;
+        ClassTableEntry curEntry = Address:offset(classDesc, classDesc.class_tabs_offset);
+        while (curEntry.handle_offset) {
+            InstanceHandle curHandle = Address:offset(instDesc, curEntry.handle_offset);
+            curHandle.call_entry = call_entry;
+            curHandle.inst_desc = instDesc;
+            curHandle.vtab_offset = curEntry.vtab_offset;
+            
+            curEntry = Address:offset(curEntry, ClassTableEntry:SIZEOF);
+        }
+        Object obj = Address:offset(instDesc, classDesc.obj_handle_offset);
+        return obj;
     }
     
     __naked__ [] _call_entry() {
