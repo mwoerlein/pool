@@ -160,4 +160,11 @@ class Address {
     global [] copyWord(int srcAddr, int destAddr) {
         __pasm__("movw (%esi), %ax; movw %ax, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
     }
+    
+    global [] copyBytes(int srcAddr, int destAddr, int bytes) {
+        __pasm__(
+            ".byte 0xf3; .byte 0xa4 #// rep movsb",
+             {"%ecx": bytes, "%esi": srcAddr, "%edi": destAddr}
+        );
+    }
 }

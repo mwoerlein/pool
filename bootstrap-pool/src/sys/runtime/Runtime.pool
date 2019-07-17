@@ -124,18 +124,14 @@ class Runtime extends Object {
     }
     
     global [__all__, Object] _initTemplate(MemoryInfo instInfo, ClassDescriptor classDesc) {
-        InstanceDescriptor instDesc = Address:cast(instInfo.buf);
-        
         // copy template to object
-        __pasm__(
-            ".byte 0xf3; .byte 0xa4 #// rep movsb",
-             {
-                "%ecx": classDesc.inst_tpl_size,
-                "%esi": Address:offset(classDesc, classDesc.inst_tpl_offset),
-                "%edi": instDesc
-             }
+        Address:copyBytes(
+            Address:offsetAddress(classDesc, classDesc.inst_tpl_offset),
+            instInfo.buf,
+            classDesc.inst_tpl_size
         );
         
+        InstanceDescriptor instDesc = Address:cast(instInfo.buf);
         instDesc.class_desc = classDesc;
         instDesc.info = instInfo;
         Object obj = Runtime:_initHandles(instDesc);

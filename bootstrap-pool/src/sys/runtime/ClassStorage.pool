@@ -9,7 +9,6 @@ use sys::core::Object;
 use sys::memory::Address;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
-use sys::memory::MemoryIOStream;
 
 class ClassStorage extends Object {
     
@@ -21,15 +20,7 @@ class ClassStorage extends Object {
         ClassDescriptor desc = classDesc;
         if (allocator) {
             MemoryInfo info = allocator.allocate(classDesc.class_size);
-            { // memory copy
-                MemoryIOStream source = this.rt().createInstance(MemoryIOStream:CLASSNAME);
-                MemoryIOStream target = this.rt().createInstance(MemoryIOStream:CLASSNAME);
-                source._initBuf(Address:from(classDesc), classDesc.class_size);
-                target._initMem(info);
-                target.print(source);
-                source.destroy();
-                target.destroy();
-            }
+            Address:copyBytes(Address:from(classDesc), info.buf, classDesc.class_size);
             desc = Address:cast(info.buf);
             desc.mem_info = info;
             desc.class_instance = null;
