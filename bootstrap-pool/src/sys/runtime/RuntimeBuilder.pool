@@ -17,6 +17,7 @@ class RuntimeBuilder extends Object {
     abstract [Runtime] _buildRuntime(__any__ context);
     
     global [Runtime] _bootstrap(cstring builderName, int heapsize, __any__ context) {
+        Runtime runtime = null;
         
         // allocate buffer on stack
         int heap = 0;
@@ -64,13 +65,12 @@ class RuntimeBuilder extends Object {
         iMM._appendToUsed(miSRCS);
 
         // create and init classes
-        if (!iRt._createClass(cdRt)) { return null; } // abort on initialization error
-        if (!iRt._createClass(cdMM)) { return null; } // abort on initialization error
-        if (!iRt._createClass(cdSRCS)) { return null; } // abort on initialization error
-        
-        RuntimeBuilder builder := iRt.cast(RuntimeBuilder:CLASSNAME, iRt.createInstance(builderName));
-        Runtime runtime := builder._buildRuntime(context);
-        builder.destroy();
+        if (iRt._createClass(cdRt) && iRt._createClass(cdMM) && iRt._createClass(cdSRCS)) {
+            // build runtime if no initialization error occurred
+            RuntimeBuilder builder := iRt.cast(RuntimeBuilder:CLASSNAME, iRt.createInstance(builderName));
+            runtime = builder._buildRuntime(context);
+            builder.destroy();
+        }
 
         // free stack
         __pasm__("addl %eax, %esp", {"%eax": heapsize});
