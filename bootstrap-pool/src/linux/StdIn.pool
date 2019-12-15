@@ -1,0 +1,48 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::stream::IStream;
+
+class StdIn extends IStream {
+
+    int buf;
+    int notEof;
+    
+    [] _init() {
+        buf = -1;
+        notEof = true;
+    }
+    
+    [int] isEmpty() {
+        return !(this._fillBuffer());
+    }
+    
+    [int] peekChar() {
+        if (this._fillBuffer()) {
+            return buf;
+        }
+        return 0;
+    }
+    
+    [int] readChar() {
+        if (this._fillBuffer()) {
+            int c = buf;
+            buf = -1;
+            return c;
+        }
+        return 0;
+    }
+    
+    [int] _fillBuffer() {
+        if ((buf == -1) && notEof) {
+            [int c, int eof] = SysCall:readChar(0);
+            buf = c;
+            notEof = !eof;
+        }
+        return notEof;
+    }
+}

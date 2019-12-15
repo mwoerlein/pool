@@ -15,6 +15,7 @@ use sys::core::utils::CommandLineParser;
 use sys::core::utils::CommandLineParserTarget;
 use sys::memory::Address;
 use sys::runtime::Runtime;
+use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
@@ -61,6 +62,12 @@ class Command extends CommandLine {
     
     [] _destructCommand() {
         this._destructCommandLine();
+    }
+    
+    [IStream] openStdIn() {
+        StdIn in = this.rt().createInstance(StdIn:CLASSNAME);
+        in._init();
+        return this.rt().cast(IStream:CLASSNAME, in);
     }
     
     [SeekableIOStream] openFile(String filename, int mode) {

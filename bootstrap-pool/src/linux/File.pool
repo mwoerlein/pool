@@ -61,13 +61,14 @@ class File extends SeekableIOStream {
     }
     
     [int] peekChar() {
-        int c = SysCall:readChar(fd);
+        [int c, int eof] = SysCall:readChar(fd);
         SysCall:seek(fd, -1, SysCall:SEEK_CUR);
         return c;
     }
     
     [int] readChar() {
-        return SysCall:readChar(fd);
+        [int c, int eof] = SysCall:readChar(fd);
+        return c;
     }
     
     [OStream] printChar(int c) {

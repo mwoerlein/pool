@@ -13,14 +13,15 @@ class SysCall {
     int SEEK_CUR := 1;   /* set file offset to current plus offset */
     int SEEK_END := 2;   /* set file offset to EOF plus offset */
 
-    global [int] readChar(int fd) {
+    global [int, int] readChar(int fd) {
         int ret = 0;
+        int read = 0;
         __pasm__(<"
             subl 4, %esp
             movl %esp, %ecx; int 0x80; movb (%esp), %cl
             addl 4, %esp
-        ">, {"%eax": 3, "%ebx": fd, "%ecx": ret, "%edx": 1}, {"%ecx": ret});
-        return ret;
+        ">, {"%eax": 3, "%ebx": fd, "%ecx": ret, "%edx": 1}, {"%eax": read, "%ecx": ret});
+        return [ret, (read == 0)];
     }
     
     global [] writeChar(int fd, int c) {
