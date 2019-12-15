@@ -1,0 +1,119 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::command;
+
+use pool::asm::InstructionList;
+use pool::asm::Parser;
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class Pbasm extends linux::Command {
+
+    [] __init() {
+        this._initCommand();
+    }
+    
+    [] __destruct() {
+        this._destructCommand();
+    }
+    
+    [] configure() {
+        this.setName("pbasm")
+            .setVersion("0.3.0")
+            .setUsage(<"
+Pool Bootstrap Assembler.
+
+    Usage:
+      pasm [options] -o <file> <file>
+
+    Options:
+      -h --help                 Show this screen.
+      --version                 Show version.
+      -o <file> --output <file> Place the output into <file>.
+      -b --binary               Generate plain binary without module informations.
+      -c --class                Generate class module informations.
+      -t <org>                  Locates code in the output file at the absolute address given by org.
+">);
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('o', "output")
+            .registerOptionAlias('b', "binary")
+            .registerOptionAlias('c', "class")
+        ;
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (!this.hasValueOption("output") || this.getArgumentsSize() != 1) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+        
+        int startAddress = 0;
+        if (this.hasValueOption("t")) {
+            startAddress = this.getValueOption("t").toInt();
+        }
+        
+        OStream outfile = this.openFile(this.getValueOption("output"), linux::File:MODE_WRITE).ostream();
+        IStream infile = null;
+        {
+            AnyIterator argIt = this.getArguments();
+            String name = argIt.next();
+            if (name.compareCString("-") == 0) {
+                infile = this.openStdIn();
+            } else {
+                infile = this.openFile(name, linux::File:MODE_READ).istream();
+            }
+            argIt.destroy();
+        }
+        
+        Parser parser = this.rt().createInstance(Parser:CLASSNAME);
+        InstructionList list = parser.parse(infile, this.rt().err());
+        if (list.hasErrors()) { return 1; }
+        
+        list.compile();
+        if (list.hasErrors()) { return 1; }
+        
+        list.finalize(startAddress);
+        if (list.hasErrors()) { return 1; }
+        
+        // generate module infos
+        if (!this.hasOption("binary")) {
+            outfile.printCString("/*[meta]").printNewline();
+            outfile.printCString("mimetype = application/x-bin-x86").printNewline();
+            
+            outfile.printCString("[pool]").printNewline();
+            outfile.printCString("version = ").printCString(version).printNewline();
+            if (this.hasOption("class")) {
+                outfile.printCString("class = true").printNewline();
+            }
+            outfile.printCString("*/").printNewline();
+        }
+        list.writeToStream(outfile);
+        
+        infile.destroy();
+        outfile.destroy();
+        list.destroy();
+        parser.destroy();
+        
+        return 0;
+    }
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        Pbasm pbasm = linux::Runtime:buildRuntime().createInstance(Pbasm:CLASSNAME);
+        return pbasm.execute(argc, argv);
+    }
+}

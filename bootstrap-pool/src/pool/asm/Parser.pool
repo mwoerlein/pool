@@ -1,0 +1,19 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm;
+
+use sys::core::Object;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class Parser extends Object {
+
+    [InstructionList] parse(IStream input, OStream error) {
+        InstructionList list = this.rt().createInstance(InstructionList:CLASSNAME);
+        return list;
+    }
+
+}
