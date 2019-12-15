@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::stream;
 
 use sys::core::Object;
+use sys::core::utils::Bitset;
 use sys::memory::Address;
 
 class OStream extends Object {
@@ -46,16 +47,14 @@ class OStream extends Object {
     }
     
     [OStream] printRawInt(int i) {
-        int c = 0;
         int n = i;
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
-        this.printChar(c);
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
-        this.printChar(c);
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
-        this.printChar(c);
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": n, "%ebx": 0x100}, {"%eax": n, "%edx": c});
-        this.printChar(c);
+        this.printChar(Bitset:and(n, 0xff));
+        n = Bitset:rshift(n, 8);
+        this.printChar(Bitset:and(n, 0xff));
+        n = Bitset:rshift(n, 8);
+        this.printChar(Bitset:and(n, 0xff));
+        n = Bitset:rshift(n, 8);
+        this.printChar(Bitset:and(n, 0xff));
         return this;
     }
 
