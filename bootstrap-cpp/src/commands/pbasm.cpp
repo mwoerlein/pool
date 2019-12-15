@@ -9,7 +9,7 @@ static const char USAGE[] =
 R"(Pool Bootstrap Assembler.
 
     Usage:
-      pasm [options] -o <file> <file>
+      pbasm [options] -o <file> <file>
 
     Options:
       -h --help                 Show this screen.
