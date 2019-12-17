@@ -1,0 +1,108 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+
+class InstructionNode extends LineNode {
+    
+    int data;
+    int addr;
+    String prefix;
+    String operation;
+    OperandNode o1;
+    OperandNode o2;
+    OperandNode o3;
+
+    [] __init() { this._initInstructionNode(); }
+    [] _initInstructionNode() {
+        operation = this.rt().createInstance(String:CLASSNAME);
+        this._initLineNode(); 
+    }
+
+    [] __destruct() { this._destructInstructionNode(); }
+    [] _destructInstructionNode() {
+        if (prefix) { prefix.destroy(); }
+        operation.destroy();
+        if (o1) { o1.destroy(); }
+        if (o2) { o2.destroy(); }
+        if (o3) { o3.destroy(); }
+        this._destructLineNode(); 
+    }
+    
+    [InstructionNode] setCOperation(cstring l) {
+        operation.assignCString(l);
+        return this;
+    }
+    
+    [InstructionNode] setOperation(String l) {
+        operation.assignString(l);
+        return this;
+    }
+    
+    [InstructionNode] setOperand1(OperandNode o) {
+        o1 = o;
+        return this;
+    }
+    
+    [InstructionNode] setOperand2(OperandNode o) {
+        o2 = o;
+        return this;
+    }
+    
+    [InstructionNode] setOperand3(OperandNode o) {
+        o3 = o;
+        return this;
+    }
+    
+    [InstructionNode] setData(int m) {
+        data = m;
+        return this;
+    }
+    
+    [InstructionNode] setAddr(int m) {
+        addr = m;
+        return this;
+    }
+    
+    [InstructionNode] setCPrefix(cstring p) {
+        if (!prefix) { prefix = this.rt().createInstance(String:CLASSNAME); }
+        prefix.assignCString(p);
+        return this;
+    }
+    
+    [InstructionNode] setPrefix(String p) {
+        if (!prefix) { prefix = this.rt().createInstance(String:CLASSNAME); }
+        prefix.assignString(p);
+        return this;
+    }
+    
+    [OStream] printNodeToStream(OStream stream) {
+        stream.printCString("    ");
+        if (data) {
+            stream.printCString(".data").printInt(data).printChar(' ');
+        }
+        if (addr) {
+            stream.printCString(".addr").printInt(addr).printChar(' ');
+        }
+        if (prefix) {
+            stream.print(prefix).printChar(' ');
+        }
+        stream.print(operation);
+        if (o1) {
+            stream.printChar(' ').print(o1);
+        }
+        if (o2) {
+            stream.printCString(", ").print(o2);
+        }
+        if (o3) {
+            stream.printCString(", ").print(o2);
+        }
+        return stream;
+    }
+}

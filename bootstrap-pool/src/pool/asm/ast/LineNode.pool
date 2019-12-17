@@ -1,0 +1,48 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+
+class LineNode extends Node {
+
+    String comment;
+
+    [] __init() { this._initLineNode(); }
+    [] _initLineNode() {
+        this._initNode(); 
+    }
+
+    [] __destruct() { this._destructLineNode(); }
+    [] _destructLineNode() {
+        if (comment) { comment.destroy(); }
+        this._destructNode(); 
+    }
+    
+    [LineNode] setCComment(cstring c) {
+        if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
+        comment.assignCString(c);
+        return this;
+    }
+    
+    [LineNode] setComment(String c) {
+        if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
+        comment.assignString(c);
+        return this;
+    }
+    
+    abstract [OStream] printNodeToStream(OStream stream);
+    
+    [OStream] printToStream(OStream stream) {
+        this.printNodeToStream(stream);
+        if (comment) {
+            stream.printCString("    # ").print(comment);
+        }
+        return stream.printNewline();
+    }
+}

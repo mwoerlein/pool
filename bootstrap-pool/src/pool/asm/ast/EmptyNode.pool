@@ -1,0 +1,16 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::stream::OStream;
+
+class EmptyNode extends LineNode {
+
+    [OStream] printNodeToStream(OStream stream) {
+        return stream;
+    }
+
+}

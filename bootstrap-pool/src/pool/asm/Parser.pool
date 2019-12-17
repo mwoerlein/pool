@@ -8,11 +8,29 @@ namespace pool::asm;
 use sys::core::Object;
 use sys::stream::IStream;
 use sys::stream::OStream;
+use pool::asm::ast::NodeList;
 
 class Parser extends Object {
 
-    [InstructionList] parse(IStream input, OStream error) {
-        InstructionList list = this.rt().createInstance(InstructionList:CLASSNAME);
+    [NodeList] parse(IStream input, OStream error) {
+        NodeList list = this.rt().createInstance(NodeList:CLASSNAME);
+        list.__init();
+        
+        list.addCMultilineComment(<"
+a comment
+with multiple lines
+">);
+        list.addCode(32);
+        list.addCLabel("test1");
+        
+        list.addEmptyLine();
+        list.addCode(16);
+        list.addCComment("single comment");
+        list.addCLabel("test2").setCComment("comment");
+        
+        list.addCInstruction2("movl", "%eax", "%ebx").setData(32).setCPrefix("lock");
+        list.addCInstruction0("hlt").setCComment("finish example");
+        
         return list;
     }
 

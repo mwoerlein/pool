@@ -1,0 +1,134 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+
+class NodeList extends Node {
+    
+    AnyList nodes;
+
+    [] __init() { this._initNodeList(); }
+    [] _initNodeList() {
+        nodes = this.rt().createInstance(AnyList:CLASSNAME);
+        this._initNode(); 
+    }
+
+    [] __destruct() { this._destructNodeList(); }
+    [] _destructNodeList() {
+        nodes.destroyAll();
+        this._destructNode(); 
+    }
+    
+    [LabelNode] addLabel(String l) {
+        LabelNode label = this.rt().createInstance(LabelNode:CLASSNAME);
+        label.setLabel(l);
+        nodes.add(label.node());
+        return label;
+    }
+    
+    [LabelNode] addCLabel(cstring l) {
+        LabelNode label = this.rt().createInstance(LabelNode:CLASSNAME);
+        label.setCLabel(l);
+        nodes.add(label.node());
+        return label;
+    }
+    
+    [CodeNode] addCode(int mode) {
+        CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
+        code.setMode(mode);
+        nodes.add(code.node());
+        return code;
+    }
+    
+    [EmptyNode] addEmptyLine() {
+        EmptyNode line = this.rt().createInstance(EmptyNode:CLASSNAME);
+        nodes.add(line.node());
+        return line;
+    }
+    
+    [CommentNode] addComment(String c) {
+        CommentNode comment = this.rt().createInstance(CommentNode:CLASSNAME);
+        comment.setComment(c);
+        nodes.add(comment.node());
+        return comment;
+    }
+    
+    [CommentNode] addCComment(cstring c) {
+        CommentNode comment = this.rt().createInstance(CommentNode:CLASSNAME);
+        comment.setCComment(c);
+        nodes.add(comment.node());
+        return comment;
+    }
+
+    [CommentNode] addMultilineComment(String c) {
+        CommentNode comment = this.rt().createInstance(CommentNode:CLASSNAME);
+        comment.setComment(c).setMultiline(1);
+        nodes.add(comment.node());
+        return comment;
+    }
+    
+    [CommentNode] addCMultilineComment(cstring c) {
+        CommentNode comment = this.rt().createInstance(CommentNode:CLASSNAME);
+        comment.setCComment(c).setMultiline(1);
+        nodes.add(comment.node());
+        return comment;
+    }
+    
+    [InstructionNode] addCInstruction0(cstring operation) {
+        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
+        inst.setCOperation(operation);
+        nodes.add(inst.node());
+        return inst;
+    }
+    
+    [InstructionNode] addCInstruction1(cstring operation, cstring operand1) {
+        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
+        OperandNode o1 = this.rt().createInstance(OperandNode:CLASSNAME);
+        inst.setCOperation(operation)
+            .setOperand1(o1.setCOperand(operand1));
+        nodes.add(inst.node());
+        return inst;
+    }
+    
+    [InstructionNode] addCInstruction2(cstring operation, cstring operand1, cstring operand2) {
+        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
+        OperandNode o1 = this.rt().createInstance(OperandNode:CLASSNAME);
+        OperandNode o2 = this.rt().createInstance(OperandNode:CLASSNAME);
+        inst.setCOperation(operation)
+            .setOperand1(o1.setCOperand(operand1))
+            .setOperand2(o2.setCOperand(operand2));
+        nodes.add(inst.node());
+        return inst;
+    }
+    
+    [InstructionNode] addCInstruction3(cstring operation, cstring operand1, cstring operand2, cstring operand3) {
+        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
+        OperandNode o1 = this.rt().createInstance(OperandNode:CLASSNAME);
+        OperandNode o2 = this.rt().createInstance(OperandNode:CLASSNAME);
+        OperandNode o3 = this.rt().createInstance(OperandNode:CLASSNAME);
+        inst.setCOperation(operation)
+            .setOperand1(o1.setCOperand(operand1))
+            .setOperand2(o2.setCOperand(operand2))
+            .setOperand3(o3.setCOperand(operand3));
+        nodes.add(inst.node());
+        return inst;
+    }
+    
+
+    [OStream] printToStream(OStream stream) {
+        AnyIterator it = nodes.iterator();
+        while (it.hasNext()) {
+            stream.print(it.next());
+        }
+        it.destroy();
+        return stream;
+    }
+}

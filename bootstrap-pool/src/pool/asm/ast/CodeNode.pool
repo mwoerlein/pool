@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::stream::OStream;
+
+class CodeNode extends LineNode {
+
+    int mode;
+
+    [] __init() { this._initCodeNode(); }
+    [] _initCodeNode() {
+        this._initLineNode(); 
+    }
+
+    [] __destruct() { this._destructCodeNode(); }
+    [] _destructCodeNode() {
+        this._destructLineNode(); 
+    }
+    
+    [CodeNode] setMode(int m) {
+        mode = m;
+        return this;
+    }
+    
+    [OStream] printNodeToStream(OStream stream) {
+        return stream.printCString(".code").printInt(mode);
+    }
+
+}

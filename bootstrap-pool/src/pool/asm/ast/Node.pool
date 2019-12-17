@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+
+class Node extends Object {
+
+    abstract [OStream] printToStream(OStream stream);
+
+    [] __init() { this._initNode(); }
+    [] _initNode() {}
+    [] __destruct() { this._destructNode(); }
+    [] _destructNode() { }
+    
+    // TODO: remove with implicit cast
+    [Node] node() { return this; }
+}

@@ -7,6 +7,7 @@ namespace pool::command;
 
 use pool::asm::InstructionList;
 use pool::asm::Parser;
+use pool::asm::ast::NodeList;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::stream::IStream;
@@ -80,6 +81,9 @@ Pool Bootstrap Assembler.
         }
         
         Parser parser = this.rt().createInstance(Parser:CLASSNAME);
+        NodeList list = parser.parse(infile, this.rt().err());
+        outfile.print(list);
+        /*
         InstructionList list = parser.parse(infile, this.rt().err());
         if (list.hasErrors()) { return 1; }
         
@@ -99,9 +103,10 @@ Pool Bootstrap Assembler.
             if (this.hasOption("class")) {
                 outfile.printCString("class = true").printNewline();
             }
-            outfile.printCString("*/").printNewline();
+            outfile.printCString("* /").printNewline();
         }
         list.writeToStream(outfile);
+        */
         
         infile.destroy();
         outfile.destroy();

@@ -1,0 +1,41 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class LabelNode extends LineNode {
+
+    String label;
+
+    [] __init() { this._initLabelNode(); }
+    [] _initLabelNode() {
+        label = this.rt().createInstance(String:CLASSNAME);
+        this._initLineNode(); 
+    }
+
+    [] __destruct() { this._destructLabelNode(); }
+    [] _destructLabelNode() {
+        label.destroy();
+        this._destructLineNode(); 
+    }
+    
+    [LabelNode] setCLabel(cstring l) {
+        label.assignCString(l);
+        return this;
+    }
+    
+    [LabelNode] setLabel(String l) {
+        label.assignString(l);
+        return this;
+    }
+    
+    [OStream] printNodeToStream(OStream stream) {
+        return stream.print(label).printChar(':');
+    }
+    
+}
