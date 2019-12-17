@@ -122,5 +122,5 @@ class OStream extends Object {
     }
     
     // TODO: remove with implicit cast
-    [OStream] ostream() { return this;}
+    [OStream] ostream() { return this; }
 }
