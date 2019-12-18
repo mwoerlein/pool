@@ -1,0 +1,41 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast::operand;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class RegisterOperand extends OperandNode {
+
+    String reg;
+
+    [] __init() { this._initRegisterOperand(); }
+    [] _initRegisterOperand() {
+        reg = this.rt().createInstance(String:CLASSNAME);
+        this._initOperandNode();
+    }
+
+    [] __destruct() { this._destructRegisterOperand(); }
+    [] _destructRegisterOperand() {
+        reg.destroy();
+        this._destructOperandNode(); 
+    }
+    
+    [RegisterOperand] setRegister(String r) {
+        reg.assignString(r);
+        return this;
+    }
+    
+    [RegisterOperand] setCRegister(cstring r) {
+        reg.assignCString(r);
+        return this;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printChar('%').print(reg);
+    }
+
+}

@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::asm::ast;
 
+use pool::asm::ast::operand::OperandNode;
+
 use sys::core::Object;
 use sys::core::String;
 use sys::stream::OStream;
@@ -89,39 +91,46 @@ class NodeList extends Node {
         return inst;
     }
     
-    [InstructionNode] addCInstruction1(cstring operation, cstring operand1) {
+    [InstructionNode] addCInstruction1(cstring operation, OperandNode o1) {
         InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
-        OperandNode o1 = this.rt().createInstance(OperandNode:CLASSNAME);
         inst.setCOperation(operation)
-            .setOperand1(o1.setCOperand(operand1));
+            .setOperand1(o1);
         nodes.add(inst.node());
         return inst;
     }
     
-    [InstructionNode] addCInstruction2(cstring operation, cstring operand1, cstring operand2) {
+    [InstructionNode] addCInstruction2(cstring operation, OperandNode o1, OperandNode o2) {
         InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
-        OperandNode o1 = this.rt().createInstance(OperandNode:CLASSNAME);
-        OperandNode o2 = this.rt().createInstance(OperandNode:CLASSNAME);
         inst.setCOperation(operation)
-            .setOperand1(o1.setCOperand(operand1))
-            .setOperand2(o2.setCOperand(operand2));
+            .setOperand1(o1)
+            .setOperand2(o2);
         nodes.add(inst.node());
         return inst;
     }
     
-    [InstructionNode] addCInstruction3(cstring operation, cstring operand1, cstring operand2, cstring operand3) {
+    [InstructionNode] addCInstruction3(cstring operation, OperandNode o1, OperandNode o2, OperandNode o3) {
         InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
-        OperandNode o1 = this.rt().createInstance(OperandNode:CLASSNAME);
-        OperandNode o2 = this.rt().createInstance(OperandNode:CLASSNAME);
-        OperandNode o3 = this.rt().createInstance(OperandNode:CLASSNAME);
         inst.setCOperation(operation)
-            .setOperand1(o1.setCOperand(operand1))
-            .setOperand2(o2.setCOperand(operand2))
-            .setOperand3(o3.setCOperand(operand3));
+            .setOperand1(o1)
+            .setOperand2(o2)
+            .setOperand3(o3);
         nodes.add(inst.node());
         return inst;
     }
     
+    [DefinitionNode] addDefinition(String id, OperandNode v) {
+        DefinitionNode def = this.rt().createInstance(DefinitionNode:CLASSNAME);
+        def.initDefinition(id, v);
+        nodes.add(def.node());
+        return def;
+    }
+    
+    [DefinitionNode] addCDefinition(cstring id, OperandNode v) {
+        DefinitionNode def = this.rt().createInstance(DefinitionNode:CLASSNAME);
+        def.initCDefinition(id, v);
+        nodes.add(def.node());
+        return def;
+    }
 
     [OStream] printToStream(OStream stream) {
         AnyIterator it = nodes.iterator();

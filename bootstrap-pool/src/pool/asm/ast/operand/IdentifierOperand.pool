@@ -1,0 +1,41 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast::operand;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class IdentifierOperand extends OperandNode {
+
+    String identifier;
+
+    [] __init() { this._initIdentifierOperand(); }
+    [] _initIdentifierOperand() {
+        identifier = this.rt().createInstance(String:CLASSNAME);
+        this._initOperandNode();
+    }
+
+    [] __destruct() { this._destructIdentifierOperand(); }
+    [] _destructIdentifierOperand() {
+        identifier.destroy();
+        this._destructOperandNode(); 
+    }
+    
+    [IdentifierOperand] setIdentifier(String id) {
+        identifier.assignString(id);
+        return this;
+    }
+    
+    [IdentifierOperand] setCIdentifier(cstring id) {
+        identifier.assignCString(id);
+        return this;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.print(identifier);
+    }
+
+}

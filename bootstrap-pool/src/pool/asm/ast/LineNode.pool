@@ -41,7 +41,7 @@ class LineNode extends Node {
     [OStream] printToStream(OStream stream) {
         this.printNodeToStream(stream);
         if (comment) {
-            stream.printCString("    # ").print(comment);
+            stream.printCString("\t#").print(comment);
         }
         return stream.printNewline();
     }

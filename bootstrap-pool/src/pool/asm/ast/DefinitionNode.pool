@@ -1,0 +1,47 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast;
+
+use pool::asm::ast::operand::OperandNode;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class DefinitionNode extends LineNode {
+
+    String identifier;
+    OperandNode value;
+
+    [] __init() { this._initDefinitionNode(); }
+    [] _initDefinitionNode() {
+        identifier = this.rt().createInstance(String:CLASSNAME);
+        this._initLineNode(); 
+    }
+
+    [] __destruct() { this._destructDefinitionNode(); }
+    [] _destructDefinitionNode() {
+        identifier.destroy();
+        if (value) { value.destroy(); }
+        this._destructLineNode(); 
+    }
+    
+    [DefinitionNode] initCDefinition(cstring id, OperandNode v) {
+        identifier.assignCString(id);
+        value = v;
+        return this;
+    }
+    
+    [DefinitionNode] initDefinition(String id, OperandNode v) {
+        identifier.assignString(id);
+        value = v;
+        return this;
+    }
+    
+    [OStream] printNodeToStream(OStream stream) {
+        return stream.print(identifier).printCString(" := ").print(value);
+    }
+    
+}

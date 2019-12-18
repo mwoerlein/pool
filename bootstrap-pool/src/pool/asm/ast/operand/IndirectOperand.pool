@@ -1,0 +1,71 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast::operand;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class IndirectOperand extends OperandNode {
+
+    RegisterOperand base;
+    RegisterOperand index;
+    OperandNode displacement;
+    int scale;
+
+    [] __init() { this._initIndirectOperand(); }
+    [] _initIndirectOperand() {
+        scale = 1;
+        this._initOperandNode();
+    }
+
+    [] __destruct() { this._destructIndirectOperand(); }
+    [] _destructIndirectOperand() {
+        if (base) { base.destroy(); }
+        if (index) { index.destroy(); }
+        if (displacement) { displacement.destroy(); }
+        this._destructOperandNode(); 
+    }
+    
+    [IndirectOperand] setBase(RegisterOperand r) {
+        this.base = r;
+        return this;
+    }
+    
+    [IndirectOperand] setIndex(RegisterOperand r) {
+        this.index = r;
+        return this;
+    }
+    
+    [IndirectOperand] setDisplacement(OperandNode v) {
+        this.displacement = v;
+        return this;
+    }
+    
+    [IndirectOperand] setScale(int s) {
+        this.scale = s;
+        return this;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        if (displacement && !base && !index) {
+            // memory indirect
+            return stream.printChar('(').print(displacement).printChar(')');
+        }
+        
+        // register indirect
+        if (displacement) { stream.print(displacement); }
+        stream.printChar('(');
+        if (base) { stream.print(base); }
+        if (index) {
+            stream.printChar(',').print(index);
+            if (scale > 1) {
+                stream.printChar(',').printInt(scale);
+            }
+        }
+        return stream.printChar(')');
+    }
+
+}

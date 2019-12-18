@@ -5,12 +5,54 @@ version = 0.1.0
 */
 namespace pool::asm;
 
+use pool::asm::ast::NodeList;
+use pool::asm::ast::operand::FormulaOperand;
+use pool::asm::ast::operand::IdentifierOperand;
+use pool::asm::ast::operand::IndirectOperand;
+use pool::asm::ast::operand::NumberOperand;
+use pool::asm::ast::operand::OperandNode;
+use pool::asm::ast::operand::RegisterOperand;
+use pool::asm::ast::operand::StringOperand;
+
 use sys::core::Object;
 use sys::stream::IStream;
 use sys::stream::OStream;
-use pool::asm::ast::NodeList;
 
 class Parser extends Object {
+    
+    [FormulaOperand] createFormula(OperandNode o1, cstring op, OperandNode o2) {
+        FormulaOperand formula = this.rt().createInstance(FormulaOperand:CLASSNAME);
+        formula.initCFormula(o1, op, o2);
+        return formula;
+    }
+    
+    [IdentifierOperand] createIdentifier(cstring i) {
+        IdentifierOperand id = this.rt().createInstance(IdentifierOperand:CLASSNAME);
+        id.setCIdentifier(i);
+        return id;
+    }
+
+    [NumberOperand] createNumber(int o) {
+        NumberOperand n = this.rt().createInstance(NumberOperand:CLASSNAME);
+        n.setOperand(o);
+        return n;
+    }
+    
+    [RegisterOperand] createRegister(cstring r) {
+        RegisterOperand reg = this.rt().createInstance(RegisterOperand:CLASSNAME);
+        reg.setCRegister(r);
+        return reg;
+    }
+    
+    [StringOperand] createString(cstring o) {
+        StringOperand s = this.rt().createInstance(StringOperand:CLASSNAME);
+        s.setCOperand(o);
+        return s;
+    }
+
+    [IndirectOperand] buildIndirect() {
+        return this.rt().createInstance(IndirectOperand:CLASSNAME);
+    }
 
     [NodeList] parse(IStream input, OStream error) {
         NodeList list = this.rt().createInstance(NodeList:CLASSNAME);
@@ -22,14 +64,32 @@ with multiple lines
 ">);
         list.addCode(32);
         list.addCLabel("test1");
+        list.addCDefinition("base", this.createNumber(8).operand()).setCComment(" a constant");
+        list.addCDefinition("str", this.createString("foo").operand()).setCComment(" string constant");
         
         list.addEmptyLine();
         list.addCode(16);
-        list.addCComment("single comment");
-        list.addCLabel("test2").setCComment("comment");
+        list.addCComment(" single comment");
+        list.addCLabel("test2").setCComment(" comment");
         
-        list.addCInstruction2("movl", "%eax", "%ebx").setData(32).setCPrefix("lock");
-        list.addCInstruction0("hlt").setCComment("finish example");
+        list.addCInstruction2(
+            "movl",
+            this.createFormula(
+                this.createNumber(0x123).operand(),
+                "+",
+                this.createFormula(
+                    this.createNumber(0x234).operand(),
+                    "%",
+                    this.createIdentifier("base").operand()
+                ).operand()
+            ).operand(),
+            this.buildIndirect()
+                .setBase(this.createRegister("eax"))
+                .setIndex(this.createRegister("ebx"))
+                .setDisplacement(this.createNumber(16).operand())
+                .operand()
+        ).setData(32).setCPrefix("lock");
+        list.addCInstruction0("hlt").setCComment(" finish example");
         
         return list;
     }

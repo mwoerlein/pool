@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast::operand;
+
+use sys::stream::OStream;
+
+class NumberOperand extends OperandNode {
+
+    int operand;
+
+    [] __init() { this._initNumberOperand(); }
+    [] _initNumberOperand() {
+        this._initOperandNode();
+    }
+
+    [] __destruct() { this._destructNumberOperand(); }
+    [] _destructNumberOperand() {
+        this._destructOperandNode(); 
+    }
+    
+    [NumberOperand] setOperand(int o) {
+        operand = o;
+        return this;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printHex(operand);
+    }
+
+}

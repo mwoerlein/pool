@@ -1,0 +1,24 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::ast::operand;
+
+use pool::asm::ast::Node;
+
+class OperandNode extends Node {
+
+    [] __init() { this._initOperandNode(); }
+    [] _initOperandNode() {
+        this._initNode();
+    }
+
+    [] __destruct() { this._destructOperandNode(); }
+    [] _destructOperandNode() {
+        this._destructNode(); 
+    }
+
+    // TODO: remove with implicit cast
+    [OperandNode] operand() { return this; }
+}

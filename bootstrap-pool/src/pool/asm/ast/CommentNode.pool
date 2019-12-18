@@ -45,7 +45,7 @@ class CommentNode extends Node {
         if (multiline) {
            return stream.printCString("/*\n").print(comment).printCString("\n*/\n");
         } else {
-           return stream.printCString("// ").print(comment).printChar('\n');
+           return stream.printCString("//").print(comment).printChar('\n');
         }
     }
 
