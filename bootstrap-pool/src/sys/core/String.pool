@@ -121,6 +121,32 @@ class String extends OStream {
         return stream;
     }
     
+    [OStream] escapeToStream(OStream stream) {
+        return this._escapeToStream(stream, '"', '\\');
+    }
+    
+    [OStream] _escapeToStream(OStream stream, int enclosure, int escape) {
+        stream.printChar(enclosure);
+        StringElement cur = _first;
+        while (cur) {
+            if (cur.compareChar(enclosure) == 0) {
+                stream.printChar(escape).print(cur);
+            } else if (cur.compareChar(escape) == 0) {
+                stream.printChar(escape).print(cur);
+            } else if (cur.compareChar('\n') == 0) {
+                stream.printChar(escape).printChar('n');
+            } else if (cur.compareChar('\r') == 0) {
+                stream.printChar(escape).printChar('r');
+            } else if (cur.compareChar('\t') == 0) {
+                stream.printChar(escape).printChar('t');
+            } else {
+                stream.print(cur);
+            }
+            cur = cur.getNext();
+        }
+        return stream.printChar(enclosure);
+    }
+    
     [int] toInt() {
         IStream is = this.toIStream();
         int i = is.readInt();
