@@ -111,6 +111,9 @@ class String extends OStream {
         }
         return 0;
     }
+    [int] cequals(cstring s) {
+        return this.compareCString(s) == 0;
+    }
     
     [OStream] printToStream(OStream stream) {
         StringElement cur = _first;
