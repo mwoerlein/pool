@@ -43,6 +43,18 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
         return nodeList;
     }
     
+    [] addValue(Value val) {
+        /*
+        if (values.has(val.getId()) {
+            //error;
+            return;
+        }
+        values.add(val.getId(), val);
+        */
+    }
+    
+    [AnyIterator] values() { return values.values(); }
+    
     [CompilationBlock] addBlock(CodeNode code) {
         CompilationBlock block = this.last();
         if (!block || !block.isEmpty()) {

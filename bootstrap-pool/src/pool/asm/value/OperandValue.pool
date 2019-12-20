@@ -1,0 +1,22 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::value;
+
+use pool::asm::CompilationUnit;
+use pool::asm::ast::InstructionNode;
+use pool::asm::ast::DefinitionNode;
+
+class OperandValue extends pool::asm::Value {
+    DefinitionNode def;
+    
+    [OperandValue] init(DefinitionNode d) {
+        def = d;
+        return this;
+    }
+    
+    [] validate(CompilationUnit unit) {
+    }
+}

@@ -34,6 +34,8 @@ class LabelNode extends LineNode {
         return this;
     }
     
+    [String] getLabel() { return label; }
+    
     [OStream] printNodeToStream(OStream stream) {
         return stream.print(label).printChar(':');
     }

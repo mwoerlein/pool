@@ -72,11 +72,13 @@ class InstructionNode extends LineNode {
         data = m;
         return this;
     }
+    [int] getData(int default) { if (data) { return data; } return default; }
     
     [InstructionNode] setAddr(int m) {
         addr = m;
         return this;
     }
+    [int] getAddr(int default) { if (addr) { return addr; } return default; }
     
     [InstructionNode] setCPrefix(cstring p) {
         if (!prefix) { prefix = this.rt().createInstance(String:CLASSNAME); }
@@ -90,6 +92,8 @@ class InstructionNode extends LineNode {
         return this;
     }
     
+    [String] getPrefix() { return prefix; }
+
     [OStream] printNodeToStream(OStream stream) {
         stream.printCString("    ");
         if (data) {

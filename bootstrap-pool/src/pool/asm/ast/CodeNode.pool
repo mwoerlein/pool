@@ -25,6 +25,7 @@ class CodeNode extends LineNode {
         mode = m;
         return this;
     }
+    [int] getMode() { return mode; }
     
     [OStream] printNodeToStream(OStream stream) {
         return stream.printCString(".code").printInt(mode);

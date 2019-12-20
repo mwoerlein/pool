@@ -90,12 +90,26 @@ Pool Bootstrap Assembler.
         OStream err = this.rt().err();
         SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::File:MODE_WRITE);
         if (!outfile) { status = ERRNO_IO; }
-        if (status == ERRNO_OK) { this.parse(); }
-        if (unit.flushErrors(err)) { status = ERRNO_PARSE; }
-        if (status == ERRNO_OK) { this.compile(startAddress); }
-        if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
+        if (status == ERRNO_OK) {
+            this.parse();
+            if (unit.flushErrors(err)) { status = ERRNO_PARSE; }
+        }
+        if (status == ERRNO_OK) {
+            this.rt().out().print(unit.getNodeList()); // DEBUG
+            compiler.compile(unit);
+            if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
+        }
+        if (status == ERRNO_OK) {
+            compiler.validate(unit);
+            if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
+        }
+        if (status == ERRNO_OK) {
+            compiler.finalize(unit, startAddress);
+            if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
+        }
         if (status == ERRNO_OK) { this.writeOutput(outfile.ostream()); }
         
+        outfile.destroy();
         return status;
     }
     
@@ -112,15 +126,6 @@ Pool Bootstrap Assembler.
             }
         }
         argIt.destroy();
-    }
-    
-    [] compile(int startAddress) {
-        OStream debug = this.rt().out();
-        debug.print(unit.getNodeList());
-        
-        compiler.compile(unit);
-        
-        debug.printCString("// blocks: ").printInt(unit.size()).printNewline();
     }
     
     [] writeOutput(OStream out) {

@@ -8,6 +8,7 @@ namespace pool::asm::i386;
 use pool::asm::CompilationUnit;
 use pool::asm::CompilationBlock;
 use pool::asm::Instruction;
+use pool::asm::Value;
 
 use pool::asm::ast::CodeNode;
 use pool::asm::ast::CommentNode;
@@ -29,12 +30,16 @@ use pool::asm::i386::instruction::Inline;
 use pool::asm::i386::instruction::Move;
 use pool::asm::i386::instruction::NoOperand;
 
+use pool::asm::value::PositionValue;
+use pool::asm::value::OperandValue;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::stream::IStream;
 
 class Compiler extends sys::core::Object {
     CompilationUnit unit;
+    Instruction lastInst;
 
     [CodeNode] createCode(int mode) {
         CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
@@ -44,10 +49,70 @@ class Compiler extends sys::core::Object {
     
     [CompilationUnit] compile(CompilationUnit unit) {
         this.unit = unit;
+        this.lastInst = null;
         this._visitCodeNode(this.createCode(32)); // initialize default block
         this._visitNodeList(unit.getNodeList());
         this.unit = null;
         return unit;
+    }
+    
+    [int] validate(CompilationUnit unit) {
+        {
+            int pos = 0;
+            AnyIterator it = unit.iterator();
+            while (it.hasNext()) {
+                CompilationBlock block = it.next();
+                AnyIterator bit = block.iterator();
+                while (bit.hasNext()) {
+                    Instruction inst = bit.next();
+                    pos += inst.prepare(pos);
+                }
+                bit.destroy();
+            }
+            it.destroy();
+        }
+
+        {
+            AnyIterator it = unit.values();
+            while (it.hasNext()) {
+                Value val = it.next();
+                val.validate(unit);
+            }
+            it.destroy();
+        }
+        
+        int pos = 0;
+        {
+            AnyIterator it = unit.iterator();
+            while (it.hasNext()) {
+                CompilationBlock block = it.next();
+                AnyIterator bit = block.iterator();
+                while (bit.hasNext()) {
+                    Instruction inst = bit.next();
+                    inst.setPos(pos);
+                    pos += inst.validate();
+                }
+                bit.destroy();
+            }
+            it.destroy();
+        }
+        return pos;
+    }
+    
+    [] finalize(CompilationUnit unit, int startAddress) {
+        {
+            AnyIterator it = unit.iterator();
+            while (it.hasNext()) {
+                CompilationBlock block = it.next();
+                AnyIterator bit = block.iterator();
+                while (bit.hasNext()) {
+                    Instruction inst = bit.next();
+                    inst.finalize(startAddress);
+                }
+                bit.destroy();
+            }
+            it.destroy();
+        }
     }
     
     [] _visitCodeNode(CodeNode code) {
@@ -55,16 +120,18 @@ class Compiler extends sys::core::Object {
     }
     
     [] _visitDefinitionNode(DefinitionNode def) {
-        // TODO
+        OperandValue val = this.rt().createInstance(OperandValue:CLASSNAME);
+        val.init(def);
+        unit.addValue(val.value());
     }
     
-    [] _visitInstructionNode(InstructionNode inst) {
+    [] _visitInstructionNode(InstructionNode instNode) {
         CompilationBlock block = unit.last();
         
-        // TODO: convert operation to lowercase during InstructionNode generation
+        // TODO: convert operation to lowercase during InstructionNode generation?
         String op = this.rt().createInstance(String:CLASSNAME);
         {
-            IStream s = inst.getOperation().toIStream();
+            IStream s = instNode.getOperation().toIStream();
             while (!s.isEmpty()) {
                 int c = s.readChar();
                 if (c >= 'A' && c <= 'Z') { op.printChar(c - 'A' + 'a'); }
@@ -72,60 +139,18 @@ class Compiler extends sys::core::Object {
             }
             s.destroy();
         }
-        
-        if (op.cequals("mov"))          { block.addInstruction(this._buildMove(inst,  0)); }
-        else if (op.cequals("movb"))    { block.addInstruction(this._buildMove(inst,  8)); }
-        else if (op.cequals("movw"))    { block.addInstruction(this._buildMove(inst, 16)); }
-        else if (op.cequals("movl"))    { block.addInstruction(this._buildMove(inst, 32)); }
-        
-        else if (op.cequals(".byte"))   { block.addInstruction(this._buildInline(inst,  8, true)); }
-        else if (op.cequals(".bytet"))  { block.addInstruction(this._buildInline(inst,  8, false)); }
-        else if (op.cequals(".word"))   { block.addInstruction(this._buildInline(inst, 16, true)); }
-        else if (op.cequals(".wordt"))  { block.addInstruction(this._buildInline(inst, 16, false)); }
-        else if (op.cequals(".long"))   { block.addInstruction(this._buildInline(inst, 32, true)); }
-
-        else if (op.cequals("pusha"))   { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 16)); }
-        else if (op.cequals("pushaw"))  { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 16)); }
-        else if (op.cequals("pushad"))  { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 32)); }
-        else if (op.cequals("pushal"))  { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 32)); }
-        else if (op.cequals("popa"))    { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 16)); }
-        else if (op.cequals("popaw"))   { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 16)); }
-        else if (op.cequals("popad"))   { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 32)); }
-        else if (op.cequals("popal"))   { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 32)); }
-        else if (op.cequals("pushf"))   { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 16)); }
-        else if (op.cequals("pushfw"))  { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 16)); }
-        else if (op.cequals("pushfd"))  { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 32)); }
-        else if (op.cequals("pushfl"))  { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 32)); }
-        else if (op.cequals("popf"))    { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 16)); }
-        else if (op.cequals("popfw"))   { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 16)); }
-        else if (op.cequals("popfd"))   { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 32)); }
-        else if (op.cequals("popfl"))   { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 32)); }
-        else if (op.cequals("lodsb"))   { block.addInstruction(this._buildNoOperand(inst, 0xAC, 0x00, 0x00,  8)); }
-        else if (op.cequals("lodsw"))   { block.addInstruction(this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 16)); }
-        else if (op.cequals("lodsd"))   { block.addInstruction(this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 32)); }
-        else if (op.cequals("lodsl"))   { block.addInstruction(this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 32)); }
-        else if (op.cequals("clc"))     { block.addInstruction(this._buildNoOperand(inst, 0xF8, 0x00, 0x00,  0)); }
-        else if (op.cequals("cld"))     { block.addInstruction(this._buildNoOperand(inst, 0xFC, 0x00, 0x00,  0)); }
-        else if (op.cequals("cli"))     { block.addInstruction(this._buildNoOperand(inst, 0xFA, 0x00, 0x00,  0)); }
-        else if (op.cequals("clts"))    { block.addInstruction(this._buildNoOperand(inst, 0x0F, 0x06, 0x00,  0)); }
-        else if (op.cequals("stc"))     { block.addInstruction(this._buildNoOperand(inst, 0xF9, 0x00, 0x00,  0)); }
-        else if (op.cequals("std"))     { block.addInstruction(this._buildNoOperand(inst, 0xFD, 0x00, 0x00,  0)); }
-        else if (op.cequals("sti"))     { block.addInstruction(this._buildNoOperand(inst, 0xFB, 0x00, 0x00,  0)); }
-        else if (op.cequals("hlt"))     { block.addInstruction(this._buildNoOperand(inst, 0xF4, 0x00, 0x00,  0)); }
-        else if (op.cequals("nop"))     { block.addInstruction(this._buildNoOperand(inst, 0x90, 0x00, 0x00,  0)); }
-        else if (op.cequals("int0"))    { block.addInstruction(this._buildNoOperand(inst, 0xCE, 0x00, 0x00,  0)); }
-        else if (op.cequals("int1"))    { block.addInstruction(this._buildNoOperand(inst, 0xF1, 0x00, 0x00,  0)); }
-        else if (op.cequals("int3"))    { block.addInstruction(this._buildNoOperand(inst, 0xCC, 0x00, 0x00,  0)); }
-        else if (op.cequals("leave"))   { block.addInstruction(this._buildNoOperand(inst, 0xC9, 0x00, 0x00,  0)); }
-        else if (op.cequals("ret"))     { block.addInstruction(this._buildNoOperand(inst, 0xC3, 0x00, 0x00,  0)); }
-        else if (op.cequals("iret"))    { block.addInstruction(this._buildNoOperand(inst, 0xCF, 0x00, 0x00,  0)); }
-        
-        else { unit.newError().printCString("unknown instruction: '").print(op).printChar('\''); }
+        Instruction inst = this._buildInstruction(op, instNode);
+        if (inst) {
+            lastInst = inst;
+            block.addInstruction(inst);
+        }
         op.destroy();
     }
     
     [] _visitLabelNode(LabelNode label) {
-        // TODO
+        PositionValue val = this.rt().createInstance(PositionValue:CLASSNAME);
+        val.init(label, lastInst);
+        unit.addValue(val.value());
     }
     
     [] _visitNodeList(NodeList list) {
@@ -152,25 +177,77 @@ class Compiler extends sys::core::Object {
         it.destroy();
     }
     
-    [Instruction] _buildMove(InstructionNode inst, int mode) {
+    [Instruction] _buildInstruction(String op, InstructionNode inst) {
+        if (op.cequals("mov"))      { return this._buildMove(inst,  0); }
+        if (op.cequals("movb"))     { return this._buildMove(inst,  8); }
+        if (op.cequals("movw"))     { return this._buildMove(inst, 16); }
+        if (op.cequals("movl"))     { return this._buildMove(inst, 32); }
+        
+        if (op.cequals(".byte"))    { return this._buildInline(inst,  8, false); }
+        if (op.cequals(".bytet"))   { return this._buildInline(inst,  8, true); }
+        if (op.cequals(".word"))    { return this._buildInline(inst, 16, false); }
+        if (op.cequals(".wordt"))   { return this._buildInline(inst, 16, true); }
+        if (op.cequals(".long"))    { return this._buildInline(inst, 32, false); }
+                                            
+        if (op.cequals("pusha"))    { return this._buildNoOperand(inst, 0x60, 0x00, 0x00,  0); }
+        if (op.cequals("pushaw"))   { return this._buildNoOperand(inst, 0x60, 0x00, 0x00, 16); }
+        if (op.cequals("pushad"))   { return this._buildNoOperand(inst, 0x60, 0x00, 0x00, 32); }
+        if (op.cequals("pushal"))   { return this._buildNoOperand(inst, 0x60, 0x00, 0x00, 32); }
+        if (op.cequals("popa"))     { return this._buildNoOperand(inst, 0x61, 0x00, 0x00,  0); }
+        if (op.cequals("popaw"))    { return this._buildNoOperand(inst, 0x61, 0x00, 0x00, 16); }
+        if (op.cequals("popad"))    { return this._buildNoOperand(inst, 0x61, 0x00, 0x00, 32); }
+        if (op.cequals("popal"))    { return this._buildNoOperand(inst, 0x61, 0x00, 0x00, 32); }
+        if (op.cequals("pushf"))    { return this._buildNoOperand(inst, 0x9C, 0x00, 0x00,  0); }
+        if (op.cequals("pushfw"))   { return this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 16); }
+        if (op.cequals("pushfd"))   { return this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 32); }
+        if (op.cequals("pushfl"))   { return this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 32); }
+        if (op.cequals("popf"))     { return this._buildNoOperand(inst, 0x9D, 0x00, 0x00,  0); }
+        if (op.cequals("popfw"))    { return this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 16); }
+        if (op.cequals("popfd"))    { return this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 32); }
+        if (op.cequals("popfl"))    { return this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 32); }
+        if (op.cequals("lodsb"))    { return this._buildNoOperand(inst, 0xAC, 0x00, 0x00,  8); }
+        if (op.cequals("lodsw"))    { return this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 16); }
+        if (op.cequals("lodsd"))    { return this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 32); }
+        if (op.cequals("lodsl"))    { return this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 32); }
+        if (op.cequals("clc"))      { return this._buildNoOperand(inst, 0xF8, 0x00, 0x00,  0); }
+        if (op.cequals("cld"))      { return this._buildNoOperand(inst, 0xFC, 0x00, 0x00,  0); }
+        if (op.cequals("cli"))      { return this._buildNoOperand(inst, 0xFA, 0x00, 0x00,  0); }
+        if (op.cequals("clts"))     { return this._buildNoOperand(inst, 0x0F, 0x06, 0x00,  0); }
+        if (op.cequals("stc"))      { return this._buildNoOperand(inst, 0xF9, 0x00, 0x00,  0); }
+        if (op.cequals("std"))      { return this._buildNoOperand(inst, 0xFD, 0x00, 0x00,  0); }
+        if (op.cequals("sti"))      { return this._buildNoOperand(inst, 0xFB, 0x00, 0x00,  0); }
+        if (op.cequals("hlt"))      { return this._buildNoOperand(inst, 0xF4, 0x00, 0x00,  0); }
+        if (op.cequals("nop"))      { return this._buildNoOperand(inst, 0x90, 0x00, 0x00,  0); }
+        if (op.cequals("int0"))     { return this._buildNoOperand(inst, 0xCE, 0x00, 0x00,  0); }
+        if (op.cequals("int1"))     { return this._buildNoOperand(inst, 0xF1, 0x00, 0x00,  0); }
+        if (op.cequals("int3"))     { return this._buildNoOperand(inst, 0xCC, 0x00, 0x00,  0); }
+        if (op.cequals("leave"))    { return this._buildNoOperand(inst, 0xC9, 0x00, 0x00,  0); }
+        if (op.cequals("ret"))      { return this._buildNoOperand(inst, 0xC3, 0x00, 0x00,  0); }
+        if (op.cequals("iret"))     { return this._buildNoOperand(inst, 0xCF, 0x00, 0x00,  0); }
+        
+        unit.newError().printCString("unknown instruction: '").print(op).printChar('\'');
+        return null;
+    }
+    
+    [Instruction] _buildMove(InstructionNode inst, int size) {
         Move i = this.rt().createInstance(Move:CLASSNAME);
         i.init(inst);
+        i.setOperandSize(size);
         return i.instruction();
     } 
     
-    [Instruction] _buildInline(InstructionNode inst, int size, int validateOperand) {
+    [Instruction] _buildInline(InstructionNode inst, int size, int skip) {
         Inline i = this.rt().createInstance(Inline:CLASSNAME);
         i.init(inst);
-        int val = 0x12345678;
-        NumberOperand no = this.rt().cast(NumberOperand:CLASSNAME, inst.getOperand1());
-        if (no) { val = no.getOperand(); }
-        i.setIntValue(val).setSize(size);
+        i.setOperandSize(size);
+        i.setSkipValidation(skip);
         return i.instruction();
     } 
     
-    [Instruction] _buildNoOperand(InstructionNode inst, int op1, int op2, int op3, int mode) {
+    [Instruction] _buildNoOperand(InstructionNode inst, int op1, int op2, int op3, int size) {
         NoOperand i = this.rt().createInstance(NoOperand:CLASSNAME);
         i.init(inst);
+        i.setOperandSize(size);
         i.setOperation(op1, op2, op3);
         return i.instruction();
     } 

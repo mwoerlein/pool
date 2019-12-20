@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm;
+
+use pool::asm::ast::InstructionNode;
+use sys::core::Object;
+use sys::stream::OStream;
+
+class Value extends Object {
+   
+    abstract [] validate(CompilationUnit unit);
+    
+    // TODO: remove with implicit cast
+    [Value] value() { return this; }
+}

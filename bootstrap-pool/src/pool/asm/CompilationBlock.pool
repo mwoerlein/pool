@@ -18,6 +18,9 @@ class CompilationBlock extends AnyList { // LinkedList<Instruction>
         this.unit = unit;
     }
     
+    [CodeNode] getCode() { return code; }
+    [CompilationUnit] getUnit() { return unit; }
+
     [] addInstruction(Instruction i) {
         this.add(i.setBlock(this));
     }

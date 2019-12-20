@@ -5,23 +5,85 @@ version = 0.1.0
 */
 namespace pool::asm::i386;
 
+use pool::asm::CompilationUnit;
+
 use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
 class Instruction extends pool::asm::Instruction {
 
-    int pre1;
-    int pre2;
-    int pre3;
-    int pre4;
-    int op1;
-    int op2;
-    int op3;
+    int pre1; int pre2; int pre3; int pre4;
+    int op1; int op2; int op3;
+    
+    int addr;
+    int data;
+    int operandSize;
     
     [Instruction] setOperation(int op1, int op2, int op3) {
         this.op1 = op1;
         this.op2 = op2;
         this.op3 = op3;
+        return this;
+    }
+    
+    [Instruction] setOperandSize(int size) {
+        operandSize = size;
+        return this;
+    }
+    
+    [int] prepare(int pos) {
+        this.pos = pos;
+        int mode = block.getCode().getMode();
+        addr = node.getAddr(mode);
+        data = node.getData(mode);
+        return this.prepareInstruction();
+    }
+
+    [int] prepareInstruction() {
+        return this.approximateSize();
+    }
+    
+    [int] approximateSize() {
+        // TODO: approximate specific instruction size
+        // 4xpre 3xop 1xmodrm 1xsib 4xdisp 4ximm
+        return 17;
+    }
+    
+    [int] validate() {
+        // TODO: validate generic and specific instruction properties
+        // TODO: prepare prefix nodes, normalize operands, ...
+        if (data != 0 && data != 8 && data != 16 && data != 32) {
+            this.newError().printCString("invalid data: ").printInt(data);
+        }
+        if (addr != 0 && addr != 8 && addr != 16 && addr != 32) {
+            this.newError().printCString("invalid addr: ").printInt(addr);
+        }
+        if (operandSize != 0 && operandSize != 8 && operandSize != 16 && operandSize != 32) {
+            this.newError().printCString("invalid operandSize: ").printInt(operandSize);
+        }
+        return this.validateInstruction();
+    }
+    
+    [int] validateInstruction() {
+        return this.approximateSize();
+    }
+    
+    [] finalize(int startAddress) {
+        pos += startAddress;
+    }
+    
+    [int] requiresOperandSizeOverride(int operandSize) {
+        return (operandSize == 16 && data == 32) || (operandSize == 32 && data == 16);
+    }
+    
+    [int] requiresAddressSizeOverride(int addressSize) {
+        int mode = block.getCode().getMode();
+        return (addressSize == 16 && mode == 32) || (addressSize == 32 && mode == 16);
+    }
+    
+    [int] approximateOffset(int position, int posIncr) {
+        return position - pos - posIncr;
+//        return position - (position > pos ? prePos : pos) - posIncr;
     }
     
     [OStream] rawOperationToStream(OStream stream) {

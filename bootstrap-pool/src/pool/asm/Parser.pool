@@ -69,6 +69,9 @@ with multiple lines
         list.addCDefinition("base", this.createNumber(8).operand()).setCComment(" a constant");
         list.addCDefinition("str", this.createString("foo").operand()).setCComment(" string constant");
         list.addCInstruction0("sTi");
+        list.addCInstruction0("pusha");
+        list.addCInstruction0("pushaw");
+        list.addCInstruction0("pushad");
         list.addCInstruction1(".byte", this.createNumber(0x11).operand());
         list.addCInstruction1(".bytet", this.createNumber(0x11223344).operand());
         list.addCInstruction1(".word", this.createNumber(0x1122).operand());
@@ -79,6 +82,9 @@ with multiple lines
         list.addCode(16);
         list.addCComment(" single comment");
         list.addCLabel("test2").setCComment(" comment");
+        list.addCInstruction0("pusha");
+        list.addCInstruction0("pushaw");
+        list.addCInstruction0("pushad");
         
         list.addCInstruction2(
             "mOVl",
