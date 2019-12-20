@@ -1,0 +1,59 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386;
+
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+class Instruction extends pool::asm::Instruction {
+
+    int pre1;
+    int pre2;
+    int pre3;
+    int pre4;
+    int op1;
+    int op2;
+    int op3;
+    
+    [Instruction] setOperation(int op1, int op2, int op3) {
+        this.op1 = op1;
+        this.op2 = op2;
+        this.op3 = op3;
+    }
+    
+    [OStream] rawOperationToStream(OStream stream) {
+        if (pre1) { stream.printChar(pre1); }
+        if (pre2) { stream.printChar(pre2); }
+        if (pre3) { stream.printChar(pre3); }
+        if (pre4) { stream.printChar(pre4); }
+        stream.printChar(op1);
+        if (op1 == 0x0F) {
+            stream.printChar(op2);
+            if (op2 == 0x38 || op2 == 0x3A) {
+                stream.printChar(op3);
+            }
+        }
+        return stream;
+    }
+    
+    [OStream] rawValueToStream(OStream stream, int val, int size) {
+        if (size == 8) {
+            return stream
+                .printChar(Bitset:and(val, 0xff));
+        } else if (size == 16) {
+            return stream
+                .printChar(Bitset:and(val, 0xff))
+                .printChar(Bitset:and(Bitset:rshift(val,  8), 0xff));
+        } else if (size == 32) {
+            return stream
+                .printChar(Bitset:and(val, 0xff))
+                .printChar(Bitset:and(Bitset:rshift(val,  8), 0xff))
+                .printChar(Bitset:and(Bitset:rshift(val, 16), 0xff))
+                .printChar(Bitset:and(Bitset:rshift(val, 24), 0xff));
+        }
+        return stream;
+    }
+}

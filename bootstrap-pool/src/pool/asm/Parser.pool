@@ -5,7 +5,9 @@ version = 0.1.0
 */
 namespace pool::asm;
 
+use pool::asm::ast::CodeNode;
 use pool::asm::ast::NodeList;
+use pool::asm::ast::InstructionNode;
 use pool::asm::ast::operand::FormulaOperand;
 use pool::asm::ast::operand::IdentifierOperand;
 use pool::asm::ast::operand::IndirectOperand;
@@ -15,6 +17,7 @@ use pool::asm::ast::operand::RegisterOperand;
 use pool::asm::ast::operand::StringOperand;
 
 use sys::core::Object;
+use sys::core::String;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
@@ -54,9 +57,8 @@ class Parser extends Object {
         return this.rt().createInstance(IndirectOperand:CLASSNAME);
     }
 
-    [NodeList] parse(IStream input, OStream error) {
-        NodeList list = this.rt().createInstance(NodeList:CLASSNAME);
-        list.__init();
+    [] parse(IStream input, String name, CompilationUnit unit) {
+        NodeList list = unit.getNodeList();
         
         list.addCMultilineComment(<"
 a comment
@@ -66,6 +68,12 @@ with multiple lines
         list.addCLabel("test1");
         list.addCDefinition("base", this.createNumber(8).operand()).setCComment(" a constant");
         list.addCDefinition("str", this.createString("foo").operand()).setCComment(" string constant");
+        list.addCInstruction0("sTi");
+        list.addCInstruction1(".byte", this.createNumber(0x11).operand());
+        list.addCInstruction1(".bytet", this.createNumber(0x11223344).operand());
+        list.addCInstruction1(".word", this.createNumber(0x1122).operand());
+        list.addCInstruction1(".wordt", this.createNumber(0x11223344).operand());
+        list.addCInstruction1(".long", this.createNumber(0x11223344).operand());
         
         list.addEmptyLine();
         list.addCode(16);
@@ -73,7 +81,7 @@ with multiple lines
         list.addCLabel("test2").setCComment(" comment");
         
         list.addCInstruction2(
-            "movl",
+            "mOVl",
             this.createFormula(
                 this.createNumber(0x123).operand(),
                 "+",
@@ -89,9 +97,7 @@ with multiple lines
                 .setDisplacement(this.createNumber(16).operand())
                 .operand()
         ).setData(32).setCPrefix("lock");
-        list.addCInstruction0("hlt").setCComment(" finish example");
-        
-        return list;
+        list.addCInstruction0("Hlt").setCComment(" finish example");
     }
 
 }

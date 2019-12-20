@@ -1,0 +1,31 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm;
+
+use pool::asm::ast::InstructionNode;
+use sys::core::Object;
+use sys::stream::OStream;
+
+class Instruction extends Object {
+    
+    InstructionNode node;
+    CompilationBlock block;
+    
+    [Instruction] init(InstructionNode node) {
+        this.node = node;
+        return this;
+    }
+    
+    [Instruction] setBlock(CompilationBlock b) {
+        block = b;
+        return this;
+    }
+    
+    abstract [OStream] rawToStream(OStream stream);
+   
+    // TODO: remove with implicit cast
+    [Instruction] instruction() { return this; }
+}

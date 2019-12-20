@@ -1,0 +1,98 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm;
+
+use pool::asm::ast::CodeNode;
+use pool::asm::ast::NodeList;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+use sys::core::utils::StringOwner;
+
+class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBlock>
+    
+    NodeList nodeList;
+    AnyList errors; // LinkedList<String>
+    AnyMap values; // HashMap<String, Value>
+
+    [] __init() {
+        sys::runtime::Runtime rt = this.rt();
+        nodeList = rt.createInstance(NodeList:CLASSNAME);
+        errors = rt.createInstance(AnyList:CLASSNAME);
+        values = rt.createInstance(AnyMap:CLASSNAME);
+        values.init(13);
+        this._initStringOwner();
+    }
+
+    [] __destruct() {
+        errors.destroyAll();
+        errors.destroy();
+        values.destroy();
+        nodeList.destroy();
+        this._destructStringOwner();
+    }
+    
+    [NodeList] getNodeList() {
+        return nodeList;
+    }
+    
+    [CompilationBlock] addBlock(CodeNode code) {
+        CompilationBlock block = this.last();
+        if (!block || !block.isEmpty()) {
+            block = this.rt().createInstance(CompilationBlock:CLASSNAME);
+            this.add(block); 
+        }
+        block.init(code, this);
+        return block;
+    }
+    
+    [int] hasErrors() {
+        return errors.size() > 0;
+    }
+    
+    [String] newError() {
+        String err = this.rt().createInstance(String:CLASSNAME);
+        errors.add(err);
+        return err;
+    }
+    
+    [int] flushErrors(OStream stream) {
+        if (errors.size() == 0) {
+            return false;
+        }
+        
+        {
+            AnyIterator it = errors.iterator();
+            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
+            it.destroy();
+        }
+        errors.clear();
+        return true;
+    }
+    
+    [OStream] rawToStream(OStream stream) {
+        {
+            AnyIterator it = this.iterator();
+            while (it.hasNext()) {
+                CompilationBlock block = it.next();
+                {
+                    AnyIterator bit = block.iterator();
+                    while (bit.hasNext()) {
+                        Instruction inst = bit.next();
+                        inst.rawToStream(stream);
+                    }
+                    bit.destroy();
+                }
+            }
+            it.destroy();
+        }
+        return stream;
+    }
+}

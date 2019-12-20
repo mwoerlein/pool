@@ -26,6 +26,8 @@ class NumberOperand extends OperandNode {
         return this;
     }
     
+    [int] getOperand() { return operand; }
+    
     [OStream] printToStream(OStream stream) {
         return stream.printHex(operand);
     }

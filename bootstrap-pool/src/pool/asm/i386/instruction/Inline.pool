@@ -1,0 +1,28 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use sys::stream::OStream;
+
+class Inline extends pool::asm::i386::Instruction {
+
+    int value;
+    int size;
+    
+    [Inline] setIntValue(int v) {
+        this.value = v;
+        return this;
+    }
+    
+    [Inline] setSize(int s) {
+        this.size = s;
+        return this;
+    }
+    
+    [OStream] rawToStream(OStream stream) {
+        return this.rawValueToStream(stream, value, size);
+    }
+}

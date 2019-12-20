@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use sys::stream::OStream;
+
+class NoOperand extends pool::asm::i386::Instruction {
+    
+    [OStream] rawToStream(OStream stream) {
+        return this.rawOperationToStream(stream);
+    }
+}

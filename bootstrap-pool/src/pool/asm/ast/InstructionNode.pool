@@ -47,6 +47,8 @@ class InstructionNode extends LineNode {
         return this;
     }
     
+    [String] getOperation() { return operation; }
+    
     [InstructionNode] setOperand1(OperandNode o) {
         o1 = o;
         return this;
@@ -61,6 +63,10 @@ class InstructionNode extends LineNode {
         o3 = o;
         return this;
     }
+    
+    [OperandNode] getOperand1() { return o1; }
+    [OperandNode] getOperand2() { return o2; }
+    [OperandNode] getOperand3() { return o3; }
     
     [InstructionNode] setData(int m) {
         data = m;

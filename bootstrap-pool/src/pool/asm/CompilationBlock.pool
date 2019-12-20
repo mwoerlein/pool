@@ -1,0 +1,25 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm;
+
+use pool::asm::ast::CodeNode;
+use sys::core::anycollection::AnyList;
+
+class CompilationBlock extends AnyList { // LinkedList<Instruction>
+    
+    CodeNode code;
+    CompilationUnit unit;
+    
+    [] init(CodeNode code, CompilationUnit unit) {
+        this.code = code;
+        this.unit = unit;
+    }
+    
+    [] addInstruction(Instruction i) {
+        this.add(i.setBlock(this));
+    }
+   
+}

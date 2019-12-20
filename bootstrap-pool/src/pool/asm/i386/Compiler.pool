@@ -1,0 +1,177 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386;
+
+use pool::asm::CompilationUnit;
+use pool::asm::CompilationBlock;
+use pool::asm::Instruction;
+
+use pool::asm::ast::CodeNode;
+use pool::asm::ast::CommentNode;
+use pool::asm::ast::DefinitionNode;
+use pool::asm::ast::EmptyNode;
+use pool::asm::ast::InstructionNode;
+use pool::asm::ast::LabelNode;
+use pool::asm::ast::Node;
+use pool::asm::ast::NodeList;
+use pool::asm::ast::operand::FormulaOperand;
+use pool::asm::ast::operand::IdentifierOperand;
+use pool::asm::ast::operand::IndirectOperand;
+use pool::asm::ast::operand::NumberOperand;
+use pool::asm::ast::operand::OperandNode;
+use pool::asm::ast::operand::RegisterOperand;
+use pool::asm::ast::operand::StringOperand;
+
+use pool::asm::i386::instruction::Inline;
+use pool::asm::i386::instruction::Move;
+use pool::asm::i386::instruction::NoOperand;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::IStream;
+
+class Compiler extends sys::core::Object {
+    CompilationUnit unit;
+
+    [CodeNode] createCode(int mode) {
+        CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
+        code.setMode(mode);
+        return code;
+    }
+    
+    [CompilationUnit] compile(CompilationUnit unit) {
+        this.unit = unit;
+        this._visitCodeNode(this.createCode(32)); // initialize default block
+        this._visitNodeList(unit.getNodeList());
+        this.unit = null;
+        return unit;
+    }
+    
+    [] _visitCodeNode(CodeNode code) {
+        unit.addBlock(code);
+    }
+    
+    [] _visitDefinitionNode(DefinitionNode def) {
+        // TODO
+    }
+    
+    [] _visitInstructionNode(InstructionNode inst) {
+        CompilationBlock block = unit.last();
+        
+        // TODO: convert operation to lowercase during InstructionNode generation
+        String op = this.rt().createInstance(String:CLASSNAME);
+        {
+            IStream s = inst.getOperation().toIStream();
+            while (!s.isEmpty()) {
+                int c = s.readChar();
+                if (c >= 'A' && c <= 'Z') { op.printChar(c - 'A' + 'a'); }
+                else { op.printChar(c); }
+            }
+            s.destroy();
+        }
+        
+        if (op.cequals("mov"))          { block.addInstruction(this._buildMove(inst,  0)); }
+        else if (op.cequals("movb"))    { block.addInstruction(this._buildMove(inst,  8)); }
+        else if (op.cequals("movw"))    { block.addInstruction(this._buildMove(inst, 16)); }
+        else if (op.cequals("movl"))    { block.addInstruction(this._buildMove(inst, 32)); }
+        
+        else if (op.cequals(".byte"))   { block.addInstruction(this._buildInline(inst,  8, true)); }
+        else if (op.cequals(".bytet"))  { block.addInstruction(this._buildInline(inst,  8, false)); }
+        else if (op.cequals(".word"))   { block.addInstruction(this._buildInline(inst, 16, true)); }
+        else if (op.cequals(".wordt"))  { block.addInstruction(this._buildInline(inst, 16, false)); }
+        else if (op.cequals(".long"))   { block.addInstruction(this._buildInline(inst, 32, true)); }
+
+        else if (op.cequals("pusha"))   { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 16)); }
+        else if (op.cequals("pushaw"))  { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 16)); }
+        else if (op.cequals("pushad"))  { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 32)); }
+        else if (op.cequals("pushal"))  { block.addInstruction(this._buildNoOperand(inst, 0x60, 0x00, 0x00, 32)); }
+        else if (op.cequals("popa"))    { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 16)); }
+        else if (op.cequals("popaw"))   { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 16)); }
+        else if (op.cequals("popad"))   { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 32)); }
+        else if (op.cequals("popal"))   { block.addInstruction(this._buildNoOperand(inst, 0x61, 0x00, 0x00, 32)); }
+        else if (op.cequals("pushf"))   { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 16)); }
+        else if (op.cequals("pushfw"))  { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 16)); }
+        else if (op.cequals("pushfd"))  { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 32)); }
+        else if (op.cequals("pushfl"))  { block.addInstruction(this._buildNoOperand(inst, 0x9C, 0x00, 0x00, 32)); }
+        else if (op.cequals("popf"))    { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 16)); }
+        else if (op.cequals("popfw"))   { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 16)); }
+        else if (op.cequals("popfd"))   { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 32)); }
+        else if (op.cequals("popfl"))   { block.addInstruction(this._buildNoOperand(inst, 0x9D, 0x00, 0x00, 32)); }
+        else if (op.cequals("lodsb"))   { block.addInstruction(this._buildNoOperand(inst, 0xAC, 0x00, 0x00,  8)); }
+        else if (op.cequals("lodsw"))   { block.addInstruction(this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 16)); }
+        else if (op.cequals("lodsd"))   { block.addInstruction(this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 32)); }
+        else if (op.cequals("lodsl"))   { block.addInstruction(this._buildNoOperand(inst, 0xAD, 0x00, 0x00, 32)); }
+        else if (op.cequals("clc"))     { block.addInstruction(this._buildNoOperand(inst, 0xF8, 0x00, 0x00,  0)); }
+        else if (op.cequals("cld"))     { block.addInstruction(this._buildNoOperand(inst, 0xFC, 0x00, 0x00,  0)); }
+        else if (op.cequals("cli"))     { block.addInstruction(this._buildNoOperand(inst, 0xFA, 0x00, 0x00,  0)); }
+        else if (op.cequals("clts"))    { block.addInstruction(this._buildNoOperand(inst, 0x0F, 0x06, 0x00,  0)); }
+        else if (op.cequals("stc"))     { block.addInstruction(this._buildNoOperand(inst, 0xF9, 0x00, 0x00,  0)); }
+        else if (op.cequals("std"))     { block.addInstruction(this._buildNoOperand(inst, 0xFD, 0x00, 0x00,  0)); }
+        else if (op.cequals("sti"))     { block.addInstruction(this._buildNoOperand(inst, 0xFB, 0x00, 0x00,  0)); }
+        else if (op.cequals("hlt"))     { block.addInstruction(this._buildNoOperand(inst, 0xF4, 0x00, 0x00,  0)); }
+        else if (op.cequals("nop"))     { block.addInstruction(this._buildNoOperand(inst, 0x90, 0x00, 0x00,  0)); }
+        else if (op.cequals("int0"))    { block.addInstruction(this._buildNoOperand(inst, 0xCE, 0x00, 0x00,  0)); }
+        else if (op.cequals("int1"))    { block.addInstruction(this._buildNoOperand(inst, 0xF1, 0x00, 0x00,  0)); }
+        else if (op.cequals("int3"))    { block.addInstruction(this._buildNoOperand(inst, 0xCC, 0x00, 0x00,  0)); }
+        else if (op.cequals("leave"))   { block.addInstruction(this._buildNoOperand(inst, 0xC9, 0x00, 0x00,  0)); }
+        else if (op.cequals("ret"))     { block.addInstruction(this._buildNoOperand(inst, 0xC3, 0x00, 0x00,  0)); }
+        else if (op.cequals("iret"))    { block.addInstruction(this._buildNoOperand(inst, 0xCF, 0x00, 0x00,  0)); }
+        
+        else { unit.newError().printCString("unknown instruction: '").print(op).printChar('\''); }
+        op.destroy();
+    }
+    
+    [] _visitLabelNode(LabelNode label) {
+        // TODO
+    }
+    
+    [] _visitNodeList(NodeList list) {
+        sys::runtime::Runtime rt = this.rt();
+        AnyIterator it = list.iterator();
+        while (it.hasNext()) {
+            Node n = it.next();
+            CodeNode code = rt.cast(CodeNode:CLASSNAME, n);
+            CommentNode comment = rt.cast(CommentNode:CLASSNAME, n);
+            DefinitionNode def = rt.cast(DefinitionNode:CLASSNAME, n);
+            EmptyNode empty = rt.cast(EmptyNode:CLASSNAME, n);
+            InstructionNode inst = rt.cast(InstructionNode:CLASSNAME, n);
+            LabelNode label = rt.cast(LabelNode:CLASSNAME, n);
+            NodeList list = rt.cast(NodeList:CLASSNAME, n);
+            if (code) { this._visitCodeNode(code); }
+            else if (comment) { /* ignore */ }
+            else if (def) { this._visitDefinitionNode(def); }
+            else if (empty) { /* ignore */ }
+            else if (inst) { this._visitInstructionNode(inst); }
+            else if (label) { this._visitLabelNode(label); }
+            else if (list) { this._visitNodeList(list); }
+            else { unit.newError().printCString("unexpected node in nodelist: '").print(n).printChar('\''); }
+        }
+        it.destroy();
+    }
+    
+    [Instruction] _buildMove(InstructionNode inst, int mode) {
+        Move i = this.rt().createInstance(Move:CLASSNAME);
+        i.init(inst);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildInline(InstructionNode inst, int size, int validateOperand) {
+        Inline i = this.rt().createInstance(Inline:CLASSNAME);
+        i.init(inst);
+        int val = 0x12345678;
+        NumberOperand no = this.rt().cast(NumberOperand:CLASSNAME, inst.getOperand1());
+        if (no) { val = no.getOperand(); }
+        i.setIntValue(val).setSize(size);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildNoOperand(InstructionNode inst, int op1, int op2, int op3, int mode) {
+        NoOperand i = this.rt().createInstance(NoOperand:CLASSNAME);
+        i.init(inst);
+        i.setOperation(op1, op2, op3);
+        return i.instruction();
+    } 
+}
