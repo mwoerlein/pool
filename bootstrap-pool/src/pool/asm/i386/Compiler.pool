@@ -63,7 +63,7 @@ class Compiler extends sys::core::Object {
             int pos = 0;
             AnyIterator bit = unit.blocks();
             while (bit.hasNext()) {
-                CompilationBlock block = it.next();
+                CompilationBlock block = bit.next();
                 AnyIterator iit = block.instructions();
                 while (iit.hasNext()) {
                     Instruction inst = iit.next();
@@ -104,7 +104,7 @@ class Compiler extends sys::core::Object {
     [] finalize(CompilationUnit unit, int startAddress) {
         {
             AnyIterator bit = unit.blocks();
-            while (it.hasNext()) {
+            while (bit.hasNext()) {
                 CompilationBlock block = bit.next();
                 AnyIterator iit = block.instructions();
                 while (iit.hasNext()) {
