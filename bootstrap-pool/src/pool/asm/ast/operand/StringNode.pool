@@ -5,31 +5,32 @@ version = 0.1.0
 */
 namespace pool::asm::ast::operand;
 
+use pool::asm::ast::OperandNode;
 use sys::core::String;
 use sys::stream::OStream;
 
-class StringOperand extends OperandNode {
+class StringNode extends OperandNode {
 
     String operand;
 
-    [] __init() { this._initStringOperand(); }
-    [] _initStringOperand() {
+    [] __init() { this._initStringNode(); }
+    [] _initStringNode() {
         operand = this.rt().createInstance(String:CLASSNAME);
         this._initOperandNode();
     }
 
-    [] __destruct() { this._destructStringOperand(); }
-    [] _destructStringOperand() {
+    [] __destruct() { this._destructStringNode(); }
+    [] _destructStringNode() {
         operand.destroy();
         this._destructOperandNode(); 
     }
     
-    [StringOperand] setOperand(String o) {
+    [StringNode] setOperand(String o) {
         operand.assignString(o);
         return this;
     }
     
-    [StringOperand] setCOperand(cstring o) {
+    [StringNode] setCOperand(cstring o) {
         operand.assignCString(o);
         return this;
     }

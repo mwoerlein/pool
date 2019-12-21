@@ -5,23 +5,24 @@ version = 0.1.0
 */
 namespace pool::asm::ast::operand;
 
+use pool::asm::ast::OperandNode;
 use sys::stream::OStream;
 
-class NumberOperand extends OperandNode {
+class NumberNode extends OperandNode {
 
     int operand;
 
-    [] __init() { this._initNumberOperand(); }
-    [] _initNumberOperand() {
+    [] __init() { this._initNumberNode(); }
+    [] _initNumberNode() {
         this._initOperandNode();
     }
 
-    [] __destruct() { this._destructNumberOperand(); }
-    [] _destructNumberOperand() {
+    [] __destruct() { this._destructNumberNode(); }
+    [] _destructNumberNode() {
         this._destructOperandNode(); 
     }
     
-    [NumberOperand] setOperand(int o) {
+    [NumberNode] setOperand(int o) {
         operand = o;
         return this;
     }

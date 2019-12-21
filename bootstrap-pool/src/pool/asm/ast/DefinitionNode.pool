@@ -5,8 +5,6 @@ version = 0.1.0
 */
 namespace pool::asm::ast;
 
-use pool::asm::ast::operand::OperandNode;
-
 use sys::core::String;
 use sys::stream::OStream;
 

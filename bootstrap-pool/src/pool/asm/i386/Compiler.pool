@@ -5,10 +5,10 @@ version = 0.1.0
 */
 namespace pool::asm::i386;
 
-use pool::asm::CompilationUnit;
 use pool::asm::CompilationBlock;
-use pool::asm::Instruction;
+use pool::asm::CompilationUnit;
 use pool::asm::Definition;
+use pool::asm::Instruction;
 
 use pool::asm::ast::CodeNode;
 use pool::asm::ast::CommentNode;
@@ -18,24 +18,25 @@ use pool::asm::ast::InstructionNode;
 use pool::asm::ast::LabelNode;
 use pool::asm::ast::Node;
 use pool::asm::ast::NodeList;
-use pool::asm::ast::operand::FormulaOperand;
-use pool::asm::ast::operand::IdentifierOperand;
-use pool::asm::ast::operand::IndirectOperand;
-use pool::asm::ast::operand::NumberOperand;
-use pool::asm::ast::operand::OperandNode;
-use pool::asm::ast::operand::RegisterOperand;
-use pool::asm::ast::operand::StringOperand;
+use pool::asm::ast::OperandNode;
 
-use pool::asm::definition::PositionDefinition;
+use pool::asm::ast::operand::FormulaNode;
+use pool::asm::ast::operand::IdentifierNode;
+use pool::asm::ast::operand::IndirectNode;
+use pool::asm::ast::operand::NumberNode;
+use pool::asm::ast::operand::RegisterNode;
+use pool::asm::ast::operand::StringNode;
+
 use pool::asm::definition::OperandDefinition;
+use pool::asm::definition::PositionDefinition;
 
 use pool::asm::i386::instruction::Inline;
 use pool::asm::i386::instruction::Move;
 use pool::asm::i386::instruction::NoOperand;
 use pool::asm::i386::instruction::Nothing;
 
-use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::String;
 use sys::stream::IStream;
 
 class Compiler extends sys::core::Object {

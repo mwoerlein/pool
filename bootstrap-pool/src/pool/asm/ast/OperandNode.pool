@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::ast::operand;
+namespace pool::asm::ast;
 
 use pool::asm::ast::Node;
 

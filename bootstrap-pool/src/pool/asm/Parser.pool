@@ -6,15 +6,15 @@ version = 0.1.0
 namespace pool::asm;
 
 use pool::asm::ast::CodeNode;
-use pool::asm::ast::NodeList;
 use pool::asm::ast::InstructionNode;
-use pool::asm::ast::operand::FormulaOperand;
-use pool::asm::ast::operand::IdentifierOperand;
-use pool::asm::ast::operand::IndirectOperand;
-use pool::asm::ast::operand::NumberOperand;
-use pool::asm::ast::operand::OperandNode;
-use pool::asm::ast::operand::RegisterOperand;
-use pool::asm::ast::operand::StringOperand;
+use pool::asm::ast::NodeList;
+use pool::asm::ast::OperandNode;
+use pool::asm::ast::operand::FormulaNode;
+use pool::asm::ast::operand::IdentifierNode;
+use pool::asm::ast::operand::IndirectNode;
+use pool::asm::ast::operand::NumberNode;
+use pool::asm::ast::operand::RegisterNode;
+use pool::asm::ast::operand::StringNode;
 
 use sys::core::Object;
 use sys::core::String;
@@ -23,38 +23,38 @@ use sys::stream::OStream;
 
 class Parser extends Object {
     
-    [FormulaOperand] createFormula(OperandNode o1, cstring op, OperandNode o2) {
-        FormulaOperand formula = this.rt().createInstance(FormulaOperand:CLASSNAME);
+    [FormulaNode] createFormula(OperandNode o1, cstring op, OperandNode o2) {
+        FormulaNode formula = this.rt().createInstance(FormulaNode:CLASSNAME);
         formula.initCFormula(o1, op, o2);
         return formula;
     }
     
-    [IdentifierOperand] createIdentifier(cstring i) {
-        IdentifierOperand id = this.rt().createInstance(IdentifierOperand:CLASSNAME);
+    [IdentifierNode] createIdentifier(cstring i) {
+        IdentifierNode id = this.rt().createInstance(IdentifierNode:CLASSNAME);
         id.setCIdentifier(i);
         return id;
     }
 
-    [NumberOperand] createNumber(int o) {
-        NumberOperand n = this.rt().createInstance(NumberOperand:CLASSNAME);
+    [NumberNode] createNumber(int o) {
+        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
         n.setOperand(o);
         return n;
     }
     
-    [RegisterOperand] createRegister(cstring r) {
-        RegisterOperand reg = this.rt().createInstance(RegisterOperand:CLASSNAME);
+    [RegisterNode] createRegister(cstring r) {
+        RegisterNode reg = this.rt().createInstance(RegisterNode:CLASSNAME);
         reg.setCRegister(r);
         return reg;
     }
     
-    [StringOperand] createString(cstring o) {
-        StringOperand s = this.rt().createInstance(StringOperand:CLASSNAME);
+    [StringNode] createString(cstring o) {
+        StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
         s.setCOperand(o);
         return s;
     }
 
-    [IndirectOperand] buildIndirect() {
-        return this.rt().createInstance(IndirectOperand:CLASSNAME);
+    [IndirectNode] buildIndirect() {
+        return this.rt().createInstance(IndirectNode:CLASSNAME);
     }
 
     [] parse(IStream input, String name, CompilationUnit unit) {

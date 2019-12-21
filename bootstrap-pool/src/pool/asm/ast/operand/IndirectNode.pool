@@ -5,46 +5,47 @@ version = 0.1.0
 */
 namespace pool::asm::ast::operand;
 
+use pool::asm::ast::OperandNode;
 use sys::core::String;
 use sys::stream::OStream;
 
-class IndirectOperand extends OperandNode {
+class IndirectNode extends OperandNode {
 
-    RegisterOperand base;
-    RegisterOperand index;
+    RegisterNode base;
+    RegisterNode index;
     OperandNode displacement;
     int scale;
 
-    [] __init() { this._initIndirectOperand(); }
-    [] _initIndirectOperand() {
+    [] __init() { this._initIndirectNode(); }
+    [] _initIndirectNode() {
         scale = 1;
         this._initOperandNode();
     }
 
-    [] __destruct() { this._destructIndirectOperand(); }
-    [] _destructIndirectOperand() {
+    [] __destruct() { this._destructIndirectNode(); }
+    [] _destructIndirectNode() {
         if (base) { base.destroy(); }
         if (index) { index.destroy(); }
         if (displacement) { displacement.destroy(); }
         this._destructOperandNode(); 
     }
     
-    [IndirectOperand] setBase(RegisterOperand r) {
+    [IndirectNode] setBase(RegisterNode r) {
         this.base = r;
         return this;
     }
     
-    [IndirectOperand] setIndex(RegisterOperand r) {
+    [IndirectNode] setIndex(RegisterNode r) {
         this.index = r;
         return this;
     }
     
-    [IndirectOperand] setDisplacement(OperandNode v) {
+    [IndirectNode] setDisplacement(OperandNode v) {
         this.displacement = v;
         return this;
     }
     
-    [IndirectOperand] setScale(int s) {
+    [IndirectNode] setScale(int s) {
         this.scale = s;
         return this;
     }

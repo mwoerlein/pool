@@ -5,31 +5,32 @@ version = 0.1.0
 */
 namespace pool::asm::ast::operand;
 
+use pool::asm::ast::OperandNode;
 use sys::core::String;
 use sys::stream::OStream;
 
-class RegisterOperand extends OperandNode {
+class RegisterNode extends OperandNode {
 
     String reg;
 
-    [] __init() { this._initRegisterOperand(); }
-    [] _initRegisterOperand() {
+    [] __init() { this._initRegisterNode(); }
+    [] _initRegisterNode() {
         reg = this.rt().createInstance(String:CLASSNAME);
         this._initOperandNode();
     }
 
-    [] __destruct() { this._destructRegisterOperand(); }
-    [] _destructRegisterOperand() {
+    [] __destruct() { this._destructRegisterNode(); }
+    [] _destructRegisterNode() {
         reg.destroy();
         this._destructOperandNode(); 
     }
     
-    [RegisterOperand] setRegister(String r) {
+    [RegisterNode] setRegister(String r) {
         reg.assignString(r);
         return this;
     }
     
-    [RegisterOperand] setCRegister(cstring r) {
+    [RegisterNode] setCRegister(cstring r) {
         reg.assignCString(r);
         return this;
     }

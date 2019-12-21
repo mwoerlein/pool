@@ -5,29 +5,30 @@ version = 0.1.0
 */
 namespace pool::asm::ast::operand;
 
+use pool::asm::ast::OperandNode;
 use sys::core::String;
 use sys::stream::OStream;
 
-class FormulaOperand extends OperandNode {
+class FormulaNode extends OperandNode {
 
     String operation;
     OperandNode o1;
     OperandNode o2;
 
-    [] __init() { this._initFormulaOperand(); }
-    [] _initFormulaOperand() {
+    [] __init() { this._initFormulaNode(); }
+    [] _initFormulaNode() {
         this._initOperandNode();
     }
 
-    [] __destruct() { this._destructFormulaOperand(); }
-    [] _destructFormulaOperand() {
+    [] __destruct() { this._destructFormulaNode(); }
+    [] _destructFormulaNode() {
         if (operation) { operation.destroy(); }
         if (o1) { o1.destroy(); }
         if (o2) { o2.destroy(); }
         this._destructOperandNode(); 
     }
     
-    [FormulaOperand] initCFormula(OperandNode o1, cstring op, OperandNode o2) {
+    [FormulaNode] initCFormula(OperandNode o1, cstring op, OperandNode o2) {
         operation = this.rt().createInstance(String:CLASSNAME);
         operation.assignCString(op);
         this.o1 = o1;

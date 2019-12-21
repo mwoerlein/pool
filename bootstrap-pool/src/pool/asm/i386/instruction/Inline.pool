@@ -5,7 +5,7 @@ version = 0.1.0
 */
 namespace pool::asm::i386::instruction;
 
-use pool::asm::ast::operand::NumberOperand;
+use pool::asm::ast::operand::NumberNode;
 use sys::stream::OStream;
 
 class Inline extends pool::asm::i386::Instruction {
@@ -24,7 +24,7 @@ class Inline extends pool::asm::i386::Instruction {
         if (!operandSize) { this.newError().printCString("Missing operand size in '").print(node).printChar('\''); }
         
         // TODO: support formula and identifier operands, if numeric
-        NumberOperand no = this.rt().cast(NumberOperand:CLASSNAME, node.getOperand1());
+        NumberNode no = this.rt().cast(NumberNode:CLASSNAME, node.getOperand1());
         if (!no) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
         // TODO: validate operand value size, if not skipped
         
@@ -37,7 +37,7 @@ class Inline extends pool::asm::i386::Instruction {
     
     [OStream] rawToStream(OStream stream) {
         // TODO: support formula and identifier operands, if numeric
-        NumberOperand no = this.rt().cast(NumberOperand:CLASSNAME, node.getOperand1());
+        NumberNode no = this.rt().cast(NumberNode:CLASSNAME, node.getOperand1());
         return this.rawValueToStream(stream, no.getOperand(), operandSize);
     }
 }
