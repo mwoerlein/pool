@@ -637,7 +637,7 @@ ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * o
             return &env().create<NoOperandInstruction, const char *, char>("cli", 0xFA);
         }
         [cC][lL][tT][sS] {
-            return &env().create<NoOperandInstruction, const char *, char>("clts", 0x0F, 0x06);
+            return &env().create<NoOperandInstruction, const char *, char, char>("clts", 0x0F, 0x06);
         }
         [sS][tT][cC] {
             return &env().create<NoOperandInstruction, const char *, char>("stc", 0xF9);
