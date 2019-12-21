@@ -17,6 +17,18 @@ class Character extends Object {
     [] assignCharacter(Character c) { _c = c.getChar(); }
     
     [int] getChar() { return _c; }
+    [int] getLowerChar() {
+        if (_c >= 'A' && _c <= 'Z') {
+            return _c - 'A' + 'a';
+        }
+        return _c;
+    }
+    [int] getUpperChar() {
+        if (_c >= 'a' && _c <= 'z') {
+            return _c - 'a' + 'A';
+        }
+        return _c;
+    }
     
     [int] compareChar(int c) { return _c - c; }
     [int] compareCharacter(Character c) { return _c - c.getChar(); }
