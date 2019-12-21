@@ -39,6 +39,8 @@ class DefinitionNode extends LineNode {
         value = v;
         return this;
     }
+    [String] getId() { return identifier; }
+    [OperandNode] getValue() { return value; }
     
     [OStream] printNodeToStream(OStream stream) {
         return stream.print(identifier).printCString(" := ").print(value);

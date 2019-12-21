@@ -6,13 +6,15 @@ version = 0.1.0
 namespace pool::asm;
 
 use pool::asm::ast::InstructionNode;
-use sys::core::Object;
-use sys::stream::OStream;
 
-class Value extends Object {
+use sys::core::Object;
+use sys::core::String;
+
+class Definition extends Object {
    
+    abstract [String] getId();
     abstract [] validate(CompilationUnit unit);
     
     // TODO: remove with implicit cast
-    [Value] value() { return this; }
+    [Definition] definition() { return this; }
 }

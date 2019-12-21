@@ -7,34 +7,34 @@ namespace pool::asm;
 
 use pool::asm::ast::CodeNode;
 use pool::asm::ast::NodeList;
+use pool::asm::definition::PositionDefinition;
 
-use sys::core::Object;
-use sys::core::String;
-use sys::stream::OStream;
-use sys::core::anycollection::AnyMap;
-use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::String;
 use sys::core::utils::StringOwner;
+use sys::stream::OStream;
 
 class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBlock>
     
     NodeList nodeList;
     AnyList errors; // LinkedList<String>
-    AnyMap values; // HashMap<String, Value>
+    AnyMap definitions; // HashMap<String, Definition>
 
     [] __init() {
         sys::runtime::Runtime rt = this.rt();
         nodeList = rt.createInstance(NodeList:CLASSNAME);
         errors = rt.createInstance(AnyList:CLASSNAME);
-        values = rt.createInstance(AnyMap:CLASSNAME);
-        values.init(13);
+        definitions = rt.createInstance(AnyMap:CLASSNAME);
+        definitions.init(13);
         this._initStringOwner();
     }
 
     [] __destruct() {
         errors.destroyAll();
         errors.destroy();
-        values.destroy();
+        definitions.destroy();
         nodeList.destroy();
         this._destructStringOwner();
     }
@@ -43,17 +43,16 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
         return nodeList;
     }
     
-    [] addValue(Value val) {
-        /*
-        if (values.has(val.getId()) {
-            //error;
-            return;
-        }
-        values.add(val.getId(), val);
-        */
+    [] addDefinition(Definition def) {
+        Definition prev = definitions.set(this.createOwnStringFromString(def.getId()), def);
+        if (prev) { prev.destroy(); }
+    }
+    [int] hasDefinition(String id) { return definitions.has(id); }
+    [int] hasPosition(String id) {
+        return definitions.has(id) && this.rt().cast(PositionDefinition:CLASSNAME, definitions.get(id));
     }
     
-    [AnyIterator] values() { return values.values(); }
+    [AnyIterator] definitions() { return definitions.values(); }
     
     [CompilationBlock] addBlock(CodeNode code) {
         CompilationBlock block = this.last();
@@ -64,6 +63,8 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
         block.init(code, this);
         return block;
     }
+    
+    [AnyIterator] blocks() { return this.iterator(); }
     
     [int] hasErrors() {
         return errors.size() > 0;
@@ -91,19 +92,19 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
     
     [OStream] rawToStream(OStream stream) {
         {
-            AnyIterator it = this.iterator();
-            while (it.hasNext()) {
-                CompilationBlock block = it.next();
+            AnyIterator bit = this.blocks();
+            while (bit.hasNext()) {
+                CompilationBlock block = bit.next();
                 {
-                    AnyIterator bit = block.iterator();
-                    while (bit.hasNext()) {
-                        Instruction inst = bit.next();
+                    AnyIterator iit = block.instructions();
+                    while (iit.hasNext()) {
+                        Instruction inst = iit.next();
                         inst.rawToStream(stream);
                     }
-                    bit.destroy();
+                    iit.destroy();
                 }
             }
-            it.destroy();
+            bit.destroy();
         }
         return stream;
     }

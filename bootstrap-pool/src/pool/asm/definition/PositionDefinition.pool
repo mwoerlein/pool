@@ -3,22 +3,26 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::value;
+namespace pool::asm::definition;
 
 use pool::asm::CompilationUnit;
 use pool::asm::ast::LabelNode;
 use pool::asm::Instruction;
 
-class PositionValue extends pool::asm::Value {
+use sys::core::String;
+
+class PositionDefinition extends pool::asm::Definition {
 
     LabelNode label;
     Instruction inst;
     
-    [PositionValue] init(LabelNode l, Instruction i) {
+    [PositionDefinition] init(LabelNode l, Instruction i) {
         label = l;
         inst = i;
         return this;
     }
+    
+    [String] getId() { return label.getLabel(); }
     
     [] validate(CompilationUnit unit) {
     }

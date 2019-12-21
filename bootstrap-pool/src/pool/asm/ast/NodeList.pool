@@ -10,8 +10,8 @@ use pool::asm::ast::operand::OperandNode;
 use sys::core::Object;
 use sys::core::String;
 use sys::stream::OStream;
-use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 
 class NodeList extends Node, AnyList {
     
@@ -127,9 +127,11 @@ class NodeList extends Node, AnyList {
         this.add(def.node());
         return def;
     }
+    
+    [AnyIterator] nodes() { return this.iterator(); }
 
     [OStream] printToStream(OStream stream) {
-        AnyIterator it = this.iterator();
+        AnyIterator it = this.nodes();
         while (it.hasNext()) {
             stream.print(it.next());
         }

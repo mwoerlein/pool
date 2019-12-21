@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::asm;
 
 use pool::asm::ast::CodeNode;
+use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
 class CompilationBlock extends AnyList { // LinkedList<Instruction>
@@ -25,5 +26,7 @@ class CompilationBlock extends AnyList { // LinkedList<Instruction>
         this.add(i.setBlock(this));
         return i;
     }
+    
+    [AnyIterator] instructions() { return this.iterator(); }
    
 }

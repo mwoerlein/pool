@@ -8,7 +8,7 @@ namespace pool::asm::i386;
 use pool::asm::CompilationUnit;
 use pool::asm::CompilationBlock;
 use pool::asm::Instruction;
-use pool::asm::Value;
+use pool::asm::Definition;
 
 use pool::asm::ast::CodeNode;
 use pool::asm::ast::CommentNode;
@@ -26,13 +26,13 @@ use pool::asm::ast::operand::OperandNode;
 use pool::asm::ast::operand::RegisterOperand;
 use pool::asm::ast::operand::StringOperand;
 
+use pool::asm::definition::PositionDefinition;
+use pool::asm::definition::OperandDefinition;
+
 use pool::asm::i386::instruction::Inline;
 use pool::asm::i386::instruction::Move;
 use pool::asm::i386::instruction::NoOperand;
 use pool::asm::i386::instruction::Nothing;
-
-use pool::asm::value::PositionValue;
-use pool::asm::value::OperandValue;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
@@ -61,59 +61,59 @@ class Compiler extends sys::core::Object {
     [int] validate(CompilationUnit unit) {
         {
             int pos = 0;
-            AnyIterator it = unit.iterator();
-            while (it.hasNext()) {
+            AnyIterator bit = unit.blocks();
+            while (bit.hasNext()) {
                 CompilationBlock block = it.next();
-                AnyIterator bit = block.iterator();
-                while (bit.hasNext()) {
-                    Instruction inst = bit.next();
+                AnyIterator iit = block.instructions();
+                while (iit.hasNext()) {
+                    Instruction inst = iit.next();
                     pos += inst.prepare(pos);
                 }
-                bit.destroy();
+                iit.destroy();
             }
-            it.destroy();
+            bit.destroy();
         }
 
         {
-            AnyIterator it = unit.values();
-            while (it.hasNext()) {
-                Value val = it.next();
-                val.validate(unit);
+            AnyIterator dit = unit.definitions();
+            while (dit.hasNext()) {
+                Definition def = dit.next();
+                def.validate(unit);
             }
-            it.destroy();
+            dit.destroy();
         }
         
         int pos = 0;
         {
-            AnyIterator it = unit.iterator();
-            while (it.hasNext()) {
-                CompilationBlock block = it.next();
-                AnyIterator bit = block.iterator();
-                while (bit.hasNext()) {
-                    Instruction inst = bit.next();
+            AnyIterator bit = unit.blocks();
+            while (bit.hasNext()) {
+                CompilationBlock block = bit.next();
+                AnyIterator iit = block.instructions();
+                while (iit.hasNext()) {
+                    Instruction inst = iit.next();
                     inst.setPos(pos);
                     pos += inst.validate();
                 }
-                bit.destroy();
+                iit.destroy();
             }
-            it.destroy();
+            bit.destroy();
         }
         return pos;
     }
     
     [] finalize(CompilationUnit unit, int startAddress) {
         {
-            AnyIterator it = unit.iterator();
+            AnyIterator bit = unit.blocks();
             while (it.hasNext()) {
-                CompilationBlock block = it.next();
-                AnyIterator bit = block.iterator();
-                while (bit.hasNext()) {
-                    Instruction inst = bit.next();
+                CompilationBlock block = bit.next();
+                AnyIterator iit = block.instructions();
+                while (iit.hasNext()) {
+                    Instruction inst = iit.next();
                     inst.finalize(startAddress);
                 }
-                bit.destroy();
+                iit.destroy();
             }
-            it.destroy();
+            bit.destroy();
         }
     }
     
@@ -121,10 +121,10 @@ class Compiler extends sys::core::Object {
         lastBlock = unit.addBlock(code);
     }
     
-    [] _visitDefinitionNode(DefinitionNode def) {
-        OperandValue val = this.rt().createInstance(OperandValue:CLASSNAME);
-        val.init(def);
-        unit.addValue(val.value());
+    [] _visitDefinitionNode(DefinitionNode defNode) {
+        OperandDefinition def = this.rt().createInstance(OperandDefinition:CLASSNAME);
+        def.init(defNode);
+        unit.addDefinition(def.definition());
     }
     
     [] _visitInstructionNode(InstructionNode instNode) {
@@ -138,18 +138,18 @@ class Compiler extends sys::core::Object {
     }
     
     [] _visitLabelNode(LabelNode label) {
-        PositionValue val = this.rt().createInstance(PositionValue:CLASSNAME);
+        PositionDefinition def = this.rt().createInstance(PositionDefinition:CLASSNAME);
         if (!lastInst) {
             // fake instruction as reference for the beginning of the unit
             lastInst = lastBlock.addInstruction(this._buildInstruction(null));
         }
-        val.init(label, lastInst);
-        unit.addValue(val.value());
+        def.init(label, lastInst);
+        unit.addDefinition(def.definition());
     }
     
     [] _visitNodeList(NodeList list) {
         sys::runtime::Runtime rt = this.rt();
-        AnyIterator it = list.iterator();
+        AnyIterator it = list.nodes();
         while (it.hasNext()) {
             Node n = it.next();
             CodeNode code = rt.cast(CodeNode:CLASSNAME, n);

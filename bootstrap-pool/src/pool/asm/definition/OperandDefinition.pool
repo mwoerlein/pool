@@ -3,19 +3,23 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::value;
+namespace pool::asm::definition;
 
 use pool::asm::CompilationUnit;
 use pool::asm::ast::InstructionNode;
 use pool::asm::ast::DefinitionNode;
 
-class OperandValue extends pool::asm::Value {
+use sys::core::String;
+
+class OperandDefinition extends pool::asm::Definition {
     DefinitionNode def;
     
-    [OperandValue] init(DefinitionNode d) {
+    [OperandDefinition] init(DefinitionNode d) {
         def = d;
         return this;
     }
+    
+    [String] getId() { return def.getId(); }
     
     [] validate(CompilationUnit unit) {
     }
