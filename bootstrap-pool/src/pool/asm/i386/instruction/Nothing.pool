@@ -1,0 +1,29 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use sys::stream::OStream;
+
+class Nothing extends pool::asm::i386::Instruction {
+    
+    [int] prepare(int pos) {
+        this.pos = pos;
+        data = addr = block.getCode().getMode();
+        return this.prepareInstruction();
+    }
+
+    [int] approximateSize() {
+        return 0;
+    }
+    
+    [int] validateInstruction() {
+        return 0;
+    }
+    
+    [OStream] rawToStream(OStream stream) {
+        return stream;
+    }
+}

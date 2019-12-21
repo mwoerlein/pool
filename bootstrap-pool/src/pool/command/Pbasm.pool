@@ -88,6 +88,7 @@ Pool Bootstrap Assembler.
         }
         
         OStream err = this.rt().err();
+        OStream DEBUG = this.rt().out();
         SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::File:MODE_WRITE);
         if (!outfile) { status = ERRNO_IO; }
         if (status == ERRNO_OK) {
@@ -95,8 +96,9 @@ Pool Bootstrap Assembler.
             if (unit.flushErrors(err)) { status = ERRNO_PARSE; }
         }
         if (status == ERRNO_OK) {
-            this.rt().out().print(unit.getNodeList()); // DEBUG
+            DEBUG.print(unit.getNodeList());
             compiler.compile(unit);
+            DEBUG.printInt(unit.size()).printNewline();
             if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
         }
         if (status == ERRNO_OK) {

@@ -16,7 +16,8 @@ class Instruction extends Object {
     CompilationBlock block;
     int pos;
     
-    [Instruction] init(InstructionNode n) { node = n; return this; }
+    [Instruction] setNode(InstructionNode n) { node = n; return this; }
+    [InstructionNode] getNode() { return node; }
     
     [Instruction] setBlock(CompilationBlock b) { block = b; return this; }
     [CompilationBlock] getBlock() { return block; }
