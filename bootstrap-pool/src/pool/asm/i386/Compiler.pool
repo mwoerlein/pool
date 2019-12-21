@@ -49,16 +49,13 @@ class Compiler extends sys::core::Object {
         return code;
     }
     
-    [CompilationUnit] compile(CompilationUnit unit) {
+    [] prepare(CompilationUnit unit) {
         this.unit = unit;
         this.lastInst = null;
-        this._visitCodeNode(this.createCode(32)); // initialize default block
-        this._visitNodeList(unit.getNodeList());
+        this._prepareCodeNode(this.createCode(32)); // initialize default block
+        this._prepareNodeList(unit.getNodeList());
         this.unit = null;
-        return unit;
-    }
-    
-    [int] validate(CompilationUnit unit) {
+        
         {
             int pos = 0;
             AnyIterator bit = unit.blocks();
@@ -73,6 +70,9 @@ class Compiler extends sys::core::Object {
             }
             bit.destroy();
         }
+    }
+    
+    [int] compile(CompilationUnit unit) {
 
         {
             AnyIterator dit = unit.definitions();
@@ -117,17 +117,17 @@ class Compiler extends sys::core::Object {
         }
     }
     
-    [] _visitCodeNode(CodeNode code) {
+    [] _prepareCodeNode(CodeNode code) {
         lastBlock = unit.addBlock(code);
     }
     
-    [] _visitDefinitionNode(DefinitionNode defNode) {
+    [] _prepareDefinitionNode(DefinitionNode defNode) {
         OperandDefinition def = this.rt().createInstance(OperandDefinition:CLASSNAME);
         def.init(defNode);
         unit.addDefinition(def.definition());
     }
     
-    [] _visitInstructionNode(InstructionNode instNode) {
+    [] _prepareInstructionNode(InstructionNode instNode) {
         String op = instNode.getOperation().toLower();
         Instruction inst = this._buildInstruction(op);
         if (inst) {
@@ -137,7 +137,7 @@ class Compiler extends sys::core::Object {
         op.destroy();
     }
     
-    [] _visitLabelNode(LabelNode label) {
+    [] _prepareLabelNode(LabelNode label) {
         PositionDefinition def = this.rt().createInstance(PositionDefinition:CLASSNAME);
         if (!lastInst) {
             // fake instruction as reference for the beginning of the unit
@@ -147,7 +147,7 @@ class Compiler extends sys::core::Object {
         unit.addDefinition(def.definition());
     }
     
-    [] _visitNodeList(NodeList list) {
+    [] _prepareNodeList(NodeList list) {
         sys::runtime::Runtime rt = this.rt();
         AnyIterator it = list.nodes();
         while (it.hasNext()) {
@@ -159,13 +159,13 @@ class Compiler extends sys::core::Object {
             InstructionNode inst = rt.cast(InstructionNode:CLASSNAME, n);
             LabelNode label = rt.cast(LabelNode:CLASSNAME, n);
             NodeList list = rt.cast(NodeList:CLASSNAME, n);
-            if (code) { this._visitCodeNode(code); }
+            if (code) { this._prepareCodeNode(code); }
             else if (comment) { /* ignore */ }
-            else if (def) { this._visitDefinitionNode(def); }
+            else if (def) { this._prepareDefinitionNode(def); }
             else if (empty) { /* ignore */ }
-            else if (inst) { this._visitInstructionNode(inst); }
-            else if (label) { this._visitLabelNode(label); }
-            else if (list) { this._visitNodeList(list); }
+            else if (inst) { this._prepareInstructionNode(inst); }
+            else if (label) { this._prepareLabelNode(label); }
+            else if (list) { this._prepareNodeList(list); }
             else { unit.newError().printCString("unexpected node in nodelist: '").print(n).printChar('\''); }
         }
         it.destroy();

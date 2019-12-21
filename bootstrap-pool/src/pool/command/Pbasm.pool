@@ -20,7 +20,9 @@ class Pbasm extends linux::Command {
     int ERRNO_OK        := 0;
     int ERRNO_IO        := 1;
     int ERRNO_PARSE     := 2;
-    int ERRNO_COMPILE   := 3;
+    int ERRNO_PREPARE   := 3;
+    int ERRNO_COMPILE   := 4;
+    int ERRNO_FINALIZE  := 5;
     
     Parser parser;
     Compiler compiler;
@@ -95,16 +97,16 @@ Pool Bootstrap Assembler.
             if (unit.flushErrors(err)) { status = ERRNO_PARSE; }
         }
         if (status == ERRNO_OK) {
+            compiler.prepare(unit);
+            if (unit.flushErrors(err)) { status = ERRNO_PREPARE; }
+        }
+        if (status == ERRNO_OK) {
             compiler.compile(unit);
             if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
         }
         if (status == ERRNO_OK) {
-            compiler.validate(unit);
-            if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
-        }
-        if (status == ERRNO_OK) {
             compiler.finalize(unit, startAddress);
-            if (unit.flushErrors(err)) { status = ERRNO_COMPILE; }
+            if (unit.flushErrors(err)) { status = ERRNO_FINALIZE; }
         }
         if (status == ERRNO_OK) { this.writeOutput(outfile.ostream()); }
         
