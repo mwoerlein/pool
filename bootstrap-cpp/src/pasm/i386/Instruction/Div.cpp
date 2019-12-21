@@ -16,7 +16,7 @@ size_t Div::approximateSizeInBytes() {
         size += i1->getSibSize();
         size += (int) i1->getDispSize();
     } 
-    return 1;
+    return size;
 }
 
 void Div::checkOperands() {
