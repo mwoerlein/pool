@@ -10,16 +10,11 @@ use sys::stream::OStream;
 class Nothing extends pool::asm::i386::Instruction {
     
     [int] prepare(int pos) {
-        this.pos = pos;
-        data = addr = block.getCode().getMode();
-        return this.prepareInstruction();
-    }
-
-    [int] approximateSize() {
+        this.pos = this.preparePos = pos;
         return 0;
     }
     
-    [int] validateInstruction() {
+    [int] compile() {
         return 0;
     }
     

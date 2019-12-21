@@ -16,7 +16,7 @@ class Inline extends pool::asm::i386::Instruction {
         skipValidation = skip;
     }
 
-    [int] validateInstruction() {
+    [int] compileInstruction() {
         if (node.getPrefix()) { this.newError().printCString("Unexpected prefix: ").print(node.getPrefix()); }
         if (!node.getOperand1()) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); }
         if (node.getOperand2()) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); }

@@ -93,7 +93,7 @@ class Compiler extends sys::core::Object {
                 while (iit.hasNext()) {
                     Instruction inst = iit.next();
                     inst.setPos(pos);
-                    pos += inst.validate();
+                    pos += inst.compile();
                 }
                 iit.destroy();
             }

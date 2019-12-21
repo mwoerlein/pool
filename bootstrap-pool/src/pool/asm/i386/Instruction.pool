@@ -18,6 +18,7 @@ class Instruction extends pool::asm::Instruction {
     int addr;
     int data;
     int operandSize;
+    int preparePos;
     
     [Instruction] setOperation(int op1, int op2, int op3) {
         this.op1 = op1;
@@ -32,7 +33,7 @@ class Instruction extends pool::asm::Instruction {
     }
     
     [int] prepare(int pos) {
-        this.pos = pos;
+        this.pos = this.preparePos = pos;
         int mode = block.getCode().getMode();
         addr = node.getAddr(mode);
         data = node.getData(mode);
@@ -49,7 +50,7 @@ class Instruction extends pool::asm::Instruction {
         return 17;
     }
     
-    [int] validate() {
+    [int] compile() {
         // TODO: validate generic and specific instruction properties
         // TODO: prepare prefix nodes, normalize operands, ...
         if (data != 0 && data != 8 && data != 16 && data != 32) {
@@ -61,10 +62,10 @@ class Instruction extends pool::asm::Instruction {
         if (operandSize != 0 && operandSize != 8 && operandSize != 16 && operandSize != 32) {
             this.newError().printCString("invalid operandSize: ").printInt(operandSize);
         }
-        return this.validateInstruction();
+        return this.compileInstruction();
     }
     
-    [int] validateInstruction() {
+    [int] compileInstruction() {
         return this.approximateSize();
     }
     
@@ -82,8 +83,11 @@ class Instruction extends pool::asm::Instruction {
     }
     
     [int] approximateOffset(int position, int posIncr) {
-        return position - pos - posIncr;
-//        return position - (position > pos ? prePos : pos) - posIncr;
+        if (position > pos) {
+            return position - preparePos - posIncr;
+        } else {
+            return position - pos - posIncr;
+        }
     }
     
     [OStream] rawOperationToStream(OStream stream) {

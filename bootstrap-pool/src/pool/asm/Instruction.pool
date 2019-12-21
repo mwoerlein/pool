@@ -28,7 +28,7 @@ class Instruction extends Object {
     [String] newError() { return block.getUnit().newError(); }
     
     abstract [int] prepare(int pos);
-    abstract [int] validate();
+    abstract [int] compile();
     abstract [] finalize(int startAddress);
     
     abstract [OStream] rawToStream(OStream stream);

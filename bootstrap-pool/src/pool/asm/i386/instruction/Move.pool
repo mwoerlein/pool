@@ -9,6 +9,10 @@ use sys::stream::OStream;
 
 class Move extends pool::asm::i386::Instruction {
     
+    [int] approximateSize() {
+        return 2;
+    }
+    
     [OStream] rawToStream(OStream stream) {
         return stream.printChar(0x89).printChar(0xC0); // movl %eax, %eax
     }
