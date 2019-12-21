@@ -13,7 +13,7 @@ __elf_ehdr_start:                                   # Elf32_Ehdr
     .wordt (__elf_ehdr_end - __elf_ehdr_start)      #   e_ehsize
     .wordt (__elf_phdr_end - __elf_phdr_start)      #   e_phentsize
     .word 1                                         #   e_phnum
-    .word 0                                         #   e_shentsize
+    .word 40                                        #   e_shentsize
     .word 0                                         #   e_shnum
     .word 0                                         #   e_shstrndx
 __elf_ehdr_end:
