@@ -1,7 +1,7 @@
-#include "pasm/i386/Instruction/Div.hpp"
+#include "pasm/i386/Instruction/GroupTwoInstruction.hpp"
 
 // protected
-size_t Div::approximateSizeInBytes() {
+size_t GroupTwoInstruction::approximateSizeInBytes() {
     Indirect *i1 = o1->as<Indirect>(indirect);
     
     size_t size = 2; //opcode, modrm
@@ -19,7 +19,7 @@ size_t Div::approximateSizeInBytes() {
     return size;
 }
 
-void Div::checkOperands() {
+void GroupTwoInstruction::checkOperands() {
     if (!o1) {
         list->err<<"Missing operand!\n";
     }
@@ -40,7 +40,7 @@ void Div::checkOperands() {
     }
 }
 
-void Div::validateOperands() {
+void GroupTwoInstruction::validateOperands() {
     Register *r1 = o1->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
     
@@ -59,7 +59,7 @@ void Div::validateOperands() {
     return;
 }
 
-size_t Div::compileOperands() {
+size_t GroupTwoInstruction::compileOperands() {
     size_t size = 0;
     Register *r1 = o1->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
@@ -84,13 +84,13 @@ size_t Div::compileOperands() {
     return -1;
 }
 
-void Div::writeOperandsToStream(OStream & stream) {
+void GroupTwoInstruction::writeOperandsToStream(OStream & stream) {
     Register *r1 = o1->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
     if (r1) {
-        writeModRMToStream(stream, 6, r1);
+        writeModRMToStream(stream, regO, r1);
     }
     if (i1) {
-        writeIndirectToStream(stream, i1, 6);
+        writeIndirectToStream(stream, i1, regO);
     }
 }

@@ -28,8 +28,7 @@ class Bitset {
     
     global [int] not(int a) {
         int ret = 0;
-        __pasm__(".byte 0xF7; .byte 0xD0  #// notl %eax", {"%eax": a}, {"%eax": ret});
-        //__pasm__("notl %eax", {"%eax": a}, {"%eax": ret});
+        __pasm__("notl %eax", {"%eax": a}, {"%eax": ret});
         return ret;
     }
     
@@ -52,7 +51,7 @@ class Bitset {
         __pasm__(<"
             movl 1, %ebx
             .byte 0xD3; .byte 0xE3  #// shll %ebx, %cl
-            .byte 0xF7; .byte 0xD3  #// notl %ebx
+            notl %ebx
             and %ebx, %eax
         ">, {"%eax": mask, "%ecx": bit}, {"%eax": mask});
         return mask;

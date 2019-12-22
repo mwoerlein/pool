@@ -8,8 +8,8 @@
 #include "pasm/i386/Instruction/Ascii.hpp"
 #include "pasm/i386/Instruction/Call.hpp"
 #include "pasm/i386/Instruction/ConditionalJump.hpp"
-#include "pasm/i386/Instruction/Div.hpp"
 #include "pasm/i386/Instruction/GroupOneInstruction.hpp"
+#include "pasm/i386/Instruction/GroupTwoInstruction.hpp"
 #include "pasm/i386/Instruction/In.hpp"
 #include "pasm/i386/Instruction/Inline.hpp"
 #include "pasm/i386/Instruction/Int.hpp"
@@ -584,14 +584,39 @@ ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * o
             return &env().create<GroupOneInstruction, const char *, int, ASMOperand*, ASMOperand*, BitWidth> 
                 ("cmp", 7, op1, op2, parseOperandSize(o1, o2));
         }
+        [nN][oO][tT] @o1 bitwidth? @o2 {
+            if (!op1 || op2 || op3) return 0;
+            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                ("div", 2, op1, parseOperandSize(o1, o2));
+        }
+        [nN][eE][gG] @o1 bitwidth? @o2 {
+            if (!op1 || op2 || op3) return 0;
+            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                ("div", 3, op1, parseOperandSize(o1, o2));
+        }
+        [mM][uU][lL] @o1 bitwidth? @o2 {
+            if (!op1 || op2 || op3) return 0;
+            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                ("mul", 4, op1, parseOperandSize(o1, o2));
+        }
+        [iI][mM][uU][lL] @o1 bitwidth? @o2 {
+            if (op1 && !op2 && !op3) {
+                return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                    ("mul", 5, op1, parseOperandSize(o1, o2));
+            }
+            String s(env(), *notAnInfo, start, operandsEnd);
+            list->err << "not yet supported variant of imul at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
+            return 0;
+        }
         [dD][iI][vV] @o1 bitwidth? @o2 {
             if (!op1 || op2 || op3) return 0;
-            return &env().create<Div, ASMOperand*, BitWidth> (op1, parseOperandSize(o1, o2));
+            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                ("div", 6, op1, parseOperandSize(o1, o2));
         }
-        [iI]?[mM][uU][lL] @o1 bitwidth? @o2 {
-            String s(env(), *notAnInfo, start, operandsEnd);
-            list->err << "not yet supported instruction '" << s << "' at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
-            return 0;
+        [iI][dD][iI][vV] @o1 bitwidth? @o2 {
+            if (!op1 || op2 || op3) return 0;
+            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                ("idiv", 7, op1, parseOperandSize(o1, o2));
         }
         [iI][nN] @o1 bitwidth? @o2 {
             if (!op1 || !op2 || op3) return 0;

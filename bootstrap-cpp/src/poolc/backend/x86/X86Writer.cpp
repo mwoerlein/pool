@@ -479,14 +479,14 @@ void X86Writer::write(PIRArithOp &arithOpStmt) {
             code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
             code() << ".byte 0x99 #//cdq\n";
             code() << "movl "; write(arithOpStmt.right); elem() << ", %ebx\n";
-            code() << ".byte 0xf7; .byte 0xfb #//idiv %ebx\n";
+            code() << "idiv %ebx\n";
             code() << "movl %eax, "; write(arithOpStmt.dest); elem() << "\n";
             break;
         case op_mod:
             code() << "movl "; write(arithOpStmt.left); elem() << ", %eax\n";
             code() << ".byte 0x99 #//cdq\n";
             code() << "movl "; write(arithOpStmt.right); elem() << ", %ebx\n";
-            code() << ".byte 0xf7; .byte 0xfb #//idiv %ebx\n";
+            code() << "idiv %ebx\n";
             code() << "movl %edx, "; write(arithOpStmt.dest); elem() << "\n";
             break;
     }
