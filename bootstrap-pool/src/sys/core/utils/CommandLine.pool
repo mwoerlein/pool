@@ -11,7 +11,7 @@ use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyListIterator;
 use sys::core::anycollection::AnyMap;
 
-class CommandLine extends CommandLineParserTarget, StringOwner {
+class CommandLine extends CommandLineParserTarget, Owner {
 
     AnyList _arguments;     // LinkedList<String>
     AnyMap _options;        // HashMap<String, String>
@@ -26,7 +26,7 @@ class CommandLine extends CommandLineParserTarget, StringOwner {
         _optionAliases.init(13);
         _listOptions = this.rt().createInstance(AnyMap:CLASSNAME);
         _listOptions.init(13);
-        this._initStringOwner();
+        this._initOwner();
     }
     
     [] _destructCommandLine() {
@@ -34,7 +34,7 @@ class CommandLine extends CommandLineParserTarget, StringOwner {
         _options.destroy();
         _optionAliases.destroy();
         _listOptions.destroy();
-        this._destructStringOwner();
+        this._destructOwner();
     }
 
     // TODO: implement usage parsing (see http://docopt.org/)

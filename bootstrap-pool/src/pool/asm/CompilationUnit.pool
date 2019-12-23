@@ -13,10 +13,10 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
 use sys::core::String;
-use sys::core::utils::StringOwner;
+use sys::core::utils::Owner;
 use sys::stream::OStream;
 
-class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBlock>
+class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     
     NodeList nodeList;
     AnyList errors; // LinkedList<String>
@@ -28,15 +28,15 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
         errors = rt.createInstance(AnyList:CLASSNAME);
         definitions = rt.createInstance(AnyMap:CLASSNAME);
         definitions.init(13);
-        this._initStringOwner();
+        this._initOwner();
     }
 
     [] __destruct() {
-        errors.destroyAll();
         errors.destroy();
         definitions.destroy();
         nodeList.destroy();
-        this._destructStringOwner();
+        this.clear();
+        this._destructOwner();
     }
     
     [NodeList] getNodeList() {
@@ -57,7 +57,7 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
     [CompilationBlock] addBlock(CodeNode code) {
         CompilationBlock block = this.last();
         if (!block || !block.isEmpty()) {
-            block = this.rt().createInstance(CompilationBlock:CLASSNAME);
+            block = this.createOwn(CompilationBlock:CLASSNAME);
             this.add(block); 
         }
         block.init(code, this);
@@ -71,7 +71,7 @@ class CompilationUnit extends AnyList, StringOwner { // LinkedList<CompilationBl
     }
     
     [String] newError() {
-        String err = this.rt().createInstance(String:CLASSNAME);
+        String err = this.createOwn(String:CLASSNAME);
         errors.add(err);
         return err;
     }

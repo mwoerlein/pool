@@ -12,18 +12,18 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::OStream;
 
 // TODO: add Object/Integer/Bool/... value handling
-class PropertyContainer extends StringOwner {
+class PropertyContainer extends Owner {
     
     AnyMap _properties;  // HashMap<(own)String, (own?)String>
 
     [] _initPropertyContainer() {
         _properties = this.rt().createInstance(AnyMap:CLASSNAME);
         _properties.init(13);
-        this._initStringOwner();
+        this._initOwner();
     }
     [] _destructPropertyContainer() {
         _properties.destroy();
-        this._destructStringOwner();
+        this._destructOwner();
     }
 
     [int] hasStringProperty(String name) {
