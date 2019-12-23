@@ -67,6 +67,17 @@ with multiple lines
         list.addCode(32);
         list.addCLabel("test1");
         list.addCDefinition("base", this.createNumber(8).operand()).setCComment(" a constant");
+        list.addCDefinition("form", 
+            this.createFormula(
+                this.createNumber(0x123).operand(),
+                "+",
+                this.createFormula(
+                    this.createNumber(0x234).operand(),
+                    "%",
+                    this.createIdentifier("base").operand()
+                ).operand()
+            ).operand()
+        ).setCComment(" a formula");
         list.addCDefinition("str", this.createString("foo").operand()).setCComment(" string constant");
         list.addCInstruction0("sTi");
         list.addCInstruction0("pusha");
@@ -77,6 +88,10 @@ with multiple lines
         list.addCInstruction1(".word", this.createNumber(0x1122).operand());
         list.addCInstruction1(".wordt", this.createNumber(0x11223344).operand());
         list.addCInstruction1(".long", this.createNumber(0x11223344).operand());
+        
+        list.addCInstruction1(".long", this.createIdentifier("test2").operand());
+        list.addCInstruction1(".long", this.createIdentifier("base").operand());
+        list.addCInstruction1(".long", this.createIdentifier("form").operand());
         
         list.addEmptyLine();
         list.addCode(16);

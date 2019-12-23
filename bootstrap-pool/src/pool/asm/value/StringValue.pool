@@ -1,0 +1,27 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::value;
+
+use sys::core::String;
+
+class StringValue extends TextValue {
+
+    String value;
+    
+    [StringValue] init(String v) {
+        value = this.rt().createInstance(String:CLASSNAME);
+        value.assignString(v);
+        return this;
+    }
+    
+    [] __destruct() {
+        value.destroy();
+    }
+    
+    [String] getValue() { return value; }
+    [int] isConstant() { return true; }
+    
+}

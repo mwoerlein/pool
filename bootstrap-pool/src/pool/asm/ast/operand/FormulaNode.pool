@@ -35,6 +35,9 @@ class FormulaNode extends OperandNode {
         this.o2 = o2;
         return this;
     }
+    [String] getOperation() { return operation; }
+    [OperandNode] getOperand1() { return o1; }
+    [OperandNode] getOperand2() { return o2; }
     
     [OStream] printToStream(OStream stream) {
         return stream.printChar('(').print(o1).printChar(' ').print(operation).printChar(' ').print(o2).printChar(')');

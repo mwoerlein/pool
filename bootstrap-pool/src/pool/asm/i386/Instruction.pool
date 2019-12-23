@@ -6,8 +6,10 @@ version = 0.1.0
 namespace pool::asm::i386;
 
 use pool::asm::CompilationUnit;
+use pool::asm::Value;
 
 use sys::core::utils::Bitset;
+use sys::memory::Address;
 use sys::stream::OStream;
 
 class Instruction extends pool::asm::Instruction {
@@ -19,6 +21,8 @@ class Instruction extends pool::asm::Instruction {
     int data;
     int operandSize;
     int preparePos;
+    int pos;
+    int size;
     
     [Instruction] setOperation(int op1, int op2, int op3) {
         this.op1 = op1;
@@ -37,7 +41,7 @@ class Instruction extends pool::asm::Instruction {
         int mode = block.getCode().getMode();
         addr = node.getAddr(mode);
         data = node.getData(mode);
-        return this.prepareInstruction();
+        return this.size = this.prepareInstruction();
     }
 
     [int] prepareInstruction() {
@@ -50,9 +54,15 @@ class Instruction extends pool::asm::Instruction {
         return 17;
     }
     
-    [int] compile() {
+    [int] compile(int pos) {
+        CompilationUnit unit = this.block.getUnit();
+        this.pos = pos;
         // TODO: validate generic and specific instruction properties
         // TODO: prepare prefix nodes, normalize operands, ...
+        if (o1) { o1 = o1.compile(unit); }
+        if (o2) { o2 = o2.compile(unit); }
+        if (o3) { o3 = o3.compile(unit); }
+        
         if (data != 0 && data != 8 && data != 16 && data != 32) {
             this.newError().printCString("invalid data: ").printInt(data);
         }
@@ -62,7 +72,7 @@ class Instruction extends pool::asm::Instruction {
         if (operandSize != 0 && operandSize != 8 && operandSize != 16 && operandSize != 32) {
             this.newError().printCString("invalid operandSize: ").printInt(operandSize);
         }
-        return this.compileInstruction();
+        return this.size = this.compileInstruction();
     }
     
     [int] compileInstruction() {
@@ -72,6 +82,9 @@ class Instruction extends pool::asm::Instruction {
     [] finalize(int startAddress) {
         pos += startAddress;
     }
+    
+    [int] getStart() { return pos; }
+    [int] getEnd() { return pos + size; }
     
     [int] requiresOperandSizeOverride(int operandSize) {
         return (operandSize == 16 && data == 32) || (operandSize == 32 && data == 16);

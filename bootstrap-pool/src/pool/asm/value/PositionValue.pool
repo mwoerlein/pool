@@ -1,0 +1,22 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::value;
+
+use pool::asm::Instruction;
+
+class PositionValue extends NumericValue {
+
+    Instruction inst;
+    
+    [PositionValue] init(Instruction i) {
+        inst = i;
+        return this;
+    }
+    
+    [int] getValue() { return inst.getEnd(); }
+    [int] isConstant() { return false; }
+    
+}

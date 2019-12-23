@@ -7,7 +7,19 @@ namespace pool::asm;
 
 use pool::asm::ast::CodeNode;
 use pool::asm::ast::NodeList;
-use pool::asm::definition::PositionDefinition;
+use pool::asm::ast::Node;
+
+use pool::asm::ast::operand::FormulaNode;
+use pool::asm::ast::operand::IdentifierNode;
+use pool::asm::ast::operand::IndirectNode;
+use pool::asm::ast::operand::RegisterNode;
+
+use pool::asm::value::IdentifierValue;
+use pool::asm::value::NumberValue;
+use pool::asm::value::NumericOperation;
+use pool::asm::value::PositionValue;
+use pool::asm::value::StringValue;
+use pool::asm::value::TextOperation;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
@@ -43,13 +55,20 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
         return nodeList;
     }
     
-    [] addDefinition(Definition def) {
-        Definition prev = definitions.set(this.createOwnStringFromString(def.getId()), def);
-        if (prev) { prev.destroy(); }
+    [] addDefinition(Node node, String id, Value v) {
+        Definition def = this.createOwn(Definition:CLASSNAME);
+        def.init(node, this.createOwnStringFromString(id), v);
+        definitions.set(def.getId(), def);
     }
     [int] hasDefinition(String id) { return definitions.has(id); }
     [int] hasPosition(String id) {
-        return definitions.has(id) && this.rt().cast(PositionDefinition:CLASSNAME, definitions.get(id));
+        Definition def = definitions.get(id);
+        return def && this.rt().cast(PositionValue:CLASSNAME, def.getValue());
+    }
+    [Value] getValue(String id) {
+        Definition def = definitions.get(id);
+        if (def) { return def.getValue(); }
+        return null;
     }
     
     [AnyIterator] definitions() { return definitions.values(); }
@@ -66,6 +85,42 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     
     [AnyIterator] blocks() { return this.iterator(); }
     
+    [Value] _buildNumberValue(int n) {
+        NumberValue num = this.createOwn(NumberValue:CLASSNAME);
+        num.init(n);
+        return num.value();
+    }
+    
+    [Value] _buildIdentifierValue(IdentifierNode n) {
+        IdentifierValue id = this.createOwn(IdentifierValue:CLASSNAME);
+        id.init(n);
+        return id.value();
+    }
+    
+    [Value] _buildStringValue(String n) {
+        StringValue str = this.createOwn(StringValue:CLASSNAME);
+        str.init(n);
+        return str.value();
+    }
+    
+    [Value] _buildTextOperation(FormulaNode n, Value o1, int op, Value o2) {
+        TextOperation o = this.createOwn(TextOperation:CLASSNAME);
+        o.init(n, o1, op, o2);
+        return o.value();
+    }
+    
+    [Value] _buildNumericOperation(FormulaNode n, Value o1, int op, Value o2) {
+        NumericOperation o = this.createOwn(NumericOperation:CLASSNAME);
+        o.init(n, o1, op, o2);
+        return o.value();
+    }
+    
+    [Value] _buildPositionValue(Instruction i) {
+        PositionValue value = this.createOwn(PositionValue:CLASSNAME);
+        value.init(i);
+        return value.value();
+    }
+
     [int] hasErrors() {
         return errors.size() > 0;
     }

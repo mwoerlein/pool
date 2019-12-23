@@ -1,0 +1,12 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::value;
+
+class NumericValue extends pool::asm::Value {
+
+    [NumericValue] asNumeric() { return this; }
+    abstract [int] getValue();
+}

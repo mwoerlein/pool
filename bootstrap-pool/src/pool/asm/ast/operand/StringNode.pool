@@ -34,6 +34,7 @@ class StringNode extends OperandNode {
         operand.assignCString(o);
         return this;
     }
+    [String] getOperand() { return operand; }
     
     [OStream] printToStream(OStream stream) {
         return operand.escapeToStream(stream);

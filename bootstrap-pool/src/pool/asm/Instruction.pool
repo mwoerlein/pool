@@ -14,7 +14,10 @@ class Instruction extends Object {
     
     InstructionNode node;
     CompilationBlock block;
-    int pos;
+    
+    Value o1;
+    Value o2;
+    Value o3;
     
     [Instruction] setNode(InstructionNode n) { node = n; return this; }
     [InstructionNode] getNode() { return node; }
@@ -22,14 +25,17 @@ class Instruction extends Object {
     [Instruction] setBlock(CompilationBlock b) { block = b; return this; }
     [CompilationBlock] getBlock() { return block; }
     
-    [Instruction] setPos(int p) { pos = p; return this; }
-    [int] getPos() { return pos; }
+    [Instruction] setOperand1(Value o) { o1 = o; return this; }
+    [Instruction] setOperand2(Value o) { o2 = o; return this; }
+    [Instruction] setOperand3(Value o) { o3 = o; return this; }
     
     [String] newError() { return block.getUnit().newError(); }
     
-    abstract [int] prepare(int pos);
-    abstract [int] compile();
+    abstract [int] prepare(int start);
+    abstract [int] compile(int start);
     abstract [] finalize(int startAddress);
+    abstract [int] getStart();
+    abstract [int] getEnd();
     
     abstract [OStream] rawToStream(OStream stream);
    

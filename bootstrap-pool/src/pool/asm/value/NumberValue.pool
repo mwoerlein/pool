@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::value;
+
+class NumberValue extends NumericValue {
+
+    int value;
+    
+    [NumberValue] init(int n) {
+        value = n;
+        return this;
+    }
+    [int] getValue() { return value; }
+    [int] isConstant() { return true; }
+}

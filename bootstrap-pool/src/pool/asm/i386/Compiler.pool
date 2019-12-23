@@ -9,6 +9,7 @@ use pool::asm::CompilationBlock;
 use pool::asm::CompilationUnit;
 use pool::asm::Definition;
 use pool::asm::Instruction;
+use pool::asm::Value;
 
 use pool::asm::ast::CodeNode;
 use pool::asm::ast::CommentNode;
@@ -27,8 +28,9 @@ use pool::asm::ast::operand::NumberNode;
 use pool::asm::ast::operand::RegisterNode;
 use pool::asm::ast::operand::StringNode;
 
-use pool::asm::definition::OperandDefinition;
-use pool::asm::definition::PositionDefinition;
+use pool::asm::value::NumericOperation;
+use pool::asm::value::PositionValue;
+use pool::asm::value::TextOperation;
 
 use pool::asm::i386::instruction::Inline;
 use pool::asm::i386::instruction::Move;
@@ -43,6 +45,7 @@ class Compiler extends sys::core::Object {
     CompilationUnit unit;
     CompilationBlock lastBlock;
     Instruction lastInst;
+    Value lastValue;
 
     [CodeNode] createCode(int mode) {
         CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
@@ -53,6 +56,7 @@ class Compiler extends sys::core::Object {
     [] prepare(CompilationUnit unit) {
         this.unit = unit;
         this.lastInst = null;
+        this.lastValue = null;
         this._prepareCodeNode(this.createCode(32)); // initialize default block
         this._prepareNodeList(unit.getNodeList());
         this.unit = null;
@@ -79,7 +83,7 @@ class Compiler extends sys::core::Object {
             AnyIterator dit = unit.definitions();
             while (dit.hasNext()) {
                 Definition def = dit.next();
-                def.validate(unit);
+                def.compile(unit);
             }
             dit.destroy();
         }
@@ -92,8 +96,7 @@ class Compiler extends sys::core::Object {
                 AnyIterator iit = block.instructions();
                 while (iit.hasNext()) {
                     Instruction inst = iit.next();
-                    inst.setPos(pos);
-                    pos += inst.compile();
+                    pos += inst.compile(pos);
                 }
                 iit.destroy();
             }
@@ -123,9 +126,8 @@ class Compiler extends sys::core::Object {
     }
     
     [] _prepareDefinitionNode(DefinitionNode defNode) {
-        OperandDefinition def = this.rt().createInstance(OperandDefinition:CLASSNAME);
-        def.init(defNode);
-        unit.addDefinition(def.definition());
+        this._prepareOperandNode(defNode.getValue());
+        unit.addDefinition(defNode.node(), defNode.getId(), lastValue);
     }
     
     [] _prepareInstructionNode(InstructionNode instNode) {
@@ -133,19 +135,29 @@ class Compiler extends sys::core::Object {
         Instruction inst = this._buildInstruction(op);
         if (inst) {
             inst.setNode(instNode);
+            if (instNode.getOperand1()) {
+                this._prepareOperandNode(instNode.getOperand1());
+                inst.setOperand1(lastValue);
+            }
+            if (instNode.getOperand2()) {
+                this._prepareOperandNode(instNode.getOperand2());
+                inst.setOperand2(lastValue);
+            }
+            if (instNode.getOperand3()) {
+                this._prepareOperandNode(instNode.getOperand3());
+                inst.setOperand3(lastValue);
+            }
             lastInst = lastBlock.addInstruction(inst);
         }
         op.destroy();
     }
     
     [] _prepareLabelNode(LabelNode label) {
-        PositionDefinition def = this.rt().createInstance(PositionDefinition:CLASSNAME);
         if (!lastInst) {
             // fake instruction as reference for the beginning of the unit
             lastInst = lastBlock.addInstruction(this._buildInstruction(null));
         }
-        def.init(label, lastInst);
-        unit.addDefinition(def.definition());
+        unit.addDefinition(label.node(), label.getLabel(), unit._buildPositionValue(lastInst));
     }
     
     [] _prepareNodeList(NodeList list) {
@@ -171,6 +183,44 @@ class Compiler extends sys::core::Object {
         }
         it.destroy();
     }
+    
+    [] _prepareOperandNode(OperandNode o) {
+        sys::runtime::Runtime rt = this.rt();
+        FormulaNode formula = rt.cast(FormulaNode:CLASSNAME, o);
+        IdentifierNode id = rt.cast(IdentifierNode:CLASSNAME, o);
+        IndirectNode indirect = rt.cast(IndirectNode:CLASSNAME, o);
+        NumberNode number = rt.cast(NumberNode:CLASSNAME, o);
+        RegisterNode reg = rt.cast(RegisterNode:CLASSNAME, o);
+        StringNode str = rt.cast(StringNode:CLASSNAME, o);
+        if (formula) { lastValue = this._buildOperationValue(formula); }
+        else if (id) { lastValue = unit._buildIdentifierValue(id); }
+        else if (indirect) { lastValue = null; /* TDB */ }
+        else if (number) { lastValue = unit._buildNumberValue(number.getOperand()); }
+        else if (reg) { lastValue = null; /* TDB */ }
+        else if (str) { lastValue = unit._buildStringValue(str.getOperand()); }
+        else { unit.newError().printCString("unexpected operand '").print(o).printChar('\''); }
+    }
+    
+    [Value] _buildOperationValue(FormulaNode n) {
+        this._prepareOperandNode(n.getOperand1());
+        Value o1 = lastValue;
+        this._prepareOperandNode(n.getOperand2());
+        Value o2 = lastValue;
+        String op = n.getOperation();
+        
+        if (op.cequals("."))  { return unit._buildTextOperation(n, o1, TextOperation:CONC, o2); }
+        if (op.cequals("+"))  { return unit._buildNumericOperation(n, o1, NumericOperation:ADD, o2); }
+        if (op.cequals("-"))  { return unit._buildNumericOperation(n, o1, NumericOperation:SUB, o2); }
+        if (op.cequals("*"))  { return unit._buildNumericOperation(n, o1, NumericOperation:MUL, o2); }
+        if (op.cequals("/"))  { return unit._buildNumericOperation(n, o1, NumericOperation:DIV, o2); }
+        if (op.cequals("%"))  { return unit._buildNumericOperation(n, o1, NumericOperation:MOD, o2); }
+        if (op.cequals(">>"))  { return unit._buildNumericOperation(n, o1, NumericOperation:SHR, o2); }
+        if (op.cequals("<<"))  { return unit._buildNumericOperation(n, o1, NumericOperation:SHL, o2); }
+        
+        unit.newError().printCString("unknown operation: '").print(n).printChar('\'');
+        return null;
+    }
+    
     
     // TODO: extract InstructionFactory
     [Instruction] _buildInstruction(String op) {

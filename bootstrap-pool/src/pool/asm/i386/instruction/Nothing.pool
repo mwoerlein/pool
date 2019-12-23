@@ -11,11 +11,12 @@ class Nothing extends pool::asm::i386::Instruction {
     
     [int] prepare(int pos) {
         this.pos = this.preparePos = pos;
-        return 0;
+        return this.size = 0;
     }
     
-    [int] compile() {
-        return 0;
+    [int] compile(int pos) {
+        this.pos = pos;
+        return this.size = 0;
     }
     
     [OStream] rawToStream(OStream stream) {

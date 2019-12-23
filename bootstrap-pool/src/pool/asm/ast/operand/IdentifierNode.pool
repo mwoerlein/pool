@@ -35,6 +35,8 @@ class IdentifierNode extends OperandNode {
         return this;
     }
     
+    [String] getIdentifier() { return identifier; }
+    
     [OStream] printToStream(OStream stream) {
         return stream.print(identifier);
     }

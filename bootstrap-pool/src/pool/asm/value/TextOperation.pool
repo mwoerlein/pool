@@ -1,0 +1,76 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::value;
+
+use pool::asm::CompilationUnit;
+use pool::asm::Value;
+
+use pool::asm::ast::operand::FormulaNode;
+
+use sys::core::String;
+
+class TextOperation extends TextValue {
+
+    int CONC := 1;
+    
+    FormulaNode node;
+    Value o1;
+    Value o2;
+    int operation;
+    String value;
+    
+    [TextOperation] init(FormulaNode node, Value o1, int operation, Value o2) {
+        this.node = node;
+        this.o1 = o1;
+        this.o2 = o2;
+        this.operation = operation;
+        value = null;
+    }
+    
+    [] __destruct() {
+        if (value) { value.destroy(); }
+    }
+
+    [int] validate(CompilationUnit unit) {
+        int valid = true;
+        if (operation < TextOperation:CONC || operation > TextOperation:CONC) {
+            valid = false;
+            unit.newError().printCString("invalid operation in ").print(node);
+        }
+        if (!o1.asText()) {
+            valid = false;
+            unit.newError().printCString("invalid first argument in ").print(node);
+        }
+        if (!o2.asText()) {
+            valid = false;
+            unit.newError().printCString("invalid second argument in ").print(node);
+        }
+        return valid;
+    }
+    
+    [Value] compile(CompilationUnit unit) {
+        o1 = o1.compile(unit);
+        o2 = o2.compile(unit);
+        
+        if (this.validate(unit)) {
+            return unit._buildStringValue(this.getValue()).compile(unit);
+        }
+        return this.value();
+    }
+    
+    [int] isConstant() { return true; }
+    [String] getValue() {
+        if (!value) {
+            value = this.rt().createInstance(String:CLASSNAME);
+            TextValue t1 = o1.asText();
+            TextValue t2 = o2.asText();
+            if (t1 && t2) {
+                if (operation == TextOperation:CONC) { value.print(t1.getValue()).print(t2.getValue()); }
+            }
+        }
+        return value;
+    }
+}

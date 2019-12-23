@@ -5,16 +5,28 @@ version = 0.1.0
 */
 namespace pool::asm;
 
-use pool::asm::ast::InstructionNode;
+use pool::asm::ast::Node;
 
 use sys::core::Object;
 use sys::core::String;
 
 class Definition extends Object {
-   
-    abstract [String] getId();
-    abstract [] validate(CompilationUnit unit);
     
+    Node node;
+    String id;
+    Value value;
+    
+    [Definition] init(Node n, String id, Value v) {
+        node = n;
+        value = v;
+        this.id = id;
+    }
+    
+    [String] getId() { return id; }
+    [Value] getValue() { return value; }
+    [Value] compile(CompilationUnit unit) {
+        return value = value.compile(unit);
+    }
     // TODO: remove with implicit cast
     [Definition] definition() { return this; }
 }
