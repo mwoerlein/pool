@@ -109,7 +109,7 @@ class String extends OStream {
         if (s) {
             return this.compareString(s) == 0;
         }
-        return 0;
+        return false;
     }
     [int] cequals(cstring s) {
         return this.compareCString(s) == 0;
