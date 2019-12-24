@@ -79,6 +79,7 @@ with multiple lines
             ).operand()
         ).setCComment(" a formula");
         list.addCDefinition("str", this.createString("foo").operand()).setCComment(" string constant");
+        list.addCDefinition("reg", this.createRegister("cx").operand());
         list.addCInstruction0("sTi");
         list.addCInstruction0("pusha");
         list.addCInstruction0("pushaw");
@@ -101,6 +102,11 @@ with multiple lines
         list.addCInstruction0("pushaw");
         list.addCInstruction0("pushad");
         
+        list.addCInstruction2(
+            "mOVl",
+            this.createIdentifier("reg").operand(),
+            this.createRegister("cR0").operand()
+        );
         list.addCInstruction2(
             "mOVl",
             this.createFormula(

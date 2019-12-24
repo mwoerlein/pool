@@ -34,6 +34,7 @@ class RegisterNode extends OperandNode {
         reg.assignCString(r);
         return this;
     }
+    [String] getRegister() { return reg; }
     
     [OStream] printToStream(OStream stream) {
         return stream.printChar('%').print(reg);

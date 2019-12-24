@@ -37,6 +37,8 @@ use pool::asm::i386::instruction::Move;
 use pool::asm::i386::instruction::NoOperand;
 use pool::asm::i386::instruction::Nothing;
 
+use pool::asm::i386::value::RegisterValue;
+
 use sys::core::anycollection::AnyIterator;
 use sys::core::String;
 use sys::stream::IStream;
@@ -196,7 +198,7 @@ class Compiler extends sys::core::Object {
         else if (id) { lastValue = unit._buildIdentifierValue(id); }
         else if (indirect) { lastValue = null; /* TDB */ }
         else if (number) { lastValue = unit._buildNumberValue(number.getOperand()); }
-        else if (reg) { lastValue = null; /* TDB */ }
+        else if (reg) { lastValue = this._buildRegisterValue(reg); }
         else if (str) { lastValue = unit._buildStringValue(str.getOperand()); }
         else { unit.newError().printCString("unexpected operand '").print(o).printChar('\''); }
     }
@@ -219,6 +221,12 @@ class Compiler extends sys::core::Object {
         
         unit.newError().printCString("unknown operation: '").print(n).printChar('\'');
         return null;
+    }
+    
+    [Value] _buildRegisterValue(RegisterNode node) {
+        RegisterValue v = unit.createOwn(RegisterValue:CLASSNAME);
+        v.init(node);
+        return v.value();
     }
     
     

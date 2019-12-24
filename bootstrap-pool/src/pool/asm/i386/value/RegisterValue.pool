@@ -1,0 +1,236 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::value;
+
+use pool::asm::CompilationUnit;
+use pool::asm::Value;
+
+use pool::asm::ast::operand::RegisterNode;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class RegisterValue extends Value {
+
+    int NONE := 0;
+    // 8bit
+    int AL := 2;
+    int AH := 3;
+    int BL := 4;
+    int BH := 5;
+    int CL := 6;
+    int CH := 7;
+    int DL := 8;
+    int DH := 9;
+    // 16bit
+    int AX := 10;
+    int BX := 11;
+    int CX := 12;
+    int DX := 13;
+    int DI := 14;
+    int SI := 15;
+    int BP := 16;
+    int SP := 17;
+    // 32bit
+    int EAX := 20;
+    int EBX := 21;
+    int ECX := 22;
+    int EDX := 23;
+    int EDI := 24;
+    int ESI := 25;
+    int EBP := 26;
+    int ESP := 27;
+    // segment register
+    int CS := 30;
+    int DS := 31;
+    int ES := 32;
+    int FS := 33;
+    int GS := 34;
+    int SS := 35;
+    // control register
+    int CR0 := 40;
+    int CR1 := 41;
+    int CR2 := 42;
+    int CR3 := 43;
+    int CR4 := 44;
+    
+    // kinds
+    int GENERAL := 1;
+    int SEGMENT := 2;
+    int CONTROL := 3;
+    
+    RegisterNode node;
+    int reg;
+    int width;
+    int kind;
+    int opCodeReg;
+    
+    [RegisterValue] init(RegisterNode n) {
+        node = n;
+        reg = RegisterValue:NONE;
+        kind = RegisterValue:NONE;
+        width = 0;
+        opCodeReg = -1;
+        return this;
+    }
+    
+    [int] isConstant() { return true; }
+    [int] isRegister(int reg) { return this.reg == reg; }
+    [int] isGeneral() { return kind == RegisterValue:GENERAL; }
+    [int] isSegment() { return kind == RegisterValue:SEGMENT; }
+    [int] isControl() { return kind == RegisterValue:CONTROL; }
+    
+    [int] getWidth() { return width; }
+    [int] getOpCodeRegister() { return opCodeReg; }
+    
+    [Value] compile(CompilationUnit unit) {
+        String name = node.getRegister().toLower();
+        // 8bit
+        if (name.cequals("al"))         { reg = RegisterValue:AL; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 0; }
+        else if (name.cequals("ah"))    { reg = RegisterValue:AH; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 4; }
+        else if (name.cequals("bl"))    { reg = RegisterValue:BL; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 3; }
+        else if (name.cequals("bh"))    { reg = RegisterValue:BH; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 7; }
+        else if (name.cequals("cl"))    { reg = RegisterValue:CL; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 1; }
+        else if (name.cequals("ch"))    { reg = RegisterValue:CH; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 5; }
+        else if (name.cequals("dl"))    { reg = RegisterValue:DL; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 2; }
+        else if (name.cequals("dh"))    { reg = RegisterValue:DH; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 6; }
+        // 16bit
+        else if (name.cequals("ax"))    { reg = RegisterValue:AX; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 0; }
+        else if (name.cequals("bx"))    { reg = RegisterValue:BX; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 3; }
+        else if (name.cequals("cx"))    { reg = RegisterValue:CX; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 1; }
+        else if (name.cequals("dx"))    { reg = RegisterValue:DX; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 2; }
+        else if (name.cequals("di"))    { reg = RegisterValue:DI; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 7; }
+        else if (name.cequals("si"))    { reg = RegisterValue:SI; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 6; }
+        else if (name.cequals("bp"))    { reg = RegisterValue:BP; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 5; }
+        else if (name.cequals("sp"))    { reg = RegisterValue:SP; width = 16; kind = RegisterValue:GENERAL; opCodeReg = 4; }
+        // 32bit
+        else if (name.cequals("eax"))   { reg = RegisterValue:EAX; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 0; }
+        else if (name.cequals("ebx"))   { reg = RegisterValue:EBX; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 3; }
+        else if (name.cequals("ecx"))   { reg = RegisterValue:ECX; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 1; }
+        else if (name.cequals("edx"))   { reg = RegisterValue:EDX; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 2; }
+        else if (name.cequals("edi"))   { reg = RegisterValue:EDI; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 7; }
+        else if (name.cequals("esi"))   { reg = RegisterValue:ESI; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 6; }
+        else if (name.cequals("ebp"))   { reg = RegisterValue:EBP; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 5; }
+        else if (name.cequals("esp"))   { reg = RegisterValue:ESP; width = 32; kind = RegisterValue:GENERAL; opCodeReg = 4; }
+        // segment register
+        else if (name.cequals("cs"))    { reg = RegisterValue:CS; width = 16; kind = RegisterValue:SEGMENT; opCodeReg = 1; }
+        else if (name.cequals("ds"))    { reg = RegisterValue:DS; width = 16; kind = RegisterValue:SEGMENT; opCodeReg = 3; }
+        else if (name.cequals("es"))    { reg = RegisterValue:ES; width = 16; kind = RegisterValue:SEGMENT; opCodeReg = 0; }
+        else if (name.cequals("fs"))    { reg = RegisterValue:FS; width = 16; kind = RegisterValue:SEGMENT; opCodeReg = 4; }
+        else if (name.cequals("gs"))    { reg = RegisterValue:GS; width = 16; kind = RegisterValue:SEGMENT; opCodeReg = 5; }
+        else if (name.cequals("ss"))    { reg = RegisterValue:SS; width = 16; kind = RegisterValue:SEGMENT; opCodeReg = 2; }
+        // control register
+        else if (name.cequals("cr0"))   { reg = RegisterValue:CR0; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 0; }
+        else if (name.cequals("cr1"))   { reg = RegisterValue:CR1; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 1; }
+        else if (name.cequals("cr2"))   { reg = RegisterValue:CR2; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 2; }
+        else if (name.cequals("cr3"))   { reg = RegisterValue:CR3; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 3; }
+        else if (name.cequals("cr4"))   { reg = RegisterValue:CR4; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 4; }
+        
+        else { unit.newError().printCString("unknown register: ").print(name); }
+        name.destroy();
+        return this.value();
+    }
+    
+    [] wideTo(int width, CompilationUnit unit) {
+        if (this.width == width) { return; }
+        int newReg = this._wideRegister(reg, width);
+        if (newReg == RegisterValue:NONE) {
+            unit.newError().printCString("Invalid register \"").print(this).printCString("\" for ").printInt(width).printCString(" bit operand size");
+            return;
+        }
+        OStream warn = unit.newWarning().printCString("replace \"").print(this).printCString("\" with \"");
+        this.reg = newReg;
+        this.width = width;
+        warn.print(this).printCString("\" due to ").printInt(width).printCString(" bit operand size");
+    }
+    
+    [int] hash() { return reg; }
+    [int] equals(__any__ obj) {
+        RegisterValue r = this.rt().cast(RegisterValue:CLASSNAME, obj);
+        if (r) {
+            return r.isRegister(reg);
+        }
+        return false;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        if (reg == RegisterValue:AL) { return stream.printCString("%al"); }
+        if (reg == RegisterValue:AH) { return stream.printCString("%ah"); }
+        if (reg == RegisterValue:BL) { return stream.printCString("%bl"); }
+        if (reg == RegisterValue:BH) { return stream.printCString("%bh"); }
+        if (reg == RegisterValue:CL) { return stream.printCString("%cl"); }
+        if (reg == RegisterValue:CH) { return stream.printCString("%ch"); }
+        if (reg == RegisterValue:DL) { return stream.printCString("%dl"); }
+        if (reg == RegisterValue:DH) { return stream.printCString("%dh"); }
+        
+        if (reg == RegisterValue:AX) { return stream.printCString("%ax"); }
+        if (reg == RegisterValue:BX) { return stream.printCString("%bx"); }
+        if (reg == RegisterValue:CX) { return stream.printCString("%cx"); }
+        if (reg == RegisterValue:DX) { return stream.printCString("%dx"); }
+        if (reg == RegisterValue:DI) { return stream.printCString("%di"); }
+        if (reg == RegisterValue:SI) { return stream.printCString("%si"); }
+        if (reg == RegisterValue:SP) { return stream.printCString("%sp"); }
+        if (reg == RegisterValue:BP) { return stream.printCString("%bp"); }
+        
+        if (reg == RegisterValue:EAX) { return stream.printCString("%eax"); }
+        if (reg == RegisterValue:EBX) { return stream.printCString("%ebx"); }
+        if (reg == RegisterValue:ECX) { return stream.printCString("%ecx"); }
+        if (reg == RegisterValue:EDX) { return stream.printCString("%edx"); }
+        if (reg == RegisterValue:EDI) { return stream.printCString("%edi"); }
+        if (reg == RegisterValue:ESI) { return stream.printCString("%esi"); }
+        if (reg == RegisterValue:ESP) { return stream.printCString("%esp"); }
+        if (reg == RegisterValue:EBP) { return stream.printCString("%ebp"); }
+        
+        if (reg == RegisterValue:CS) { return stream.printCString("%cs"); }
+        if (reg == RegisterValue:DS) { return stream.printCString("%ds"); }
+        if (reg == RegisterValue:ES) { return stream.printCString("%es"); }
+        if (reg == RegisterValue:FS) { return stream.printCString("%fs"); }
+        if (reg == RegisterValue:GS) { return stream.printCString("%gs"); }
+        if (reg == RegisterValue:SS) { return stream.printCString("%ss"); }
+        
+        if (reg == RegisterValue:CR0) { return stream.printCString("%cr0"); }
+        if (reg == RegisterValue:CR1) { return stream.printCString("%cr1"); }
+        if (reg == RegisterValue:CR2) { return stream.printCString("%cr2"); }
+        if (reg == RegisterValue:CR3) { return stream.printCString("%cr3"); }
+        if (reg == RegisterValue:CR4) { return stream.printCString("%cr4"); }
+        
+        return stream;
+    }
+    
+    [int] _wideRegister(int orig, int size) {
+        if (size == 32) {
+            if (orig == RegisterValue:AL) { return RegisterValue:EAX; }
+            if (orig == RegisterValue:BL) { return RegisterValue:EBX; }
+            if (orig == RegisterValue:CL) { return RegisterValue:ECX; }
+            if (orig == RegisterValue:DL) { return RegisterValue:EDX; }
+            
+            if (orig == RegisterValue:AX) { return RegisterValue:EAX; }
+            if (orig == RegisterValue:BX) { return RegisterValue:EBX; }
+            if (orig == RegisterValue:CX) { return RegisterValue:ECX; }
+            if (orig == RegisterValue:DX) { return RegisterValue:EDX; }
+            if (orig == RegisterValue:DI) { return RegisterValue:EDI; }
+            if (orig == RegisterValue:SI) { return RegisterValue:ESI; }
+            if (orig == RegisterValue:BP) { return RegisterValue:EBP; }
+            if (orig == RegisterValue:SP) { return RegisterValue:ESP; }
+        }
+        if (size == 16) {
+            if (orig == RegisterValue:AL) { return RegisterValue:AX; }
+            if (orig == RegisterValue:BL) { return RegisterValue:BX; }
+            if (orig == RegisterValue:CL) { return RegisterValue:CX; }
+            if (orig == RegisterValue:DL) { return RegisterValue:DX; }
+            
+            if (orig == RegisterValue:EAX) { return RegisterValue:AX; }
+            if (orig == RegisterValue:EBX) { return RegisterValue:BX; }
+            if (orig == RegisterValue:ECX) { return RegisterValue:CX; }
+            if (orig == RegisterValue:EDX) { return RegisterValue:DX; }
+            if (orig == RegisterValue:EDI) { return RegisterValue:DI; }
+            if (orig == RegisterValue:ESI) { return RegisterValue:SI; }
+            if (orig == RegisterValue:EBP) { return RegisterValue:BP; }
+            if (orig == RegisterValue:ESP) { return RegisterValue:SP; }
+        }
+        return RegisterValue:NONE;
+    }
+}
