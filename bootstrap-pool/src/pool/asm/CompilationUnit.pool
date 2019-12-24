@@ -31,12 +31,14 @@ use sys::stream::OStream;
 class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     
     NodeList nodeList;
+    AnyList warnings; // LinkedList<String>
     AnyList errors; // LinkedList<String>
     AnyMap definitions; // HashMap<String, Definition>
 
     [] __init() {
         sys::runtime::Runtime rt = this.rt();
         nodeList = rt.createInstance(NodeList:CLASSNAME);
+        warnings = rt.createInstance(AnyList:CLASSNAME);
         errors = rt.createInstance(AnyList:CLASSNAME);
         definitions = rt.createInstance(AnyMap:CLASSNAME);
         definitions.init(13);
@@ -44,6 +46,7 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     }
 
     [] __destruct() {
+        warnings.destroy();
         errors.destroy();
         definitions.destroy();
         nodeList.destroy();
@@ -131,7 +134,20 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
         return err;
     }
     
+    [String] newWarning() {
+        String warn = this.createOwn(String:CLASSNAME);
+        warnings.add(warn);
+        return warn;
+    }
+    
     [int] flushErrors(OStream stream) {
+        {
+            AnyIterator it = warnings.iterator();
+            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
+            it.destroy();
+            warnings.clear();
+        }
+        
         if (errors.size() == 0) {
             return false;
         }
@@ -140,8 +156,8 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
             AnyIterator it = errors.iterator();
             while (it.hasNext()) { stream.print(it.next()).printNewline(); }
             it.destroy();
+            errors.clear();
         }
-        errors.clear();
         return true;
     }
     
