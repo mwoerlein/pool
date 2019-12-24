@@ -12,11 +12,11 @@ use sys::core::Object;
 
 class Value extends Object {
    
-    [int] isConstant() { return false; }
+    [int] isConstant() { return true; }
     [NumericValue] asNumeric() { return null; }
     [TextValue] asText() { return null; }
     
-    [Value] compile(CompilationUnit unit) { return this; }
+    [Value] compile(CompilationBlock block) { return this; }
     
     // TODO: remove with implicit cast
     [Value] value() { return this; }

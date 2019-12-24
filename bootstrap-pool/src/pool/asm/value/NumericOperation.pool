@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::asm::value;
 
+use pool::asm::CompilationBlock;
 use pool::asm::CompilationUnit;
 use pool::asm::Value;
 
@@ -51,12 +52,13 @@ class NumericOperation extends NumericValue {
         return valid;
     }
     
-    [Value] compile(CompilationUnit unit) {
-        o1 = o1.compile(unit);
-        o2 = o2.compile(unit);
+    [Value] compile(CompilationBlock block) {
+        CompilationUnit unit = block.getUnit();
+        o1 = o1.compile(block);
+        o2 = o2.compile(block);
         
         if (this.validate(unit) && this.isConstant()) {
-            return unit._buildNumberValue(this.getValue()).compile(unit);
+            return unit._buildNumberValue(this.getValue()).compile(block);
         }
         return this.value();
     }

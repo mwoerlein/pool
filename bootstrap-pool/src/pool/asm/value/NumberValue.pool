@@ -14,5 +14,5 @@ class NumberValue extends NumericValue {
         return this;
     }
     [int] getValue() { return value; }
-    [int] isConstant() { return true; }
+    
 }

@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::asm::value;
 
+use pool::asm::CompilationBlock;
 use pool::asm::CompilationUnit;
 use pool::asm::Value;
 
@@ -19,10 +20,11 @@ class IdentifierValue extends Value {
         return this;
     }
     [int] isConstant() { return false; }
-    [Value] compile(CompilationUnit unit) {
+    [Value] compile(CompilationBlock block) {
+        CompilationUnit unit = block.getUnit();
         Value v = unit.getValue(node.getIdentifier());
         if (v) {
-            return v.compile(unit);
+            return v.compile(block);
         }
         unit.newError().printCString("unknown identifier ").print(node);
         return this.value();

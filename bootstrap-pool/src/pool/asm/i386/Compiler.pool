@@ -7,7 +7,6 @@ namespace pool::asm::i386;
 
 use pool::asm::CompilationBlock;
 use pool::asm::CompilationUnit;
-use pool::asm::Definition;
 use pool::asm::Instruction;
 use pool::asm::Value;
 
@@ -38,6 +37,7 @@ use pool::asm::i386::instruction::NoOperand;
 use pool::asm::i386::instruction::Nothing;
 
 use pool::asm::i386::value::RegisterValue;
+use pool::asm::i386::value::IndirectValue;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::String;
@@ -47,7 +47,6 @@ class Compiler extends sys::core::Object {
     CompilationUnit unit;
     CompilationBlock lastBlock;
     Instruction lastInst;
-    Value lastValue;
 
     [CodeNode] createCode(int mode) {
         CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
@@ -58,7 +57,6 @@ class Compiler extends sys::core::Object {
     [] prepare(CompilationUnit unit) {
         this.unit = unit;
         this.lastInst = null;
-        this.lastValue = null;
         this._prepareCodeNode(this.createCode(32)); // initialize default block
         this._prepareNodeList(unit.getNodeList());
         this.unit = null;
@@ -80,16 +78,6 @@ class Compiler extends sys::core::Object {
     }
     
     [int] compile(CompilationUnit unit) {
-
-        {
-            AnyIterator dit = unit.definitions();
-            while (dit.hasNext()) {
-                Definition def = dit.next();
-                def.compile(unit);
-            }
-            dit.destroy();
-        }
-        
         int pos = 0;
         {
             AnyIterator bit = unit.blocks();
@@ -137,8 +125,7 @@ class Compiler extends sys::core::Object {
     }
     
     [] _prepareDefinitionNode(DefinitionNode defNode) {
-        this._prepareOperandNode(defNode.getValue());
-        unit.addDefinition(defNode.node(), defNode.getId(), lastValue);
+        unit.addDefinition(defNode.getId(), this._prepareOperandNode(defNode.getValue()));
     }
     
     [] _prepareInstructionNode(InstructionNode instNode) {
@@ -146,18 +133,9 @@ class Compiler extends sys::core::Object {
         Instruction inst = this._buildInstruction(op);
         if (inst) {
             inst.setNode(instNode);
-            if (instNode.getOperand1()) {
-                this._prepareOperandNode(instNode.getOperand1());
-                inst.setOperand1(lastValue);
-            }
-            if (instNode.getOperand2()) {
-                this._prepareOperandNode(instNode.getOperand2());
-                inst.setOperand2(lastValue);
-            }
-            if (instNode.getOperand3()) {
-                this._prepareOperandNode(instNode.getOperand3());
-                inst.setOperand3(lastValue);
-            }
+            inst.setOperand1(this._prepareOperandNode(instNode.getOperand1()));
+            inst.setOperand2(this._prepareOperandNode(instNode.getOperand2()));
+            inst.setOperand3(this._prepareOperandNode(instNode.getOperand3()));
             lastInst = lastBlock.addInstruction(inst);
         }
         op.destroy();
@@ -168,7 +146,7 @@ class Compiler extends sys::core::Object {
             // fake instruction as reference for the beginning of the unit
             lastInst = lastBlock.addInstruction(this._buildInstruction(null));
         }
-        unit.addDefinition(label.node(), label.getLabel(), unit._buildPositionValue(lastInst));
+        unit.addDefinition(label.getLabel(), unit._buildPositionValue(lastInst));
     }
     
     [] _prepareNodeList(NodeList list) {
@@ -195,7 +173,8 @@ class Compiler extends sys::core::Object {
         it.destroy();
     }
     
-    [] _prepareOperandNode(OperandNode o) {
+    [Value] _prepareOperandNode(OperandNode o) {
+        if (!o) { return null; }
         sys::runtime::Runtime rt = this.rt();
         FormulaNode formula = rt.cast(FormulaNode:CLASSNAME, o);
         IdentifierNode id = rt.cast(IdentifierNode:CLASSNAME, o);
@@ -203,20 +182,19 @@ class Compiler extends sys::core::Object {
         NumberNode number = rt.cast(NumberNode:CLASSNAME, o);
         RegisterNode reg = rt.cast(RegisterNode:CLASSNAME, o);
         StringNode str = rt.cast(StringNode:CLASSNAME, o);
-        if (formula) { lastValue = this._buildOperationValue(formula); }
-        else if (id) { lastValue = unit._buildIdentifierValue(id); }
-        else if (indirect) { lastValue = null; /* TDB */ }
-        else if (number) { lastValue = unit._buildNumberValue(number.getOperand()); }
-        else if (reg) { lastValue = this._buildRegisterValue(reg); }
-        else if (str) { lastValue = unit._buildStringValue(str.getOperand()); }
+        if (formula) { return this._buildOperationValue(formula); }
+        else if (id) { return unit._buildIdentifierValue(id); }
+        else if (indirect) { return this._buildIndirectValue(indirect); }
+        else if (number) { return unit._buildNumberValue(number.getOperand()); }
+        else if (reg) { return this._buildRegisterValue(reg); }
+        else if (str) { return unit._buildStringValue(str.getOperand()); }
         else { unit.newError().printCString("unexpected operand '").print(o).printChar('\''); }
+        return null;
     }
     
     [Value] _buildOperationValue(FormulaNode n) {
-        this._prepareOperandNode(n.getOperand1());
-        Value o1 = lastValue;
-        this._prepareOperandNode(n.getOperand2());
-        Value o2 = lastValue;
+        Value o1 = this._prepareOperandNode(n.getOperand1());
+        Value o2 = this._prepareOperandNode(n.getOperand2());
         String op = n.getOperation();
         
         if (op.cequals("."))  { return unit._buildTextOperation(n, o1, TextOperation:CONC, o2); }
@@ -234,10 +212,18 @@ class Compiler extends sys::core::Object {
     
     [Value] _buildRegisterValue(RegisterNode node) {
         RegisterValue v = unit.createOwn(RegisterValue:CLASSNAME);
-        v.init(node);
-        return v.value();
+        return v.init(node).value();
     }
     
+    [Value] _buildIndirectValue(IndirectNode node) {
+        IndirectValue v = unit.createOwn(IndirectValue:CLASSNAME);
+        return v.init(
+            node,
+            this._prepareOperandNode(node.getBase()),
+            this._prepareOperandNode(node.getIndex()),
+            this._prepareOperandNode(node.getDisplacement())
+        ).value();
+    }
     
     // TODO: extract InstructionFactory
     [Instruction] _buildInstruction(String op) {

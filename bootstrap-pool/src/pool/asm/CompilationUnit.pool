@@ -33,22 +33,22 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     NodeList nodeList;
     AnyList warnings; // LinkedList<String>
     AnyList errors; // LinkedList<String>
-    AnyMap definitions; // HashMap<String, Definition>
+    AnyMap values; // HashMap<String, Value>
 
     [] __init() {
         sys::runtime::Runtime rt = this.rt();
         nodeList = rt.createInstance(NodeList:CLASSNAME);
         warnings = rt.createInstance(AnyList:CLASSNAME);
         errors = rt.createInstance(AnyList:CLASSNAME);
-        definitions = rt.createInstance(AnyMap:CLASSNAME);
-        definitions.init(13);
+        values = rt.createInstance(AnyMap:CLASSNAME);
+        values.init(13);
         this._initOwner();
     }
 
     [] __destruct() {
         warnings.destroy();
         errors.destroy();
-        definitions.destroy();
+        values.destroy();
         nodeList.destroy();
         this.clear();
         this._destructOwner();
@@ -58,23 +58,16 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
         return nodeList;
     }
     
-    [] addDefinition(Node node, String id, Value v) {
-        Definition def = this.createOwn(Definition:CLASSNAME);
-        def.init(node, this.createOwnStringFromString(id), v);
-        definitions.set(def.getId(), def);
+    [] addDefinition(String id, Value v) {
+        values.set(this.createOwnStringFromString(id), v);
     }
-    [int] hasDefinition(String id) { return definitions.has(id); }
+    [int] hasDefinition(String id) { return values.has(id); }
     [int] hasPosition(String id) {
-        Definition def = definitions.get(id);
-        return def && this.rt().cast(PositionValue:CLASSNAME, def.getValue());
+        return values.has(id) && this.rt().cast(PositionValue:CLASSNAME, values.get(id));
     }
-    [Value] getValue(String id) {
-        Definition def = definitions.get(id);
-        if (def) { return def.getValue(); }
-        return null;
-    }
+    [Value] getValue(String id) { return values.get(id); }
     
-    [AnyIterator] definitions() { return definitions.values(); }
+    [AnyIterator] definitionIds() { return values.keys(); }
     
     [CompilationBlock] addBlock(CodeNode code) {
         CompilationBlock block = this.last();

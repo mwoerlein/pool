@@ -55,13 +55,12 @@ class Instruction extends pool::asm::Instruction {
     }
     
     [int] compile(int pos) {
-        CompilationUnit unit = this.block.getUnit();
         this.pos = pos;
         // TODO: validate generic and specific instruction properties
         // TODO: prepare prefix nodes, normalize operands, ...
-        if (o1) { o1 = o1.compile(unit); }
-        if (o2) { o2 = o2.compile(unit); }
-        if (o3) { o3 = o3.compile(unit); }
+        if (o1) { o1 = o1.compile(block); }
+        if (o2) { o2 = o2.compile(block); }
+        if (o3) { o3 = o3.compile(block); }
         
         if (data != 0 && data != 8 && data != 16 && data != 32) {
             this.newError().printCString("invalid data: ").printInt(data);

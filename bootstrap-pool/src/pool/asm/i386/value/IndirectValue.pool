@@ -1,0 +1,201 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::value;
+
+use pool::asm::CompilationBlock;
+use pool::asm::CompilationUnit;
+use pool::asm::Value;
+
+use pool::asm::ast::operand::IndirectNode;
+use pool::asm::value::NumericValue;
+
+use sys::core::String;
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+class IndirectValue extends Value {
+
+    IndirectNode node;
+    Value baseVal;
+    Value indexVal;
+    Value displacementVal;
+    RegisterValue base;
+    RegisterValue index;
+    NumericValue displacement;
+    int scale;
+    int addrWidth;
+    
+    [IndirectValue] init(IndirectNode n, Value b, Value i, Value d) {
+        node = n;
+        baseVal = b;
+        indexVal = i;
+        displacementVal = d;
+        scale = node.getScale();
+        return this;
+    }
+    
+    [Value] compile(CompilationBlock block) {
+        CompilationUnit unit = block.getUnit();
+        addrWidth = block.getCode().getMode();
+        
+        if (indexVal) {
+            index = this.rt().cast(RegisterValue:CLASSNAME, indexVal.compile(block));
+            if (index) {
+                if (
+                    index.isRegister(RegisterValue:EAX)
+                    || index.isRegister(RegisterValue:EBX)
+                    || index.isRegister(RegisterValue:ECX)
+                    || index.isRegister(RegisterValue:EDX)
+                    || index.isRegister(RegisterValue:EDI)
+                    || index.isRegister(RegisterValue:ESI)
+                    || index.isRegister(RegisterValue:EBP)
+                    || index.isRegister(RegisterValue:DI)
+                    || index.isRegister(RegisterValue:SI)
+                ) {
+                    addrWidth = index.getWidth();
+                } else {
+                    unit.newError().printCString("Invalid index register: ").print(node);
+                }
+            } else {
+                unit.newError().printCString("Invalid index operand: ").print(node);
+            }
+        }
+        if (baseVal) {
+            base = this.rt().cast(RegisterValue:CLASSNAME, baseVal.compile(block));
+            if (base) {
+                if (
+                    base.isRegister(RegisterValue:EAX)
+                    || base.isRegister(RegisterValue:EBX)
+                    || base.isRegister(RegisterValue:ECX)
+                    || base.isRegister(RegisterValue:EDX)
+                    || base.isRegister(RegisterValue:EDI)
+                    || base.isRegister(RegisterValue:ESI)
+                    || base.isRegister(RegisterValue:EBP)
+                    || base.isRegister(RegisterValue:ESP)
+                    || base.isRegister(RegisterValue:BX)
+                    || base.isRegister(RegisterValue:BP)
+                ) {
+                    if (index && base.getWidth() != addrWidth) {
+                        unit.newError().printCString("Unmatching index and base register: ").print(node);
+                    }
+                } else if (
+                    base.isRegister(RegisterValue:DI)
+                    || base.isRegister(RegisterValue:SI)
+                ) {
+                    if (index) {
+                        unit.newError().printCString("Invalid index register: ").print(node);
+                    }
+                } else {
+                    unit.newError().printCString("Invalid base register: ").print(node);
+                }
+                addrWidth = base.getWidth();
+            } else {
+                unit.newError().printCString("Invalid base operand: ").print(node);
+            }
+        }
+        if (displacementVal) {
+            displacement = displacementVal.compile(block).asNumeric();
+            if (displacement) {
+                if (displacement.isConstant() && (displacement.getValue() == 0) && (base || index)) {
+                    displacement = null;
+                }
+            } else {
+                unit.newError().printCString("Invalid displacement: ").print(node);
+            }
+        }
+        if (addrWidth == 32) {
+            if ((scale != 1) && (scale != 2) && (scale != 4) && (scale != 8)) {
+                unit.newError().printCString("Invalid scale: ").print(node);
+            }
+        } else if (addrWidth == 16) {
+            if (scale != 1) {
+                unit.newError().printCString("Invalid scale: ").print(node);
+            }
+        } else {
+            unit.newError().printCString("Invalid address width: ").print(node);
+        }
+        return this.value();
+    }
+    
+    [int] getModRMSize() { return 1; }
+    
+    [int] getSibSize() {
+        if (addrWidth == 16) { return 0; }
+        if (index || (base && base.isRegister(RegisterValue:ESP))) { return 1; }
+        return 0;
+    }
+    
+    [int] getDispSize() {
+        if (displacement) {
+            int value = displacement.getValue();
+            if ((base || index) && (-128 <= value && value <= 127)) { return 8; }
+            return addrWidth;
+        }
+        if (!index && base && base.isRegister(RegisterValue:BP)) { return 8; } // use 0(%bp)
+        if (!base && index) { return addrWidth; } // use 0(,<_index>)
+        return 0; // no disp bytes
+    }
+    
+    [int] getModRM(int reg) {
+        int dispSize = this.getDispSize();
+        if (addrWidth == 32) {
+            if (dispSize == 0) {
+                if (index) { return IndirectValue:ModRM(0, reg, 4); }
+                return IndirectValue:ModRM(0, reg, base.getOpCodeRegister());
+            } else if (dispSize == 8) {
+                if (index) { return IndirectValue:ModRM(1, reg, 4); }
+                return IndirectValue:ModRM(1, reg, base.getOpCodeRegister());
+            } else if (dispSize == 32) {
+                if (index && base) { return IndirectValue:ModRM(2, reg, 4); }
+                if (index) { return IndirectValue:ModRM(0, reg, 4); }
+                if (base) { return IndirectValue:ModRM(2, reg, base.getOpCodeRegister()); }
+                return IndirectValue:ModRM(0, reg, 5);
+            }
+        } else if (addrWidth == 16) {
+            if (!base) { return IndirectValue:ModRM(0, reg, 6); }
+            int mod = dispSize / 8;
+            if (base.isRegister(RegisterValue:BX)) {
+                int regM = 7;
+                if (index && index.isRegister(RegisterValue:SI)) { regM = 0; }
+                if (index && index.isRegister(RegisterValue:DI)) { regM = 1; }
+                return IndirectValue:ModRM(mod, reg, regM);
+            }
+            if (base.isRegister(RegisterValue:BP)) {
+                int regM = 6;
+                if (index && index.isRegister(RegisterValue:SI)) { regM = 2; }
+                if (index && index.isRegister(RegisterValue:DI)) { regM = 3; }
+                return IndirectValue:ModRM(mod, reg, regM);
+            }
+            if (base.isRegister(RegisterValue:SI)) { return IndirectValue:ModRM(mod, reg, 4); }
+            if (base.isRegister(RegisterValue:DI)) { return IndirectValue:ModRM(mod, reg, 5); }
+        }
+        return -1;
+    }
+    
+    [int] getSib() {
+        int b = 5; if (base) { b = base.getOpCodeRegister(); }
+        int i = 4; if (index) { i = index.getOpCodeRegister(); }
+        if (scale == 1) { return IndirectValue:SIB(0, i, b); }
+        if (scale == 2) { return IndirectValue:SIB(1, i, b); }
+        if (scale == 4) { return IndirectValue:SIB(2, i, b); }
+        if (scale == 8) { return IndirectValue:SIB(3, i, b); }
+        return -1;
+    }
+    
+    [int] getDispValue() {
+        if (displacement) { return displacement.getValue(); }
+        return 0;
+    }
+    
+    [int] isOffset() { return !base && !index; }
+    
+    global [int] ModRM(int mod, int regO, int regM) {
+        return Bitset:rshift(Bitset:and(mod, 0x3), 6) + Bitset:rshift(Bitset:and(regO, 0x7), 3) + Bitset:and(regM, 0x7);
+    }
+    global [int] SIB(int ss, int index, int base) {
+        return Bitset:rshift(Bitset:and(ss, 0x3), 6) + Bitset:rshift(Bitset:and(index, 0x7), 3) + Bitset:and(base, 0x7);
+    }
+}

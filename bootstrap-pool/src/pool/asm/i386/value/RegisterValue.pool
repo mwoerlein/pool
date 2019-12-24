@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::asm::i386::value;
 
+use pool::asm::CompilationBlock;
 use pool::asm::CompilationUnit;
 use pool::asm::Value;
 
@@ -77,7 +78,6 @@ class RegisterValue extends Value {
         return this;
     }
     
-    [int] isConstant() { return true; }
     [int] isRegister(int reg) { return this.reg == reg; }
     [int] isGeneral() { return kind == RegisterValue:GENERAL; }
     [int] isSegment() { return kind == RegisterValue:SEGMENT; }
@@ -86,7 +86,7 @@ class RegisterValue extends Value {
     [int] getWidth() { return width; }
     [int] getOpCodeRegister() { return opCodeReg; }
     
-    [Value] compile(CompilationUnit unit) {
+    [Value] compile(CompilationBlock block) {
         String name = node.getRegister().toLower();
         // 8bit
         if (name.cequals("al"))         { reg = RegisterValue:AL; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 0; }
@@ -129,7 +129,7 @@ class RegisterValue extends Value {
         else if (name.cequals("cr3"))   { reg = RegisterValue:CR3; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 3; }
         else if (name.cequals("cr4"))   { reg = RegisterValue:CR4; width = 32; kind = RegisterValue:CONTROL; opCodeReg = 4; }
         
-        else { unit.newError().printCString("unknown register: ").print(name); }
+        else { block.getUnit().newError().printCString("unknown register: ").print(name); }
         name.destroy();
         return this.value();
     }

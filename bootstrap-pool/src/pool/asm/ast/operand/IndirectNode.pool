@@ -11,8 +11,8 @@ use sys::stream::OStream;
 
 class IndirectNode extends OperandNode {
 
-    RegisterNode base;
-    RegisterNode index;
+    OperandNode base;
+    OperandNode index;
     OperandNode displacement;
     int scale;
 
@@ -30,25 +30,29 @@ class IndirectNode extends OperandNode {
         this._destructOperandNode(); 
     }
     
-    [IndirectNode] setBase(RegisterNode r) {
+    [IndirectNode] setBase(OperandNode r) {
         this.base = r;
         return this;
     }
+    [OperandNode] getBase() { return base; }
     
-    [IndirectNode] setIndex(RegisterNode r) {
+    [IndirectNode] setIndex(OperandNode r) {
         this.index = r;
         return this;
     }
+    [OperandNode] getIndex() { return index; }
     
     [IndirectNode] setDisplacement(OperandNode v) {
         this.displacement = v;
         return this;
     }
+    [OperandNode] getDisplacement() { return displacement; }
     
     [IndirectNode] setScale(int s) {
         this.scale = s;
         return this;
     }
+    [int] getScale() { return scale; }
     
     [OStream] printToStream(OStream stream) {
         if (displacement && !base && !index) {
