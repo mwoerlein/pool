@@ -95,16 +95,25 @@ class Compiler extends sys::core::Object {
             AnyIterator bit = unit.blocks();
             while (bit.hasNext()) {
                 CompilationBlock block = bit.next();
-                AnyIterator iit = block.instructions();
-                while (iit.hasNext()) {
-                    Instruction inst = iit.next();
-                    pos += inst.compile(pos);
+                if (this._validateCodeNode(block.getCode(), unit)) {
+                    AnyIterator iit = block.instructions();
+                    while (iit.hasNext()) {
+                        Instruction inst = iit.next();
+                        pos += inst.compile(pos);
+                    }
+                    iit.destroy();
                 }
-                iit.destroy();
             }
             bit.destroy();
         }
         return pos;
+    }
+    
+    [int] _validateCodeNode(CodeNode code, CompilationUnit unit) {
+        int mode = code.getMode();
+        if (mode == 16 || mode == 32) { return true; }
+        unit.newError().printCString("unsupported compilation mode ").print(code);
+        return false;
     }
     
     [] finalize(CompilationUnit unit, int startAddress) {
