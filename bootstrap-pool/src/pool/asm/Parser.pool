@@ -119,8 +119,8 @@ with multiple lines
                 ).operand()
             ).operand(),
             this.buildIndirect()
-                .setBase(this.createRegister("eax"))
-                .setIndex(this.createRegister("ebx"))
+                .setBase(this.createRegister("eax").operand())
+                .setIndex(this.createRegister("ebx").operand())
                 .setDisplacement(this.createNumber(16).operand())
                 .operand()
         ).setData(32).setCPrefix("lock");
