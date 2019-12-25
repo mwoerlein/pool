@@ -18,9 +18,9 @@ class SysCall {
         int read = 0;
         __pasm__(<"
             subl 4, %esp
-            movl %esp, %ecx; int 0x80; movb (%esp), %cl
+            movl %esp, %ecx; int 0x80; xor %ecx, %ecx; movb (%esp), %cl
             addl 4, %esp
-        ">, {"%eax": 3, "%ebx": fd, "%ecx": ret, "%edx": 1}, {"%eax": read, "%ecx": ret});
+        ">, {"%eax": 3, "%ebx": fd, "%edx": 1}, {"%eax": read, "%ecx": ret});
         return [ret, (read == 0)];
     }
     
