@@ -5,7 +5,6 @@ version = 0.1.0
 */
 namespace pool::asm;
 
-use pool::asm::ast::CodeNode;
 use pool::asm::ast::InstructionNode;
 use pool::asm::ast::NodeList;
 use pool::asm::ast::OperandNode;
@@ -64,7 +63,7 @@ class Parser extends Object {
 a comment
 with multiple lines
 ">);
-        list.addCode(32);
+        list.addCInstruction0(".code32");
         list.addCLabel("test1");
         list.addCDefinition("base", this.createNumber(8).operand()).setCComment(" a constant");
         list.addCDefinition("form", 
@@ -95,7 +94,7 @@ with multiple lines
         list.addCInstruction1(".long", this.createIdentifier("form").operand());
         
         list.addEmptyLine();
-        list.addCode(16);
+        list.addCInstruction0(".code16");
         list.addCComment(" single comment");
         list.addCLabel("test2").setCComment(" comment");
         list.addCInstruction0("pusha");

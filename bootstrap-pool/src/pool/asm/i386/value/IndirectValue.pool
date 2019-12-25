@@ -39,7 +39,7 @@ class IndirectValue extends Value {
     
     [Value] compile(CompilationBlock block) {
         CompilationUnit unit = block.getUnit();
-        addrWidth = block.getCode().getMode();
+        addrWidth = block.getMode();
         
         if (indexVal) {
             index = this.rt().cast(RegisterValue:CLASSNAME, indexVal.compile(block));

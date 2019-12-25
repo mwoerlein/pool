@@ -10,7 +10,6 @@ use pool::asm::CompilationUnit;
 use pool::asm::Instruction;
 use pool::asm::Value;
 
-use pool::asm::ast::CodeNode;
 use pool::asm::ast::CommentNode;
 use pool::asm::ast::DefinitionNode;
 use pool::asm::ast::EmptyNode;
@@ -48,16 +47,10 @@ class Compiler extends sys::core::Object {
     CompilationBlock lastBlock;
     Instruction lastInst;
 
-    [CodeNode] createCode(int mode) {
-        CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
-        code.setMode(mode);
-        return code;
-    }
-    
     [] prepare(CompilationUnit unit) {
         this.unit = unit;
         this.lastInst = null;
-        this._prepareCodeNode(this.createCode(32)); // initialize default block
+        this.lastBlock = unit.addBlock(32); // initialize default block
         this._prepareNodeList(unit.getNodeList());
         this.unit = null;
         
@@ -83,25 +76,16 @@ class Compiler extends sys::core::Object {
             AnyIterator bit = unit.blocks();
             while (bit.hasNext()) {
                 CompilationBlock block = bit.next();
-                if (this._validateCodeNode(block.getCode(), unit)) {
-                    AnyIterator iit = block.instructions();
-                    while (iit.hasNext()) {
-                        Instruction inst = iit.next();
-                        pos += inst.compile(pos);
-                    }
-                    iit.destroy();
+                AnyIterator iit = block.instructions();
+                while (iit.hasNext()) {
+                    Instruction inst = iit.next();
+                    pos += inst.compile(pos);
                 }
+                iit.destroy();
             }
             bit.destroy();
         }
         return pos;
-    }
-    
-    [int] _validateCodeNode(CodeNode code, CompilationUnit unit) {
-        int mode = code.getMode();
-        if (mode == 16 || mode == 32) { return true; }
-        unit.newError().printCString("unsupported compilation mode ").print(code);
-        return false;
     }
     
     [] finalize(CompilationUnit unit, int startAddress) {
@@ -120,23 +104,23 @@ class Compiler extends sys::core::Object {
         }
     }
     
-    [] _prepareCodeNode(CodeNode code) {
-        lastBlock = unit.addBlock(code);
-    }
-    
     [] _prepareDefinitionNode(DefinitionNode defNode) {
         unit.addDefinition(defNode.getId(), this._prepareOperandNode(defNode.getValue()));
     }
     
     [] _prepareInstructionNode(InstructionNode instNode) {
         String op = instNode.getOperation().toLower();
-        Instruction inst = this._buildInstruction(op);
-        if (inst) {
-            inst.setNode(instNode);
-            inst.setOperand1(this._prepareOperandNode(instNode.getOperand1()));
-            inst.setOperand2(this._prepareOperandNode(instNode.getOperand2()));
-            inst.setOperand3(this._prepareOperandNode(instNode.getOperand3()));
-            lastInst = lastBlock.addInstruction(inst);
+        if (op.cequals(".code16")) { lastBlock = unit.addBlock(16); }
+        else if (op.cequals(".code32")) { lastBlock = unit.addBlock(32); }
+        else {
+            Instruction inst = this._buildInstruction(op);
+            if (inst) {
+                inst.setNode(instNode);
+                inst.setOperand1(this._prepareOperandNode(instNode.getOperand1()));
+                inst.setOperand2(this._prepareOperandNode(instNode.getOperand2()));
+                inst.setOperand3(this._prepareOperandNode(instNode.getOperand3()));
+                lastInst = lastBlock.addInstruction(inst);
+            }
         }
         op.destroy();
     }
@@ -154,17 +138,14 @@ class Compiler extends sys::core::Object {
         AnyIterator it = list.nodes();
         while (it.hasNext()) {
             Node n = it.next();
-            CodeNode code = rt.cast(CodeNode:CLASSNAME, n);
             CommentNode comment = rt.cast(CommentNode:CLASSNAME, n);
             DefinitionNode def = rt.cast(DefinitionNode:CLASSNAME, n);
             EmptyNode empty = rt.cast(EmptyNode:CLASSNAME, n);
             InstructionNode inst = rt.cast(InstructionNode:CLASSNAME, n);
             LabelNode label = rt.cast(LabelNode:CLASSNAME, n);
             NodeList list = rt.cast(NodeList:CLASSNAME, n);
-            if (code) { this._prepareCodeNode(code); }
-            else if (comment) { /* ignore */ }
+            if (comment || empty) { /* ignore */ }
             else if (def) { this._prepareDefinitionNode(def); }
-            else if (empty) { /* ignore */ }
             else if (inst) { this._prepareInstructionNode(inst); }
             else if (label) { this._prepareLabelNode(label); }
             else if (list) { this._prepareNodeList(list); }

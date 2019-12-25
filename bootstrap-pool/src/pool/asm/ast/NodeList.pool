@@ -37,13 +37,6 @@ class NodeList extends Node, AnyList {
         return label;
     }
     
-    [CodeNode] addCode(int mode) {
-        CodeNode code = this.rt().createInstance(CodeNode:CLASSNAME);
-        code.setMode(mode);
-        this.add(code.node());
-        return code;
-    }
-    
     [EmptyNode] addEmptyLine() {
         EmptyNode line = this.rt().createInstance(EmptyNode:CLASSNAME);
         this.add(line.node());

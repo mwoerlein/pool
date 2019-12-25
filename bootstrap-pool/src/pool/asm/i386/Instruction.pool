@@ -38,7 +38,7 @@ class Instruction extends pool::asm::Instruction {
     
     [int] prepare(int pos) {
         this.pos = this.preparePos = pos;
-        int mode = block.getCode().getMode();
+        int mode = block.getMode();
         addr = node.getAddr(mode);
         data = node.getData(mode);
         return this.size = this.prepareInstruction();
@@ -90,7 +90,7 @@ class Instruction extends pool::asm::Instruction {
     }
     
     [int] requiresAddressSizeOverride(int addressSize) {
-        int mode = block.getCode().getMode();
+        int mode = block.getMode();
         return (addressSize == 16 && mode == 32) || (addressSize == 32 && mode == 16);
     }
     

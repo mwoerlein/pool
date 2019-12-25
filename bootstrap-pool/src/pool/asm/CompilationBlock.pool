@@ -5,21 +5,20 @@ version = 0.1.0
 */
 namespace pool::asm;
 
-use pool::asm::ast::CodeNode;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
 class CompilationBlock extends AnyList { // LinkedList<Instruction>
     
-    CodeNode code;
+    int mode;
     CompilationUnit unit;
     
-    [] init(CodeNode code, CompilationUnit unit) {
-        this.code = code;
+    [] init(int mode, CompilationUnit unit) {
+        this.mode = mode;
         this.unit = unit;
     }
     
-    [CodeNode] getCode() { return code; }
+    [int] getMode() { return mode; }
     [CompilationUnit] getUnit() { return unit; }
 
     [Instruction] addInstruction(Instruction i) {

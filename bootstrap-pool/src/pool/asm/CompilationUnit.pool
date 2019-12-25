@@ -5,7 +5,6 @@ version = 0.1.0
 */
 namespace pool::asm;
 
-use pool::asm::ast::CodeNode;
 use pool::asm::ast::NodeList;
 use pool::asm::ast::Node;
 
@@ -69,13 +68,13 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     
     [AnyIterator] definitionIds() { return values.keys(); }
     
-    [CompilationBlock] addBlock(CodeNode code) {
+    [CompilationBlock] addBlock(int mode) {
         CompilationBlock block = this.last();
         if (!block || !block.isEmpty()) {
             block = this.createOwn(CompilationBlock:CLASSNAME);
             this.add(block); 
         }
-        block.init(code, this);
+        block.init(mode, this);
         return block;
     }
     
