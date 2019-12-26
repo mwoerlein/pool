@@ -119,11 +119,16 @@ Pool Bootstrap Assembler.
         while (argIt.hasNext()) {
             String name = argIt.next();
             if (name.compareCString("-") == 0) {
-                parser.parse(this.openStdIn(), name, unit);
+                IStream in = this.openStdIn();
+                parser.parse(in, name, unit);
+                in.destroy();
             } else {
                 SeekableIOStream f = this.openFile(name, linux::File:MODE_READ);
                 if (!f) { status = ERRNO_IO; }
-                if (status == ERRNO_OK) { parser.parse(f.istream(), name, unit); }
+                if (status == ERRNO_OK) {
+                    parser.parse(f.istream(), name, unit);
+                    f.destroy();
+                }
             }
         }
         argIt.destroy();

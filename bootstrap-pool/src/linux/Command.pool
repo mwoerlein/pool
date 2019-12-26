@@ -66,8 +66,7 @@ class Command extends CommandLine {
     
     [IStream] openStdIn() {
         StdIn in = this.rt().createInstance(StdIn:CLASSNAME);
-        in._init();
-        return this.rt().cast(IStream:CLASSNAME, in);
+        return in.istream();
     }
     
     [SeekableIOStream] openFile(String filename, int mode) {

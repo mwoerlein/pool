@@ -12,7 +12,7 @@ class StdIn extends IStream {
     int buf;
     int notEof;
     
-    [] _init() {
+    [] __init() {
         buf = -1;
         notEof = true;
     }
