@@ -1,0 +1,210 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::token;
+
+use sys::core::String;
+use sys::memory::Address;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class Tokenizer extends sys::core::anycollection::AnyIterator {
+
+    LocationAwareIStream input;
+    String tmp;
+    String inputName;
+    int startLine;
+    int startColumn;
+    int curLine;
+    int curColumn;
+    
+    Token nextToken;
+    
+    [Tokenizer] init(IStream in, String inName) {
+        input = this.rt().createInstance(LocationAwareIStream:CLASSNAME);
+        input.init(in);
+        inputName = inName;
+        tmp = this.rt().createInstance(String:CLASSNAME);
+        return this;
+    }
+    [] __destruct() {
+        input.destroy();
+        tmp.destroy();
+    }
+    
+    [int] hasNext() {
+        return this._fillToken();
+    }
+    
+    [__all__] next() {
+        if (this._fillToken()) {
+            Token ret = nextToken;
+            nextToken = null;
+            return Address:convert(ret);
+        }
+        return null;
+    }
+    
+    // Tokenizer states
+    int START       :=  0;
+    
+    int IDENTIFIER  :=  1;
+    int REGISTER    :=  2;
+    int STRING      :=  3;
+    int STRING_ESC  :=  4;
+    int CHAR        :=  5;
+    int CHAR_ESC    :=  6;
+    int LINECOMMENT :=  7;
+    int MLCOMMENT   :=  8;
+    int MLC_STAR    :=  9;
+    
+    int NUMBER_ZERO := 10;
+    int NUMBER_BIN  := 11;
+    int NUMBER_OCT  := 12;
+    int NUMBER_DEC  := 13;
+    int NUMBER_HEX  := 14;
+    
+    int DOT         := 20;
+    int NEWLINE     := 21;
+    int PERCENTAGE  := 22;
+    int SLASH       := 23;
+    int SPACER      := 24;
+    
+    [int] _fillToken() {
+        int state = Tokenizer:START;
+        startLine = input.getLine();
+        startColumn = input.getColumn();
+        while (!nextToken && !input.isEmpty()) {
+            int c = input.peekChar();
+            if (state == Tokenizer:START) {
+                this._consume();
+                if (c == ' ' || c == '\t') { state = Tokenizer:SPACER; }
+                else if (c == '\n' || c == '\r') { state = Tokenizer:NEWLINE; }
+                else if (c == '"') { state = Tokenizer:STRING; }
+                else if (c == '\'') { state = Tokenizer:CHAR; }
+                else if (c == '.') { state = Tokenizer:DOT; }
+                else if (c == '%') { state = Tokenizer:PERCENTAGE; }
+                else if (c == '/') { state = Tokenizer:SLASH; }
+                else if (c == '#') { state = Tokenizer:LINECOMMENT; }
+                else if (c == '0') { state = Tokenizer:NUMBER_ZERO; }
+                else if (c == '_') { state = Tokenizer:IDENTIFIER; }
+                else if ('a' <= c && c <= 'z') { state = Tokenizer:IDENTIFIER; }
+                else if ('A' <= c && c <= 'Z') { state = Tokenizer:IDENTIFIER; }
+                else if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:DOT) {
+                if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:IDENTIFIER; }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:NEWLINE) {
+                if (c == '\n' || c == '\r') { this._consume(); }
+                else { return this._buildToken(Token:NEWLINE); }
+                
+            } else if (state == Tokenizer:PERCENTAGE) {
+                if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:REGISTER; }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:SLASH) {
+                if (c == '/') { this._consume(); state = Tokenizer:LINECOMMENT; }
+                else if (c == '*') { this._consume(); state = Tokenizer:MLCOMMENT; }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:SPACER) {
+                if (c == ' ' || c == '\t') { this._consume(); }
+                else { return this._buildToken(Token:SPACER); }
+                
+            } else if (state == Tokenizer:STRING) {
+                if (c == '"') { this._consume(); return this._buildToken(Token:STRING); }
+                else if (c == '\\') { this._consume(); state = Tokenizer:STRING_ESC; }
+                else if (c == '\n' || c == '\r') {
+                    this.rt().err().printCString("Unterminated string").printNewline();
+                    return false;
+                } else { this._consume(); }
+            } else if (state == Tokenizer:STRING_ESC) {
+                if (c == '\n' || c == '\r') {
+                    this.rt().err().printCString("Unterminated string").printNewline();
+                    return false;
+                } else { this._consume(); state = Tokenizer:STRING; }
+                
+            } else if (state == Tokenizer:CHAR) {
+                if (c == '\'') { this._consume(); return this._buildToken(Token:CHAR); }
+                else if (c == '\\') { this._consume(); state = Tokenizer:CHAR_ESC; }
+                else if (c == '\n' || c == '\r') {
+                    this.rt().err().printCString("Unterminated char sequence").printNewline();
+                    return false;
+                } else { this._consume(); }
+            } else if (state == Tokenizer:CHAR_ESC) {
+                if (c == '\n' || c == '\r') {
+                    this.rt().err().printCString("Unterminated char sequence").printNewline();
+                    return false;
+                } else { this._consume(); state = Tokenizer:CHAR; }
+                
+            } else if (state == Tokenizer:LINECOMMENT) {
+                if (c == '\n' || c == '\r') { return this._buildToken(Token:COMMENT); }
+                else { this._consume(); }
+            } else if (state == Tokenizer:MLCOMMENT) {
+                if (c == '*') { this._consume(); state = Tokenizer:MLC_STAR; }
+                else { this._consume(); }
+            } else if (state == Tokenizer:MLC_STAR) {
+                if (c == '/') { this._consume(); return this._buildToken(Token:COMMENT); }
+                else if (c == '*') { this._consume(); }
+                else { this._consume(); state = Tokenizer:MLCOMMENT; }
+                
+            } else if (state == Tokenizer:IDENTIFIER) {
+                if (
+                    ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+                    || ('1' <= c && c <= '9')
+                    || (c == '_')
+                ) { this._consume(); }
+                else { return this._buildToken(Token:IDENTIFIER); }
+            } else if (state == Tokenizer:REGISTER) {
+                if (
+                    ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
+                    || ('1' <= c && c <= '9')
+                    || (c == '_')
+                ) { this._consume(); }
+                else { return this._buildToken(Token:REGISTER); }
+                
+            } else if (state == Tokenizer:NUMBER_ZERO) {
+                if (c == 'b' || c == 'B') { this._consume(); state = Tokenizer:NUMBER_BIN; }
+                else if (c == 'x' || c == 'X') { this._consume(); state = Tokenizer:NUMBER_HEX; }
+                else if ('0' <= c && c <= '9') { this._consume(); state = Tokenizer:NUMBER_OCT; }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == Tokenizer:NUMBER_BIN) {
+                if (c == '0' || c == '1') { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == Tokenizer:NUMBER_OCT) {
+                if ('0' <= c && c <= '7') { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == Tokenizer:NUMBER_DEC) {
+                if ('0' <= c && c <= '9') { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == Tokenizer:NUMBER_HEX) {
+                if ('0' <= c && c <= '9') { this._consume(); }
+                else if ('a' <= c && c <= 'f') { this._consume(); }
+                else if ('A' <= c && c <= 'F') { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+                
+            } else {
+                this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
+                return false;
+            }
+        }
+        return !!nextToken;
+    }
+    
+    [] _consume() {
+        curLine = input.getLine();
+        curColumn = input.getColumn();
+        tmp.printChar(input.readChar());
+    }
+    [int] _buildToken(int type) {
+        Token t = this.rt().createInstance(Token:CLASSNAME);
+        nextToken = t.init(tmp, type).setLocation(inputName, startLine, startColumn, curLine, curColumn);
+        tmp.clear();
+        return true;
+    }
+}

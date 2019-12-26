@@ -15,6 +15,9 @@ use pool::asm::ast::operand::NumberNode;
 use pool::asm::ast::operand::RegisterNode;
 use pool::asm::ast::operand::StringNode;
 
+use pool::asm::token::Token;
+use pool::asm::token::Tokenizer;
+
 use sys::core::Object;
 use sys::core::String;
 use sys::stream::IStream;
@@ -59,6 +62,18 @@ class Parser extends Object {
     [] parse(IStream input, String name, CompilationUnit unit) {
         NodeList list = unit.getNodeList();
         
+        //*/
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        in.init(input, name);
+        OStream out = this.rt().out();
+        out.print(name).printNewline();
+        while (in.hasNext()) {
+            Token t = in.next();
+            t.debugToStream(out).printNewline();
+            t.destroy();
+        }
+        in.destroy();
+        /*/
         list.addCMultilineComment(<"
 a comment
 with multiple lines
@@ -124,6 +139,7 @@ with multiple lines
                 .operand()
         ).setData(32).setCPrefix("lock");
         list.addCInstruction0("Hlt").setCComment(" finish example");
+        //*/
     }
 
 }

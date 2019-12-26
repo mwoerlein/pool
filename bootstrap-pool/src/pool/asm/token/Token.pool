@@ -1,0 +1,74 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::token;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+
+class Token extends Object {
+
+    int OTHER       := 0;
+    int IDENTIFIER  := 1;
+    int REGISTER    := 2;
+    int CHAR        := 3;
+    int STRING      := 4;
+    int NUMBER      := 5;
+    int NEWLINE     := 6;
+    int SPACER      := 7;
+    int COMMENT     := 8;
+    
+    int type;
+    String value;
+    
+    // Location
+    String inputName;
+    int firstLine;
+    int firstColumn;
+    int lastLine;
+    int lastColumn;
+    
+    [Token] init(String v, int t) {
+        value = this.rt().createInstance(String:CLASSNAME);
+        value.assignString(v);
+        type = t;
+        return this;
+    }
+    [] __destruct() {
+        value.destroy();
+    }
+    
+    [Token] setLocation(String inputName, int firstLine, int firstColumn, int lastLine, int lastColumn) {
+        this.inputName = inputName;
+        this.firstLine = firstLine;
+        this.firstColumn = firstColumn;
+        this.lastLine = lastLine;
+        this.lastColumn = lastColumn;
+        return this;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.print(value);
+    }
+    
+    [OStream] debugToStream(OStream stream) {
+        if (type == Token:OTHER) { stream.printCString("OTHER"); }
+        else if (type == Token:IDENTIFIER) { stream.printCString("IDENTIFIER"); }
+        else if (type == Token:REGISTER) { stream.printCString("REGISTER"); }
+        else if (type == Token:CHAR) { stream.printCString("CHAR"); }
+        else if (type == Token:STRING) { stream.printCString("STRING"); }
+        else if (type == Token:NUMBER) { stream.printCString("NUMBER"); }
+        else if (type == Token:NEWLINE) { stream.printCString("NEWLINE"); }
+        else if (type == Token:SPACER) { stream.printCString("SPACER"); }
+        else if (type == Token:COMMENT) { stream.printCString("COMMENT"); }
+        stream.printChar('(')
+            .printInt(firstLine).printChar('/').printInt(firstColumn)
+            .printChar('-')
+            .printInt(lastLine).printChar('/').printInt(lastColumn)
+            .printChar(')');
+        return value.escapeToStream(stream.printChar(':'));
+    }
+}
