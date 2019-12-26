@@ -66,11 +66,14 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
     int NUMBER_DEC  := 13;
     int NUMBER_HEX  := 14;
     
-    int DOT         := 20;
-    int NEWLINE     := 21;
-    int PERCENTAGE  := 22;
-    int SLASH       := 23;
-    int SPACER      := 24;
+    int ABC         := 20;
+    int ABO         := 21;
+    int COLON       := 22;
+    int DOT         := 23;
+    int NEWLINE     := 24;
+    int PERCENTAGE  := 25;
+    int SLASH       := 26;
+    int SPACER      := 27;
     
     [int] _fillToken() {
         int state = Tokenizer:START;
@@ -84,6 +87,9 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 else if (c == '\n' || c == '\r') { state = Tokenizer:NEWLINE; }
                 else if (c == '"') { state = Tokenizer:STRING; }
                 else if (c == '\'') { state = Tokenizer:CHAR; }
+                else if (c == '>') { state = Tokenizer:ABC; }
+                else if (c == '<') { state = Tokenizer:ABO; }
+                else if (c == ':') { state = Tokenizer:COLON; }
                 else if (c == '.') { state = Tokenizer:DOT; }
                 else if (c == '%') { state = Tokenizer:PERCENTAGE; }
                 else if (c == '/') { state = Tokenizer:SLASH; }
@@ -93,11 +99,24 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 else if ('a' <= c && c <= 'z') { state = Tokenizer:IDENTIFIER; }
                 else if ('A' <= c && c <= 'Z') { state = Tokenizer:IDENTIFIER; }
                 else if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
+                else if (c == '+' || c == '-' || c == '*') { return this._buildToken(Token:OPERATOR); }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:ABC) {
+                if (c == '>') { this._consume(); return this._buildToken(Token:OPERATOR); }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:ABO) {
+                if (c == '<') { this._consume(); return this._buildToken(Token:OPERATOR); }
+                else { return this._buildToken(Token:OTHER); }
+                
+            } else if (state == Tokenizer:COLON) {
+                if (c == '=') { this._consume(); return this._buildToken(Token:ASSIGN); }
                 else { return this._buildToken(Token:OTHER); }
                 
             } else if (state == Tokenizer:DOT) {
                 if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:IDENTIFIER; }
-                else { return this._buildToken(Token:OTHER); }
+                else { return this._buildToken(Token:OPERATOR); }
                 
             } else if (state == Tokenizer:NEWLINE) {
                 if (c == '\n' || c == '\r') { this._consume(); }
@@ -105,12 +124,12 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 
             } else if (state == Tokenizer:PERCENTAGE) {
                 if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:REGISTER; }
-                else { return this._buildToken(Token:OTHER); }
+                else { return this._buildToken(Token:OPERATOR); }
                 
             } else if (state == Tokenizer:SLASH) {
                 if (c == '/') { this._consume(); state = Tokenizer:LINECOMMENT; }
                 else if (c == '*') { this._consume(); state = Tokenizer:MLCOMMENT; }
-                else { return this._buildToken(Token:OTHER); }
+                else { return this._buildToken(Token:OPERATOR); }
                 
             } else if (state == Tokenizer:SPACER) {
                 if (c == ' ' || c == '\t') { this._consume(); }

@@ -58,6 +58,64 @@ class Parser extends Object {
     [IndirectNode] buildIndirect() {
         return this.rt().createInstance(IndirectNode:CLASSNAME);
     }
+/*
+// ignore SPACER & COMMENT
+
+translation_unit:
+    // empty
+|   translation_unit label
+|   translation_unit definition
+|   translation_unit inst
+|   translation_unit eoi
+;
+    
+label:
+    IDENTIFIER ':'    
+;
+
+inst:
+    IDENTIFIER eoi
+|   IDENTIFIER operand eoi
+|   IDENTIFIER operand ',' operand eoi
+|   IDENTIFIER operand ',' operand ',' operand eoi
+;
+
+definition:
+    IDENTIFIER ASSIGN operand eoi
+;
+
+eoi:
+    ';'
+|   NEWLINE
+;
+
+operand:
+    IDENTIFIER
+|   REGISTER
+|   NUMBER
+|   CHAR
+|   STRING
+|   indirect
+|   formula
+;
+
+indirect:
+    '(' operand ')'
+|   '(' operand ',' operand ')'
+|   '(' operand ',' operand ',' NUMBER ')'
+|   '(' ',' operand ')'
+|   '(' ',' operand ',' NUMBER ')'
+|   operand '(' operand ')'
+|   operand '(' operand ',' operand ')'
+|   operand '(' operand ',' operand ',' NUMBER ')'
+|   operand '(' ',' operand ')'
+|   operand '(' ',' operand ',' NUMBER ')'
+;
+
+formula:
+    '(' operand OPERATOR operand ')'
+;
+*/    
 
     [] parse(IStream input, String name, CompilationUnit unit) {
         NodeList list = unit.getNodeList();

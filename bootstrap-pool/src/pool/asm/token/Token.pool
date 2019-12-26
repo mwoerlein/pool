@@ -20,6 +20,8 @@ class Token extends Object {
     int NEWLINE     := 6;
     int SPACER      := 7;
     int COMMENT     := 8;
+    int OPERATOR    := 9;
+    int ASSIGN      := 10;
     
     int type;
     String value;
@@ -64,6 +66,8 @@ class Token extends Object {
         else if (type == Token:NEWLINE) { stream.printCString("NEWLINE"); }
         else if (type == Token:SPACER) { stream.printCString("SPACER"); }
         else if (type == Token:COMMENT) { stream.printCString("COMMENT"); }
+        else if (type == Token:OPERATOR) { stream.printCString("OPERATOR"); }
+        else if (type == Token:ASSIGN) { stream.printCString("ASSIGN"); }
         stream.printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)
             .printChar('-')
