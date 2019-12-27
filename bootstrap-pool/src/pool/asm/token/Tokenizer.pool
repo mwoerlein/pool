@@ -99,6 +99,10 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 else if ('a' <= c && c <= 'z') { state = Tokenizer:IDENTIFIER; }
                 else if ('A' <= c && c <= 'Z') { state = Tokenizer:IDENTIFIER; }
                 else if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
+                else if (c == '(') { return this._buildToken(Token:OBRACKET); }
+                else if (c == ')') { return this._buildToken(Token:CBRACKET); }
+                else if (c == ';') { return this._buildToken(Token:SEMICOLON); }
+                else if (c == ',') { return this._buildToken(Token:COMMA); }
                 else if (c == '+' || c == '-' || c == '*') { return this._buildToken(Token:OPERATOR); }
                 else { return this._buildToken(Token:OTHER); }
                 
@@ -112,7 +116,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 
             } else if (state == Tokenizer:COLON) {
                 if (c == '=') { this._consume(); return this._buildToken(Token:ASSIGN); }
-                else { return this._buildToken(Token:OTHER); }
+                else { return this._buildToken(Token:COLON); }
                 
             } else if (state == Tokenizer:DOT) {
                 if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:IDENTIFIER; }

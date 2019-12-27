@@ -1,0 +1,41 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::token;
+
+use sys::core::Object;
+use sys::stream::OStream;
+
+class RuleElement extends Object {
+
+    int SYMBOL := 1;
+    int TERMINAL := 2;
+    
+    int type;
+    int id;
+    RuleElement next;
+    
+    [RuleElement] init(int t, int i) {
+        type = t;
+        id = i;
+        return this;
+    }
+    [] __destruct() {
+        if (next) { next.destroy(); }
+    }
+    
+    [RuleElement] setNext(RuleElement e) { return next = e; }
+    [RuleElement] getNext() { return next; }
+    
+    [OStream] printToStream(OStream stream) {
+        if (type == RuleElement:SYMBOL) {
+            return stream.printChar('S').printInt(id);
+        }
+        if (type == RuleElement:TERMINAL) {
+            return stream.printChar('T').printInt(id);
+        }
+        return stream.printChar('?').printInt(id);
+    }
+}

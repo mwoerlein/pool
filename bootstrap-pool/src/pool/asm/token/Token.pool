@@ -11,6 +11,7 @@ use sys::stream::OStream;
 
 class Token extends Object {
 
+    // terminals
     int OTHER       := 0;
     int IDENTIFIER  := 1;
     int REGISTER    := 2;
@@ -22,6 +23,11 @@ class Token extends Object {
     int COMMENT     := 8;
     int OPERATOR    := 9;
     int ASSIGN      := 10;
+    int OBRACKET    := 11;
+    int CBRACKET    := 12;
+    int COLON       := 13;
+    int SEMICOLON   := 14;
+    int COMMA       := 15;
     
     int type;
     String value;
@@ -68,6 +74,11 @@ class Token extends Object {
         else if (type == Token:COMMENT) { stream.printCString("COMMENT"); }
         else if (type == Token:OPERATOR) { stream.printCString("OPERATOR"); }
         else if (type == Token:ASSIGN) { stream.printCString("ASSIGN"); }
+        else if (type == Token:OBRACKET) { stream.printCString("OBRACKET"); }
+        else if (type == Token:CBRACKET) { stream.printCString("CBRACKET"); }
+        else if (type == Token:COLON) { stream.printCString("COLON"); }
+        else if (type == Token:SEMICOLON) { stream.printCString("SEMICOLON"); }
+        else if (type == Token:COMMA) { stream.printCString("COMMA"); }
         stream.printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)
             .printChar('-')

@@ -1,0 +1,43 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::token;
+
+use sys::core::Object;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class Grammar extends Object {
+
+    AnyList rules;
+    
+    [] __init() {
+        rules = this.rt().createInstance(AnyList:CLASSNAME);
+        this.initRules();
+    }
+    [] __destruct() {
+        rules.destroyAll();
+        rules.destroy();
+    }
+    abstract [] initRules();
+    abstract [__any__] executeRule(int r, int /*AnyStack*/ s);
+    
+    [Rule] addRule(int lhs) {
+        Rule r = this.rt().createInstance(Rule:CLASSNAME);
+        rules.add(r.init(rules.size(), lhs));
+        return r;
+    }
+    [Rule] getRule(int idx) { return rules.at(idx); }
+    [AnyIterator] rules() { return rules.iterator(); }
+    
+    [OStream] printToStream(OStream stream) {
+        AnyIterator it = rules.iterator();
+        while (it.hasNext()) {
+            stream.print(it.next()).printNewline();
+        }
+        return stream;
+    }
+}

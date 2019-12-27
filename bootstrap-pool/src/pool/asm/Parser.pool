@@ -23,7 +23,7 @@ use sys::core::String;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
-class Parser extends Object {
+class Parser extends pool::asm::token::Grammar {
     
     [FormulaNode] createFormula(OperandNode o1, cstring op, OperandNode o2) {
         FormulaNode formula = this.rt().createInstance(FormulaNode:CLASSNAME);
@@ -65,26 +65,26 @@ translation_unit:
     // empty
 |   translation_unit label
 |   translation_unit definition
-|   translation_unit inst
-|   translation_unit eoi
+|   translation_unit instruction
+|   translation_unit eol
 ;
     
 label:
     IDENTIFIER ':'    
 ;
 
-inst:
-    IDENTIFIER eoi
-|   IDENTIFIER operand eoi
-|   IDENTIFIER operand ',' operand eoi
-|   IDENTIFIER operand ',' operand ',' operand eoi
+instruction:
+    IDENTIFIER eol
+|   IDENTIFIER operand eol
+|   IDENTIFIER operand ',' operand eol
+|   IDENTIFIER operand ',' operand ',' operand eol
 ;
 
 definition:
-    IDENTIFIER ASSIGN operand eoi
+    IDENTIFIER ASSIGN operand eol
 ;
 
-eoi:
+eol:
     ';'
 |   NEWLINE
 ;
@@ -115,7 +115,152 @@ indirect:
 formula:
     '(' operand OPERATOR operand ')'
 ;
-*/    
+*/
+    // symbols
+    int TRANSLATION_UNIT    := 0;    
+    int LABEL               := 1;
+    int DEFINITION          := 2;
+    int INSTRUCTION         := 3;
+    int EOL                 := 4;
+    int OPERAND             := 5;
+    int INDIRECT            := 6;
+    int FORMULA             := 7;
+    
+    [] initRules() {
+        // translation_unit:
+        /*  0 */ this.addRule(Parser:TRANSLATION_UNIT);
+        /*  1 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:LABEL);
+        /*  2 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:DEFINITION);
+        /*  3 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:INSTRUCTION);
+        /*  4 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:EOL);
+        
+        // label:
+        /*  5 */ this.addRule(Parser:LABEL).terminal(Token:IDENTIFIER).terminal(Token:COLON);
+        
+        // instruction:
+        /*  6 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:EOL);
+        /*  7 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        /*  8 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        /*  9 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
+            
+        // definition:
+        /* 10 */ this.addRule(Parser:DEFINITION).terminal(Token:IDENTIFIER)
+                    .terminal(Token:ASSIGN).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        
+        // eol:
+        /* 11 */ this.addRule(Parser:EOL).terminal(Token:SEMICOLON);
+        /* 12 */ this.addRule(Parser:EOL).terminal(Token:NEWLINE);
+        
+        // operand:
+        /* 13 */ this.addRule(Parser:OPERAND).terminal(Token:IDENTIFIER);
+        /* 14 */ this.addRule(Parser:OPERAND).terminal(Token:REGISTER);
+        /* 15 */ this.addRule(Parser:OPERAND).terminal(Token:NUMBER);
+        /* 16 */ this.addRule(Parser:OPERAND).terminal(Token:CHAR);
+        /* 17 */ this.addRule(Parser:OPERAND).terminal(Token:STRING);
+        /* 18 */ this.addRule(Parser:OPERAND).symbol(Parser:INDIRECT);
+        /* 19 */ this.addRule(Parser:OPERAND).symbol(Parser:FORMULA);
+        
+        // indirect:
+        /* 20 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+        /* 21 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+        /* 22 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).terminal(Token:NUMBER)
+                    .terminal(Token:CBRACKET);
+        /* 23 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+        /* 24 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).terminal(Token:NUMBER)
+                    .terminal(Token:CBRACKET);
+            
+        /* 25 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
+                    .terminal(Token:OBRACKET).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+        /* 26 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
+                    .terminal(Token:OBRACKET).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+        /* 27 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
+                    .terminal(Token:OBRACKET).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).terminal(Token:NUMBER)
+                    .terminal(Token:CBRACKET);
+        /* 28 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
+                    .terminal(Token:OBRACKET)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+        /* 29 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
+                    .terminal(Token:OBRACKET)
+                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
+                    .terminal(Token:COMMA).terminal(Token:NUMBER)
+                    .terminal(Token:CBRACKET);
+            
+        // formula:
+        /* 30 */ this.addRule(Parser:FORMULA).terminal(Token:OBRACKET)
+                    .symbol(Parser:OPERAND).terminal(Token:OPERATOR).symbol(Parser:OPERAND)
+                    .terminal(Token:CBRACKET);
+            
+    }
+    
+    [__any__] executeRule(int rule, int /*AnyStack*/ s) {
+        // translation_unit:
+        if (rule ==  0) { return null; /* return Address:convert(unit.getNodeList()); */ }
+        else if (rule ==  1) { return null; /* NodeList list = s.at(0); LabelNode label = s.at(1); list.addLabel(label); return s.at(0); */ }
+        else if (rule ==  2) { return null; /* NodeList list = s.at(0); DefinitionNode def = s.at(1); list.addDefinition(def); return s.at(0); */ }
+        else if (rule ==  3) { return null; /* NodeList list = s.at(0); InstructionNode inst = s.at(1); list.addInstruction(inst); return return s.at(0); */ }
+        else if (rule ==  4) { return null; /* return s.at(0); */ }
+        
+        // label:
+        else if (rule ==  5) { return null; /* Token t = s.at(0); return Address:convert(this.createLabel(t)); */ }
+        
+        // instruction:
+        else if (rule ==  6) { return null; /* Token t = s.at(0); return Address:convert(this.createInst0(t)); */ }
+        else if (rule ==  7) { return null; /* Token t = s.at(0); OperandNode o1 = s.at(2); return Address:convert(this.createInst1(t, o1)); */ }
+        else if (rule ==  8) { return null; /* Token t = s.at(0); OperandNode o1 = s.at(2); OperandNode o1 = s.at(4); return Address:convert(this.createInst2(t, o1, o2)); */ }
+        else if (rule ==  9) { return null; /* Token t = s.at(0); OperandNode o1 = s.at(2); OperandNode o1 = s.at(4); OperandNode o1 = s.at(6); return Address:convert(this.createInst3(t, o1, o2, o3)); */ }
+        
+        // definition:
+        else if (rule ==  10) { return null; /* Token t = s.at(0); OperandNode o = s.at(3); return Address:convert(this.createDefinition(t, o)); */ }
+        
+        // eol:
+        else if (rule ==  11) { return null; /* return s.at(0); */ }
+        else if (rule ==  12) { return null; /* return s.at(0); */ }
+        
+        // operand:
+        else if (rule ==  13) { return null; /* Token t = s.at(0); return Address:convert(this.createIdentifier(t).operand()); */ }
+        else if (rule ==  14) { return null; /* Token t = s.at(0); return Address:convert(this.createRegister(t).operand()); */ }
+        else if (rule ==  15) { return null; /* Token t = s.at(0); return Address:convert(this.createNumber(t).operand()); */ }
+        else if (rule ==  16) { return null; /* Token t = s.at(0); return Address:convert(this.createChar(t).operand()); */ }
+        else if (rule ==  17) { return null; /* Token t = s.at(0); return Address:convert(this.createString(t).operand()); */ }
+        else if (rule ==  18) { return null; /* IndirectNode i = s.at(0); return Address:convert(i.operand()); */ }
+        else if (rule ==  19) { return null; /* FormulaNode f = s.at(0); return Address:convert(f.operand()); */ }
+        
+        // indirect:
+        else if (rule ==  20) { return null; /* OperandNode d = null; OperandNode b = s.at(1); OperandNode i = null; Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  21) { return null; /* OperandNode d = null; OperandNode b = s.at(1); OperandNode i = s.at(3); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  22) { return null; /* OperandNode d = null; OperandNode b = s.at(1); OperandNode i = s.at(3); Token s = s.at(5); return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  23) { return null; /* OperandNode d = null; OperandNode b = null; OperandNode i = s.at(2); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  24) { return null; /* OperandNode d = null; OperandNode b = null; OperandNode i = s.at(2); Token s = s.at(4); return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  25) { return null; /* OperandNode d = s.at(0); OperandNode b = s.at(2); OperandNode i = null; Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  26) { return null; /* OperandNode d = s.at(0); OperandNode b = s.at(2); OperandNode i = s.at(4); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  27) { return null; /* OperandNode d = s.at(0); OperandNode b = s.at(2); OperandNode i = s.at(4); Token s = s.at(6); return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  28) { return null; /* OperandNode d = s.at(0); OperandNode b = null; OperandNode i = s.at(3); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        else if (rule ==  29) { return null; /* OperandNode d = s.at(0); OperandNode b = null; OperandNode i = s.at(3); Token s = s.at(5); return Address:convert(this.createIndirect(d, b, i, s)); */ }
+        
+        // formula:
+        else if (rule ==  30) { return null; /* OperandNode o1 = s.at(1); Token op = s.at(2); OperandNode o2 = s.at(3); return Address:convert(this.createFormula(o1, op, o2)); */ }
+        
+        // TODO unknown rule;
+        return null;
+    }
 
     [] parse(IStream input, String name, CompilationUnit unit) {
         NodeList list = unit.getNodeList();
@@ -131,6 +276,7 @@ formula:
             t.destroy();
         }
         in.destroy();
+        out.print(this);
         /*/
         list.addCMultilineComment(<"
 a comment
