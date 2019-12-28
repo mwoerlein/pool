@@ -195,6 +195,35 @@ class String extends OStream {
         return s;
     }
     
+    [String] subString(int start, int length) {
+        int first = start;
+        if (start < 0) { first = _length - start; }
+        if (first < 0) { first = 0; }
+        int last = first + length;
+        if (length <= 0) { last = _length + length; }
+        if (last > _length) { last = _length; }
+        
+        String s = this.rt().createInstance(String:CLASSNAME);
+        if (first >= _length || first >= last) { return s; }
+        int i = 0;
+        StringElement cur = _first;
+        while (i < first) { cur = cur.getNext(); i++; }
+        while (i < last) {
+            s.printChar(cur.getChar());
+            cur = cur.getNext();
+            i++;
+        }
+        return s;
+    }
+    
+    [int] at(int pos) {
+        if (pos < 0 || pos >= _length) { return -1; }
+        int i = 0;
+        StringElement cur = _first;
+        while (i < pos) { cur = cur.getNext(); i++; }
+        return cur.getChar();
+    }
+    
     global [int] compareCStrings(cstring a, cstring b) {
         int ret = 0;
         __pasm__(<"
