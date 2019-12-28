@@ -64,7 +64,8 @@ class IndirectValue extends Value {
             }
         }
         if (baseVal) {
-            base = this.rt().cast(RegisterValue:CLASSNAME, baseVal.compile(block));
+            Value bv = baseVal.compile(block);
+            base = this.rt().cast(RegisterValue:CLASSNAME, bv);
             if (base) {
                 if (
                     base.isRegister(RegisterValue:EAX)
@@ -92,6 +93,9 @@ class IndirectValue extends Value {
                     unit.newError().printCString("Invalid base register: ").print(node);
                 }
                 addrWidth = base.getWidth();
+            } else if (bv.asNumeric() && !displacementVal && !indexVal) {
+                base = null;
+                displacementVal = bv;
             } else {
                 unit.newError().printCString("Invalid base operand: ").print(node);
             }
