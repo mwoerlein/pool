@@ -12,6 +12,7 @@ use sys::stream::OStream;
 class Token extends Object {
 
     // terminals
+    int EOI         := -1;
     int OTHER       := 0;
     int IDENTIFIER  := 1;
     int REGISTER    := 2;
@@ -45,9 +46,19 @@ class Token extends Object {
         type = t;
         return this;
     }
+    [Token] cinit(cstring v, int t) {
+        value = this.rt().createInstance(String:CLASSNAME);
+        value.assignCString(v);
+        type = t;
+        return this;
+    }
     [] __destruct() {
         value.destroy();
     }
+    
+    [int] getType() { return type; }
+    [String] getValue() { return value; }
+    [int] toInt() { return value.toInt(); }
     
     [Token] setLocation(String inputName, int firstLine, int firstColumn, int lastLine, int lastColumn) {
         this.inputName = inputName;

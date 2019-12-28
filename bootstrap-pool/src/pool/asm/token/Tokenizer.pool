@@ -21,17 +21,21 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
     int curColumn;
     
     Token nextToken;
+    Token eoi;
     
     [Tokenizer] init(IStream in, String inName) {
         input = this.rt().createInstance(LocationAwareIStream:CLASSNAME);
         input.init(in);
         inputName = inName;
         tmp = this.rt().createInstance(String:CLASSNAME);
+        eoi = this.rt().createInstance(Token:CLASSNAME);
+        eoi.init(tmp, Token:EOI);
         return this;
     }
     [] __destruct() {
         input.destroy();
         tmp.destroy();
+        eoi.destroy();
     }
     
     [int] hasNext() {
@@ -44,7 +48,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
             nextToken = null;
             return Address:convert(ret);
         }
-        return null;
+        return Address:convert(eoi);
     }
     
     // Tokenizer states
@@ -76,10 +80,11 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
     int SPACER      := 27;
     
     [int] _fillToken() {
+        if (nextToken) { return true; }
         int state = Tokenizer:START;
         startLine = input.getLine();
         startColumn = input.getColumn();
-        while (!nextToken && !input.isEmpty()) {
+        while (!input.isEmpty()) {
             int c = input.peekChar();
             if (state == Tokenizer:START) {
                 this._consume();
@@ -216,7 +221,31 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 return false;
             }
         }
-        return !!nextToken;
+        
+        if (state == Tokenizer:ABC) { return this._buildToken(Token:OTHER); }
+        else if (state == Tokenizer:ABO) { return this._buildToken(Token:OTHER); }
+        else if (state == Tokenizer:COLON) { return this._buildToken(Token:COLON); }
+        else if (state == Tokenizer:NEWLINE) { return this._buildToken(Token:NEWLINE); }
+        else if (state == Tokenizer:DOT) { return this._buildToken(Token:OPERATOR); }
+        else if (state == Tokenizer:PERCENTAGE) { return this._buildToken(Token:OPERATOR); }
+        else if (state == Tokenizer:SLASH) { return this._buildToken(Token:OPERATOR); }
+        else if (state == Tokenizer:SPACER) { return this._buildToken(Token:SPACER); }
+        else if (state == Tokenizer:LINECOMMENT) { return this._buildToken(Token:COMMENT); }
+        else if (state == Tokenizer:IDENTIFIER) { return this._buildToken(Token:IDENTIFIER); }
+        else if (state == Tokenizer:REGISTER) { return this._buildToken(Token:REGISTER); }
+        else if (state == Tokenizer:NUMBER_ZERO) { return this._buildToken(Token:NUMBER); }
+        else if (state == Tokenizer:NUMBER_BIN) { return this._buildToken(Token:NUMBER); }
+        else if (state == Tokenizer:NUMBER_OCT) { return this._buildToken(Token:NUMBER); }
+        else if (state == Tokenizer:NUMBER_DEC) { return this._buildToken(Token:NUMBER); }
+        else if (state == Tokenizer:NUMBER_HEX) { return this._buildToken(Token:NUMBER); }
+        else if (state == Tokenizer:STRING || state == Tokenizer:STRING_ESC) {
+            this.rt().err().printCString("Unterminated string").printNewline();
+        } else if (state == Tokenizer:CHAR || state == Tokenizer:CHAR_ESC) {
+            this.rt().err().printCString("Unterminated char sequence").printNewline();
+        } else if (state == Tokenizer:MLCOMMENT || state == Tokenizer:MLC_STAR) {
+            this.rt().err().printCString("Unterminated comment").printNewline();
+        }
+        return false;
     }
     
     [] _consume() {
