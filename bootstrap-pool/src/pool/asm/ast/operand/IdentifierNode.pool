@@ -29,12 +29,6 @@ class IdentifierNode extends OperandNode {
         identifier.assignString(id);
         return this;
     }
-    
-    [IdentifierNode] setCIdentifier(cstring id) {
-        identifier.assignCString(id);
-        return this;
-    }
-    
     [String] getIdentifier() { return identifier; }
     
     [OStream] printToStream(OStream stream) {

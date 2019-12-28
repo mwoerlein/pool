@@ -29,11 +29,6 @@ class RegisterNode extends OperandNode {
         reg.assignString(r);
         return this;
     }
-    
-    [RegisterNode] setCRegister(cstring r) {
-        reg.assignCString(r);
-        return this;
-    }
     [String] getRegister() { return reg; }
     
     [OStream] printToStream(OStream stream) {

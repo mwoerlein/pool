@@ -26,12 +26,6 @@ class DefinitionNode extends LineNode {
         this._destructLineNode(); 
     }
     
-    [DefinitionNode] initCDefinition(cstring id, OperandNode v) {
-        identifier.assignCString(id);
-        value = v;
-        return this;
-    }
-    
     [DefinitionNode] initDefinition(String id, OperandNode v) {
         identifier.assignString(id);
         value = v;

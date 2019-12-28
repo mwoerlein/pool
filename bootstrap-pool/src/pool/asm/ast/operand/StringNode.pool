@@ -29,11 +29,6 @@ class StringNode extends OperandNode {
         operand.assignString(o);
         return this;
     }
-    
-    [StringNode] setCOperand(cstring o) {
-        operand.assignCString(o);
-        return this;
-    }
     [String] getOperand() { return operand; }
     
     [OStream] printToStream(OStream stream) {

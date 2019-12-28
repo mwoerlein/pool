@@ -24,11 +24,6 @@ class LabelNode extends LineNode {
         this._destructLineNode(); 
     }
     
-    [LabelNode] setCLabel(cstring l) {
-        label.assignCString(l);
-        return this;
-    }
-    
     [LabelNode] setLabel(String l) {
         label.assignString(l);
         return this;

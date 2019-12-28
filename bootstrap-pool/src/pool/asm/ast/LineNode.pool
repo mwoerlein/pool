@@ -24,12 +24,6 @@ class LineNode extends Node {
         this._destructNode(); 
     }
     
-    [LineNode] setCComment(cstring c) {
-        if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
-        comment.assignCString(c);
-        return this;
-    }
-    
     [LineNode] setComment(String c) {
         if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
         comment.assignString(c);

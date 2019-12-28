@@ -24,12 +24,6 @@ class CommentNode extends Node {
         this._destructNode(); 
     }
     
-    [CommentNode] setCComment(cstring c) {
-        if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
-        comment.assignCString(c);
-        return this;
-    }
-    
     [CommentNode] setComment(String c) {
         if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
         comment.assignString(c);

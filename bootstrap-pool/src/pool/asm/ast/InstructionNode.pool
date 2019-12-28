@@ -35,11 +35,6 @@ class InstructionNode extends LineNode {
         this._destructLineNode(); 
     }
     
-    [InstructionNode] setCOperation(cstring l) {
-        operation.assignCString(l);
-        return this;
-    }
-    
     [InstructionNode] setOperation(String l) {
         operation.assignString(l);
         return this;
@@ -77,12 +72,6 @@ class InstructionNode extends LineNode {
         return this;
     }
     [int] getAddr(int default) { if (addr) { return addr; } return default; }
-    
-    [InstructionNode] setCPrefix(cstring p) {
-        if (!prefix) { prefix = this.rt().createInstance(String:CLASSNAME); }
-        prefix.assignCString(p);
-        return this;
-    }
     
     [InstructionNode] setPrefix(String p) {
         if (!prefix) { prefix = this.rt().createInstance(String:CLASSNAME); }
