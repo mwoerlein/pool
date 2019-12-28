@@ -6,7 +6,9 @@ version = 0.1.0
 namespace pool::asm;
 
 use pool::asm::ast::InstructionNode;
+use pool::asm::ast::LabelNode;
 use pool::asm::ast::NodeList;
+use pool::asm::ast::DefinitionNode;
 use pool::asm::ast::OperandNode;
 use pool::asm::ast::operand::FormulaNode;
 use pool::asm::ast::operand::IdentifierNode;
@@ -15,58 +17,28 @@ use pool::asm::ast::operand::NumberNode;
 use pool::asm::ast::operand::RegisterNode;
 use pool::asm::ast::operand::StringNode;
 
+use pool::asm::token::ParseStack;
+use pool::asm::token::Rule;
 use pool::asm::token::Token;
 use pool::asm::token::Tokenizer;
 
 use sys::core::Object;
 use sys::core::String;
+use sys::memory::Address;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
 class Parser extends pool::asm::token::Grammar {
     
-    [FormulaNode] createFormula(OperandNode o1, cstring op, OperandNode o2) {
-        FormulaNode formula = this.rt().createInstance(FormulaNode:CLASSNAME);
-        formula.initCFormula(o1, op, o2);
-        return formula;
-    }
-    
-    [IdentifierNode] createIdentifier(cstring i) {
-        IdentifierNode id = this.rt().createInstance(IdentifierNode:CLASSNAME);
-        id.setCIdentifier(i);
-        return id;
-    }
-
-    [NumberNode] createNumber(int o) {
-        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
-        n.setOperand(o);
-        return n;
-    }
-    
-    [RegisterNode] createRegister(cstring r) {
-        RegisterNode reg = this.rt().createInstance(RegisterNode:CLASSNAME);
-        reg.setCRegister(r);
-        return reg;
-    }
-    
-    [StringNode] createString(cstring o) {
-        StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
-        s.setCOperand(o);
-        return s;
-    }
-
-    [IndirectNode] buildIndirect() {
-        return this.rt().createInstance(IndirectNode:CLASSNAME);
-    }
 /*
 // ignore SPACER & COMMENT
 
-translation_unit:
+compilation_unit:
     // empty
-|   translation_unit label
-|   translation_unit definition
-|   translation_unit instruction
-|   translation_unit eol
+|   compilation_unit label
+|   compilation_unit definition
+|   compilation_unit instruction
+|   compilation_unit eol
 ;
     
 label:
@@ -116,23 +88,13 @@ formula:
     '(' operand OPERATOR operand ')'
 ;
 */
-    // symbols
-    int TRANSLATION_UNIT    := 0;    
-    int LABEL               := 1;
-    int DEFINITION          := 2;
-    int INSTRUCTION         := 3;
-    int EOL                 := 4;
-    int OPERAND             := 5;
-    int INDIRECT            := 6;
-    int FORMULA             := 7;
-    
     [] initRules() {
-        // translation_unit:
-        /*  0 */ this.addRule(Parser:TRANSLATION_UNIT);
-        /*  1 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:LABEL);
-        /*  2 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:DEFINITION);
-        /*  3 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:INSTRUCTION);
-        /*  4 */ this.addRule(Parser:TRANSLATION_UNIT).symbol(Parser:TRANSLATION_UNIT).symbol(Parser:EOL);
+        // compilation_unit:
+        /*  0 */ this.addRule(Parser:COMPILATION_UNIT);
+        /*  1 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:LABEL);
+        /*  2 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:DEFINITION);
+        /*  3 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:INSTRUCTION);
+        /*  4 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:EOL);
         
         // label:
         /*  5 */ this.addRule(Parser:LABEL).terminal(Token:IDENTIFIER).terminal(Token:COLON);
@@ -207,143 +169,425 @@ formula:
         /* 30 */ this.addRule(Parser:FORMULA).terminal(Token:OBRACKET)
                     .symbol(Parser:OPERAND).terminal(Token:OPERATOR).symbol(Parser:OPERAND)
                     .terminal(Token:CBRACKET);
-            
-    }
-    
-    [__any__] executeRule(int rule, int /*AnyStack*/ s) {
-        // translation_unit:
-        if (rule ==  0) { return null; /* return Address:convert(unit.getNodeList()); */ }
-        else if (rule ==  1) { return null; /* NodeList list = s.at(0); LabelNode label = s.at(1); list.addLabel(label); return s.at(0); */ }
-        else if (rule ==  2) { return null; /* NodeList list = s.at(0); DefinitionNode def = s.at(1); list.addDefinition(def); return s.at(0); */ }
-        else if (rule ==  3) { return null; /* NodeList list = s.at(0); InstructionNode inst = s.at(1); list.addInstruction(inst); return return s.at(0); */ }
-        else if (rule ==  4) { return null; /* return s.at(0); */ }
-        
-        // label:
-        else if (rule ==  5) { return null; /* Token t = s.at(0); return Address:convert(this.createLabel(t)); */ }
-        
-        // instruction:
-        else if (rule ==  6) { return null; /* Token t = s.at(0); return Address:convert(this.createInst0(t)); */ }
-        else if (rule ==  7) { return null; /* Token t = s.at(0); OperandNode o1 = s.at(2); return Address:convert(this.createInst1(t, o1)); */ }
-        else if (rule ==  8) { return null; /* Token t = s.at(0); OperandNode o1 = s.at(2); OperandNode o1 = s.at(4); return Address:convert(this.createInst2(t, o1, o2)); */ }
-        else if (rule ==  9) { return null; /* Token t = s.at(0); OperandNode o1 = s.at(2); OperandNode o1 = s.at(4); OperandNode o1 = s.at(6); return Address:convert(this.createInst3(t, o1, o2, o3)); */ }
-        
-        // definition:
-        else if (rule ==  10) { return null; /* Token t = s.at(0); OperandNode o = s.at(3); return Address:convert(this.createDefinition(t, o)); */ }
-        
-        // eol:
-        else if (rule ==  11) { return null; /* return s.at(0); */ }
-        else if (rule ==  12) { return null; /* return s.at(0); */ }
-        
-        // operand:
-        else if (rule ==  13) { return null; /* Token t = s.at(0); return Address:convert(this.createIdentifier(t).operand()); */ }
-        else if (rule ==  14) { return null; /* Token t = s.at(0); return Address:convert(this.createRegister(t).operand()); */ }
-        else if (rule ==  15) { return null; /* Token t = s.at(0); return Address:convert(this.createNumber(t).operand()); */ }
-        else if (rule ==  16) { return null; /* Token t = s.at(0); return Address:convert(this.createChar(t).operand()); */ }
-        else if (rule ==  17) { return null; /* Token t = s.at(0); return Address:convert(this.createString(t).operand()); */ }
-        else if (rule ==  18) { return null; /* IndirectNode i = s.at(0); return Address:convert(i.operand()); */ }
-        else if (rule ==  19) { return null; /* FormulaNode f = s.at(0); return Address:convert(f.operand()); */ }
-        
-        // indirect:
-        else if (rule ==  20) { return null; /* OperandNode d = null; OperandNode b = s.at(1); OperandNode i = null; Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  21) { return null; /* OperandNode d = null; OperandNode b = s.at(1); OperandNode i = s.at(3); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  22) { return null; /* OperandNode d = null; OperandNode b = s.at(1); OperandNode i = s.at(3); Token s = s.at(5); return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  23) { return null; /* OperandNode d = null; OperandNode b = null; OperandNode i = s.at(2); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  24) { return null; /* OperandNode d = null; OperandNode b = null; OperandNode i = s.at(2); Token s = s.at(4); return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  25) { return null; /* OperandNode d = s.at(0); OperandNode b = s.at(2); OperandNode i = null; Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  26) { return null; /* OperandNode d = s.at(0); OperandNode b = s.at(2); OperandNode i = s.at(4); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  27) { return null; /* OperandNode d = s.at(0); OperandNode b = s.at(2); OperandNode i = s.at(4); Token s = s.at(6); return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  28) { return null; /* OperandNode d = s.at(0); OperandNode b = null; OperandNode i = s.at(3); Token s = null; return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        else if (rule ==  29) { return null; /* OperandNode d = s.at(0); OperandNode b = null; OperandNode i = s.at(3); Token s = s.at(5); return Address:convert(this.createIndirect(d, b, i, s)); */ }
-        
-        // formula:
-        else if (rule ==  30) { return null; /* OperandNode o1 = s.at(1); Token op = s.at(2); OperandNode o2 = s.at(3); return Address:convert(this.createFormula(o1, op, o2)); */ }
-        
-        // TODO unknown rule;
-        return null;
     }
 
+    CompilationUnit unit;
+    
     [] parse(IStream input, String name, CompilationUnit unit) {
-        NodeList list = unit.getNodeList();
-        
-        //*/
+        this.unit = unit;
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
         in.init(input, name);
-        OStream out = this.rt().out();
-        out.print(name).printNewline();
-        while (in.hasNext()) {
-            Token t = in.next();
-            t.debugToStream(out).printNewline();
-            t.destroy();
-        }
-        in.destroy();
-        out.print(this);
-        /*/
-        list.addCMultilineComment(<"
-a comment
-with multiple lines
-">);
-        list.addCInstruction0(".code32");
-        list.addCLabel("test1");
-        list.addCDefinition("base", this.createNumber(8).operand()).setCComment(" a constant");
-        list.addCDefinition("form", 
-            this.createFormula(
-                this.createNumber(0x123).operand(),
-                "+",
-                this.createFormula(
-                    this.createNumber(0x234).operand(),
-                    "%",
-                    this.createIdentifier("base").operand()
-                ).operand()
-            ).operand()
-        ).setCComment(" a formula");
-        list.addCDefinition("str", this.createString("foo").operand()).setCComment(" string constant");
-        list.addCDefinition("reg", this.createRegister("cx").operand());
-        list.addCInstruction0("sTi");
-        list.addCInstruction0("pusha");
-        list.addCInstruction0("pushaw");
-        list.addCInstruction0("pushad");
-        list.addCInstruction1(".byte", this.createNumber(0x11).operand());
-        list.addCInstruction1(".bytet", this.createNumber(0x11223344).operand());
-        list.addCInstruction1(".word", this.createNumber(0x1122).operand());
-        list.addCInstruction1(".wordt", this.createNumber(0x11223344).operand());
-        list.addCInstruction1(".long", this.createNumber(0x11223344).operand());
-        
-        list.addCInstruction1(".long", this.createIdentifier("test2").operand());
-        list.addCInstruction1(".long", this.createIdentifier("base").operand());
-        list.addCInstruction1(".long", this.createIdentifier("form").operand());
-        
-        list.addEmptyLine();
-        list.addCInstruction0(".code16");
-        list.addCComment(" single comment");
-        list.addCLabel("test2").setCComment(" comment");
-        list.addCInstruction0("pusha");
-        list.addCInstruction0("pushaw");
-        list.addCInstruction0("pushad");
-        
-        list.addCInstruction2(
-            "mOVl",
-            this.createIdentifier("reg").operand(),
-            this.createRegister("cR0").operand()
-        );
-        list.addCInstruction2(
-            "mOVl",
-            this.createFormula(
-                this.createNumber(0x123).operand(),
-                "+",
-                this.createFormula(
-                    this.createNumber(0x234).operand(),
-                    "%",
-                    this.createIdentifier("base").operand()
-                ).operand()
-            ).operand(),
-            this.buildIndirect()
-                .setBase(this.createRegister("eax").operand())
-                .setIndex(this.createRegister("ebx").operand())
-                .setDisplacement(this.createNumber(16).operand())
-                .operand()
-        ).setData(32).setCPrefix("lock");
-        list.addCInstruction0("Hlt").setCComment(" finish example");
-        //*/
+        this._parse(in);
+        this.unit = null;
     }
 
+    // symbols
+    int COMPILATION_UNIT    := 0;    
+    int LABEL               := 1;
+    int DEFINITION          := 2;
+    int INSTRUCTION         := 3;
+    int EOL                 := 4;
+    int OPERAND             := 5;
+    int INDIRECT            := 6;
+    int FORMULA             := 7;
+    
+    // actions    
+    int UNKNOWN      := -2;
+    int ERROR        := -1;
+    int ACCEPT       := 0;
+    int SHIFT        := 1;
+    int REDUCE       := 2;
+    int SHIFT_REDUCE := 3;
+    
+    [__any__] executeRule(int rule, ParseStack s) {
+        // compilation_unit:
+        if (rule ==  0) { return Address:convert(unit.getNodeList()); }
+        else if (rule ==  1) { NodeList list = s.at(1); list.add(s.at(0)); return s.at(1); }
+        else if (rule ==  2) { NodeList list = s.at(1); list.add(s.at(0)); return s.at(1); }
+        else if (rule ==  3) { NodeList list = s.at(1); list.add(s.at(0)); return s.at(1); }
+        else if (rule ==  4) { return s.at(1); }
+        
+        // label:
+        else if (rule ==  5) { return Address:convert(this.createLabel(s.at(1)).node()); }
+        
+        // instruction:
+        else if (rule ==  6) { return Address:convert(this.createInstruction(s.at(1))); }
+        else if (rule ==  7) { return Address:convert(this.createInstruction(s.at(2)).setOperand1(s.at(1))); }
+        else if (rule ==  8) { return Address:convert(this.createInstruction(s.at(4)).setOperand1(s.at(3)).setOperand2(s.at(1))); }
+        else if (rule ==  9) { return Address:convert(this.createInstruction(s.at(6)).setOperand1(s.at(5)).setOperand2(s.at(3)).setOperand3(s.at(1))); }
+        
+        // definition:
+        else if (rule ==  10) { return Address:convert(this.createDefinition(s.at(3), s.at(1)).node()); }
+        
+        // eol:
+        else if (rule ==  11) { return s.at(0); }
+        else if (rule ==  12) { return s.at(0); }
+        
+        // operand:
+        else if (rule ==  13) { return Address:convert(this.createIdentifier(s.at(0)).operand()); }
+        else if (rule ==  14) { return Address:convert(this.createRegister(s.at(0)).operand()); }
+        else if (rule ==  15) { return Address:convert(this.createNumber(s.at(0)).operand()); }
+        else if (rule ==  16) { return Address:convert(this.createChar(s.at(0)).operand()); }
+        else if (rule ==  17) { return Address:convert(this.createString(s.at(0)).operand()); }
+        else if (rule ==  18) { IndirectNode i = s.at(0); return Address:convert(i.operand()); }
+        else if (rule ==  19) { FormulaNode f = s.at(0); return Address:convert(f.operand()); }
+        
+        // indirect:
+        else if (rule ==  20) { return Address:convert(this.createIndirect().setBase(s.at(1))); }
+        else if (rule ==  21) { return Address:convert(this.createIndirect().setBase(s.at(3)).setIndex(s.at(1))); }
+        else if (rule ==  22) { Token scale = s.at(1); return Address:convert(this.createIndirect().setBase(s.at(5)).setIndex(s.at(3)).setScale(scale.toInt())); }
+        else if (rule ==  23) { return Address:convert(this.createIndirect().setIndex(s.at(1))); }
+        else if (rule ==  24) { Token scale = s.at(1); return Address:convert(this.createIndirect().setIndex(s.at(3)).setScale(scale.toInt())); }
+        else if (rule ==  25) { return Address:convert(this.createIndirect().setDisplacement(s.at(3)).setBase(s.at(1))); }
+        else if (rule ==  26) { return Address:convert(this.createIndirect().setDisplacement(s.at(5)).setBase(s.at(3)).setIndex(s.at(1))); }
+        else if (rule ==  27) { Token scale = s.at(1); return Address:convert(this.createIndirect().setDisplacement(s.at(7)).setBase(s.at(5)).setIndex(s.at(3)).setScale(scale.toInt())); }
+        else if (rule ==  28) { return Address:convert(this.createIndirect().setDisplacement(s.at(4)).setIndex(s.at(1))); }
+        else if (rule ==  29) { Token scale = s.at(1); return Address:convert(this.createIndirect().setDisplacement(s.at(6)).setIndex(s.at(3)).setScale(scale.toInt())); }
+        
+        // formula:
+        else if (rule ==  30) { return Address:convert(this.createFormula(s.at(3), s.at(2), s.at(1))); }
+        
+        // unknown rule
+        return null;
+    }
+    
+    [int] goto(int state, int symbol) {
+        if (state == 0) { // <EMPTY>
+            if (symbol == Parser:COMPILATION_UNIT)  { return 1; }
+        } else if (state == 1) { // compilation_unit
+            if (symbol == Parser:COMPILATION_UNIT)  { return 1; }
+            else if (symbol == Parser:LABEL)        { return 10001; }
+            else if (symbol == Parser:DEFINITION)   { return 10002; }
+            else if (symbol == Parser:INSTRUCTION)  { return 10003; }
+            else if (symbol == Parser:EOL)          { return 10004; }
+        } else if (state == 2) { // compilation_unit IDENTIFIER
+            if (symbol == Parser:OPERAND)           { return 5; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 3) { // compilation_unit IDENTIFIER ASSIGN
+            if (symbol == Parser:OPERAND)           { return 4; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 6) { // compilation_unit IDENTIFIER operand ','
+            if (symbol == Parser:OPERAND)           { return 7; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 8) { // compilation_unit IDENTIFIER operand ',' operand ','
+            if (symbol == Parser:OPERAND)           { return 9; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+            
+        } else if (state == 100) { // .. '('
+            if (symbol == Parser:OPERAND)           { return 101; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 102) { // .. '(' operand ','
+            if (symbol == Parser:OPERAND)           { return 103; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 106) { // .. '(' ','
+            if (symbol == Parser:OPERAND)           { return 107; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 110) { // .. '(' operand OPERATION
+            if (symbol == Parser:OPERAND)           { return 111; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+            
+        } else if (state == 200) { // .. operand '('
+            if (symbol == Parser:OPERAND)           { return 201; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 202) { // .. operand '(' operand ','
+            if (symbol == Parser:OPERAND)           { return 203; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        } else if (state == 206) { // .. operand '(' ','
+            if (symbol == Parser:OPERAND)           { return 207; }
+            else if (symbol == Parser:INDIRECT)     { return 10018; }
+            else if (symbol == Parser:FORMULA)      { return 10019; }
+        }
+        return Parser:ERROR;
+    }
+    
+    [int, int] action(int state, int type) {
+        int isEOL = (type == Token:EOI || type == Token:SEMICOLON || type == Token:NEWLINE);
+        if (state == 0) { // <EMPTY>
+            if (isEOL)                          { return [Parser:REDUCE, 0]; }
+            else if (type == Token:IDENTIFIER)  { return [Parser:REDUCE, 0]; }
+        } else if (state == 1) { // compilation_unit
+            if (type == Token:EOI)              { return [Parser:ACCEPT, 0]; }
+            else if (isEOL)                     { return [Parser:SHIFT_REDUCE, 4]; }
+            else if (type == Token:IDENTIFIER)  { return [Parser:SHIFT, 2]; }
+        } else if (state == 2) { // compilation_unit IDENTIFIER
+            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 6]; }
+            else if (type == Token:COLON)       { return [Parser:SHIFT_REDUCE, 5]; }
+            else if (type == Token:ASSIGN)      { return [Parser:SHIFT, 3]; }
+            else if (type == Token:IDENTIFIER)  { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 3) { // compilation_unit IDENTIFIER ASSIGN
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 4) { // compilation_unit IDENTIFIER ASSIGN operand
+            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 10]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+        } else if (state == 5) { // compilation_unit IDENTIFIER operand
+            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 7]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 6]; }
+        } else if (state == 6) { // compilation_unit IDENTIFIER operand ','
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 7) { // compilation_unit IDENTIFIER operand ',' operand
+            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 8]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 8]; }
+        } else if (state == 8) { // compilation_unit IDENTIFIER operand ',' operand ','
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 9) { // compilation_unit IDENTIFIER operand ',' operand ',' operand
+            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 9]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            
+        } else if (state == 100) { // .. '('
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 106]; }
+        } else if (state == 101) { // .. '(' operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 20]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 102]; }
+            else if (type == Token:OPERATOR)    { return [Parser:SHIFT, 110]; }
+        } else if (state == 102) { // .. '(' operand ','
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 103) { // .. '(' operand ',' operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 21]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 104]; }
+        } else if (state == 104) { // .. '(' operand ',' operand ','
+            if (type == Token:NUMBER)           { return [Parser:SHIFT, 105]; }
+        } else if (state == 105) { // .. '(' operand ',' operand ',' NUMBER
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 22]; }
+        } else if (state == 106) { // .. '(' ','
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 107) { // .. '(' ',' operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 23]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 108]; }
+        } else if (state == 108) { // .. '(' ',' operand ','
+            if (type == Token:NUMBER)           { return [Parser:SHIFT, 109]; }
+        } else if (state == 109) { // .. '(' ',' operand ',' NUMBER
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 24]; }
+        } else if (state == 110) { // .. '(' operand OPERATOR
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 111) { // .. '(' operand OPERATOR operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 30]; }
+            
+        } else if (state == 200) { // .. operand '('
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 206]; }
+        } else if (state == 201) { // .. operand '(' operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 25]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 202]; }
+        } else if (state == 202) { // .. operand '(' operand ','
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 203) { // .. operand '(' operand ',' operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 26]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 204]; }
+        } else if (state == 204) { // .. operand '(' operand ',' operand ','
+            if (type == Token:NUMBER)           { return [Parser:SHIFT, 205]; }
+        } else if (state == 205) { // .. operand '(' operand ',' operand ',' NUMBER
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 27]; }
+        } else if (state == 206) { // .. operand '(' ','
+            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
+        } else if (state == 207) { // .. operand '(' ',' operand
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 28]; }
+            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
+            else if (type == Token:COMMA)       { return [Parser:SHIFT, 208]; }
+        } else if (state == 208) { // .. operand '(' ',' operand ','
+            if (type == Token:NUMBER)           { return [Parser:SHIFT, 209]; }
+        } else if (state == 209) { // .. operand '(' ',' operand ',' NUMBER
+            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 29]; }
+        }
+        
+        // goto reduce targets
+        else if (state == 10000) { return [Parser:REDUCE,  0]; } // compilation_unit: // empty
+        else if (state == 10001) { return [Parser:REDUCE,  1]; } // compilation_unit: compilation_unit label
+        else if (state == 10002) { return [Parser:REDUCE,  2]; } // compilation_unit: compilation_unit definition
+        else if (state == 10003) { return [Parser:REDUCE,  3]; } // compilation_unit: compilation_unit instruction
+        else if (state == 10004) { return [Parser:REDUCE,  4]; } // compilation_unit: compilation_unit eol
+        else if (state == 10005) { return [Parser:REDUCE,  5]; } // label: IDENTIFIER ':'    
+        else if (state == 10006) { return [Parser:REDUCE,  6]; } // instruction: IDENTIFIER eol
+        else if (state == 10007) { return [Parser:REDUCE,  7]; } // instruction: IDENTIFIER operand eol
+        else if (state == 10008) { return [Parser:REDUCE,  8]; } // instruction: IDENTIFIER operand ',' operand eol
+        else if (state == 10009) { return [Parser:REDUCE,  9]; } // instruction: IDENTIFIER operand ',' operand ',' operand eol
+        else if (state == 10010) { return [Parser:REDUCE, 10]; } // definition: IDENTIFIER ASSIGN operand eol
+        else if (state == 10011) { return [Parser:REDUCE, 11]; } // eol: ';'
+        else if (state == 10012) { return [Parser:REDUCE, 12]; } // eol: NEWLINE
+        else if (state == 10013) { return [Parser:REDUCE, 13]; } // operand: IDENTIFIER
+        else if (state == 10014) { return [Parser:REDUCE, 14]; } // operand: REGISTER
+        else if (state == 10015) { return [Parser:REDUCE, 15]; } // operand: NUMBER
+        else if (state == 10016) { return [Parser:REDUCE, 16]; } // operand: CHAR
+        else if (state == 10017) { return [Parser:REDUCE, 17]; } // operand: STRING
+        else if (state == 10018) { return [Parser:REDUCE, 18]; } // operand: indirect
+        else if (state == 10019) { return [Parser:REDUCE, 19]; } // operand: formula
+        else if (state == 10020) { return [Parser:REDUCE, 20]; } // indirect: '(' operand ')'
+        else if (state == 10021) { return [Parser:REDUCE, 21]; } // indirect: '(' operand ',' operand ')'
+        else if (state == 10022) { return [Parser:REDUCE, 22]; } // indirect: '(' operand ',' operand ',' NUMBER ')'
+        else if (state == 10023) { return [Parser:REDUCE, 23]; } // indirect: '(' ',' operand ')'
+        else if (state == 10024) { return [Parser:REDUCE, 24]; } // indirect: '(' ',' operand ',' NUMBER ')'
+        else if (state == 10025) { return [Parser:REDUCE, 25]; } // indirect: operand '(' operand ')'
+        else if (state == 10026) { return [Parser:REDUCE, 26]; } // indirect: operand '(' operand ',' operand ')'
+        else if (state == 10027) { return [Parser:REDUCE, 27]; } // indirect: operand '(' operand ',' operand ',' NUMBER ')'
+        else if (state == 10028) { return [Parser:REDUCE, 28]; } // indirect: operand '(' ',' operand ')'
+        else if (state == 10029) { return [Parser:REDUCE, 29]; } // indirect: operand '(' ',' operand ',' NUMBER ')'
+        else if (state == 10030) { return [Parser:REDUCE, 30]; } // formula: '(' operand OPERATOR operand ')'
+        
+        return [Parser:ERROR, 0];
+    }
+
+    [int] _parse(Tokenizer tokens) {
+        ParseStack stack = this.rt().createInstance(ParseStack:CLASSNAME);
+        stack.push(0, null);
+        int result = Parser:UNKNOWN;
+        
+        Token t = tokens.next();
+        while (result == Parser:UNKNOWN) {
+            int type = t.getType();
+            if (type == Token:SPACER || type == Token:COMMENT) {
+                // ignore
+                t = tokens.next();
+            } else {
+                [int action, int param] = this.action(stack.getState(), type);
+                if (action == Parser:ACCEPT) {
+                    result = Parser:ACCEPT;
+                } else if (action == Parser:SHIFT) {
+                    stack.push(param, t);
+                    t = tokens.next();
+                } else if (action == Parser:REDUCE) {
+                    Rule rule = this.getRule(param);
+                    __any__ v = this.executeRule(rule.getId(), stack);
+                    stack.pop(rule.getRhSize());
+                    int goto = this.goto(stack.getState(), rule.getLHS());
+                    if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
+                } else if (action == Parser:SHIFT_REDUCE) {
+                    stack.push(Parser:UNKNOWN, t);
+                    Rule rule = this.getRule(param);
+                    __any__ v = this.executeRule(rule.getId(), stack);
+                    stack.pop(rule.getRhSize());
+                    int goto = this.goto(stack.getState(), rule.getLHS());
+                    if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
+                    t = tokens.next();
+                } else if (action == Parser:ERROR) {
+                    result = Parser:ERROR;
+                    t.debugToStream(unit.newError().printCString("Parsing error near "));
+                }
+            }
+        }
+        stack.destroy();
+        return result == Parser:ACCEPT;
+    }
+
+    // Node creation helper
+    [IdentifierNode] createIdentifier(Token t) {
+        IdentifierNode id = this.rt().createInstance(IdentifierNode:CLASSNAME);
+        return id.setIdentifier(t.getValue());
+    }
+
+    [NumberNode] createNumber(Token t) {
+        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
+        return n.setOperand(t.toInt());
+    }
+    
+    [NumberNode] createChar(Token t) {
+        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
+        return n.setOperand(t.getValue().at(1)); // TODO: validate correct length of char (in parser or lexer?)
+    }
+    
+    [RegisterNode] createRegister(Token t) {
+        RegisterNode reg = this.rt().createInstance(RegisterNode:CLASSNAME);
+        return reg.setRegister(t.getValue().subString(1, 0));
+    }
+    
+    [StringNode] createString(Token t) {
+        StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
+        return s.setOperand(t.getValue().subString(1, -1));
+    }
+    
+    [LabelNode] createLabel(Token t) {
+        LabelNode label = this.rt().createInstance(LabelNode:CLASSNAME);
+        return label.setLabel(t.getValue());
+    }
+    
+    [DefinitionNode] createDefinition(Token t, OperandNode v) {
+        DefinitionNode def = this.rt().createInstance(DefinitionNode:CLASSNAME);
+        return def.initDefinition(t.getValue(), v);
+    }
+    
+    [InstructionNode] createInstruction(Token t) {
+        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
+        return inst.setOperation(t.getValue());
+    }
+    
+    [IndirectNode] createIndirect() {
+        IndirectNode indirect = this.rt().createInstance(IndirectNode:CLASSNAME);
+        return indirect;
+    }
+    
+    [FormulaNode] createFormula(OperandNode o1, Token t, OperandNode o2) {
+        FormulaNode formula = this.rt().createInstance(FormulaNode:CLASSNAME);
+        return formula.initFormula(o1, t.getValue(), o2);
+    }
 }

@@ -23,7 +23,7 @@ class Grammar extends Object {
         rules.destroy();
     }
     abstract [] initRules();
-    abstract [__any__] executeRule(int r, int /*AnyStack*/ s);
+    abstract [__any__] executeRule(int r, ParseStack s);
     
     [Rule] addRule(int lhs) {
         Rule r = this.rt().createInstance(Rule:CLASSNAME);

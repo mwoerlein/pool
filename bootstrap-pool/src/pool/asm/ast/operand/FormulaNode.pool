@@ -28,9 +28,9 @@ class FormulaNode extends OperandNode {
         this._destructOperandNode(); 
     }
     
-    [FormulaNode] initCFormula(OperandNode o1, cstring op, OperandNode o2) {
+    [FormulaNode] initFormula(OperandNode o1, String op, OperandNode o2) {
         operation = this.rt().createInstance(String:CLASSNAME);
-        operation.assignCString(op);
+        operation.assignString(op);
         this.o1 = o1;
         this.o2 = o2;
         return this;
