@@ -1,0 +1,54 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::token;
+
+use sys::core::Object;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class ParseStack extends Object {
+
+    ParseStackElement head;
+    
+    [] __destruct() {
+        while (head) {
+            ParseStackElement kill = head;
+            head = head.getNext();
+            kill.destroy();
+        }
+        if (head) { head.destroy(); }
+    }
+    
+    [] push(int state, __any__ value) {
+        ParseStackElement e = this.rt().createInstance(ParseStackElement:CLASSNAME);
+        head = e.init(head, state, value);
+    }
+    
+    [] pop(int n) {
+        int i = n;
+        while (head && i-- > 0) {
+            ParseStackElement kill = head;
+            head = head.getNext();
+            kill.destroy();
+        }
+    }
+    
+    [int] getState() {
+        if (head) { return head.getState(); }
+        return -1;
+    }
+    
+    [__all__] at(int pos) {
+        int i = pos;
+        ParseStackElement cur = head;
+        while (cur && i-- > 0) {
+            cur = cur.getNext();
+        }
+        if (cur) { return cur.getValue(); }
+        return null;
+    }
+}

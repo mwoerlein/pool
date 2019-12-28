@@ -1,0 +1,26 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::token;
+
+use sys::core::Object;
+use sys::memory::Address;
+
+class ParseStackElement extends Object {
+
+    ParseStackElement next;
+    int state;
+    __any__ value;
+    
+    [ParseStackElement] init(ParseStackElement n, int s, __any__ v) {
+        next = n;
+        state = s;
+        value = v;
+        return this;
+    }
+    [ParseStackElement] getNext() { return next; }
+    [int] getState() { return state; }
+    [__all__] getValue() { return Address:convert(this.value); }
+}
