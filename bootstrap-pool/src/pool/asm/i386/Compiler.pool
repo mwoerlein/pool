@@ -27,24 +27,15 @@ use pool::asm::ast::operand::RegisterNode;
 use pool::asm::ast::operand::StringNode;
 
 use pool::asm::value::NumericOperation;
-use pool::asm::value::PositionValue;
 use pool::asm::value::TextOperation;
-
-use pool::asm::i386::instruction::Ascii;
-use pool::asm::i386::instruction::Inline;
-use pool::asm::i386::instruction::Move;
-use pool::asm::i386::instruction::NoOperand;
-use pool::asm::i386::instruction::Nothing;
-use pool::asm::i386::instruction::Organize;
 
 use pool::asm::i386::value::RegisterValue;
 use pool::asm::i386::value::IndirectValue;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::String;
-use sys::stream::IStream;
 
-class Compiler extends sys::core::Object {
+class Compiler extends pool::asm::i386::instruction::Factory {
     CompilationUnit unit;
     CompilationBlock lastBlock;
     Instruction lastInst;
@@ -115,13 +106,15 @@ class Compiler extends sys::core::Object {
         if (op.cequals(".code16")) { lastBlock = unit.addBlock(16); }
         else if (op.cequals(".code32")) { lastBlock = unit.addBlock(32); }
         else {
-            Instruction inst = this._buildInstruction(op);
+            Instruction inst = this.buildInstruction(op);
             if (inst) {
                 inst.setNode(instNode);
                 inst.setOperand1(this._prepareOperandNode(instNode.getOperand1()));
                 inst.setOperand2(this._prepareOperandNode(instNode.getOperand2()));
                 inst.setOperand3(this._prepareOperandNode(instNode.getOperand3()));
                 lastInst = lastBlock.addInstruction(inst);
+            } else {
+                unit.newError().printCString("unknown instruction: '").print(op).printChar('\'');
             }
         }
         op.destroy();
@@ -130,7 +123,7 @@ class Compiler extends sys::core::Object {
     [] _prepareLabelNode(LabelNode label) {
         if (!lastInst) {
             // fake instruction as reference for the beginning of the unit
-            lastInst = lastBlock.addInstruction(this._buildInstruction(null));
+            lastInst = lastBlock.addInstruction(this.buildInstruction(null));
         }
         unit.addDefinition(label.getLabel(), unit._buildPositionValue(lastInst));
     }
@@ -207,102 +200,4 @@ class Compiler extends sys::core::Object {
             this._prepareOperandNode(node.getDisplacement())
         ).value();
     }
-    
-    // TODO: extract InstructionFactory
-    [Instruction] _buildInstruction(String op) {
-        if (!op) { return this._buildNothing(); }
-        
-        if (op.cequals("mov"))      { return this._buildMove( 0); }
-        if (op.cequals("movb"))     { return this._buildMove( 8); }
-        if (op.cequals("movw"))     { return this._buildMove(16); }
-        if (op.cequals("movl"))     { return this._buildMove(32); }
-        
-        if (op.cequals(".ascii"))   { return this._buildAscii(false); }
-        if (op.cequals(".asciz"))   { return this._buildAscii(true); }
-        
-        if (op.cequals(".byte"))    { return this._buildInline( 8, false); }
-        if (op.cequals(".bytet"))   { return this._buildInline( 8, true); }
-        if (op.cequals(".word"))    { return this._buildInline(16, false); }
-        if (op.cequals(".wordt"))   { return this._buildInline(16, true); }
-        if (op.cequals(".long"))    { return this._buildInline(32, false); }
-        
-        if (op.cequals(".align"))   { return this._buildOrganize(true); }
-        if (op.cequals(".org"))     { return this._buildOrganize(false); }
-                                            
-        if (op.cequals("pusha"))    { return this._buildNoOperand(0x60, 0x00, 0x00,  0); }
-        if (op.cequals("pushaw"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
-        if (op.cequals("pushad"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 32); }
-        if (op.cequals("pushal"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 32); }
-        if (op.cequals("popa"))     { return this._buildNoOperand(0x61, 0x00, 0x00,  0); }
-        if (op.cequals("popaw"))    { return this._buildNoOperand(0x61, 0x00, 0x00, 16); }
-        if (op.cequals("popad"))    { return this._buildNoOperand(0x61, 0x00, 0x00, 32); }
-        if (op.cequals("popal"))    { return this._buildNoOperand(0x61, 0x00, 0x00, 32); }
-        if (op.cequals("pushf"))    { return this._buildNoOperand(0x9C, 0x00, 0x00,  0); }
-        if (op.cequals("pushfw"))   { return this._buildNoOperand(0x9C, 0x00, 0x00, 16); }
-        if (op.cequals("pushfd"))   { return this._buildNoOperand(0x9C, 0x00, 0x00, 32); }
-        if (op.cequals("pushfl"))   { return this._buildNoOperand(0x9C, 0x00, 0x00, 32); }
-        if (op.cequals("popf"))     { return this._buildNoOperand(0x9D, 0x00, 0x00,  0); }
-        if (op.cequals("popfw"))    { return this._buildNoOperand(0x9D, 0x00, 0x00, 16); }
-        if (op.cequals("popfd"))    { return this._buildNoOperand(0x9D, 0x00, 0x00, 32); }
-        if (op.cequals("popfl"))    { return this._buildNoOperand(0x9D, 0x00, 0x00, 32); }
-        if (op.cequals("lodsb"))    { return this._buildNoOperand(0xAC, 0x00, 0x00,  8); }
-        if (op.cequals("lodsw"))    { return this._buildNoOperand(0xAD, 0x00, 0x00, 16); }
-        if (op.cequals("lodsd"))    { return this._buildNoOperand(0xAD, 0x00, 0x00, 32); }
-        if (op.cequals("lodsl"))    { return this._buildNoOperand(0xAD, 0x00, 0x00, 32); }
-        if (op.cequals("clc"))      { return this._buildNoOperand(0xF8, 0x00, 0x00,  0); }
-        if (op.cequals("cld"))      { return this._buildNoOperand(0xFC, 0x00, 0x00,  0); }
-        if (op.cequals("cli"))      { return this._buildNoOperand(0xFA, 0x00, 0x00,  0); }
-        if (op.cequals("clts"))     { return this._buildNoOperand(0x0F, 0x06, 0x00,  0); }
-        if (op.cequals("stc"))      { return this._buildNoOperand(0xF9, 0x00, 0x00,  0); }
-        if (op.cequals("std"))      { return this._buildNoOperand(0xFD, 0x00, 0x00,  0); }
-        if (op.cequals("sti"))      { return this._buildNoOperand(0xFB, 0x00, 0x00,  0); }
-        if (op.cequals("hlt"))      { return this._buildNoOperand(0xF4, 0x00, 0x00,  0); }
-        if (op.cequals("nop"))      { return this._buildNoOperand(0x90, 0x00, 0x00,  0); }
-        if (op.cequals("int0"))     { return this._buildNoOperand(0xCE, 0x00, 0x00,  0); }
-        if (op.cequals("int1"))     { return this._buildNoOperand(0xF1, 0x00, 0x00,  0); }
-        if (op.cequals("int3"))     { return this._buildNoOperand(0xCC, 0x00, 0x00,  0); }
-        if (op.cequals("leave"))    { return this._buildNoOperand(0xC9, 0x00, 0x00,  0); }
-        if (op.cequals("ret"))      { return this._buildNoOperand(0xC3, 0x00, 0x00,  0); }
-        if (op.cequals("iret"))     { return this._buildNoOperand(0xCF, 0x00, 0x00,  0); }
-        
-        unit.newError().printCString("unknown instruction: '").print(op).printChar('\'');
-        return null;
-    }
-    
-    [Instruction] _buildAscii(int zeroTerminated) {
-        Ascii i = this.rt().createInstance(Ascii:CLASSNAME);
-        i.setZeroTerminated(zeroTerminated);
-        return i.instruction();
-    } 
-    
-    [Instruction] _buildInline(int size, int skip) {
-        Inline i = this.rt().createInstance(Inline:CLASSNAME);
-        i.setOperandSize(size);
-        i.setSkipValidation(skip);
-        return i.instruction();
-    } 
-    
-    [Instruction] _buildMove(int size) {
-        Move i = this.rt().createInstance(Move:CLASSNAME);
-        i.setOperandSize(size);
-        return i.instruction();
-    } 
-    
-    [Instruction] _buildNoOperand(int op1, int op2, int op3, int size) {
-        NoOperand i = this.rt().createInstance(NoOperand:CLASSNAME);
-        i.setOperandSize(size);
-        i.setOperation(op1, op2, op3);
-        return i.instruction();
-    }
-     
-    [Instruction] _buildNothing() {
-        Nothing i = this.rt().createInstance(Nothing:CLASSNAME);
-        return i.instruction();
-    } 
-    
-    [Instruction] _buildOrganize(int align) {
-        Organize i = this.rt().createInstance(Organize:CLASSNAME);
-        i.setAlign(align);
-        return i.instruction();
-    } 
 }
