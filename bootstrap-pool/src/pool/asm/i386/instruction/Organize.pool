@@ -19,30 +19,30 @@ class Organize extends OneOperand {
         return this;
     }
 
-    [int] compileInstruction() {
+    [int] prepareInstruction() {
         if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
-        if (!o1.asNumeric()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
-        else {
-            int value = o1.asNumeric().getValue();
-            if (align && !Bitset:isPowerOfTwo(value)) {
+        if (!o1.asNumeric()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); return; }
+        
+        int value = o1.asNumeric().getValue();
+        if (align) {
+            if (!Bitset:isPowerOfTwo(value)) {
                 this.newError().printCString("Invalid alignment: ").printInt(value).printCString(" is not a power of 2");
+                return;
             }
-            if (!align && value < pos) {
+            int offset = pos % value;
+            immSize = value - offset;
+            if (!offset) { immSize = 0; }
+        } else {
+            if (value < pos) {
                 this.newError().printCString("Invalid organize: ").printInt(value).printCString(" is lower than current position ").printInt(pos);
+                return;
             }
+            immSize = value - pos;
         }
-        return immSize = this.approximateSize();
     }
     
     [int] approximateSize() {
-        int value = this.getValue();
-        if (!value) { return 0; }
-        if (align) {
-            int offset = pos % value;
-            if (!offset) { return 0; }
-            return value - offset;
-        }
-        return value - pos;
+        return immSize;
     }
     
     [OStream] rawToStream(OStream stream) {
@@ -51,12 +51,5 @@ class Organize extends OneOperand {
         int i = 0;
         while (i++ < immSize) { stream.printChar(c); }
         return stream;
-    }
-    
-    [int] getValue() {
-        if (!o1) { return 0; }
-        NumericValue nv = o1.resolve(block).asNumeric();
-        if (!nv) { return 0; }
-        return nv.getValue();
     }
 }

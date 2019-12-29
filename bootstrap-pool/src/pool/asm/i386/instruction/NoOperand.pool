@@ -9,6 +9,12 @@ use sys::stream::OStream;
 
 class NoOperand extends pool::asm::i386::Instruction {
     
+    [] checkOperands() {
+        if (o1) { this.newError().printCString("Unexpected operand: ").print(node.getOperand1()); }
+        if (o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); }
+        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); }
+    }
+    
     [int] approximateSize() {
         int size = 1;
         if (this.requiresOperandSizeOverride(operandSize)) { size++; }
@@ -18,14 +24,7 @@ class NoOperand extends pool::asm::i386::Instruction {
     }
     
     [int] compileInstruction() {
-        if (o1) { this.newError().printCString("Unexpected operand: ").print(node.getOperand1()); }
-        if (o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); }
-        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); }
         if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; }
         return this.approximateSize();
-    }
-    
-    [OStream] rawToStream(OStream stream) {
-        return this.rawOperationToStream(stream);
     }
 }

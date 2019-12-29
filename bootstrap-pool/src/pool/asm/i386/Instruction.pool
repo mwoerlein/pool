@@ -42,12 +42,25 @@ class Instruction extends pool::asm::Instruction {
         addr = node.getAddr(mode);
         data = node.getData(mode);
         immSize = 0;
-        return this.size = this.prepareInstruction();
+        
+        // TODO: prepare prefix nodes
+        if (node.getPrefix()) { this.newError().printCString("Unexpected prefix: ").print(node.getPrefix()); }
+        this.checkOperands();
+        if (block.getUnit().hasErrors()) { return this.size = 0; }
+        
+        if (o1) { o1 = o1.resolve(block); }
+        if (o2) { o2 = o2.resolve(block); }
+        if (o3) { o3 = o3.resolve(block); }
+        if (block.getUnit().hasErrors()) { return this.size = 0; }
+        
+        this.prepareInstruction();
+        if (block.getUnit().hasErrors()) { return this.size = 0; }
+        return this.size = this.approximateSize();
     }
+    
+    [] checkOperands() {}
 
-    [int] prepareInstruction() {
-        return this.approximateSize();
-    }
+    [] prepareInstruction() {}
     
     [int] approximateSize() {
         // TODO: approximate specific instruction size
@@ -57,12 +70,6 @@ class Instruction extends pool::asm::Instruction {
     
     [int] compile(int pos) {
         this.pos = pos;
-        // TODO: prepare prefix nodes
-        if (node.getPrefix()) { this.newError().printCString("Unexpected prefix: ").print(node.getPrefix()); }
-        
-        if (o1) { o1 = o1.resolve(block); }
-        if (o2) { o2 = o2.resolve(block); }
-        if (o3) { o3 = o3.resolve(block); }
         
         if (data != 0 && data != 8 && data != 16 && data != 32) {
             this.newError().printCString("invalid data: ").printInt(data);
@@ -73,7 +80,11 @@ class Instruction extends pool::asm::Instruction {
         if (operandSize != 0 && operandSize != 8 && operandSize != 16 && operandSize != 32) {
             this.newError().printCString("invalid operandSize: ").printInt(operandSize);
         }
-        return this.size = this.compileInstruction();
+        if (block.getUnit().hasErrors()) { return this.size = 0; }
+        
+        this.size = this.compileInstruction();
+        if (block.getUnit().hasErrors()) { return this.size = 0; }
+        return this.size;
     }
     
     [int] compileInstruction() {
@@ -117,6 +128,11 @@ class Instruction extends pool::asm::Instruction {
         }
     }
     
+    [OStream] rawToStream(OStream stream) {
+        this.rawOperationToStream(stream);
+        return this.rawOperandsToStream(stream);
+    }
+    
     [OStream] rawOperationToStream(OStream stream) {
         if (pre1) { stream.printChar(pre1); }
         if (pre2) { stream.printChar(pre2); }
@@ -131,6 +147,8 @@ class Instruction extends pool::asm::Instruction {
         }
         return stream;
     }
+    
+    [OStream] rawOperandsToStream(OStream stream) { return stream; }
     
     [OStream] rawValueToStream(OStream stream, int val, int size) {
         if (size == 8) {

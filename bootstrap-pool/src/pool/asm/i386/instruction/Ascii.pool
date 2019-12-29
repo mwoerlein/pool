@@ -19,30 +19,22 @@ class Ascii extends OneOperand {
         return this;
     }
 
-    [int] compileInstruction() {
+    [int] prepareInstruction() {
         if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
         if (!o1.asText()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
-        return immSize = this.approximateSize();
+        else {
+            immSize = o1.asText().getValue().length();
+            if (zeroTerminated) { immSize++; }
+        }
     }
     
     [int] approximateSize() {
-        String text = this.getText();
-        if (!text) { return 0; }
-        int size = text.length();
-        if (zeroTerminated) { size++; }
-        return size;
+        return immSize;
     }
     
     [OStream] rawToStream(OStream stream) {
-        stream.print(this.getText());
+        stream.print(o1.asText().getValue());
         if (zeroTerminated) { stream.printChar(0); }
         return stream;
-    }
-    
-    [String] getText() {
-        if (!o1) { return null; }
-        TextValue tv = o1.resolve(block).asText();
-        if (!tv) { return null; }
-        return tv.getValue();
     }
 }

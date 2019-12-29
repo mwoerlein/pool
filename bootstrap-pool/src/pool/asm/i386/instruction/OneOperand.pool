@@ -8,13 +8,9 @@ namespace pool::asm::i386::instruction;
 
 class OneOperand extends pool::asm::i386::Instruction {
 
-    [int] compileInstruction() {
-        int failed = false;
-        if (!o1) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); failed = true; }
-        if (o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); failed = true; }
-        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); failed = true; }
-        if (failed) { return 0; }
-        return this.compileOperands();
+    [] checkOperands() {
+        if (!o1) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); }
+        if (o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); }
+        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); }
     }
-    abstract [int] compileOperands();
 }
