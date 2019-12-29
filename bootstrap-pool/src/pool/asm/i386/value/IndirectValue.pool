@@ -197,9 +197,9 @@ class IndirectValue extends Value {
     [int] isOffset() { return !base && !index; }
     
     global [int] ModRM(int mod, int regO, int regM) {
-        return Bitset:rshift(Bitset:and(mod, 0x3), 6) + Bitset:rshift(Bitset:and(regO, 0x7), 3) + Bitset:and(regM, 0x7);
+        return Bitset:lshift(Bitset:and(mod, 0x3), 6) + Bitset:lshift(Bitset:and(regO, 0x7), 3) + Bitset:and(regM, 0x7);
     }
     global [int] SIB(int ss, int index, int base) {
-        return Bitset:rshift(Bitset:and(ss, 0x3), 6) + Bitset:rshift(Bitset:and(index, 0x7), 3) + Bitset:and(base, 0x7);
+        return Bitset:lshift(Bitset:and(ss, 0x3), 6) + Bitset:lshift(Bitset:and(index, 0x7), 3) + Bitset:and(base, 0x7);
     }
 }
