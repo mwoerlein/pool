@@ -72,4 +72,8 @@ class Bitset {
         __pasm__(".byte 0xD3; .byte 0xE0  #// shll %eax, %cl", {"%eax": a, "%ecx": bits}, {"%eax": ret});
         return ret;
     }
+    
+    global [int] isPowerOfTwo(int n) {
+        return n && !(Bitset:and(n, n-1));
+    }
 }
