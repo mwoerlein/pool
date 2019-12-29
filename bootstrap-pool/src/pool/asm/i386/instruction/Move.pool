@@ -5,15 +5,194 @@ version = 0.1.0
 */
 namespace pool::asm::i386::instruction;
 
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
+use pool::asm::i386::value::RegisterValue;
+
 use sys::stream::OStream;
 
-class Move extends pool::asm::i386::Instruction {
+class Move extends TwoOperand {
     
-    [int] approximateSize() {
-        return 2;
+    [] prepareInstruction() {
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        if (!operandSize) {
+            if (r1) {
+                operandSize = r1.getWidth();
+                if (r2 && (r2.getWidth() != operandSize)) {
+                    this.newError().printCString("Ambigious operand sizes: ").print(node);
+                }
+            } else if (r2) { operandSize = r2.getWidth(); }
+            else { this.newError().printCString("Missing operand size and no register to determine it from: ").print(node); }
+        }
+        if (r1) { r1.wideTo(operandSize, block.getUnit()); }
+        if (r2) { r2.wideTo(operandSize, block.getUnit()); }
+        if (block.getUnit().hasErrors()) { return; }
+        
+        NumericValue num1 = o1.asNumeric();
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        RegisterValue gr1 = null; 
+        RegisterValue gr2 = null; 
+        RegisterValue sr1 = null; 
+        RegisterValue sr2 = null;
+        if (r1 && r1.isGeneral()) { gr1 = r1; } 
+        if (r2 && r2.isGeneral()) { gr2 = r2; } 
+        if (r1 && r1.isSegment()) { sr1 = r1; } 
+        if (r2 && r2.isSegment()) { sr2 = r2; } 
+        
+        if ((num1 || gr1) && (gr2 || i2)) { return; }
+        if (i1 && gr2) { return; }
+        if (gr1 && sr2) { return; }
+        if (i1 && sr2) { return; }
+        if (sr1 && gr2) { return; }
+        if (sr1 && i2) { return; }
+        this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
     }
     
-    [OStream] rawToStream(OStream stream) {
-        return stream.printChar(0x89).printChar(0xC0); // movl %eax, %eax
+    [int] approximateSize() {
+        NumericValue num1 = o1.asNumeric();
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        
+        int size = 2; //opcode, modrm
+        if (this.requiresOperandSizeOverride(operandSize)) { size++; }
+        
+        if (num1) {
+            if (operandSize) { size += operandSize / 8; } else { size += 4; }
+        }
+        if (i1) {
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { size++; }
+            size += i1.getSibSize();
+            size += i1.getDispSize();
+        } 
+        if (i2) {
+            if (this.requiresAddressSizeOverride(i2.getAddrWidth())) { size++; }
+            size += i2.getSibSize();
+            size += i2.getDispSize();
+        } 
+        return size;
+    }
+    
+    [int] compileInstruction() {
+        int size = 0;
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        RegisterValue gr1 = null; 
+        RegisterValue gr2 = null; 
+        RegisterValue sr1 = null; 
+        RegisterValue sr2 = null;
+        if (r1 && r1.isGeneral()) { gr1 = r1; } 
+        if (r2 && r2.isGeneral()) { gr2 = r2; } 
+        if (r1 && r1.isSegment()) { sr1 = r1; } 
+        if (r2 && r2.isSegment()) { sr2 = r2; } 
+        
+        if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; size++; }
+        
+        if (num1 && gr2) {
+            op1 = 0xB8;
+            if (operandSize == 8) { op1 = 0xB0; } 
+            op1 += gr2.getOpCodeRegister();
+            immSize = operandSize;
+            return size + 1 + immSize;
+        }
+        if (num1 && i2) {
+            if (this.requiresAddressSizeOverride(i2.getAddrWidth())) { pre4 = 0x67; size++; }    
+            op1 = 0xC7;
+            if (operandSize == 8) { op1 = 0xC6; } 
+            immSize = operandSize;
+            this.useIndirectSizes(i2);
+            return size + 1 + modrmSize + sibSize + dispSize + immSize;
+        }
+        if (gr1 && gr2) {
+            op1 = 0x89;
+            if (operandSize == 8) { op1 = 0x88; } 
+            modrmSize = 1;
+            return size + 1 + modrmSize;
+        }
+        if (gr1 && i2) {
+            if (this.requiresAddressSizeOverride(i2.getAddrWidth())) { pre4 = 0x67; size++; }    
+            if (i2.isOffset() && (gr1.getOpCodeRegister() == 0 /*al, ax, eax*/)) {
+                op1 = 0xA3;
+                if (operandSize == 8) { op1 = 0xA2; } 
+                dispSize = i2.getAddrWidth();
+                return size + 1 + dispSize;
+            }
+            op1 = 0x89;
+            if (operandSize == 8) { op1 = 0x88; } 
+            this.useIndirectSizes(i2);
+            return size + 1 + modrmSize + sibSize + dispSize;
+        }
+        if (i1 && gr2) {
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { pre4 = 0x67; size++; }    
+            if (i1.isOffset() && (gr2.getOpCodeRegister() == 0 /*al, ax, eax*/)) {
+                op1 = 0xA1;
+                if (operandSize == 8) { op1 = 0xA0; } 
+                dispSize = i1.getAddrWidth();
+                return size + 1 + dispSize;
+            }
+            op1 = 0x8B;
+            if (operandSize == 8) { op1 = 0x8A; } 
+            this.useIndirectSizes(i1);
+            return size + 1 + modrmSize + sibSize + dispSize;
+        }
+        if (gr1 && sr2) {
+            op1 = 0x8E;
+            modrmSize = 1;
+            return size + 1 + modrmSize;
+        }
+        if (i1 && sr2) {
+            if (pre3) { pre3 = 0; size--; } // segment register implicit uses 16 bit
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { pre4 = 0x67; size++; }    
+            op1 = 0x8E;
+            this.useIndirectSizes(i1);
+            return size + 1 + modrmSize + sibSize + dispSize;
+        }
+        if (sr1 && gr2) {
+            op1 = 0x8C;
+            modrmSize = 1;
+            return size + 1 + modrmSize;
+        }
+        if (sr1 && i2) {
+            if (pre3) { pre3 = 0; size--; } // segment register implicit uses 16 bit
+            if (this.requiresAddressSizeOverride(i2.getAddrWidth())) { pre4 = 0x67; size++; }    
+            op1 = 0x8C;
+            this.useIndirectSizes(i2);
+            return size + 1 + modrmSize + sibSize + dispSize;
+        }
+        return -1;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        
+        if (num1) {
+            if (r2) { this.rawModRMToStream(stream, 0, r2.getOpCodeRegister()); }
+            if (i2) { this.rawIndirectToStream(stream, i2, 0); }
+            this.rawImmediateToStream(stream, num1);
+        }
+        if (r1) {
+            if (r2) {
+                if (r2.isSegment()) {
+                    this.rawModRMToStream(stream, r2.getOpCodeRegister(), r1.getOpCodeRegister());
+                } else {
+                    this.rawModRMToStream(stream, r1.getOpCodeRegister(), r2.getOpCodeRegister());
+                }
+            }
+            if (i2) {
+                this.rawIndirectToStream(stream, i2, r1.getOpCodeRegister());
+            }
+        }
+        if (i1 && r2) {
+            this.rawIndirectToStream(stream, i1, r2.getOpCodeRegister());
+        }
+        return stream;
     }
 }

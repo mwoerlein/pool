@@ -1,0 +1,16 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+
+class TwoOperand extends pool::asm::i386::Instruction {
+
+    [] checkOperands() {
+        if (!o1) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); }
+        if (!o2) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); }
+        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); }
+    }
+}

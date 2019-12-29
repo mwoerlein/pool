@@ -124,6 +124,8 @@ class IndirectValue extends Value {
         return this.value();
     }
     
+    [int] getAddrWidth() { return addrWidth; }
+    
     [int] getModRMSize() { return 1; }
     
     [int] getSibSize() {

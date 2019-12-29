@@ -7,6 +7,8 @@ namespace pool::asm::i386;
 
 use pool::asm::CompilationUnit;
 use pool::asm::Value;
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
 
 use sys::core::utils::Bitset;
 use sys::stream::OStream;
@@ -16,13 +18,10 @@ class Instruction extends pool::asm::Instruction {
     int pre1; int pre2; int pre3; int pre4;
     int op1; int op2; int op3;
     
-    int addr;
-    int data;
-    int operandSize;
-    int preparePos;
-    int pos;
+    int addr; int data; int operandSize;
+    int pos; int preparePos;
+    int immSize; int modrmSize; int sibSize; int dispSize;
     int size;
-    int immSize;
     
     [Instruction] setOperation(int op1, int op2, int op3) {
         this.op1 = op1;
@@ -98,6 +97,12 @@ class Instruction extends pool::asm::Instruction {
     [int] getStart() { return pos; }
     [int] getEnd() { return pos + size; }
     
+    [] useIndirectSizes(IndirectValue i) {
+        modrmSize = i.getModRMSize();
+        sibSize = i.getSibSize();
+        dispSize = i.getDispSize();
+    }
+    
     [int] requiresOperandSizeOverride(int operandSize) {
         return (operandSize == 16 && data == 32) || (operandSize == 32 && data == 16);
     }
@@ -165,6 +170,23 @@ class Instruction extends pool::asm::Instruction {
                 .printChar(Bitset:and(Bitset:rshift(val, 16), 0xff))
                 .printChar(Bitset:and(Bitset:rshift(val, 24), 0xff));
         }
+        return stream;
+    }
+
+    [OStream] rawImmediateToStream(OStream stream, NumericValue num) {
+        if (num) { this.rawValueToStream(stream, num.getValue(), immSize); }
+        return stream;
+    }
+    
+    [OStream] rawModRMToStream(OStream stream, int regO, int regM) {
+        if (modrmSize) { stream.printChar(IndirectValue:ModRM(3, regO, regM)); }
+        return stream;
+    }
+    
+    [OStream] rawIndirectToStream(OStream stream, IndirectValue i, int reg) {
+        if (modrmSize) { stream.printChar(i.getModRM(reg)); }
+        if (sibSize) { stream.printChar(i.getSib()); }
+        if (dispSize) { this.rawValueToStream(stream, i.getDispValue(), dispSize); }
         return stream;
     }
 }
