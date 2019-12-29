@@ -5,7 +5,6 @@ version = 0.1.0
 */
 namespace pool::asm::i386::instruction;
 
-use pool::asm::ast::operand::NumberNode;
 use pool::asm::value::NumericValue;
 
 use sys::stream::OStream;
@@ -16,6 +15,7 @@ class Inline extends OneOperand {
     
     [Inline] setSkipValidation(int skip) {
         skipValidation = skip;
+        return this;
     }
 
     [int] compileOperands() {

@@ -16,6 +16,7 @@ class Ascii extends OneOperand {
     
     [Ascii] setZeroTerminated(int zeroTerminated) {
         this.zeroTerminated = zeroTerminated;
+        return this;
     }
 
     [int] compileInstruction() {

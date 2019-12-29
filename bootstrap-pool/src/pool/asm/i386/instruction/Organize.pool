@@ -13,11 +13,10 @@ use sys::stream::OStream;
 class Organize extends OneOperand {
 
     int align;
-    int filler;
     
     [Organize] setAlign(int align) {
         this.align = align;
-        if (align) { filler = 0x90; }
+        return this;
     }
 
     [int] compileInstruction() {
@@ -47,10 +46,10 @@ class Organize extends OneOperand {
     }
     
     [OStream] rawToStream(OStream stream) {
+        int c = 0x0;
+        if (align) { c = 0x90; }
         int i = 0;
-        while (i++ < immSize) {
-            stream.printChar(filler);
-        }
+        while (i++ < immSize) { stream.printChar(c); }
         return stream;
     }
     
