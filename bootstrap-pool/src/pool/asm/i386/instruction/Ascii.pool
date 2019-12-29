@@ -41,7 +41,7 @@ class Ascii extends OneOperand {
     
     [String] getText() {
         if (!o1) { return null; }
-        TextValue tv = o1.compile(block).asText();
+        TextValue tv = o1.resolve(block).asText();
         if (!tv) { return null; }
         return tv.getValue();
     }

@@ -60,9 +60,9 @@ class Instruction extends pool::asm::Instruction {
         // TODO: prepare prefix nodes
         if (node.getPrefix()) { this.newError().printCString("Unexpected prefix: ").print(node.getPrefix()); }
         
-        if (o1) { o1 = o1.compile(block); }
-        if (o2) { o2 = o2.compile(block); }
-        if (o3) { o3 = o3.compile(block); }
+        if (o1) { o1 = o1.resolve(block); }
+        if (o2) { o2 = o2.resolve(block); }
+        if (o3) { o3 = o3.resolve(block); }
         
         if (data != 0 && data != 8 && data != 16 && data != 32) {
             this.newError().printCString("invalid data: ").printInt(data);

@@ -86,7 +86,7 @@ class RegisterValue extends Value {
     [int] getWidth() { return width; }
     [int] getOpCodeRegister() { return opCodeReg; }
     
-    [Value] compile(CompilationBlock block) {
+    [Value] resolve(CompilationBlock block) {
         String name = node.getRegister().toLower();
         // 8bit
         if (name.cequals("al"))         { reg = RegisterValue:AL; width = 8; kind = RegisterValue:GENERAL; opCodeReg = 0; }

@@ -16,7 +16,7 @@ class Value extends Object {
     [NumericValue] asNumeric() { return null; }
     [TextValue] asText() { return null; }
     
-    [Value] compile(CompilationBlock block) { return this; }
+    [Value] resolve(CompilationBlock block) { return this; }
     
     // TODO: remove with implicit cast
     [Value] value() { return this; }

@@ -20,11 +20,11 @@ class IdentifierValue extends Value {
         return this;
     }
     [int] isConstant() { return false; }
-    [Value] compile(CompilationBlock block) {
+    [Value] resolve(CompilationBlock block) {
         CompilationUnit unit = block.getUnit();
         Value v = unit.getValue(node.getIdentifier());
         if (v) {
-            return v.compile(block);
+            return v.resolve(block);
         }
         unit.newError().printCString("unknown identifier ").print(node);
         return this.value();

@@ -52,13 +52,13 @@ class NumericOperation extends NumericValue {
         return valid;
     }
     
-    [Value] compile(CompilationBlock block) {
+    [Value] resolve(CompilationBlock block) {
         CompilationUnit unit = block.getUnit();
-        o1 = o1.compile(block);
-        o2 = o2.compile(block);
+        o1 = o1.resolve(block);
+        o2 = o2.resolve(block);
         
         if (this.validate(unit) && this.isConstant()) {
-            return unit._buildNumberValue(this.getValue()).compile(block);
+            return unit._buildNumberValue(this.getValue()).resolve(block);
         }
         return this.value();
     }

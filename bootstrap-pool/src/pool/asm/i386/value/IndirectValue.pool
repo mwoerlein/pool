@@ -37,12 +37,12 @@ class IndirectValue extends Value {
         return this;
     }
     
-    [Value] compile(CompilationBlock block) {
+    [Value] resolve(CompilationBlock block) {
         CompilationUnit unit = block.getUnit();
         addrWidth = block.getMode();
         
         if (indexVal) {
-            index = this.rt().cast(RegisterValue:CLASSNAME, indexVal.compile(block));
+            index = this.rt().cast(RegisterValue:CLASSNAME, indexVal.resolve(block));
             if (index) {
                 if (
                     index.isRegister(RegisterValue:EAX)
@@ -64,7 +64,7 @@ class IndirectValue extends Value {
             }
         }
         if (baseVal) {
-            Value bv = baseVal.compile(block);
+            Value bv = baseVal.resolve(block);
             base = this.rt().cast(RegisterValue:CLASSNAME, bv);
             if (base) {
                 if (
@@ -101,7 +101,7 @@ class IndirectValue extends Value {
             }
         }
         if (displacementVal) {
-            displacement = displacementVal.compile(block).asNumeric();
+            displacement = displacementVal.resolve(block).asNumeric();
             if (displacement) {
                 if (displacement.isConstant() && (displacement.getValue() == 0) && (base || index)) {
                     displacement = null;
