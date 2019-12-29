@@ -528,8 +528,13 @@ formula:
                     __any__ v = this.executeRule(rule.getId(), stack);
                     stack.pop(rule.getRhSize());
                     int goto = this.goto(stack.getState(), rule.getLHS());
-                    if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
-                    t = tokens.next();
+                    if (goto < 0) {
+                        result = Parser:ERROR;
+                        t.debugToStream(unit.newError().printCString("Parsing error near "));
+                    } else {
+                        stack.push(goto, v);
+                        t = tokens.next();
+                    }
                 } else if (action == Parser:ERROR) {
                     result = Parser:ERROR;
                     t.debugToStream(unit.newError().printCString("Parsing error near "));
