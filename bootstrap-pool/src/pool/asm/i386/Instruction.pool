@@ -9,7 +9,6 @@ use pool::asm::CompilationUnit;
 use pool::asm::Value;
 
 use sys::core::utils::Bitset;
-use sys::memory::Address;
 use sys::stream::OStream;
 
 class Instruction extends pool::asm::Instruction {
@@ -23,6 +22,7 @@ class Instruction extends pool::asm::Instruction {
     int preparePos;
     int pos;
     int size;
+    int immSize;
     
     [Instruction] setOperation(int op1, int op2, int op3) {
         this.op1 = op1;
@@ -41,6 +41,7 @@ class Instruction extends pool::asm::Instruction {
         int mode = block.getMode();
         addr = node.getAddr(mode);
         data = node.getData(mode);
+        immSize = 0;
         return this.size = this.prepareInstruction();
     }
 
@@ -56,8 +57,9 @@ class Instruction extends pool::asm::Instruction {
     
     [int] compile(int pos) {
         this.pos = pos;
-        // TODO: validate generic and specific instruction properties
-        // TODO: prepare prefix nodes, normalize operands, ...
+        // TODO: prepare prefix nodes
+        if (node.getPrefix()) { this.newError().printCString("Unexpected prefix: ").print(node.getPrefix()); }
+        
         if (o1) { o1 = o1.compile(block); }
         if (o2) { o2 = o2.compile(block); }
         if (o3) { o3 = o3.compile(block); }
@@ -92,6 +94,19 @@ class Instruction extends pool::asm::Instruction {
     [int] requiresAddressSizeOverride(int addressSize) {
         int mode = block.getMode();
         return (addressSize == 16 && mode == 32) || (addressSize == 32 && mode == 16);
+    }
+    
+    [int] getBitWidth(int value) {
+        if (-128 <= value && value <= 127) { return 8; }
+        if (-32768 <= value && value <= 32767) { return 16; }
+        return 32;
+    }
+    
+    [int] getUnsignedBitWidth(int value) {
+        if (value < 0) { return 32; }
+        if (value <= 255) { return 8; }
+        if (value <= 65535) { return 16; }
+        return 32;
     }
     
     [int] approximateOffset(int position, int posIncr) {

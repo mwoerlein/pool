@@ -1,0 +1,47 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::TextValue;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class Ascii extends OneOperand {
+
+    int zeroTerminated;
+    
+    [Ascii] setZeroTerminated(int zeroTerminated) {
+        this.zeroTerminated = zeroTerminated;
+    }
+
+    [int] compileInstruction() {
+        if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
+        if (!o1.asText()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
+        return immSize = this.approximateSize();
+    }
+    
+    [int] approximateSize() {
+        String text = this.getText();
+        if (!text) { return 0; }
+        int size = text.length();
+        if (zeroTerminated) { size++; }
+        return size;
+    }
+    
+    [OStream] rawToStream(OStream stream) {
+        stream.print(this.getText());
+        if (zeroTerminated) { stream.printChar(0); }
+        return stream;
+    }
+    
+    [String] getText() {
+        if (!o1) { return null; }
+        TextValue tv = o1.compile(block).asText();
+        if (!tv) { return null; }
+        return tv.getValue();
+    }
+}

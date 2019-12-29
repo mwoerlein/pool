@@ -30,10 +30,12 @@ use pool::asm::value::NumericOperation;
 use pool::asm::value::PositionValue;
 use pool::asm::value::TextOperation;
 
+use pool::asm::i386::instruction::Ascii;
 use pool::asm::i386::instruction::Inline;
 use pool::asm::i386::instruction::Move;
 use pool::asm::i386::instruction::NoOperand;
 use pool::asm::i386::instruction::Nothing;
+use pool::asm::i386::instruction::Organize;
 
 use pool::asm::i386::value::RegisterValue;
 use pool::asm::i386::value::IndirectValue;
@@ -215,11 +217,17 @@ class Compiler extends sys::core::Object {
         if (op.cequals("movw"))     { return this._buildMove(16); }
         if (op.cequals("movl"))     { return this._buildMove(32); }
         
+        if (op.cequals(".ascii"))   { return this._buildAscii(false); }
+        if (op.cequals(".asciz"))   { return this._buildAscii(true); }
+        
         if (op.cequals(".byte"))    { return this._buildInline( 8, false); }
         if (op.cequals(".bytet"))   { return this._buildInline( 8, true); }
         if (op.cequals(".word"))    { return this._buildInline(16, false); }
         if (op.cequals(".wordt"))   { return this._buildInline(16, true); }
         if (op.cequals(".long"))    { return this._buildInline(32, false); }
+        
+        if (op.cequals(".align"))   { return this._buildOrganize(true); }
+        if (op.cequals(".org"))     { return this._buildOrganize(false); }
                                             
         if (op.cequals("pusha"))    { return this._buildNoOperand(0x60, 0x00, 0x00,  0); }
         if (op.cequals("pushaw"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
@@ -261,6 +269,12 @@ class Compiler extends sys::core::Object {
         return null;
     }
     
+    [Instruction] _buildAscii(int zeroTerminated) {
+        Ascii i = this.rt().createInstance(Ascii:CLASSNAME);
+        i.setZeroTerminated(zeroTerminated);
+        return i.instruction();
+    } 
+    
     [Instruction] _buildInline(int size, int skip) {
         Inline i = this.rt().createInstance(Inline:CLASSNAME);
         i.setOperandSize(size);
@@ -283,6 +297,12 @@ class Compiler extends sys::core::Object {
      
     [Instruction] _buildNothing() {
         Nothing i = this.rt().createInstance(Nothing:CLASSNAME);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildOrganize(int align) {
+        Organize i = this.rt().createInstance(Organize:CLASSNAME);
+        i.setAlign(align);
         return i.instruction();
     } 
 }

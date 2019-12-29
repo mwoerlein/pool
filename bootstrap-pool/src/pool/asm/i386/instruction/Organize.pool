@@ -1,0 +1,63 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+class Organize extends OneOperand {
+
+    int align;
+    int filler;
+    
+    [Organize] setAlign(int align) {
+        this.align = align;
+        if (align) { filler = 0x90; }
+    }
+
+    [int] compileInstruction() {
+        if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
+        if (!o1.asNumeric()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
+        else {
+            int value = o1.asNumeric().getValue();
+            if (align && !Bitset:isPowerOfTwo(value)) {
+                this.newError().printCString("Invalid alignment: ").printInt(value).printCString(" is not a power of 2");
+            }
+            if (!align && value < pos) {
+                this.newError().printCString("Invalid organize: ").printInt(value).printCString(" is lower than current position ").printInt(pos);
+            }
+        }
+        return immSize = this.approximateSize();
+    }
+    
+    [int] approximateSize() {
+        int value = this.getValue();
+        if (!value) { return 0; }
+        if (align) {
+            int offset = pos % value;
+            if (!offset) { return 0; }
+            return value - offset;
+        }
+        return value - pos;
+    }
+    
+    [OStream] rawToStream(OStream stream) {
+        int i = 0;
+        while (i++ < immSize) {
+            stream.printChar(filler);
+        }
+        return stream;
+    }
+    
+    [int] getValue() {
+        if (!o1) { return 0; }
+        NumericValue nv = o1.compile(block).asNumeric();
+        if (!nv) { return 0; }
+        return nv.getValue();
+    }
+}

@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::ast::operand::NumberNode;
+use pool::asm::value::NumericValue;
+
+use sys::stream::OStream;
+
+class OneOperand extends pool::asm::i386::Instruction {
+
+    int skipValidation;
+    
+    [Inline] setSkipValidation(int skip) {
+        skipValidation = skip;
+    }
+
+    [int] compileInstruction() {
+        int failed = false;
+        if (!o1) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); failed = true; }
+        if (o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); failed = true; }
+        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); failed = true; }
+        if (failed) { return 0; }
+        return this.compileOperands();
+    }
+    abstract [int] compileOperands();
+}

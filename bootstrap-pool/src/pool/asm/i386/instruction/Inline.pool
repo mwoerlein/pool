@@ -10,7 +10,7 @@ use pool::asm::value::NumericValue;
 
 use sys::stream::OStream;
 
-class Inline extends pool::asm::i386::Instruction {
+class Inline extends OneOperand {
 
     int skipValidation;
     
@@ -18,16 +18,11 @@ class Inline extends pool::asm::i386::Instruction {
         skipValidation = skip;
     }
 
-    [int] compileInstruction() {
-        if (node.getPrefix()) { this.newError().printCString("Unexpected prefix: ").print(node.getPrefix()); }
-        if (!o1) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); }
-        if (o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand2()); }
-        if (o3) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); }
+    [int] compileOperands() {
         if (!operandSize) { this.newError().printCString("Missing operand size in '").print(node).printChar('\''); }
         
-        if (!o1.asNumeric()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
-        else {
-            NumericValue num1 = o1.asNumeric();
+        NumericValue num1 = o1.asNumeric();
+        if (num1) {
             if (num1.isConstant()) {
                 int value = num1.getValue();
                 if (this.getUnsignedBitWidth(value) > operandSize) {
@@ -36,9 +31,9 @@ class Inline extends pool::asm::i386::Instruction {
             } else if (!skipValidation && (addr > operandSize)) {
                 this.newError().printCString("address size ").printInt(addr).printCString(" bit does not match ").printInt(operandSize).printCString(" bit operand size: ").print(node);
             }
-        }
+        } else { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
         
-        return this.approximateSize();
+        return immSize = this.approximateSize();
     }
     
     [int] approximateSize() {
