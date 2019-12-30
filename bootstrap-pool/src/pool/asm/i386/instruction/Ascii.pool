@@ -19,13 +19,14 @@ class Ascii extends OneOperand {
         return this;
     }
 
-    [int] prepareInstruction() {
+    [] prepareInstruction() {
         if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
-        if (!o1.asText()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
-        else {
-            immSize = o1.asText().getValue().length();
+        
+        TextValue t1 = o1.asText();
+        if (t1) {
+            immSize = t1.getValue().length();
             if (zeroTerminated) { immSize++; }
-        }
+        } else { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
     }
     
     [int] approximateSize() {

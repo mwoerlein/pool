@@ -18,7 +18,7 @@ class Inline extends OneOperand {
         return this;
     }
 
-    [int] compileInstruction() {
+    [] prepareInstruction() {
         if (!operandSize) { this.newError().printCString("Missing operand size in '").print(node).printChar('\''); }
         immSize = operandSize / 8;
         

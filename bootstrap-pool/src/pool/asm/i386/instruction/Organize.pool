@@ -19,29 +19,34 @@ class Organize extends OneOperand {
         return this;
     }
 
-    [int] prepareInstruction() {
+    [] prepareInstruction() {
         if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
-        if (!o1.asNumeric()) { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); return; }
         
+        NumericValue num1 = o1.asNumeric();
+        if (num1 && num1.isConstant()) {
+            int value = num1.getValue();
+            if (align) {
+                if (!Bitset:isPowerOfTwo(value)) {
+                    this.newError().printCString("Invalid alignment: ").printInt(value).printCString(" is not a power of 2");
+                }
+            } else {
+                if (value < pos) {
+                    this.newError().printCString("Invalid organize: ").printInt(value).printCString(" is lower than current position ").printInt(pos);
+                }
+            }
+        } else { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
+    }
+    
+    [int] approximateSize() {
+        // recompute immSize for prepare *and* compute relative to current position 
         int value = o1.asNumeric().getValue();
         if (align) {
-            if (!Bitset:isPowerOfTwo(value)) {
-                this.newError().printCString("Invalid alignment: ").printInt(value).printCString(" is not a power of 2");
-                return;
-            }
             int offset = pos % value;
             immSize = value - offset;
             if (!offset) { immSize = 0; }
         } else {
-            if (value < pos) {
-                this.newError().printCString("Invalid organize: ").printInt(value).printCString(" is lower than current position ").printInt(pos);
-                return;
-            }
             immSize = value - pos;
         }
-    }
-    
-    [int] approximateSize() {
         return immSize;
     }
     
