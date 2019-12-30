@@ -1,0 +1,109 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
+use pool::asm::i386::value::RegisterValue;
+
+use sys::stream::OStream;
+
+class Jump extends OneOperand {
+
+    int call;
+    
+    [Jump] setCall(int call) {
+        this.call = call;
+        return this;
+    }
+    
+    [] prepareInstruction() {
+        if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
+        
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        if (num1 || i1) {
+            return;
+        }
+        if (r1) {
+            if (!r1.isGeneral() || (r1.getWidth() != 16 && r1.getWidth() != 32)) {
+                this.newError().printCString("Invalid register: ").print(node.getOperand1());
+            }
+        } else { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
+    }
+    
+    [int] approximateSize() {
+        NumericValue num1 = o1.asNumeric();
+        if (num1) { return 1 + addr / 8; } // opcode + immediate
+
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        if (r1) {
+            if (this.requiresAddressSizeOverride(r1.getWidth())) {
+                return 3; // opcode + prefix + modmr
+            }    
+            return 2; // opcode + modmr
+        }
+        
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        if (i1) {
+            int size = 1; // opcode
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { size++; }
+            size += i1.getModRMSize();
+            size += i1.getSibSize();
+            size += i1.getDispSize();
+            return size;
+        }
+        return 8; // all over maximum
+    }
+    
+    [int] compileInstruction() {
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        if (num1) {
+            immSize = addr / 8;
+            if (call) {
+                op1 = 0xE8;
+                return 1 + immSize;
+            } else {
+                // Offset of explicit address cannot be determined before final positioning in finalize
+                // relative offsets must result in correct addr width, otherwise the upper two bytes of the EIP register are cleared
+                if (num1.isConstant() || this.getBitWidth(this.approximateOffset(num1.getValue(), 2)) != 8) {
+                    op1 = 0xE9;
+                } else {
+                    op1 = 0xEB;
+                    immSize = 1;
+                }
+                return 1 + immSize;
+            }
+        }
+        if (r1) {
+            if (this.requiresAddressSizeOverride(r1.getWidth())) { pre4 = 0x66; size++; }    
+            op1 = 0xFF;
+            modrmSize = 1;
+            return 1 + modrmSize;
+        }
+        if (i1) {
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { pre4 = 0x67; size++; }    
+            op1 = 0xFF;
+            this.useIndirectSizes(i1);
+            return 1 + modrmSize + sibSize + dispSize;
+        }
+        return -1;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        int reg = 4;
+        if (call) { reg = 2; }
+        if (num1) { this.rawOffsetToStream(stream, num1); }
+        if (r1) { this.rawModRMToStream(stream, reg, r1.getOpCodeRegister()); }
+        if (i1) { this.rawIndirectToStream(stream, i1, reg); }
+    }
+}

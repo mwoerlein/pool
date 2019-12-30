@@ -178,6 +178,11 @@ class Instruction extends pool::asm::Instruction {
         return stream;
     }
     
+    [OStream] rawOffsetToStream(OStream stream, NumericValue num) {
+        if (num) { this.rawValueToStream(stream, num.getValue() - this.getEnd(), immSize); }
+        return stream;
+    }
+    
     [OStream] rawModRMToStream(OStream stream, int regO, int regM) {
         if (modrmSize) { stream.printChar(IndirectValue:ModRM(3, regO, regM)); }
         return stream;

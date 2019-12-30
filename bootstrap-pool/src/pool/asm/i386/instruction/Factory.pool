@@ -18,6 +18,8 @@ class Factory extends sys::core::Object {
         if (op.cequals("movw"))     { return this._buildMove(16); }
         if (op.cequals("movl"))     { return this._buildMove(32); }
         if (op.cequals("int"))      { return this._buildInterrupt(); }
+        if (op.cequals("jmp"))      { return this._buildJump(false); }
+        if (op.cequals("call"))     { return this._buildJump(true); }
         
         if (op.cequals(".ascii"))   { return this._buildAscii(false); }
         if (op.cequals(".asciz"))   { return this._buildAscii(true); }
@@ -85,6 +87,12 @@ class Factory extends sys::core::Object {
     
     [Instruction] _buildInterrupt() {
         Interrupt i = this.rt().createInstance(Interrupt:CLASSNAME);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildJump(int call) {
+        Jump i = this.rt().createInstance(Jump:CLASSNAME);
+        i.setCall(call);
         return i.instruction();
     } 
     
