@@ -1,0 +1,39 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+
+use sys::stream::OStream;
+
+class Interrupt extends OneOperand {
+
+    [] prepareInstruction() {
+        if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
+        
+        NumericValue num1 = o1.asNumeric();
+        if (num1 && num1.isConstant()) {
+            int value = num1.getValue();
+            if (this.getUnsignedBitWidth(value) != 8) {
+                this.newError().printCString("Invalid interrupt number: ").printInt(value);
+            }
+        } else { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
+    }
+    
+    [int] approximateSize() {
+        return 2;
+    }
+    
+    [int] compileInstruction() {
+        op1 = 0xCD;
+        immSize = 8;
+        return 2;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        return this.rawImmediateToStream(stream, o1.asNumeric());
+    }
+}
