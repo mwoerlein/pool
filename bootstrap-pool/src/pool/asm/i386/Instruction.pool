@@ -155,15 +155,15 @@ class Instruction extends pool::asm::Instruction {
     
     [OStream] rawOperandsToStream(OStream stream) { return stream; }
     
-    [OStream] rawValueToStream(OStream stream, int val, int size) {
-        if (size == 8) {
+    [OStream] rawValueToStream(OStream stream, int val, int bytes) {
+        if (bytes == 1) {
             return stream
                 .printChar(Bitset:and(val, 0xff));
-        } else if (size == 16) {
+        } else if (bytes == 2) {
             return stream
                 .printChar(Bitset:and(val, 0xff))
                 .printChar(Bitset:and(Bitset:rshift(val,  8), 0xff));
-        } else if (size == 32) {
+        } else if (bytes == 4) {
             return stream
                 .printChar(Bitset:and(val, 0xff))
                 .printChar(Bitset:and(Bitset:rshift(val,  8), 0xff))

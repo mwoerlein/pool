@@ -107,14 +107,14 @@ class Move extends TwoOperand {
             op1 = 0xB8;
             if (operandSize == 8) { op1 = 0xB0; } 
             op1 += gr2.getOpCodeRegister();
-            immSize = operandSize;
+            immSize = operandSize / 8;
             return size + 1 + immSize;
         }
         if (num1 && i2) {
             if (this.requiresAddressSizeOverride(i2.getAddrWidth())) { pre4 = 0x67; size++; }    
             op1 = 0xC7;
             if (operandSize == 8) { op1 = 0xC6; } 
-            immSize = operandSize;
+            immSize = operandSize / 8;
             this.useIndirectSizes(i2);
             return size + 1 + modrmSize + sibSize + dispSize + immSize;
         }

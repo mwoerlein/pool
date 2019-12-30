@@ -29,7 +29,7 @@ class Interrupt extends OneOperand {
     
     [int] compileInstruction() {
         op1 = 0xCD;
-        immSize = 8;
+        immSize = 1;
         return 2;
     }
     

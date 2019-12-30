@@ -137,11 +137,11 @@ class IndirectValue extends Value {
     [int] getDispSize() {
         if (displacement) {
             int value = displacement.getValue();
-            if ((base || index) && (-128 <= value && value <= 127)) { return 8; }
-            return addrWidth;
+            if ((base || index) && (-128 <= value && value <= 127)) { return 1; }
+            return addrWidth / 8;
         }
-        if (!index && base && base.isRegister(RegisterValue:BP)) { return 8; } // use 0(%bp)
-        if (!base && index) { return addrWidth; } // use 0(,<_index>)
+        if (!index && base && base.isRegister(RegisterValue:BP)) { return 1; } // use 0(%bp)
+        if (!base && index) { return addrWidth / 8; } // use 0(,<_index>)
         return 0; // no disp bytes
     }
     
@@ -151,10 +151,10 @@ class IndirectValue extends Value {
             if (dispSize == 0) {
                 if (index) { return IndirectValue:ModRM(0, reg, 4); }
                 return IndirectValue:ModRM(0, reg, base.getOpCodeRegister());
-            } else if (dispSize == 8) {
+            } else if (dispSize == 1) {
                 if (index) { return IndirectValue:ModRM(1, reg, 4); }
                 return IndirectValue:ModRM(1, reg, base.getOpCodeRegister());
-            } else if (dispSize == 32) {
+            } else if (dispSize == 4) {
                 if (index && base) { return IndirectValue:ModRM(2, reg, 4); }
                 if (index) { return IndirectValue:ModRM(0, reg, 4); }
                 if (base) { return IndirectValue:ModRM(2, reg, base.getOpCodeRegister()); }
@@ -162,21 +162,20 @@ class IndirectValue extends Value {
             }
         } else if (addrWidth == 16) {
             if (!base) { return IndirectValue:ModRM(0, reg, 6); }
-            int mod = dispSize / 8;
             if (base.isRegister(RegisterValue:BX)) {
                 int regM = 7;
                 if (index && index.isRegister(RegisterValue:SI)) { regM = 0; }
                 if (index && index.isRegister(RegisterValue:DI)) { regM = 1; }
-                return IndirectValue:ModRM(mod, reg, regM);
+                return IndirectValue:ModRM(dispSize, reg, regM);
             }
             if (base.isRegister(RegisterValue:BP)) {
                 int regM = 6;
                 if (index && index.isRegister(RegisterValue:SI)) { regM = 2; }
                 if (index && index.isRegister(RegisterValue:DI)) { regM = 3; }
-                return IndirectValue:ModRM(mod, reg, regM);
+                return IndirectValue:ModRM(dispSize, reg, regM);
             }
-            if (base.isRegister(RegisterValue:SI)) { return IndirectValue:ModRM(mod, reg, 4); }
-            if (base.isRegister(RegisterValue:DI)) { return IndirectValue:ModRM(mod, reg, 5); }
+            if (base.isRegister(RegisterValue:SI)) { return IndirectValue:ModRM(dispSize, reg, 4); }
+            if (base.isRegister(RegisterValue:DI)) { return IndirectValue:ModRM(dispSize, reg, 5); }
         }
         return -1;
     }

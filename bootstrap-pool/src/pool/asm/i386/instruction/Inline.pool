@@ -40,6 +40,6 @@ class Inline extends OneOperand {
     }
     
     [OStream] rawToStream(OStream stream) {
-        return this.rawValueToStream(stream, o1.asNumeric().getValue(), operandSize);
+        return this.rawImmediateToStream(stream, o1.asNumeric());
     }
 }
