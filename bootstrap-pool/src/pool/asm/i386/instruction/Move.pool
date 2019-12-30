@@ -36,26 +36,33 @@ class Move extends TwoOperand {
         RegisterValue gr2 = null; 
         RegisterValue sr1 = null; 
         RegisterValue sr2 = null;
+        RegisterValue cr1 = null; 
+        RegisterValue cr2 = null;
         if (r1 && r1.isGeneral()) { gr1 = r1; } 
         if (r2 && r2.isGeneral()) { gr2 = r2; } 
         if (r1 && r1.isSegment()) { sr1 = r1; } 
         if (r2 && r2.isSegment()) { sr2 = r2; } 
+        if (r1 && r1.isControl()) { cr1 = r1; } 
+        if (r2 && r2.isControl()) { cr2 = r2; } 
         
         if ((num1 || gr1) && (gr2 || i2)) { return; }
         if (i1 && gr2) { return; }
-        if (gr1 && sr2) { return; }
+        if (gr1 && (sr2 || cr2)) { return; }
         if (i1 && sr2) { return; }
-        if (sr1 && gr2) { return; }
+        if ((sr1 || cr1) && gr2) { return; }
         if (sr1 && i2) { return; }
         this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
     }
     
     [int] approximateSize() {
         NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
         IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
         IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
         
         int size = 2; //opcode, modrm
+        if ((r1 && r1.isControl()) || (r2 && r2.isControl())) { size++; } // 2-byte opcode
         if (this.requiresOperandSizeOverride(operandSize)) { size++; }
         
         if (num1) {
@@ -85,10 +92,14 @@ class Move extends TwoOperand {
         RegisterValue gr2 = null; 
         RegisterValue sr1 = null; 
         RegisterValue sr2 = null;
+        RegisterValue cr1 = null; 
+        RegisterValue cr2 = null;
         if (r1 && r1.isGeneral()) { gr1 = r1; } 
         if (r2 && r2.isGeneral()) { gr2 = r2; } 
         if (r1 && r1.isSegment()) { sr1 = r1; } 
         if (r2 && r2.isSegment()) { sr2 = r2; } 
+        if (r1 && r1.isControl()) { cr1 = r1; } 
+        if (r2 && r2.isControl()) { cr2 = r2; } 
         
         if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; size++; }
         
@@ -163,6 +174,18 @@ class Move extends TwoOperand {
             this.useIndirectSizes(i2);
             return size + 1 + modrmSize + sibSize + dispSize;
         }
+        if (gr1 && cr2) {
+            op1 = 0x0F;
+            op2 = 0x22;
+            modrmSize = 1;
+            return size + 2 + modrmSize;
+        }
+        if (cr1 && gr2) {
+            op1 = 0x0F;
+            op2 = 0x20;
+            modrmSize = 1;
+            return size + 2 + modrmSize;
+        }
         return -1;
     }
     
@@ -180,7 +203,7 @@ class Move extends TwoOperand {
         }
         if (r1) {
             if (r2) {
-                if (r2.isSegment()) {
+                if (r2.isSegment() || r2.isControl()) {
                     this.rawModRMToStream(stream, r2.getOpCodeRegister(), r1.getOpCodeRegister());
                 } else {
                     this.rawModRMToStream(stream, r1.getOpCodeRegister(), r2.getOpCodeRegister());
