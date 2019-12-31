@@ -117,7 +117,7 @@ class Move extends TwoOperand {
             if (i2.isOffset() && (gr1.getOpCodeRegister() == 0 /*al, ax, eax*/)) {
                 op1 = 0xA3;
                 if (operandSize == 8) { op1 = 0xA2; } 
-                dispSize = i2.getAddrWidth();
+                dispSize = i2.getAddrWidth() / 8;
                 return size + 1 + dispSize;
             }
             op1 = 0x89;
@@ -130,7 +130,7 @@ class Move extends TwoOperand {
             if (i1.isOffset() && (gr2.getOpCodeRegister() == 0 /*al, ax, eax*/)) {
                 op1 = 0xA1;
                 if (operandSize == 8) { op1 = 0xA0; } 
-                dispSize = i1.getAddrWidth();
+                dispSize = i1.getAddrWidth() / 8;
                 return size + 1 + dispSize;
             }
             op1 = 0x8B;
