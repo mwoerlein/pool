@@ -83,6 +83,31 @@ class Factory extends sys::core::Object {
         if (op.cequals("cmpw"))     { return this._buildGroupOne(7, 16); }
         if (op.cequals("cmpl"))     { return this._buildGroupOne(7, 32); }
                                             
+        if (op.cequals("not"))      { return this._buildGroupTwo(2,  0); }
+        if (op.cequals("notb"))     { return this._buildGroupTwo(2,  8); }
+        if (op.cequals("notw"))     { return this._buildGroupTwo(2, 16); }
+        if (op.cequals("notl"))     { return this._buildGroupTwo(2, 32); }
+        if (op.cequals("neg"))      { return this._buildGroupTwo(3,  0); }
+        if (op.cequals("negb"))     { return this._buildGroupTwo(3,  8); }
+        if (op.cequals("negw"))     { return this._buildGroupTwo(3, 16); }
+        if (op.cequals("negl"))     { return this._buildGroupTwo(3, 32); }
+        if (op.cequals("mul"))      { return this._buildGroupTwo(4,  0); }
+        if (op.cequals("mulb"))     { return this._buildGroupTwo(4,  8); }
+        if (op.cequals("mulw"))     { return this._buildGroupTwo(4, 16); }
+        if (op.cequals("mull"))     { return this._buildGroupTwo(4, 32); }
+        if (op.cequals("imul"))     { return this._buildIMul( 0); }
+        if (op.cequals("imulb"))    { return this._buildIMul( 8); }
+        if (op.cequals("imulw"))    { return this._buildIMul(16); }
+        if (op.cequals("imull"))    { return this._buildIMul(32); }
+        if (op.cequals("div"))      { return this._buildGroupTwo(6,  0); }
+        if (op.cequals("divb"))     { return this._buildGroupTwo(6,  8); }
+        if (op.cequals("divw"))     { return this._buildGroupTwo(6, 16); }
+        if (op.cequals("divl"))     { return this._buildGroupTwo(6, 32); }
+        if (op.cequals("idiv"))     { return this._buildGroupTwo(7,  0); }
+        if (op.cequals("idivb"))    { return this._buildGroupTwo(7,  8); }
+        if (op.cequals("idivw"))    { return this._buildGroupTwo(7, 16); }
+        if (op.cequals("idivl"))    { return this._buildGroupTwo(7, 32); }
+
         if (op.cequals("pusha"))    { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
         if (op.cequals("pushaw"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
         if (op.cequals("pushad"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 32); }
@@ -133,6 +158,18 @@ class Factory extends sys::core::Object {
         i.setRegO(regO);
         i.setOperandSize(size);
         return i.instruction();
+    } 
+    
+    [Instruction] _buildGroupTwo(int regO, int size) {
+        GroupTwoInstruction i = this.rt().createInstance(GroupTwoInstruction:CLASSNAME);
+        i.setRegO(regO);
+        i.setOperandSize(size);
+        return i.instruction();
+    }
+     
+    [Instruction] _buildIMul(int size) {
+        // TODO: generate explicit imul instruction with full operands support
+        return this._buildGroupTwo(5, size);
     } 
     
     [Instruction] _buildIn(int size) {
