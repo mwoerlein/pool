@@ -13,13 +13,22 @@ class Factory extends sys::core::Object {
     [Instruction] buildInstruction(String op) {
         if (!op) { return this._buildNothing(); }
         
+        if (op.cequals("int"))      { return this._buildInterrupt(); }
+        if (op.cequals("jmp"))      { return this._buildJump(false); }
+        if (op.cequals("call"))     { return this._buildJump(true); }
+        
         if (op.cequals("mov"))      { return this._buildMove( 0); }
         if (op.cequals("movb"))     { return this._buildMove( 8); }
         if (op.cequals("movw"))     { return this._buildMove(16); }
         if (op.cequals("movl"))     { return this._buildMove(32); }
-        if (op.cequals("int"))      { return this._buildInterrupt(); }
-        if (op.cequals("jmp"))      { return this._buildJump(false); }
-        if (op.cequals("call"))     { return this._buildJump(true); }
+        if (op.cequals("pop"))      { return this._buildPop ( 0); }
+        if (op.cequals("popb"))     { return this._buildPop ( 8); }
+        if (op.cequals("popw"))     { return this._buildPop (16); }
+        if (op.cequals("popl"))     { return this._buildPop (32); }
+        if (op.cequals("push"))     { return this._buildPush( 0); }
+        if (op.cequals("pushb"))    { return this._buildPush( 8); }
+        if (op.cequals("pushw"))    { return this._buildPush(16); }
+        if (op.cequals("pushl"))    { return this._buildPush(32); }
         
         if (op.cequals(".ascii"))   { return this._buildAscii(false); }
         if (op.cequals(".asciz"))   { return this._buildAscii(true); }
@@ -117,6 +126,18 @@ class Factory extends sys::core::Object {
     [Instruction] _buildOrganize(int align) {
         Organize i = this.rt().createInstance(Organize:CLASSNAME);
         i.setAlign(align);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildPop(int size) {
+        Pop i = this.rt().createInstance(Pop:CLASSNAME);
+        i.setOperandSize(size);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildPush(int size) {
+        Push i = this.rt().createInstance(Push:CLASSNAME);
+        i.setOperandSize(size);
         return i.instruction();
     } 
 }

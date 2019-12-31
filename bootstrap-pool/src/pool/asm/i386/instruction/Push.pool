@@ -1,0 +1,118 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
+use pool::asm::i386::value::RegisterValue;
+
+use sys::stream::OStream;
+
+class Push extends OneOperand {
+
+    [] prepareInstruction() {
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        if (!operandSize) {
+            if (r1 && r1.isGeneral()) {
+                operandSize = r1.getWidth();
+                if (operandSize == 8) { this.newError().printCString("Invalid operand size in '").print(node).printChar('\''); }
+            } else {
+                operandSize = addr;
+            }
+        }
+        if (block.getUnit().hasErrors()) { return; }
+        
+        NumericValue num1 = o1.asNumeric();
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        
+        if (num1 || i1) { return; }
+        if (r1 && (r1.isGeneral() || r1.isSegment())) {
+            r1.wideTo(operandSize, block.getUnit());
+            return;
+        }
+        this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
+    }
+    
+    [int] approximateSize() {
+        int size = 1; // op1
+        NumericValue num1 = o1.asNumeric();
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        
+        if (this.requiresOperandSizeOverride(operandSize)) { size++; }
+        
+        if (num1) {
+            if (num1.isConstant() && (this.getBitWidth(num1.getValue()) == 8)) {
+                size++; 
+            } else {
+                size += operandSize / 8;
+            }
+        }
+        if (i1) {
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { size++; }
+            size++; // modRM
+            size += i1.getSibSize();
+            size += i1.getDispSize();
+        }
+        if (r1 && (r1.isRegister(RegisterValue:FS) || r1.isRegister(RegisterValue:GS))) { size++; } // op2
+        return size;
+    }
+    
+    [int] compileInstruction() {
+        int size = 1; // op1
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        
+        if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; size++; }
+        
+        if (num1) {
+            if (num1.isConstant() && (this.getBitWidth(num1.getValue()) == 8)) {
+                op1 = 0x6A;
+                immSize = 1;
+            } else {
+                op1 = 0x68;
+                immSize = operandSize / 8;
+            }
+            return size + immSize;
+        }
+        if (r1) {
+            if (r1.isGeneral()) {
+                op1 = 0x50 + r1.getOpCodeRegister();
+            } else if (r1.isRegister(RegisterValue:CS)) {
+                op1 = 0x0E;
+            } else if (r1.isRegister(RegisterValue:DS)) {
+                op1 = 0x1E;
+            } else if (r1.isRegister(RegisterValue:ES)) {
+                op1 = 0x06;
+            } else if (r1.isRegister(RegisterValue:FS)) {
+                op1 = 0x0F;
+                op2 = 0xA0; size++;
+            } else if (r1.isRegister(RegisterValue:GS)) {
+                op1 = 0x0F;
+                op2 = 0xA8; size++;
+            } else if (r1.isRegister(RegisterValue:SS)) {
+                op1 = 0x16;
+            }
+            return size;
+        }
+        if (i1) {
+            op1 = 0xFF;
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { pre4 = 0x67; size++; }    
+            this.useIndirectSizes(i1);
+            return size + modrmSize + sibSize + dispSize;
+        }
+        return -1;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        NumericValue num1 = o1.asNumeric();
+        if (num1) { return this.rawImmediateToStream(stream, num1); }
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        if (i1) { return this.rawIndirectToStream(stream, i1, 6); }
+        return stream;
+    }
+}
