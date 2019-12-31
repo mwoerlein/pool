@@ -602,7 +602,7 @@ ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * o
         [iI][mM][uU][lL] @o1 bitwidth? @o2 {
             if (op1 && !op2 && !op3) {
                 return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
-                    ("mul", 5, op1, parseOperandSize(o1, o2));
+                    ("imul", 5, op1, parseOperandSize(o1, o2));
             }
             String s(env(), *notAnInfo, start, operandsEnd);
             list->err << "not yet supported variant of imul at line: " << getLine(start) << " column: "  << getColumn(start)<< '\n';
