@@ -434,9 +434,9 @@ void X86Writer::write(PIRCond &cond, PIRBasicBlock &trueBlock) {
     switch (cond.op) {
         case op_eq: code() << "je "; break;
         case op_neq: code() << "jne "; break;
-        case op_lt: code() << "jlt "; break;
+        case op_lt: code() << "jl "; break;
         case op_le: code() << "jle "; break;
-        case op_gt: code() << "jgt "; break;
+        case op_gt: code() << "jg "; break;
         case op_ge: code() << "jge "; break;
     
     } 
