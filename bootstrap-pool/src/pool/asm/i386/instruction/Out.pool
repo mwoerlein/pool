@@ -1,0 +1,80 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
+use pool::asm::i386::value::RegisterValue;
+
+use sys::stream::OStream;
+
+class Out extends TwoOperand {
+    
+    [] prepareInstruction() {
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        if (!operandSize) {
+            if (r1) { operandSize = r1.getWidth(); }
+            else { this.newError().printCString("Missing operand size and no src register to determine it from: ").print(node); }
+        }
+        if (block.getUnit().hasErrors()) { return; }
+        
+        NumericValue num2 = o2.asNumeric();
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        
+        if (r1) {
+            if (!r1.isGeneral() || (r1.getOpCodeRegister() != 0 /*al, ax, eax*/)) {
+                this.newError().printCString("Invalid src register '").print(node.getOperand1()).printCString("'. Only one of %al/%ax/%eax is allowed.");
+            } else {
+                r1.wideTo(operandSize, block.getUnit());
+            }
+        }
+        if (num2 && !(num2.isConstant() && (this.getUnsignedBitWidth(num2.getValue()) == 8))) {
+            this.newError().printCString("Invalid port: ").print(node.getOperand2());
+        }
+        if (r2 && !r2.isRegister(RegisterValue:DX)) {
+            this.newError().printCString("Invalid port register '").print(node.getOperand2()).printCString("'. Only %dx is allowed.");
+        }
+        if (block.getUnit().hasErrors()) { return; }
+        
+        if (r1 && (num2 || r2)) { return; }
+        this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
+    }
+    
+    [int] approximateSize() {
+        int size = 1; //opcode
+        if (this.requiresOperandSizeOverride(operandSize)) { size++; }
+        if (o2.asNumeric()) { size ++; }
+        return size;
+    }
+    
+    [int] compileInstruction() {
+        int size = 0;
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        NumericValue num2 = o2.asNumeric();
+        
+        if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; size++; }
+        
+        if (r1 && num2) {
+            op1 = 0xE7;
+            if (operandSize == 8) { op1 = 0xE6; } 
+            immSize = 1;
+            return size + 1 + immSize;
+        }
+        if (r1 && r2) {
+            op1 = 0xEF;
+            if (operandSize == 8) { op1 = 0xEE; } 
+            return size + 1;
+        }
+        return -1;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        NumericValue num2 = o2.asNumeric();
+        if (num2) { this.rawImmediateToStream(stream, num2); }
+        return stream;
+    }
+}

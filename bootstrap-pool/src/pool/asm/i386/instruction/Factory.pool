@@ -17,10 +17,18 @@ class Factory extends sys::core::Object {
         if (op.cequals("jmp"))      { return this._buildJump(false); }
         if (op.cequals("call"))     { return this._buildJump(true); }
         
+        if (op.cequals("in"))       { return this._buildIn  ( 0); }
+        if (op.cequals("inb"))      { return this._buildIn  ( 8); }
+        if (op.cequals("inw"))      { return this._buildIn  (16); }
+        if (op.cequals("inl"))      { return this._buildIn  (32); }
         if (op.cequals("mov"))      { return this._buildMove( 0); }
         if (op.cequals("movb"))     { return this._buildMove( 8); }
         if (op.cequals("movw"))     { return this._buildMove(16); }
         if (op.cequals("movl"))     { return this._buildMove(32); }
+        if (op.cequals("out"))      { return this._buildOut ( 0); }
+        if (op.cequals("outb"))     { return this._buildOut ( 8); }
+        if (op.cequals("outw"))     { return this._buildOut (16); }
+        if (op.cequals("outl"))     { return this._buildOut (32); }
         if (op.cequals("pop"))      { return this._buildPop ( 0); }
         if (op.cequals("popb"))     { return this._buildPop ( 8); }
         if (op.cequals("popw"))     { return this._buildPop (16); }
@@ -84,6 +92,18 @@ class Factory extends sys::core::Object {
     [Instruction] _buildAscii(int zeroTerminated) {
         Ascii i = this.rt().createInstance(Ascii:CLASSNAME);
         i.setZeroTerminated(zeroTerminated);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildIn(int size) {
+        In i = this.rt().createInstance(In:CLASSNAME);
+        i.setOperandSize(size);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildOut(int size) {
+        Out i = this.rt().createInstance(Out:CLASSNAME);
+        i.setOperandSize(size);
         return i.instruction();
     } 
     
