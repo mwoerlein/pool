@@ -145,7 +145,7 @@ Pool Bootstrap Assembler.
             if (this.hasOption("class")) {
                 out.printCString("class = true").printNewline();
             }
-            out.printCString("* /").printNewline();
+            out.printCString("*/").printNewline();
         }
         unit.rawToStream(out);
     }

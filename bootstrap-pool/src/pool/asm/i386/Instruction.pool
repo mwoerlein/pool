@@ -126,7 +126,7 @@ class Instruction extends pool::asm::Instruction {
     }
     
     [int] approximateOffset(int position, int posIncr) {
-        if (position > pos) {
+        if (position > (pos + size)) {
             return position - preparePos - posIncr;
         } else {
             return position - pos - posIncr;
