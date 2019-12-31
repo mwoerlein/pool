@@ -25,16 +25,18 @@ class Organize extends OneOperand {
         NumericValue num1 = o1.asNumeric();
         if (num1 && num1.isConstant()) {
             int value = num1.getValue();
-            if (align) {
-                if (!Bitset:isPowerOfTwo(value)) {
-                    this.newError().printCString("Invalid alignment: ").printInt(value).printCString(" is not a power of 2");
-                }
-            } else {
-                if (value < pos) {
-                    this.newError().printCString("Invalid organize: ").printInt(value).printCString(" is lower than current position ").printInt(pos);
-                }
+            if (align && !Bitset:isPowerOfTwo(value)) {
+                this.newError().printCString("Invalid alignment: ").printInt(value).printCString(" is not a power of 2");
             }
         } else { this.newError().printCString("Invalid operand: ").print(node.getOperand1()); }
+    }
+    
+    [int] compileInstruction() {
+        int value = o1.asNumeric().getValue();
+        if (!align && value < pos) {
+            this.newError().printCString("Invalid organize: ").printHex(value).printCString(" is lower than current position ").printHex(pos);
+        }
+        return this.approximateSize();
     }
     
     [int] approximateSize() {
