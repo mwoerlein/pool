@@ -29,8 +29,13 @@ class Push extends OneOperand {
         IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
         
         if (num1 || i1) { return; }
-        if (r1 && (r1.isGeneral() || r1.isSegment())) {
+        if (r1 && r1.isGeneral()) {
             r1.wideTo(operandSize, block.getUnit());
+            return;
+        }
+        if (r1 && r1.isSegment()) {
+            // ignore operand size for segment registers
+            operandSize = addr;
             return;
         }
         this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');

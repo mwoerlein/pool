@@ -27,8 +27,13 @@ class Pop extends OneOperand {
         
         IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
         if (i1) { return; }
-        if (r1 && (r1.isGeneral() || r1.isSegment()) && !r1.isRegister(RegisterValue:CS)) {
+        if (r1 && r1.isGeneral()) {
             r1.wideTo(operandSize, block.getUnit());
+            return;
+        }
+        if (r1 && r1.isSegment() && !r1.isRegister(RegisterValue:CS)) {
+            // ignore operand size for segment registers
+            operandSize = addr;
             return;
         }
         this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
