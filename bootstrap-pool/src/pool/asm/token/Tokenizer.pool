@@ -153,7 +153,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 
             } else if (state == Tokenizer:STRING) {
                 if (c == '"') { this._consume(); return this._buildToken(Token:STRING); }
-                else if (c == '\\') { this._consume(); state = Tokenizer:STRING_ESC; }
+                else if (c == '\\') { this._skip(); state = Tokenizer:STRING_ESC; }
                 else if (c == '\n' || c == '\r') {
                     this.rt().err().printCString("Unterminated string").printNewline();
                     return false;
@@ -162,11 +162,16 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 if (c == '\n' || c == '\r') {
                     this.rt().err().printCString("Unterminated string").printNewline();
                     return false;
-                } else { this._consume(); state = Tokenizer:STRING; }
+                } else if (c == 'n') { tmp.printChar('\n'); this._skip(); state = Tokenizer:STRING; }
+                else if (c == 'r') { tmp.printChar('\r'); this._skip(); state = Tokenizer:STRING; }
+                else if (c == 't') { tmp.printChar('\t'); this._skip(); state = Tokenizer:STRING; }
+                else if (c == '\\') { tmp.printChar('\\'); this._skip(); state = Tokenizer:STRING; }
+                else if (c == '"') { tmp.printChar('"'); this._skip(); state = Tokenizer:STRING; }
+                else { tmp.printChar('\\'); this._consume(); state = Tokenizer:STRING; }
                 
             } else if (state == Tokenizer:CHAR) {
                 if (c == '\'') { this._consume(); return this._buildToken(Token:CHAR); }
-                else if (c == '\\') { this._consume(); state = Tokenizer:CHAR_ESC; }
+                else if (c == '\\') { this._skip(); state = Tokenizer:CHAR_ESC; }
                 else if (c == '\n' || c == '\r') {
                     this.rt().err().printCString("Unterminated char sequence").printNewline();
                     return false;
@@ -175,7 +180,12 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 if (c == '\n' || c == '\r') {
                     this.rt().err().printCString("Unterminated char sequence").printNewline();
                     return false;
-                } else { this._consume(); state = Tokenizer:CHAR; }
+                } else if (c == 'n') { tmp.printChar('\n'); this._skip(); state = Tokenizer:CHAR; }
+                else if (c == 'r') { tmp.printChar('\r'); this._skip(); state = Tokenizer:CHAR; }
+                else if (c == 't') { tmp.printChar('\t'); this._skip(); state = Tokenizer:CHAR; }
+                else if (c == '\\') { tmp.printChar('\\'); this._skip(); state = Tokenizer:CHAR; }
+                else if (c == '\'') { tmp.printChar('\''); this._skip(); state = Tokenizer:CHAR; }
+                else { tmp.printChar('\\'); this._consume(); state = Tokenizer:CHAR; }
                 
             } else if (state == Tokenizer:LINECOMMENT) {
                 if (c == '\n' || c == '\r') { return this._buildToken(Token:COMMENT); }
@@ -260,6 +270,11 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         curLine = input.getLine();
         curColumn = input.getColumn();
         tmp.printChar(input.readChar());
+    }
+    [] _skip() {
+        curLine = input.getLine();
+        curColumn = input.getColumn();
+        input.readChar();
     }
     [int] _buildToken(int type) {
         Token t = this.rt().createInstance(Token:CLASSNAME);
