@@ -1,0 +1,77 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
+use pool::asm::i386::value::RegisterValue;
+
+use sys::stream::OStream;
+
+class ConditionalJump extends OneOperand, Conditional {
+
+    [] prepareInstruction() {
+        if (operandSize) { this.newError().printCString("Unexpected operand size in '").print(node).printChar('\''); }
+        if (block.getUnit().hasErrors()) { return; }
+        
+        NumericValue num1 = o1.asNumeric();
+        if (num1) {
+            if (num1.isConstant()) { this.newError().printCString("Only label based addressing allowed in '").print(node).printChar('\''); }
+            if (condition == Conditional:REG_CX || condition == Conditional:REG_ECX) {
+                int addr = 16;
+                if (condition == Conditional:REG_ECX) { addr = 32; }
+                int size = 2;
+                if (this.requiresAddressSizeOverride(addr)) { size++; }
+                if (this.getBitWidth(this.approximateOffset(num1.getValue(), size)) != 8) {
+                    this.newError().printCString("Only byte offset allowed in '").print(node).printChar('\'');
+                }
+            }
+            return;
+        }
+        this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
+    }
+    
+    [int] approximateSize() {
+        if (condition == Conditional:REG_CX || condition == Conditional:REG_ECX) {
+            return 7; // opcode + 2*prefix + offset
+        }
+        return 6; // opcode + prefix + offset
+    }
+    
+    [int] compileInstruction() {
+        NumericValue num1 = o1.asNumeric();
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        if (num1) {
+            immSize = addr / 8;
+            
+            int size = 1;
+            if (condition == Conditional:REG_CX) {
+                op1 = 0xE3;
+                immSize = 1;
+                if (this.requiresAddressSizeOverride(16)) { pre4 = 0x67; size++; }
+            } else if (condition == Conditional:REG_ECX) {
+                op1 = 0xE3;
+                immSize = 1;
+                if (this.requiresAddressSizeOverride(32)) { pre4 = 0x67; size++; }
+            } else if (this.getBitWidth(this.approximateOffset(num1.getValue(), 2)) == 8) {
+                op1 = 0x70 + this.getConditionEncoding();
+                immSize = 1;
+            } else {
+                // relative offsets must result in correct addr width, otherwise the upper two bytes of the EIP register are cleared
+                op1 = 0x0F; size++;
+                op2 = 0x80 + this.getConditionEncoding();
+            }
+            return size + immSize;
+        }
+        return -1;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        NumericValue num1 = o1.asNumeric();
+        if (num1) { this.rawOffsetToStream(stream, num1); }
+    }
+}

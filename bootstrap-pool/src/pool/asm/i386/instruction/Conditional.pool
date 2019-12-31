@@ -1,0 +1,85 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+
+class Conditional extends pool::asm::i386::Instruction {
+
+    int ABOVE                :=  0;
+    int ABOVE_OR_EQUAL       :=  1;
+    int BELOW                :=  2;
+    int BELOW_OR_EQUAL       :=  3;
+    int CARRY                :=  4;
+    int EQUAL                :=  5;
+    int GREATER              :=  6;
+    int GREATER_OR_EQUAL     :=  7;
+    int LESSER               :=  8;
+    int LESSER_OR_EQUAL      :=  9;
+    int OVERFLOW             := 10;
+    int PARITY               := 11;
+    int SIGN                 := 12;
+    int ZERO                 := 13;
+    int NOT_ABOVE            := 14;
+    int NOT_ABOVE_OR_EQUAL   := 15;
+    int NOT_BELOW            := 16;
+    int NOT_BELOW_OR_EQUAL   := 17;
+    int NOT_CARRY            := 18;
+    int NOT_EQUAL            := 19;
+    int NOT_GREATER          := 20;
+    int NOT_GREATER_OR_EQUAL := 21;
+    int NOT_LESSER           := 22;
+    int NOT_LESSER_OR_EQUAL  := 23;
+    int NOT_OVERFLOW         := 24;
+    int NOT_PARITY           := 25;
+    int NOT_SIGN             := 26;
+    int NOT_ZERO             := 27;
+    int PARITY_EVEN          := 28;
+    int PARITY_ODD           := 29;
+    int REG_CX               := 30;
+    int REG_ECX              := 31;
+    
+    int condition;
+    [Conditional] setCondition(int condition) {
+        this.condition = condition;
+        return this;
+    }
+    [int] getConditionEncoding() {
+        if (condition == Conditional:ABOVE                ) { return  7; }
+        if (condition == Conditional:ABOVE_OR_EQUAL       ) { return  3; }
+        if (condition == Conditional:BELOW                ) { return  2; }
+        if (condition == Conditional:BELOW_OR_EQUAL       ) { return  6; }
+        if (condition == Conditional:CARRY                ) { return  2; }
+        if (condition == Conditional:EQUAL                ) { return  4; }
+        if (condition == Conditional:GREATER              ) { return 15; }
+        if (condition == Conditional:GREATER_OR_EQUAL     ) { return 13; }
+        if (condition == Conditional:LESSER               ) { return 12; }
+        if (condition == Conditional:LESSER_OR_EQUAL      ) { return 14; }
+        if (condition == Conditional:OVERFLOW             ) { return  0; }
+        if (condition == Conditional:PARITY               ) { return 10; }
+        if (condition == Conditional:SIGN                 ) { return  8; }
+        if (condition == Conditional:ZERO                 ) { return  4; }
+        
+        if (condition == Conditional:NOT_ABOVE            ) { return  6; }
+        if (condition == Conditional:NOT_ABOVE_OR_EQUAL   ) { return  2; }
+        if (condition == Conditional:NOT_BELOW            ) { return  3; }
+        if (condition == Conditional:NOT_BELOW_OR_EQUAL   ) { return  7; }
+        if (condition == Conditional:NOT_CARRY            ) { return  3; }
+        if (condition == Conditional:NOT_EQUAL            ) { return  5; }
+        if (condition == Conditional:NOT_GREATER          ) { return 14; }
+        if (condition == Conditional:NOT_GREATER_OR_EQUAL ) { return 12; }
+        if (condition == Conditional:NOT_LESSER           ) { return 13; }
+        if (condition == Conditional:NOT_LESSER_OR_EQUAL  ) { return 15; }
+        if (condition == Conditional:NOT_OVERFLOW         ) { return  1; }
+        if (condition == Conditional:NOT_PARITY           ) { return 11; }
+        if (condition == Conditional:NOT_SIGN             ) { return  9; }
+        if (condition == Conditional:NOT_ZERO             ) { return  5; }
+
+        if (condition == Conditional:PARITY_EVEN          ) { return 10; }
+        if (condition == Conditional:PARITY_ODD           ) { return 11; }
+        this.newError().printCString("Encoding of unexpected condition requested in '").print(node).printChar('\'');
+        return 0;
+    }
+}

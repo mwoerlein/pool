@@ -17,6 +17,39 @@ class Factory extends sys::core::Object {
         if (op.cequals("jmp"))      { return this._buildJump(false); }
         if (op.cequals("call"))     { return this._buildJump(true); }
         
+        if (op.cequals("ja"))       { return this._buildConditionalJump(Conditional:ABOVE               ); }
+        if (op.cequals("jae"))      { return this._buildConditionalJump(Conditional:ABOVE_OR_EQUAL      ); }
+        if (op.cequals("jb"))       { return this._buildConditionalJump(Conditional:BELOW               ); }
+        if (op.cequals("jbe"))      { return this._buildConditionalJump(Conditional:BELOW_OR_EQUAL      ); }
+        if (op.cequals("jc"))       { return this._buildConditionalJump(Conditional:CARRY               ); }
+        if (op.cequals("je"))       { return this._buildConditionalJump(Conditional:EQUAL               ); }
+        if (op.cequals("jg"))       { return this._buildConditionalJump(Conditional:GREATER             ); }
+        if (op.cequals("jge"))      { return this._buildConditionalJump(Conditional:GREATER_OR_EQUAL    ); }
+        if (op.cequals("jl"))       { return this._buildConditionalJump(Conditional:LESSER              ); }
+        if (op.cequals("jle"))      { return this._buildConditionalJump(Conditional:LESSER_OR_EQUAL     ); }
+        if (op.cequals("jo"))       { return this._buildConditionalJump(Conditional:OVERFLOW            ); }
+        if (op.cequals("jp"))       { return this._buildConditionalJump(Conditional:PARITY              ); }
+        if (op.cequals("js"))       { return this._buildConditionalJump(Conditional:SIGN                ); }
+        if (op.cequals("jz"))       { return this._buildConditionalJump(Conditional:ZERO                ); }
+        if (op.cequals("jna"))      { return this._buildConditionalJump(Conditional:NOT_ABOVE           ); }
+        if (op.cequals("jnae"))     { return this._buildConditionalJump(Conditional:NOT_ABOVE_OR_EQUAL  ); }
+        if (op.cequals("jnb"))      { return this._buildConditionalJump(Conditional:NOT_BELOW           ); }
+        if (op.cequals("jnbe"))     { return this._buildConditionalJump(Conditional:NOT_BELOW_OR_EQUAL  ); }
+        if (op.cequals("jnc"))      { return this._buildConditionalJump(Conditional:NOT_CARRY           ); }
+        if (op.cequals("jne"))      { return this._buildConditionalJump(Conditional:NOT_EQUAL           ); }
+        if (op.cequals("jng"))      { return this._buildConditionalJump(Conditional:NOT_GREATER         ); }
+        if (op.cequals("jnge"))     { return this._buildConditionalJump(Conditional:NOT_GREATER_OR_EQUAL); }
+        if (op.cequals("jnl"))      { return this._buildConditionalJump(Conditional:NOT_LESSER          ); }
+        if (op.cequals("jnle"))     { return this._buildConditionalJump(Conditional:NOT_LESSER_OR_EQUAL ); }
+        if (op.cequals("jno"))      { return this._buildConditionalJump(Conditional:NOT_OVERFLOW        ); }
+        if (op.cequals("jnp"))      { return this._buildConditionalJump(Conditional:NOT_PARITY          ); }
+        if (op.cequals("jns"))      { return this._buildConditionalJump(Conditional:NOT_SIGN            ); }
+        if (op.cequals("jnz"))      { return this._buildConditionalJump(Conditional:NOT_ZERO            ); }
+        if (op.cequals("jpe"))      { return this._buildConditionalJump(Conditional:PARITY_EVEN         ); }
+        if (op.cequals("jpo"))      { return this._buildConditionalJump(Conditional:PARITY_ODD          ); }
+        if (op.cequals("jcxz"))     { return this._buildConditionalJump(Conditional:REG_CX              ); }
+        if (op.cequals("jecxz"))    { return this._buildConditionalJump(Conditional:REG_ECX             ); }
+
         if (op.cequals("in"))       { return this._buildIn  ( 0); }
         if (op.cequals("inb"))      { return this._buildIn  ( 8); }
         if (op.cequals("inw"))      { return this._buildIn  (16); }
@@ -199,6 +232,12 @@ class Factory extends sys::core::Object {
     [Instruction] _buildJump(int call) {
         Jump i = this.rt().createInstance(Jump:CLASSNAME);
         i.setCall(call);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildConditionalJump(int condition) {
+        ConditionalJump i = this.rt().createInstance(ConditionalJump:CLASSNAME);
+        i.setCondition(condition);
         return i.instruction();
     } 
     
