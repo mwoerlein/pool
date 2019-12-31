@@ -49,6 +49,39 @@ class Factory extends sys::core::Object {
         
         if (op.cequals(".align"))   { return this._buildOrganize(true); }
         if (op.cequals(".org"))     { return this._buildOrganize(false); }
+
+        if (op.cequals("add"))      { return this._buildGroupOne(0,  0); }
+        if (op.cequals("addb"))     { return this._buildGroupOne(0,  8); }
+        if (op.cequals("addw"))     { return this._buildGroupOne(0, 16); }
+        if (op.cequals("addl"))     { return this._buildGroupOne(0, 32); }
+        if (op.cequals("or"))       { return this._buildGroupOne(1,  0); }
+        if (op.cequals("orb"))      { return this._buildGroupOne(1,  8); }
+        if (op.cequals("orw"))      { return this._buildGroupOne(1, 16); }
+        if (op.cequals("orl"))      { return this._buildGroupOne(1, 32); }
+        if (op.cequals("adc"))      { return this._buildGroupOne(2,  0); }
+        if (op.cequals("adcb"))     { return this._buildGroupOne(2,  8); }
+        if (op.cequals("adcw"))     { return this._buildGroupOne(2, 16); }
+        if (op.cequals("adcl"))     { return this._buildGroupOne(2, 32); }
+        if (op.cequals("sbb"))      { return this._buildGroupOne(3,  0); }
+        if (op.cequals("sbbb"))     { return this._buildGroupOne(3,  8); }
+        if (op.cequals("sbbw"))     { return this._buildGroupOne(3, 16); }
+        if (op.cequals("sbbl"))     { return this._buildGroupOne(3, 32); }
+        if (op.cequals("and"))      { return this._buildGroupOne(4,  0); }
+        if (op.cequals("andb"))     { return this._buildGroupOne(4,  8); }
+        if (op.cequals("andw"))     { return this._buildGroupOne(4, 16); }
+        if (op.cequals("andl"))     { return this._buildGroupOne(4, 32); }
+        if (op.cequals("sub"))      { return this._buildGroupOne(5,  0); }
+        if (op.cequals("subb"))     { return this._buildGroupOne(5,  8); }
+        if (op.cequals("subw"))     { return this._buildGroupOne(5, 16); }
+        if (op.cequals("subl"))     { return this._buildGroupOne(5, 32); }
+        if (op.cequals("xor"))      { return this._buildGroupOne(6,  0); }
+        if (op.cequals("xorb"))     { return this._buildGroupOne(6,  8); }
+        if (op.cequals("xorw"))     { return this._buildGroupOne(6, 16); }
+        if (op.cequals("xorl"))     { return this._buildGroupOne(6, 32); }
+        if (op.cequals("cmp"))      { return this._buildGroupOne(7,  0); }
+        if (op.cequals("cmpb"))     { return this._buildGroupOne(7,  8); }
+        if (op.cequals("cmpw"))     { return this._buildGroupOne(7, 16); }
+        if (op.cequals("cmpl"))     { return this._buildGroupOne(7, 32); }
                                             
         if (op.cequals("pusha"))    { return this._buildNoOperand(0x60, 0x00, 0x00,  0); }
         if (op.cequals("pushaw"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
@@ -92,6 +125,13 @@ class Factory extends sys::core::Object {
     [Instruction] _buildAscii(int zeroTerminated) {
         Ascii i = this.rt().createInstance(Ascii:CLASSNAME);
         i.setZeroTerminated(zeroTerminated);
+        return i.instruction();
+    } 
+    
+    [Instruction] _buildGroupOne(int regO, int size) {
+        GroupOneInstruction i = this.rt().createInstance(GroupOneInstruction:CLASSNAME);
+        i.setRegO(regO);
+        i.setOperandSize(size);
         return i.instruction();
     } 
     
