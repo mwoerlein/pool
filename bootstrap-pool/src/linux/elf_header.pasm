@@ -32,7 +32,7 @@ __elf_phdr_end:
 __elf_code_start:
     popl %eax       # read argc
     movl %esp, %ebx # read argv
-    subl 4, %esp            # ret
+    pushl -1                # ret
     pushl %ebx; pushl %eax  # args
     pushl 0; pushl _entry_class_desc; call _entry_global_func # call global func
     addl 16, %esp
