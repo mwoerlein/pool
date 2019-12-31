@@ -94,7 +94,7 @@ class GroupOneInstruction extends TwoOperand {
             if (operandSize == 8) {
                 op1 = 0x80;
             } else {
-                if (num1.isConstant() && (this.getBitWidth(this.approximateOffset(num1.getValue(), 2)) == 8)) {
+                if (num1.isConstant() && (this.getBitWidth(num1.getValue()) == 8)) {
                     op1 = 0x83;
                     immSize = 1;
                 } else {
