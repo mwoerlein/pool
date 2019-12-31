@@ -32,18 +32,12 @@ class Move extends TwoOperand {
         NumericValue num1 = o1.asNumeric();
         IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
         IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
-        RegisterValue gr1 = null; 
-        RegisterValue gr2 = null; 
-        RegisterValue sr1 = null; 
-        RegisterValue sr2 = null;
-        RegisterValue cr1 = null; 
-        RegisterValue cr2 = null;
-        if (r1 && r1.isGeneral()) { gr1 = r1; } 
-        if (r2 && r2.isGeneral()) { gr2 = r2; } 
-        if (r1 && r1.isSegment()) { sr1 = r1; } 
-        if (r2 && r2.isSegment()) { sr2 = r2; } 
-        if (r1 && r1.isControl()) { cr1 = r1; } 
-        if (r2 && r2.isControl()) { cr2 = r2; } 
+        RegisterValue gr1 = null; if (r1 && r1.isGeneral()) { gr1 = r1; } 
+        RegisterValue gr2 = null; if (r2 && r2.isGeneral()) { gr2 = r2; } 
+        RegisterValue sr1 = null; if (r1 && r1.isSegment()) { sr1 = r1; } 
+        RegisterValue sr2 = null; if (r2 && r2.isSegment()) { sr2 = r2; }
+        RegisterValue cr1 = null; if (r1 && r1.isControl()) { cr1 = r1; } 
+        RegisterValue cr2 = null; if (r2 && r2.isControl()) { cr2 = r2; }
         
         if ((num1 || gr1) && (gr2 || i2)) { return; }
         if (i1 && gr2) { return; }
@@ -88,18 +82,12 @@ class Move extends TwoOperand {
         RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
         IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
         IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
-        RegisterValue gr1 = null; 
-        RegisterValue gr2 = null; 
-        RegisterValue sr1 = null; 
-        RegisterValue sr2 = null;
-        RegisterValue cr1 = null; 
-        RegisterValue cr2 = null;
-        if (r1 && r1.isGeneral()) { gr1 = r1; } 
-        if (r2 && r2.isGeneral()) { gr2 = r2; } 
-        if (r1 && r1.isSegment()) { sr1 = r1; } 
-        if (r2 && r2.isSegment()) { sr2 = r2; } 
-        if (r1 && r1.isControl()) { cr1 = r1; } 
-        if (r2 && r2.isControl()) { cr2 = r2; } 
+        RegisterValue gr1 = null; if (r1 && r1.isGeneral()) { gr1 = r1; } 
+        RegisterValue gr2 = null; if (r2 && r2.isGeneral()) { gr2 = r2; } 
+        RegisterValue sr1 = null; if (r1 && r1.isSegment()) { sr1 = r1; } 
+        RegisterValue sr2 = null; if (r2 && r2.isSegment()) { sr2 = r2; }
+        RegisterValue cr1 = null; if (r1 && r1.isControl()) { cr1 = r1; } 
+        RegisterValue cr2 = null; if (r2 && r2.isControl()) { cr2 = r2; }
         
         if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; size++; }
         

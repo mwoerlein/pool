@@ -87,7 +87,7 @@ class Pop extends OneOperand {
     
     [OStream] rawOperandsToStream(OStream stream) {
         IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
-        if (i1) { return this.rawIndirectToStream(stream, i1, 0); }
+        if (i1) { this.rawIndirectToStream(stream, i1, 0); }
         return stream;
     }
 }

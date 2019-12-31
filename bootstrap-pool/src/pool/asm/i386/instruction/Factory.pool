@@ -83,19 +83,19 @@ class Factory extends sys::core::Object {
         if (op.cequals("cmpw"))     { return this._buildGroupOne(7, 16); }
         if (op.cequals("cmpl"))     { return this._buildGroupOne(7, 32); }
                                             
-        if (op.cequals("pusha"))    { return this._buildNoOperand(0x60, 0x00, 0x00,  0); }
+        if (op.cequals("pusha"))    { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
         if (op.cequals("pushaw"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 16); }
         if (op.cequals("pushad"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 32); }
         if (op.cequals("pushal"))   { return this._buildNoOperand(0x60, 0x00, 0x00, 32); }
-        if (op.cequals("popa"))     { return this._buildNoOperand(0x61, 0x00, 0x00,  0); }
+        if (op.cequals("popa"))     { return this._buildNoOperand(0x61, 0x00, 0x00, 16); }
         if (op.cequals("popaw"))    { return this._buildNoOperand(0x61, 0x00, 0x00, 16); }
         if (op.cequals("popad"))    { return this._buildNoOperand(0x61, 0x00, 0x00, 32); }
         if (op.cequals("popal"))    { return this._buildNoOperand(0x61, 0x00, 0x00, 32); }
-        if (op.cequals("pushf"))    { return this._buildNoOperand(0x9C, 0x00, 0x00,  0); }
+        if (op.cequals("pushf"))    { return this._buildNoOperand(0x9C, 0x00, 0x00, 16); }
         if (op.cequals("pushfw"))   { return this._buildNoOperand(0x9C, 0x00, 0x00, 16); }
         if (op.cequals("pushfd"))   { return this._buildNoOperand(0x9C, 0x00, 0x00, 32); }
         if (op.cequals("pushfl"))   { return this._buildNoOperand(0x9C, 0x00, 0x00, 32); }
-        if (op.cequals("popf"))     { return this._buildNoOperand(0x9D, 0x00, 0x00,  0); }
+        if (op.cequals("popf"))     { return this._buildNoOperand(0x9D, 0x00, 0x00, 16); }
         if (op.cequals("popfw"))    { return this._buildNoOperand(0x9D, 0x00, 0x00, 16); }
         if (op.cequals("popfd"))    { return this._buildNoOperand(0x9D, 0x00, 0x00, 32); }
         if (op.cequals("popfl"))    { return this._buildNoOperand(0x9D, 0x00, 0x00, 32); }
