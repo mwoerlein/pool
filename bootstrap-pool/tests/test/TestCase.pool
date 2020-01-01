@@ -1,0 +1,14 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace test;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+
+class TestCase extends sys::core::Object {
+
+    abstract [int] runAll();
+}

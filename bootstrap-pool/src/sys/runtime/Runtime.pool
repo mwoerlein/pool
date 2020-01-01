@@ -31,6 +31,13 @@ class Runtime extends Object {
     [ClassStorage] getClassStorage() { return classStorage; }
     [] setClassStorage(ClassStorage classStorage) { this.classStorage = classStorage; }
     
+    [Class] getClass(cstring name) {
+        ClassDescriptor classDesc = classStorage.getClassDesc(name);
+        if (!classDesc) { return null; } // abort on initialization error
+        if (classDesc.class_instance) { return classDesc.class_instance; }
+        return this._createClass(classDesc);
+    }
+    
     // TODO #9: use generic method or special cast syntax instead __all__/__any__
     [__all__] cast(cstring name, __any__ obj) {
         if (!obj) { return null; }

@@ -24,6 +24,10 @@ class Class extends Object {
         return name;
     }
     
+    [cstring] getCName() {
+        return Address:string(desc, desc.classname_offset);
+    }
+    
     [ClassDescriptor] getDesc() {
         return desc;
     }

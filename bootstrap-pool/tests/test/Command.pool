@@ -1,0 +1,66 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace test;
+
+use sys::core::anycollection::AnyIterator;
+use sys::stream::OStream;
+
+class Command extends linux::Command {
+
+    [] __init() {
+        this._initCommand();
+    }
+    
+    [] __destruct() {
+        this._destructCommand();
+    }
+    
+    [] configure() {
+        this.setName("pooltest")
+            .setVersion("0.1.0")
+            .setUsage(<"
+Pool Testing Framework.
+
+    Usage:
+      pooltest [options] [<fqn>]...
+
+    Options:
+      -h --help                     Show this screen.
+      --version                     Show version.
+">);
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        
+        int success = true;
+        TestSuite ts = this.rt().createInstance(TestSuite:CLASSNAME);
+        if (this.getArgumentsSize() == 0) {
+            success = ts.runAll();
+        } else {
+            AnyIterator argIt = this.getArguments();
+            success = ts.runMany(argIt);
+            argIt.destroy();
+        }
+        ts.destroy();
+        if (!success) { return 1; }
+        return 0;
+    }
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        Command tests = linux::Runtime:buildRuntime().createInstance(Command:CLASSNAME);
+        return tests.execute(argc, argv);
+    }
+}

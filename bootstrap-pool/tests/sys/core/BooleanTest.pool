@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class BooleanTest extends test::TestCase {
+
+    [int] runAll() {
+        int success = true;
+        this.rt().out().printCString("running test\n");
+//        success = this.testInitialization() && success;
+//        success = this.testHashAndEquals() && success;
+        return success;
+    }
+}

@@ -1,0 +1,61 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace test;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+use sys::runtime::Runtime;
+
+class TestSuite extends sys::core::utils::Owner {
+
+    AnyMap knownTests;
+    
+    [] __init() {
+        this._initOwner();
+        knownTests = this.createOwn(AnyMap:CLASSNAME);
+        knownTests.init(13);
+        
+        this.register(sys::core::Boolean:CLASSNAME, sys::core::BooleanTest:CLASSNAME);
+    }
+    
+    [] register(cstring classname, cstring testname) {
+        knownTests.set(this.createOwnStringFromCString(classname), this.rt().getClass(testname));
+    }
+    
+    [int] runAll() {
+        AnyIterator all = knownTests.keys();
+        int success = this.runMany(all);
+        all.destroy();
+        return success;
+    }
+    
+    [int] runMany(AnyIterator classnames) {
+        int success = true;
+        while (classnames.hasNext()) { if (!this.run(classnames.next())) { success = false; } }
+        return success;
+    }
+    
+    [int] run(String classname) {
+        sys::runtime::Class testClass = knownTests.get(classname);
+        if (!testClass) {
+            this.rt().err().printCString("No testcase registered for class '").print(classname).printCString("'").printNewline();
+            return false;
+        }
+        
+        Runtime testRt = this.rt(); // TODO: generate sandbox for test
+        TestCase test = testRt.createInstanceAs(testClass.getCName(), TestCase:CLASSNAME);
+        if (!test) {
+            this.rt().err().printCString("Invalid testcase registered for class '").print(classname).printCString("'").printNewline();
+            return false;
+        }
+        int success = test.runAll();
+        test.destroy();
+        // TODO: destroy sandbox and check for memory leaks
+        
+        return success;
+    }
+}
