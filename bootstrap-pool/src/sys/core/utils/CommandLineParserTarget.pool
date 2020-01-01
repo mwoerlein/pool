@@ -16,4 +16,7 @@ class CommandLineParserTarget extends Object {
     abstract [int] pushCLOption(String opt);
     
     abstract [int] pushCLValueOption(String opt, String val);
+    
+    // TODO: remove with implicit cast
+    [CommandLineParserTarget] target() { return this; }
 }

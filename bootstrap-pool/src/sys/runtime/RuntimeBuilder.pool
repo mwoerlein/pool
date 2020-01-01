@@ -67,7 +67,7 @@ class RuntimeBuilder extends Object {
         // create and init classes
         if (iRt._createClass(cdRt) && iRt._createClass(cdMM) && iRt._createClass(cdSRCS)) {
             // build runtime if no initialization error occurred
-            RuntimeBuilder builder := iRt.cast(RuntimeBuilder:CLASSNAME, iRt.createInstance(builderName));
+            RuntimeBuilder builder := iRt.createInstanceAs(builderName, RuntimeBuilder:CLASSNAME);
             runtime = builder._buildRuntime(context);
             builder.destroy();
         }

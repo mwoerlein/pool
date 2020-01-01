@@ -27,7 +27,7 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         bsRt.setErr(debug);
         Allocator bsAllocator := bsRt.getAllocator();
         
-        PageAllocator bsPA := bsRt.cast(PageAllocator:CLASSNAME, bsRt.createInstance(LinuxPageAllocator:CLASSNAME));
+        PageAllocator bsPA := bsRt.createInstanceAs(LinuxPageAllocator:CLASSNAME, PageAllocator:CLASSNAME);
         PagedMemoryManager bsPMM := bsRt.createInstance(PagedMemoryManager:CLASSNAME);
         bsPMM.initFromPageAllocator(bsPA, 10);
         
@@ -42,7 +42,7 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         rt.setClassStorage(crcs.classStorage());
         crcs.rebuildClasses();
         
-        PageAllocator pa := rt.cast(PageAllocator:CLASSNAME, rt.createInstance(LinuxPageAllocator:CLASSNAME));
+        PageAllocator pa := rt.createInstanceAs(LinuxPageAllocator:CLASSNAME, PageAllocator:CLASSNAME);
         PagedMemoryManager pmm := rt.createInstance(PagedMemoryManager:CLASSNAME);
         pmm.initFromPagedMemoryManager(pa, bsPMM);
         rt.setAllocator(pmm.allocator());

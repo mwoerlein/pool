@@ -15,10 +15,12 @@ class Owner extends Object {
 
     AnyList _owned;  // LinkedList<Object>
 
+    [] __init() { this._initOwner(); }
     [] _initOwner() {
         _owned = this.rt().createInstance(AnyList:CLASSNAME);
     }
     
+    [] __destruct() { this._destructOwner(); }
     [] _destructOwner() {
         _owned.destroyAll();
         _owned.destroy();

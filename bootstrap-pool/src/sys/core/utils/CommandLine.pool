@@ -97,7 +97,7 @@ class CommandLine extends CommandLineParserTarget, Owner {
             AnyList list = this._listOptions.get(optionName);
             ret = list.iterator();
         } else {
-            ret = this.rt().cast(AnyIterator:CLASSNAME, this.rt().createInstance(AnyListIterator:CLASSNAME));
+            ret = this.rt().createInstanceAs(AnyListIterator:CLASSNAME, AnyIterator:CLASSNAME);
         }
         optionName.destroy();
         return ret;

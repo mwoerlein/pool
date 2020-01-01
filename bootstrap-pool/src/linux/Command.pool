@@ -144,7 +144,7 @@ class Command extends CommandLine {
         // parse argument list
         CommandLineParser p = rt.createInstance(CommandLineParser:CLASSNAME);
         AnyIterator ai = args.iterator();
-        int ret = p.parse(ai, rt.cast(CommandLineParserTarget:CLASSNAME, this));
+        int ret = p.parse(ai, this.target());
         ai.destroy();
         p.destroy();
         args.destroy();
