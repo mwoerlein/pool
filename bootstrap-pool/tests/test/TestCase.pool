@@ -7,8 +7,42 @@ namespace test;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
+use sys::core::String;
+use sys::stream::OStream;
 
-class TestCase extends sys::core::Object {
+class TestCase extends sys::log::Logger {
 
-    abstract [int] runAll();
+    abstract [] runAll();
+    
+    cstring noTest;
+    cstring currentTest;
+    int result;
+    
+    [] __init() {
+        result = true;
+        this._initLogger();
+    }
+    
+    [int] getResult() { return result; }
+    
+    [] start(cstring test) { currentTest = test; }
+    
+    [OStream] assert(int success, cstring message) {
+        if (success || this.hasErrors()) { return this.ignore(); }
+        OStream err = this.newError();
+        if (currentTest) { err.printCString(currentTest).printCString(" failed: "); }
+        return err.printCString(message); 
+    }
+    
+    [int] success() {
+        if (this.flushErrors(this.rt().err())) { result = false; return false; }
+        OStream out = this.rt().out(); 
+        if (currentTest) {
+            out.printCString(currentTest).printCString(" successful!").printNewline();
+            currentTest = noTest;
+        } else {
+            out.printCString("Test successful!").printNewline();
+        }
+        return true;
+    }
 }

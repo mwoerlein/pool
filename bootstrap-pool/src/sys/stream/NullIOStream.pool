@@ -1,0 +1,19 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::stream;
+
+
+class NullIOStream extends SeekableIOStream {
+    
+    [OStream] printChar(int c) { return this.ostream(); }
+    [int] isEmpty() { return true; }
+    [int] peekChar() { return 0; }
+    [int] readChar() { return 0; }
+    [int] length() { return 0; }
+    [int] pos() { return 0; }
+    [] seek(int pos) {}
+    
+}

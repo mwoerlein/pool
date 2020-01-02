@@ -12,20 +12,17 @@ class Boolean extends Object {
     int _b;
     
     // methods
-    [] assignBool(int b) { if (b) { _b = 1; } else { _b = 0; } }
+    [] assignBool(int b) { if (b) { _b = true; } else { _b = false; } }
     [] assignBoolean(Boolean b) { _b = b.getBool(); }
     
-    [] flip() { _b = 1 - _b; }
+    [] flip() { _b = !_b; }
     
     [int] getBool() { return _b; }
     
     [int] hash() { return _b; }
     [int] equals(__any__ obj) {
         Boolean b = this.rt().cast(Boolean:CLASSNAME, obj);
-        if (b) {
-            return _b == b.getBool();
-        }
-        return 0;
+        return b && (_b == b.getBool());
     }
     
     [OStream] printToStream(OStream stream) {

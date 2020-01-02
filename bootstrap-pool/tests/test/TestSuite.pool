@@ -52,7 +52,8 @@ class TestSuite extends sys::core::utils::Owner {
             this.rt().err().printCString("Invalid testcase registered for class '").print(classname).printCString("'").printNewline();
             return false;
         }
-        int success = test.runAll();
+        test.runAll();
+        int success = test.getResult(); 
         test.destroy();
         // TODO: destroy sandbox and check for memory leaks
         
