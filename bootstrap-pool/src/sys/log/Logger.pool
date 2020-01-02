@@ -1,0 +1,64 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::log;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::String;
+use sys::stream::OStream;
+
+class Logger extends sys::core::Object {
+
+    AnyList warnings; // LinkedList<String>
+    AnyList errors; // LinkedList<String>
+    
+    [] __init() { this._initLogger(); }
+    [] _initLogger() {
+        warnings = this.rt().createInstance(AnyList:CLASSNAME);
+        errors = this.rt().createInstance(AnyList:CLASSNAME);
+    }
+
+    [] __destruct() { this._destructLogger(); }
+    [] _destructLogger() {
+        warnings.destroyAll();
+        warnings.destroy();
+        errors.destroyAll();
+        errors.destroy();
+    }
+    
+    [int] hasErrors() { return errors.size() > 0; }
+    [OStream] newError() {
+        String err = this.rt().createInstance(String:CLASSNAME);
+        errors.add(err);
+        return err.ostream();
+    }
+    
+    [int] hasWarnings() { return warnings.size() > 0; }
+    [OStream] newWarning() {
+        String warn = this.rt().createInstance(String:CLASSNAME);
+        warnings.add(warn);
+        return warn.ostream();
+    }
+
+    [int] flushErrors(OStream stream) {
+        if (warnings.size() > 0) {
+            AnyIterator it = warnings.iterator();
+            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
+            it.destroy();
+            warnings.clear();
+        }
+        
+        if (errors.size() > 0) {
+            AnyIterator it = errors.iterator();
+            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
+            it.destroy();
+            errors.clear();
+            return true;
+        }
+        return false;
+    }
+
+}

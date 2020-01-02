@@ -7,7 +7,6 @@ namespace pool::asm;
 
 use pool::asm::ast::InstructionNode;
 use sys::core::Object;
-use sys::core::String;
 use sys::stream::OStream;
 
 class Instruction extends Object {
@@ -29,7 +28,7 @@ class Instruction extends Object {
     [Instruction] setOperand2(Value o) { o2 = o; return this; }
     [Instruction] setOperand3(Value o) { o3 = o; return this; }
     
-    [String] newError() { return block.getUnit().newError(); }
+    [OStream] newError() { return block.getUnit().newError(); }
     
     abstract [int] prepare(int start);
     abstract [int] compile(int start);

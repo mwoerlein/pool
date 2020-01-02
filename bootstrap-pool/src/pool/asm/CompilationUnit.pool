@@ -25,32 +25,31 @@ use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
 use sys::core::String;
 use sys::core::utils::Owner;
+use sys::log::Logger;
 use sys::stream::OStream;
 
-class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
+class CompilationUnit extends Owner, Logger {
     
     NodeList nodeList;
-    AnyList warnings; // LinkedList<String>
-    AnyList errors; // LinkedList<String>
+    AnyList blocks; // LinkedList<CompilationBlock>
     AnyMap values; // HashMap<String, Value>
 
     [] __init() {
         sys::runtime::Runtime rt = this.rt();
         nodeList = rt.createInstance(NodeList:CLASSNAME);
-        warnings = rt.createInstance(AnyList:CLASSNAME);
-        errors = rt.createInstance(AnyList:CLASSNAME);
+        blocks = rt.createInstance(AnyList:CLASSNAME);
         values = rt.createInstance(AnyMap:CLASSNAME);
         values.init(13);
         this._initOwner();
+        this._initLogger();
     }
 
     [] __destruct() {
-        warnings.destroy();
-        errors.destroy();
         values.destroy();
+        blocks.destroy();
         nodeList.destroy();
-        this.clear();
         this._destructOwner();
+        this._destructLogger();
     }
     
     [NodeList] getNodeList() {
@@ -69,16 +68,16 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
     [AnyIterator] definitionIds() { return values.keys(); }
     
     [CompilationBlock] addBlock(int mode) {
-        CompilationBlock block = this.last();
+        CompilationBlock block = blocks.last();
         if (!block || !block.isEmpty()) {
             block = this.createOwn(CompilationBlock:CLASSNAME);
-            this.add(block); 
+            blocks.add(block); 
         }
         block.init(mode, this);
         return block;
     }
     
-    [AnyIterator] blocks() { return this.iterator(); }
+    [AnyIterator] blocks() { return blocks.iterator(); }
     
     [Value] _buildNumberValue(int n) {
         NumberValue num = this.createOwn(NumberValue:CLASSNAME);
@@ -116,43 +115,6 @@ class CompilationUnit extends AnyList, Owner { // LinkedList<CompilationBlock>
         return value.value();
     }
 
-    [int] hasErrors() {
-        return errors.size() > 0;
-    }
-    
-    [String] newError() {
-        String err = this.createOwn(String:CLASSNAME);
-        errors.add(err);
-        return err;
-    }
-    
-    [String] newWarning() {
-        String warn = this.createOwn(String:CLASSNAME);
-        warnings.add(warn);
-        return warn;
-    }
-    
-    [int] flushErrors(OStream stream) {
-        {
-            AnyIterator it = warnings.iterator();
-            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
-            it.destroy();
-            warnings.clear();
-        }
-        
-        if (errors.size() == 0) {
-            return false;
-        }
-        
-        {
-            AnyIterator it = errors.iterator();
-            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
-            it.destroy();
-            errors.clear();
-        }
-        return true;
-    }
-    
     [OStream] rawToStream(OStream stream) {
         {
             AnyIterator bit = this.blocks();

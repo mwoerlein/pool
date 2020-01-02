@@ -38,7 +38,6 @@ class Pbasm extends linux::Command {
     }
     
     [] __destruct() {
-        unit.destroyAll();
         unit.destroy();
         compiler.destroy();
         parser.destroy();
