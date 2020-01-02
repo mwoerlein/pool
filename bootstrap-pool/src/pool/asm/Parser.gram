@@ -1,0 +1,53 @@
+%class   pool::asm::Parser
+%extends pool::asm::BaseParser
+%ignores SPACER
+%ignores COMMENT
+
+IDENTIFIER  := [\._a-zA-Z][_a-zA-Z0-9]*
+REGISTER    := %[a-zA-Z][a-zA-Z0-9]*
+CHAR        := '([^\\\n\r\t']|\\'|\\n|\\r|\\t|\\\\)*'
+STRING      := "([^\\\n\r\t"]|\\"|\\n|\\r|\\t|\\\\)*"
+NUMBER      := -(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)
+NEWLINE     := [\n\r]+
+SPACER      := [ \t]+
+COMMENT     := //[^\n\r]*
+OPERATOR    := (+|-|*|/|%|<<|>>|\.)
+ASSIGN      := [:]=
+OBRACKET    := (
+CBRACKET    := )
+COLON       := ;
+SEMICOLON   := :
+COMMA       := ,
+OTHER       := .*
+
+compilation_unit:                                                              { $$ = Address:convert(unit.getNodeList()); }
+compilation_unit: compilation_unit label                                       { NodeList list = $0; list.add($1); $$ = $0; }
+compilation_unit: compilation_unit definition                                  { NodeList list = $0; list.add($1); $$ = $0; }
+compilation_unit: compilation_unit instruction                                 { NodeList list = $0; list.add($1); $$ = $0; }
+compilation_unit: compilation_unit eol                                         { $$ = $0; }
+label           : IDENTIFIER SEMICOLON                                         { $$ = Address:convert(this.createLabel($0).node()); }
+instruction     : IDENTIFIER eol                                               { $$ = Address:convert(this.createInstruction($0).node()); }
+instruction     : IDENTIFIER operand eol                                       { $$ = Address:convert(this.createInstruction($0).setOperand1($1).node()); }
+instruction     : IDENTIFIER operand COMMA operand eol                         { $$ = Address:convert(this.createInstruction($0).setOperand1($1).setOperand2($3).node()); }
+instruction     : IDENTIFIER operand COMMA operand COMMA operand eol           { $$ = Address:convert(this.createInstruction($0).setOperand1($1).setOperand2($3).setOperand3($5).node()); }
+definition      : IDENTIFIER ASSIGN operand eol                                { $$ = Address:convert(this.createDefinition($0, $2).node()); }
+eol             : COLON                                                        { $$ = $0; }
+eol             : NEWLINE                                                      { $$ = $0; }
+operand         : IDENTIFIER                                                   { $$ = Address:convert(this.createIdentifier($0).operand()); }
+operand         : REGISTER                                                     { $$ = Address:convert(this.createRegister($0).operand()); }
+operand         : NUMBER                                                       { $$ = Address:convert(this.createNumber($0).operand()); }
+operand         : CHAR                                                         { $$ = Address:convert(this.createChar($0).operand()); }
+operand         : STRING                                                       { $$ = Address:convert(this.createString($0).operand()); }
+operand         : indirect                                                     { $$ = $0; }
+operand         : formula                                                      { $$ = $0; }
+indirect        : OBRACKET operand CBRACKET                                    { $$ = Address:convert(this.createIndirect().setBase($1).operand()); }
+indirect        : OBRACKET operand COMMA operand CBRACKET                      { $$ = Address:convert(this.createIndirect().setBase($1).setIndex($3).operand()); }
+indirect        : OBRACKET operand COMMA operand COMMA NUMBER CBRACKET         { Token scale = $6; $$ = Address:convert(this.createIndirect().setBase($1).setIndex($3).setScale(scale.toInt()).operand()); }
+indirect        : OBRACKET COMMA operand CBRACKET                              { $$ = Address:convert(this.createIndirect().setIndex($2).operand()); }
+indirect        : OBRACKET COMMA operand COMMA NUMBER CBRACKET                 { Token scale = $5; $$ = Address:convert(this.createIndirect().setIndex($2).setScale(scale.toInt()).operand()); }
+indirect        : operand OBRACKET operand CBRACKET                            { $$ = Address:convert(this.createIndirect().setDisplacement($0).setBase($2).operand()); }
+indirect        : operand OBRACKET operand COMMA operand CBRACKET              { $$ = Address:convert(this.createIndirect().setDisplacement($0).setBase($2).setIndex($4).operand()); }
+indirect        : operand OBRACKET operand COMMA operand COMMA NUMBER CBRACKET { Token scale = $7; $$ = Address:convert(this.createIndirect().setDisplacement($0).setBase($2).setIndex($4).setScale(scale.toInt()).operand()); }
+indirect        : operand OBRACKET COMMA operand CBRACKET                      { $$ = Address:convert(this.createIndirect().setDisplacement($0).setIndex($3).operand()); }
+indirect        : operand OBRACKET COMMA operand COMMA NUMBER CBRACKET         { Token scale = $6; $$ = Address:convert(this.createIndirect().setDisplacement($0).setIndex($3).setScale(scale.toInt()).operand()); }
+formula         : OBRACKET operand OPERATOR operand CBRACKET                   { $$ = Address:convert(this.createFormula($1, $2, $3).operand()); }
