@@ -3,22 +3,22 @@
 %ignores SPACER
 %ignores COMMENT
 
-IDENTIFIER  := [\._a-zA-Z][_a-zA-Z0-9]*
-REGISTER    := %[a-zA-Z][a-zA-Z0-9]*
-CHAR        := '([^\\\n\r\t']|\\'|\\n|\\r|\\t|\\\\)*'
-STRING      := "([^\\\n\r\t"]|\\"|\\n|\\r|\\t|\\\\)*"
-NUMBER      := -(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)
-NEWLINE     := [\n\r]+
-SPACER      := [ \t]+
-COMMENT     := //[^\n\r]*
-OPERATOR    := (+|-|*|/|%|<<|>>|\.)
-ASSIGN      := [:]=
-SEMICOLON   := [:]
-OBRACKET    := [(]
-CBRACKET    := [)]
-COLON       := ;
-COMMA       := ,
-OTHER       := .*
+IDENTIFIER  := /[\._a-zA-Z][_a-zA-Z0-9]*/
+REGISTER    := /%[a-zA-Z][a-zA-Z0-9]*/
+CHAR        := /'([^\\\n\r']|\\[^\n\r\t])*'/
+STRING      := /"([^\\\n\r"]|\\[^\n\r\t])*"/
+NUMBER      := /-?(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)/
+NEWLINE     := /[\n\r]+/
+SPACER      := /[ \t]+/
+COMMENT     := /\/\/[^\n\r]*/
+OPERATOR    := /(\+|-|*|\/|%|<<|>>|\.)/
+ASSIGN      := /:=/
+SEMICOLON   := /:/
+OBRACKET    := /\(/
+CBRACKET    := /\)/
+COLON       := /;/
+COMMA       := /,/
+OTHER       := /.*/
 
 compilation_unit:                                                              { $$ = unit.getNodeList(); }
 compilation_unit: compilation_unit label                                       { NodeList list = $0; list.add($1); $$ = $0; }
