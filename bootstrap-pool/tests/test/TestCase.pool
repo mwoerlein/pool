@@ -8,7 +8,6 @@ namespace test;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::String;
-use sys::log::Logger;
 use sys::stream::OStream;
 
 class TestCase extends sys::core::Object {
@@ -18,12 +17,10 @@ class TestCase extends sys::core::Object {
     cstring currentTest;
     int availableBytes;
     int result;
-    Logger logger;
     
-    [] init(Logger log) {
+    [] __init() {
         availableBytes = 0;
         result = true;
-        this.logger = log;
     }
     
     [int] getResult() { return result; }
@@ -34,29 +31,28 @@ class TestCase extends sys::core::Object {
     }
     
     [int] fail(cstring message) {
-        OStream err = logger.newError();
-        if (!availableBytes) { err.printCString(currentTest).printCString(" failed: "); }
-        err.printCString(message);
+        this.printError(this.rt().err(), message).printNewline();
+        availableBytes = 0;
+        result = false;
         return false; 
     }
     
     [int] success() {
-        OStream out = this.rt().out();
-        OStream err = this.rt().err();
-        if (!logger.hasErrors() && availableBytes && (availableBytes != this.rt().getAllocator().getAvailableBytes())) {
-            logger.newError().printCString(currentTest).printCString(" failed: Memory hole detected");
-        } 
-        if (logger.flushErrors(err)) {
-            result = false;
-            availableBytes = 0;
-            return false;
+        if (availableBytes && (availableBytes != this.rt().getAllocator().getAvailableBytes())) {
+            return this.fail("Memory hole detected");
         }
-        if (!availableBytes) {
-            out.printCString("Test successful!").printNewline();
-        } else {
-            out.printCString(currentTest).printCString(" successful!").printNewline();
-        }
+        this.printMessage(this.rt().out(), " successful!").printNewline();
         availableBytes = 0;
         return true;
+    }
+    
+    [OStream] printError(OStream stream, cstring message) {
+        return this.printMessage(stream, " failed: ").printCString(message);
+    }
+    
+    [OStream] printMessage(OStream stream, cstring message) {
+        stream.printCString(this.getClass().getCName());
+        if (availableBytes) { stream.printChar(':').printCString(currentTest).printChar('(').printChar(')'); }
+        return stream.printCString(message);
     }
 }

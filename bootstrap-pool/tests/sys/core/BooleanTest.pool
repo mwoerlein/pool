@@ -10,10 +10,11 @@ class BooleanTest extends test::TestCase {
     [] runAll() {
         this.testInitialization();
         this.testHashAndEquals();
+        this.testPrintToStream();
     }
     
     [int] testInitialization() {
-        this.start("BooleanTest:testInitialization()");
+        this.start("testInitialization");
         
         Boolean b1 = this.rt().createInstance(Boolean:CLASSNAME);
         b1.assignBool(true);
@@ -32,7 +33,7 @@ class BooleanTest extends test::TestCase {
     }
     
     [int] testHashAndEquals() {
-        this.start("BooleanTest:testHashAndEquals()");
+        this.start("testHashAndEquals");
         
         Boolean b1 = this.rt().createInstance(Boolean:CLASSNAME); b1.assignBool(true);
         Boolean b2 = this.rt().createInstance(Boolean:CLASSNAME); b2.assignBool(true);
@@ -50,6 +51,25 @@ class BooleanTest extends test::TestCase {
         b3.destroy();
         b2.destroy();
         b1.destroy();
+        return this.success();
+    }
+    
+    [int] testPrintToStream() {
+        this.start("testPrintToStream");
+        
+        Boolean b = this.rt().createInstance(Boolean:CLASSNAME);
+        String s = this.rt().createInstance(String:CLASSNAME);
+        b.assignBool(true);
+        b.printToStream(s.ostream());
+        if (!s.cequals("true")) { return this.fail("Invalid value printed for true"); }
+        
+        b.flip();
+        s.clear();
+        b.printToStream(s.ostream());
+        if (!s.cequals("false")) { return this.fail("Invalid value printed for false"); }
+        
+        s.destroy();
+        b.destroy();
         return this.success();
     }
 }

@@ -11,21 +11,16 @@ use sys::core::anycollection::AnyMap;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
 
-class TestSuite extends sys::core::utils::Owner, sys::log::Logger {
+class TestSuite extends sys::core::utils::Owner {
 
     AnyMap knownTests;
     
     [] __init() {
         this._initOwner();
-        this._initLogger();
         knownTests = this.createOwn(AnyMap:CLASSNAME);
         knownTests.init(13);
         
         this.register(sys::core::Boolean:CLASSNAME, sys::core::BooleanTest:CLASSNAME);
-    }
-    [] __destruct() {
-        this._destructLogger();
-        this._destructOwner();
     }
     
     [] register(cstring classname, cstring testname) {
@@ -60,13 +55,11 @@ class TestSuite extends sys::core::utils::Owner, sys::log::Logger {
             return false;
         }
         
-        test.init(this.logger());
         int availableBytes = testRt.getAllocator().getAvailableBytes();
         test.runAll();
-        int success = test.getResult(); 
+        int success = test.getResult();
         if (success && (availableBytes != testRt.getAllocator().getAvailableBytes())) {
-            err.printCString(testClass.getCName()).printCString(" failed: Memory hole detected").printNewline();
-            success = false;
+            success = test.fail("Memory hole detected");
         }
         test.destroy();
         testRt.destroy();
