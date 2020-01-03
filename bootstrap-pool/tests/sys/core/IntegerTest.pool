@@ -1,0 +1,136 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class IntegerTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+        
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME);
+        i1.assignInt(-7);
+        if (i1.getInt() != -7) { return this.fail("Assign native int"); }
+        
+        Integer i2 = this.rt().createInstance(Integer:CLASSNAME);
+        i2.assignInteger(i1);
+        if (i1.getInt() != -7) { return this.fail("Assign Integer"); }
+        
+        i2.destroy();
+        i1.destroy();
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(-19);
+        Integer i2 = this.rt().createInstance(Integer:CLASSNAME); i2.assignInt(-19);
+        Integer i3 = this.rt().createInstance(Integer:CLASSNAME); i3.assignInt(22);
+        
+        if (i1.hash() != i1.hash()) { return this.fail("Hash value is not constant"); }
+        if (i1.hash() != i2.hash()) { return this.fail("Hash value of Integers differs for same int values"); }
+        if (i1.hash() == i3.hash()) { return this.fail("Hash value of Integers is identical for different int values"); }
+        
+        if (!i1.equals(i1)) { return this.fail("Identity check"); }
+        if (!i1.equals(i2)) { return this.fail("Integers with same int value are not equal"); }
+        if (i1.equals(i3)) { return this.fail("Integers with different int value are equal"); }
+        if (i1.equals(this)) { return this.fail("Integer is equal to non-Integer"); }
+        
+        i3.destroy();
+        i2.destroy();
+        i1.destroy();
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(-7);
+        Integer i2 = this.rt().createInstance(Integer:CLASSNAME); i2.assignInt(0);
+        Integer i3 = this.rt().createInstance(Integer:CLASSNAME); i3.assignInt(0);
+        Integer i4 = this.rt().createInstance(Integer:CLASSNAME); i4.assignInt(4);
+        
+        if (i1.compareInteger(i2) == 0) { return this.fail("Test -7 !=  0"); }
+        if (i1.compareInteger(i2) >= 0) { return this.fail("Test -7 <   0"); }
+        if (i1.compareInteger(i2) >  0) { return this.fail("Test -7 <=  0"); }
+        if (i2.compareInteger(i2) >  0) { return this.fail("Test  0 <=  0 (identity)"); }
+        if (i3.compareInteger(i2) >  0) { return this.fail("Test  0 <=  0 (different Ints)"); }
+        if (i2.compareInteger(i2) != 0) { return this.fail("Test  0 ==  0 (identity)"); }
+        if (i3.compareInteger(i2) != 0) { return this.fail("Test  0 ==  0 (different Ints)"); }
+        if (i2.compareInteger(i2) <  0) { return this.fail("Test  0 >=  0 (identity)"); }
+        if (i3.compareInteger(i2) <  0) { return this.fail("Test  0 >=  0 (different Ints)"); }
+        if (i4.compareInteger(i2) <= 0) { return this.fail("Test  4 >   0"); }
+        if (i4.compareInteger(i2) <  0) { return this.fail("Test  4 >=  0"); }
+        if (i4.compareInteger(i2) == 0) { return this.fail("Test  4 !=  0"); }
+        
+        if (i1.compareInt(0) == 0) { return this.fail("Test -7 !=  0 (int)"); }
+        if (i1.compareInt(0) >= 0) { return this.fail("Test -7 <   0 (int)"); }
+        if (i1.compareInt(0) >  0) { return this.fail("Test -7 <=  0 (int)"); }
+        if (i2.compareInt(0) != 0) { return this.fail("Test  0 ==  0 (int)"); }
+        if (i2.compareInt(0) <  0) { return this.fail("Test  0 >=  0 (int)"); }
+        if (i4.compareInt(0) <= 0) { return this.fail("Test  4 >   0 (int)"); }
+        
+        if (i1.compareInteger(i4) != -11) { return this.fail("Invalid distance from -7 to  4"); }
+        if (i4.compareInt(-7)     !=  11) { return this.fail("Invalid distance from  4 to -7"); }
+        
+        i4.destroy();
+        i3.destroy();
+        i2.destroy();
+        i1.destroy();
+        return this.success();
+    }
+    
+    [int] testArithmetic() {
+        this.start("testArithmetic");
+        
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(1);
+        Integer i2 = this.rt().createInstance(Integer:CLASSNAME); i2.assignInt(2);
+        
+        i1.inc();           if (!i1.compareInt(  2)) { return this.fail("Increment Integer"); }
+        i1.dec();           if (!i1.compareInt(  1)) { return this.fail("Decrement Integer"); }
+        
+        i1.addInteger(i1);  if (!i1.compareInt(  2)) { return this.fail("Add Integer to Integer"); }
+        i1.addInt(2);       if (!i1.compareInt(  4)) { return this.fail("Add int to Integer"); }
+        i1.subInteger(i2);  if (!i1.compareInt(  2)) { return this.fail("Sub Integer from Integer"); }
+        i1.subInt(1);       if (!i1.compareInt(  1)) { return this.fail("Sub int from Integer"); }
+        i1.mulInteger(i2);  if (!i1.compareInt(  2)) { return this.fail("Mul Integer with Integer"); }
+        i1.mulInt(99);      if (!i1.compareInt(198)) { return this.fail("Mul Integer with int"); }
+        i1.divInteger(i2);  if (!i1.compareInt( 99)) { return this.fail("Div Integer by Integer"); }
+        i1.divInt(7);       if (!i1.compareInt( 14)) { return this.fail("Div Integer by int"); }
+        i1.modInt(9);       if (!i1.compareInt(  5)) { return this.fail("Mod Integer by int"); }
+        i1.modInteger(i2);  if (!i1.compareInt(  1)) { return this.fail("Mod Integer by Integer"); }
+        
+        i2.destroy();
+        i1.destroy();
+        return this.success();
+    }
+
+    [int] testPrintToStream() {
+        this.start("testPrintToStream");
+        
+        Integer i = this.rt().createInstance(Integer:CLASSNAME);
+        String s = this.rt().createInstance(String:CLASSNAME);
+        i.assignInt(-7);
+        i.printToStream(s.ostream());
+        if (!s.cequals("-7")) { return this.fail("Invalid value printed for -7"); }
+        
+        i.assignInt(12345678);
+        s.clear();
+        i.printToStream(s.ostream());
+        if (!s.cequals("12345678")) { return this.fail("Invalid value printed for 12345678"); }
+        
+        s.destroy();
+        i.destroy();
+        return this.success();
+    }
+}

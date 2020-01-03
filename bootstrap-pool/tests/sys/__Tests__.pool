@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys;
+
+class __Tests__ {
+    
+    global [] setup(test::TestSuite suite) {
+        suite.register(sys::core::Boolean:CLASSNAME, sys::core::BooleanTest:CLASSNAME);
+        suite.register(sys::core::Character:CLASSNAME, sys::core::CharacterTest:CLASSNAME);
+        suite.register(sys::core::Integer:CLASSNAME, sys::core::IntegerTest:CLASSNAME);
+    }
+}

@@ -1,0 +1,136 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class CharacterTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testLowerUpper();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+        
+        Character c1 = this.rt().createInstance(Character:CLASSNAME);
+        c1.assignChar('a');
+        if (c1.getChar() != 'a') { return this.fail("Assign native char"); }
+        
+        Character c2 = this.rt().createInstance(Character:CLASSNAME);
+        c2.assignCharacter(c1);
+        if (c2.getChar() != 'a') { return this.fail("Assign Character"); }
+        
+        c2.destroy();
+        c1.destroy();
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        
+        Character c1 = this.rt().createInstance(Character:CLASSNAME); c1.assignChar('x');
+        Character c2 = this.rt().createInstance(Character:CLASSNAME); c2.assignChar('x');
+        Character c3 = this.rt().createInstance(Character:CLASSNAME); c3.assignChar('y');
+        
+        if (c1.hash() != c1.hash()) { return this.fail("Hash value is not constant"); }
+        if (c1.hash() != c2.hash()) { return this.fail("Hash value of Characters differs for same char values"); }
+        if (c1.hash() == c3.hash()) { return this.fail("Hash value of Characters is identical for different char values"); }
+        
+        if (!c1.equals(c1)) { return this.fail("Identity check"); }
+        if (!c1.equals(c2)) { return this.fail("Characters with same char value are not equal"); }
+        if (c1.equals(c3)) { return this.fail("Characters with different char value are equal"); }
+        if (c1.equals(this)) { return this.fail("Character is equal to non-Character"); }
+        
+        c3.destroy();
+        c2.destroy();
+        c1.destroy();
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        
+        Character c1 = this.rt().createInstance(Character:CLASSNAME); c1.assignChar('A');
+        Character c2 = this.rt().createInstance(Character:CLASSNAME); c2.assignChar('B');
+        Character c3 = this.rt().createInstance(Character:CLASSNAME); c3.assignChar('B');
+        Character c4 = this.rt().createInstance(Character:CLASSNAME); c4.assignChar('C');
+        
+        if (c1.compareCharacter(c2) == 0) { return this.fail("Test A != B"); }
+        if (c1.compareCharacter(c2) >= 0) { return this.fail("Test A <  B"); }
+        if (c1.compareCharacter(c2) >  0) { return this.fail("Test A <= B"); }
+        if (c2.compareCharacter(c2) >  0) { return this.fail("Test B <= B (identity)"); }
+        if (c3.compareCharacter(c2) >  0) { return this.fail("Test B <= B (different Chars)"); }
+        if (c2.compareCharacter(c2) != 0) { return this.fail("Test B == B (identity)"); }
+        if (c3.compareCharacter(c2) != 0) { return this.fail("Test B == B (different Chars)"); }
+        if (c2.compareCharacter(c2) <  0) { return this.fail("Test B >= B (identity)"); }
+        if (c3.compareCharacter(c2) <  0) { return this.fail("Test B >= B (different Chars)"); }
+        if (c4.compareCharacter(c2) <= 0) { return this.fail("Test C >  B"); }
+        if (c4.compareCharacter(c2) <  0) { return this.fail("Test C >= B"); }
+        if (c4.compareCharacter(c2) == 0) { return this.fail("Test C != B"); }
+        
+        if (c1.compareChar('B') == 0) { return this.fail("Test A != B (char)"); }
+        if (c1.compareChar('B') >= 0) { return this.fail("Test A <  B (char)"); }
+        if (c1.compareChar('B') >  0) { return this.fail("Test A <= B (char)"); }
+        if (c2.compareChar('B') != 0) { return this.fail("Test B == B (char)"); }
+        if (c2.compareChar('B') <  0) { return this.fail("Test B >= B (char)"); }
+        if (c4.compareChar('B') <= 0) { return this.fail("Test C >  B (char)"); }
+        
+        if (c1.compareCharacter(c4) != -2) { return this.fail("Invalid distance from A to C"); }
+        if (c4.compareChar('A')     !=  2) { return this.fail("Invalid distance from C to A"); }
+        
+        c4.destroy();
+        c3.destroy();
+        c2.destroy();
+        c1.destroy();
+        return this.success();
+    }
+    
+    [int] testLowerUpper() {
+        this.start("testLowerUpper");
+        
+        Character c1 = this.rt().createInstance(Character:CLASSNAME); c1.assignChar('A');
+        Character c2 = this.rt().createInstance(Character:CLASSNAME); c2.assignChar('b');
+        Character c3 = this.rt().createInstance(Character:CLASSNAME); c3.assignChar('B');
+        Character c4 = this.rt().createInstance(Character:CLASSNAME); c4.assignChar('&');
+
+        if (c1.getLowerChar() != 'a') { return this.fail("Invalid lower 'a'"); }
+        if (c1.getUpperChar() != 'A') { return this.fail("Invalid upper 'A'"); }
+        if (c2.getLowerChar() != 'b') { return this.fail("Invalid lower 'b'"); }
+        if (c2.getUpperChar() != 'B') { return this.fail("Invalid upper 'B'"); }
+        if (c3.getLowerChar() != 'b') { return this.fail("Invalid lower 'b'"); }
+        if (c3.getUpperChar() != 'B') { return this.fail("Invalid upper 'B'"); }
+        if (c4.getLowerChar() != '&') { return this.fail("Invalid lower '&'"); }
+        if (c4.getUpperChar() != '&') { return this.fail("Invalid upper '&'"); }
+        
+        c4.destroy();
+        c3.destroy();
+        c2.destroy();
+        c1.destroy();
+        return this.success();
+    }
+    
+    [int] testPrintToStream() {
+        this.start("testPrintToStream");
+        
+        Character c = this.rt().createInstance(Character:CLASSNAME);
+        String s = this.rt().createInstance(String:CLASSNAME);
+        c.assignChar('@');
+        c.printToStream(s.ostream());
+        if (!s.cequals("@")) { return this.fail("Invalid value printed for '@'"); }
+        
+        c.assignChar('?');
+        c.printToStream(s.ostream());
+        if (!s.cequals("@?")) { return this.fail("Invalid value printed for '?'"); }
+        
+        s.destroy();
+        c.destroy();
+        return this.success();
+    }
+
+}

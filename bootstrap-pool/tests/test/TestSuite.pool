@@ -20,7 +20,7 @@ class TestSuite extends sys::core::utils::Owner {
         knownTests = this.createOwn(AnyMap:CLASSNAME);
         knownTests.init(13);
         
-        this.register(sys::core::Boolean:CLASSNAME, sys::core::BooleanTest:CLASSNAME);
+        sys::__Tests__:setup(this);
     }
     
     [] register(cstring classname, cstring testname) {
