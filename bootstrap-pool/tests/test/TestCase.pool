@@ -8,41 +8,55 @@ namespace test;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::String;
+use sys::log::Logger;
 use sys::stream::OStream;
 
-class TestCase extends sys::log::Logger {
+class TestCase extends sys::core::Object {
 
     abstract [] runAll();
     
-    cstring noTest;
     cstring currentTest;
+    int availableBytes;
     int result;
+    Logger logger;
     
-    [] __init() {
+    [] init(Logger log) {
+        availableBytes = 0;
         result = true;
-        this._initLogger();
+        this.logger = log;
     }
     
     [int] getResult() { return result; }
     
-    [] start(cstring test) { currentTest = test; }
+    [] start(cstring test) {
+        currentTest = test;
+        availableBytes = this.rt().getAllocator().getAvailableBytes();
+    }
     
-    [OStream] assert(int success, cstring message) {
-        if (success || this.hasErrors()) { return this.ignore(); }
-        OStream err = this.newError();
-        if (currentTest) { err.printCString(currentTest).printCString(" failed: "); }
-        return err.printCString(message); 
+    [int] fail(cstring message) {
+        OStream err = logger.newError();
+        if (!availableBytes) { err.printCString(currentTest).printCString(" failed: "); }
+        err.printCString(message);
+        return false; 
     }
     
     [int] success() {
-        if (this.flushErrors(this.rt().err())) { result = false; return false; }
-        OStream out = this.rt().out(); 
-        if (currentTest) {
-            out.printCString(currentTest).printCString(" successful!").printNewline();
-            currentTest = noTest;
-        } else {
-            out.printCString("Test successful!").printNewline();
+        OStream out = this.rt().out();
+        OStream err = this.rt().err();
+        if (!logger.hasErrors() && availableBytes && (availableBytes != this.rt().getAllocator().getAvailableBytes())) {
+            logger.newError().printCString(currentTest).printCString(" failed: Memory hole detected");
+        } 
+        if (logger.flushErrors(err)) {
+            result = false;
+            availableBytes = 0;
+            return false;
         }
+        if (!availableBytes) {
+            out.printCString("Test successful!").printNewline();
+        } else {
+            out.printCString(currentTest).printCString(" successful!").printNewline();
+        }
+        availableBytes = 0;
         return true;
     }
 }

@@ -17,14 +17,14 @@ class BooleanTest extends test::TestCase {
         
         Boolean b1 = this.rt().createInstance(Boolean:CLASSNAME);
         b1.assignBool(true);
-        this.assert(b1.getBool() == true, "Assign native bool");
+        if (b1.getBool() != true) { return this.fail("Assign native bool"); }
         
         Boolean b2 = this.rt().createInstance(Boolean:CLASSNAME);
         b2.assignBoolean(b1);
-        this.assert(b2.getBool() == true, "Assign Boolean");
+        if (b1.getBool() != true) { return this.fail("Assign Boolean"); }
         
         b1.flip();
-        this.assert(b1.getBool() == false, "Flip Boolean");
+        if (b1.getBool() != false) { return this.fail("Flip Boolean"); }
         
         b2.destroy();
         b1.destroy();
@@ -38,14 +38,14 @@ class BooleanTest extends test::TestCase {
         Boolean b2 = this.rt().createInstance(Boolean:CLASSNAME); b2.assignBool(true);
         Boolean b3 = this.rt().createInstance(Boolean:CLASSNAME); b3.assignBool(false);
         
-        this.assert(b1.hash() == b1.hash(), "Constant hash");
-        this.assert(b1.hash() == b2.hash(), "Same hash for same bool as different Booleans");
-        this.assert(b1.hash() != b3.hash(), "Different hash for different bools");
+        if (b1.hash() != b1.hash()) { return this.fail("Hash value is not constant"); }
+        if (b1.hash() != b2.hash()) { return this.fail("Hash value of Booleans differs for same bool values"); }
+        if (b1.hash() == b3.hash()) { return this.fail("Hash value of Booleans is identical for different bool values"); }
         
-        this.assert(b1.equals(b1), "Identity check");
-        this.assert(b1.equals(b2), "Same bool as different Booleans are equal");
-        this.assert(!b1.equals(b3), "Different chars are not equal");
-        this.assert(!b1.equals(this), "Different Objects are not equal");
+        if (!b1.equals(b1)) { return this.fail("Identity check"); }
+        if (!b1.equals(b2)) { return this.fail("Booleans with same bool value are not equal"); }
+        if (b1.equals(b3)) { return this.fail("Booleans with different bool value are equal"); }
+        if (b1.equals(this)) { return this.fail("Boolean is equal to non-Boolean"); }
         
         b3.destroy();
         b2.destroy();

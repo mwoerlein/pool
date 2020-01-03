@@ -1,0 +1,49 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace test;
+
+use sys::runtime::Class;
+use sys::runtime::ClassDescriptor;
+use sys::runtime::Runtime;
+use sys::memory::Address;
+use sys::memory::MemoryInfo;
+use sys::memory::MemoryManager;
+
+class TestRuntime extends Runtime {
+
+    MemoryInfo testMemoryInfo;
+    
+    [TestRuntime] init(int memorySize) {
+        Runtime parent = this.rt();
+        this.setClassStorage(parent.getClassStorage());
+        this.setOut(parent.out());
+        this.setErr(parent.err());
+        
+        testMemoryInfo = parent.getAllocator().allocate(memorySize + MemoryInfo:SIZEOF);
+        MemoryInfo available = Address:cast(testMemoryInfo.buf);
+        available.buf = testMemoryInfo.buf;
+        available.len = memorySize;
+        available.flags = MemoryInfo:FLAGS_AVAILABLE;
+        
+        MemoryManager mm = parent.createInstance(MemoryManager:CLASSNAME);
+        mm.initEmpty(available, false, 0);
+        this.setAllocator(mm.allocator());
+        
+        return this;
+    }
+    [] __destruct() {
+        this.getAllocator().destroy();
+        this.rt().getAllocator().free(testMemoryInfo);
+    }
+    
+    // create new classes within parent
+    [Class] _createClass(ClassDescriptor classDesc) {
+        Class cl = this.rt().createInstance(Class:CLASSNAME);
+        if (cl) { cl.setDesc(classDesc); }
+        return cl;
+    }
+    
+}

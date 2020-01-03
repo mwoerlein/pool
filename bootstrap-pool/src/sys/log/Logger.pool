@@ -9,6 +9,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::String;
 use sys::stream::OStream;
+use sys::stream::NullIOStream;
 
 class Logger extends sys::core::Object {
 
@@ -65,5 +66,7 @@ class Logger extends sys::core::Object {
         }
         return false;
     }
-
+    
+    // TODO: remove with implicit cast
+    [Logger] logger() { return this; }
 }
