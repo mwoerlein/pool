@@ -37,13 +37,21 @@ class TestCase extends sys::core::Object {
         return false; 
     }
     
+    [int] skip() {
+        this.printMessage(this.rt().err(), " skipped!").printNewline();
+        availableBytes = 0;
+        return true;
+    }
+    
     [int] success() {
-        if (availableBytes && (availableBytes != this.rt().getAllocator().getAvailableBytes())) {
-            return this.fail("Memory hole detected");
-        }
+        if (availableBytes && !this.checkMemory(availableBytes)) { return false; }
         this.printMessage(this.rt().out(), " successful!").printNewline();
         availableBytes = 0;
         return true;
+    }
+    
+    [int] checkMemory(int bytes) {
+        return (bytes == this.rt().getAllocator().getAvailableBytes()) || this.fail("Memory hole detected");
     }
     
     [OStream] printError(OStream stream, cstring message) {

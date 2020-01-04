@@ -57,10 +57,8 @@ class TestSuite extends sys::core::utils::Owner {
         
         int availableBytes = testRt.getAllocator().getAvailableBytes();
         test.runAll();
-        int success = test.getResult();
-        if (success && (availableBytes != testRt.getAllocator().getAvailableBytes())) {
-            success = test.fail("Memory hole detected");
-        }
+        int success = test.getResult() && test.checkMemory(availableBytes);
+        
         test.destroy();
         testRt.destroy();
         return success;
