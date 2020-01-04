@@ -31,7 +31,7 @@ class Runtime extends Object {
     [ClassStorage] getClassStorage() { return classStorage; }
     [] setClassStorage(ClassStorage classStorage) { this.classStorage = classStorage; }
     
-    [Class] getClass(cstring name) {
+    [Class] getClassByCName(cstring name) {
         ClassDescriptor classDesc = classStorage.getClassDesc(name);
         if (!classDesc) { return null; } // abort on initialization error
         if (classDesc.class_instance) { return classDesc.class_instance; }

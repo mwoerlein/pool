@@ -24,7 +24,7 @@ class TestSuite extends sys::core::utils::Owner {
     }
     
     [] register(cstring classname, cstring testname) {
-        knownTests.set(this.createOwnStringFromCString(classname), this.rt().getClass(testname));
+        knownTests.set(this.createOwnStringFromCString(classname), this.rt().getClassByCName(testname));
     }
     
     [int] runAll() {
