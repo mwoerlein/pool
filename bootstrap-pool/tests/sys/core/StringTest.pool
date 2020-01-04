@@ -1,0 +1,153 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class StringTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitializationClearAndLength();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testConversions();
+        this.testIStream();
+        this.testOStream();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitializationClearAndLength() {
+        this.start("testInitializationClearAndLength");
+        
+        String s1 = this.rt().createInstance(String:CLASSNAME);
+        if (s1.length() != 0) { return this.fail("Create empty String"); }
+        
+        s1.assignCString("0123456789");
+        if (s1.length() != 10) { return this.fail("Assign cstring"); }
+        
+        String s2 = this.rt().createInstance(String:CLASSNAME);
+        s2.assignString(s1);
+        if (s2.length() != 10) { return this.fail("Assign String"); }
+        
+        s1.clear();
+        if (s1.length() != 0) { return this.fail("Clear String"); }
+        
+        s2.destroy();
+        s1.destroy();
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        
+        String s1 = this.rt().createInstance(String:CLASSNAME); s1.assignCString("string");
+        String s2 = this.rt().createInstance(String:CLASSNAME); s2.assignCString("string");
+        String s3 = this.rt().createInstance(String:CLASSNAME); s3.assignCString("other string");
+        
+        if (s1.hash() != s1.hash()) { return this.fail("Hash value is not constant"); }
+        if (s1.hash() != s2.hash()) { return this.fail("Hash value of Strings differs for same cstring values"); }
+        if (s1.hash() == s3.hash()) { return this.fail("Hash value of Strings is identical for different cstring values"); }
+        
+        if (!s1.equals(s1)) { return this.fail("Identity check"); }
+        if (!s1.equals(s2)) { return this.fail("Strings with same cstring value are not equal"); }
+        if (s1.equals(s3)) { return this.fail("Strings with different cstring value are equal"); }
+        if (s1.equals(this)) { return this.fail("String is equal to non-String"); }
+        
+        s3.destroy();
+        s2.destroy();
+        s1.destroy();
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        
+        String s1 = this.rt().createInstance(String:CLASSNAME);
+        String s2 = this.rt().createInstance(String:CLASSNAME); s2.assignCString("ABC");
+        String s3 = this.rt().createInstance(String:CLASSNAME); s3.assignCString("ABCDE");
+        String s4 = this.rt().createInstance(String:CLASSNAME); s4.assignCString("ABCDE");
+        String s5 = this.rt().createInstance(String:CLASSNAME); s5.assignCString("BCD");
+        String s6 = this.rt().createInstance(String:CLASSNAME); s6.assignCString("b");
+        String s7 = this.rt().createInstance(String:CLASSNAME);
+        
+        if (s1.compareString(s2) == 0) { return this.fail("Test '' != 'ABC'"); }
+        if (s1.compareString(s3) >= 0) { return this.fail("Test '' <  'ABCDE'"); }
+        if (s1.compareString(s6) >  0) { return this.fail("Test '' <= 'b'"); }
+        if (s2.compareString(s3) >= 0) { return this.fail("Test 'ABC' <  'ABCDE'"); }
+        if (s2.compareString(s5) >  0) { return this.fail("Test 'ABC' <= 'BCD'"); }
+        if (s3.compareString(s3) >  0) { return this.fail("Test 'ABCDE' <= 'ABCDE' (identity)"); }
+        if (s3.compareString(s4) >  0) { return this.fail("Test 'ABCDE' <= 'ABCDE' (different Strings)"); }
+        if (s3.compareString(s3) != 0) { return this.fail("Test 'ABCDE' == 'ABCDE' (identity)"); }
+        if (s3.compareString(s4) != 0) { return this.fail("Test 'ABCDE' == 'ABCDE' (different Strings)"); }
+        if (s3.compareString(s3) <  0) { return this.fail("Test 'ABCDE' >= 'ABCDE' (identity)"); }
+        if (s3.compareString(s4) <  0) { return this.fail("Test 'ABCDE' >= 'ABCDE' (different Strings)"); }
+        if (s6.compareString(s2) <= 0) { return this.fail("Test 'a' >  'ABC'"); }
+        if (s6.compareString(s5) <  0) { return this.fail("Test 'a' >= 'BCD'"); }
+        if (s6.compareString(s3) == 0) { return this.fail("Test 'a' != 'ABCDE'"); }
+        if (s1.compareString(s1) != 0) { return this.fail("Test '' == '' (identity)"); }
+        if (s1.compareString(s7) != 0) { return this.fail("Test '' == '' (different Strings)"); }
+        
+        if (s1.compareCString("ABCDE") == 0) { return this.fail("Test '' != 'ABCDE' (cstring)"); }
+        if (s3.compareCString("ABCDE") != 0) { return this.fail("Test 'ABCDE' == 'ABCDE' (cstring)"); }
+        if (s2.compareCString("ABCDE") >= 0) { return this.fail("Test 'ABC' <  'ABCDE' (cstring)"); }
+        if (s2.compareCString("ABCDE") >  0) { return this.fail("Test 'ABC' <= 'ABCDE' (cstring)"); }
+        if (s5.compareCString("ABCDE") <= 0) { return this.fail("Test 'BCD' >  'ABCDE' (cstring)"); }
+        if (s5.compareCString("ABCDE") <  0) { return this.fail("Test 'BCD' >= 'ABCDE' (cstring)"); }
+        
+        if (s2.compareString(s3)     != -'D') { return this.fail("Invalid distance from 'ABC' to 'ABCDE'"); }
+        if (s5.compareCString("ABC") != 1   ) { return this.fail("Invalid distance from 'BCD' to 'ABC'"); }
+        if (s5.compareCString("BCD") != 0   ) { return this.fail("Invalid distance from 'BCD' to 'BCD'"); }
+        if (s6.compareString(s3)  != 'b'-'A') { return this.fail("Invalid distance from 'b' to 'ABCDE'"); }
+        
+        s7.destroy();
+        s6.destroy();
+        s5.destroy();
+        s4.destroy();
+        s3.destroy();
+        s2.destroy();
+        s1.destroy();
+        return this.success();
+    }
+    
+    [int] testConversions() {
+        this.start("testConversions");
+        
+        return this.skip();
+    }
+    
+    [int] testIStream() {
+        this.start("testIStream");
+        
+        return this.skip();
+    }
+    
+    [int] testOStream() {
+        this.start("testOStream");
+        
+        return this.skip();
+    }
+    
+    [int] testPrintToStream() {
+        this.start("testPrintToStream");
+        
+        String s = this.rt().createInstance(String:CLASSNAME);
+        String stream = this.rt().createInstance(String:CLASSNAME);
+        s.assignCString("Hello");
+        s.printToStream(stream.ostream());
+        if (!stream.cequals("Hello")) { return this.fail("Invalid value printed for 'Hello'"); }
+        
+        s.assignCString(" world!");
+        s.printToStream(stream.ostream());
+        if (!stream.cequals("Hello world!")) { return this.fail("Invalid value printed for ' world!'"); }
+        
+        s.assignCString("Some \"Text\"\twith escaped '\\' chars \n");
+        stream.clear();
+        s.escapeToStream(stream.ostream());
+        if (!stream.cequals("\"Some \\\"Text\\\"\\twith escaped '\\\\' chars \\n\"")) { return this.fail("Invalid escaped string"); }
+        
+        stream.destroy();
+        s.destroy();
+        return this.success();
+    }
+}

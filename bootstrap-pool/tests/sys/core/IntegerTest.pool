@@ -23,7 +23,7 @@ class IntegerTest extends test::TestCase {
         
         Integer i2 = this.rt().createInstance(Integer:CLASSNAME);
         i2.assignInteger(i1);
-        if (i1.getInt() != -7) { return this.fail("Assign Integer"); }
+        if (i2.getInt() != -7) { return this.fail("Assign Integer"); }
         
         i2.destroy();
         i1.destroy();

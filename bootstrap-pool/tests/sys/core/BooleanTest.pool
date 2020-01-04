@@ -22,7 +22,7 @@ class BooleanTest extends test::TestCase {
         
         Boolean b2 = this.rt().createInstance(Boolean:CLASSNAME);
         b2.assignBoolean(b1);
-        if (b1.getBool() != true) { return this.fail("Assign Boolean"); }
+        if (b2.getBool() != true) { return this.fail("Assign Boolean"); }
         
         b1.flip();
         if (b1.getBool() != false) { return this.fail("Flip Boolean"); }
