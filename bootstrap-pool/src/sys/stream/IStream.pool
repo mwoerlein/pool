@@ -13,14 +13,6 @@ class IStream extends Object {
     abstract [int] peekChar();
     abstract [int] readChar();
     
-    [int] peekDigit() {
-        int c = this.peekChar();
-        if (c >= '0' && c <= '9') { return c - '0'; }
-        if (c >= 'a' && c <= 'z') { return c - 'a' + 10; }
-        if (c >= 'A' && c <= 'Z') { return c - 'A' + 10; }
-        return -1;
-    }
-    
     [int] readInt() {
         if (this.isEmpty()) { return 0; }
         
@@ -32,10 +24,10 @@ class IStream extends Object {
             this.readChar();
         }
         
-        if (this.peekDigit() == 0) {
+        if (this._peekDigit() == 0) {
             this.readChar();
             if (this.isEmpty()) { return 0; }
-            int d = this.peekDigit();
+            int d = this._peekDigit();
             if (d == 11) { // 'b' or 'B'
                 base = 2;
                 this.readChar();
@@ -50,12 +42,12 @@ class IStream extends Object {
         }
         
         int result = 0;
-        int digit = this.peekDigit();
+        int digit = this._peekDigit();
         while (!this.isEmpty() && (digit >= 0 && digit < base)) {
             result *= base;
             result += digit;
             this.readChar();
-            digit = this.peekDigit();
+            digit = this._peekDigit();
         }
         return sign * result;
     }
@@ -69,6 +61,14 @@ class IStream extends Object {
             stream.printChar(this.readChar());
         }
         return stream;
+    }
+    
+    [int] _peekDigit() {
+        int c = this.peekChar();
+        if (c >= '0' && c <= '9') { return c - '0'; }
+        if (c >= 'a' && c <= 'z') { return c - 'a' + 10; }
+        if (c >= 'A' && c <= 'Z') { return c - 'A' + 10; }
+        return -1;
     }
     
     // TODO: remove with implicit cast

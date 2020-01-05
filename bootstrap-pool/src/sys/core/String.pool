@@ -197,7 +197,7 @@ class String extends OStream {
     
     [String] subString(int start, int length) {
         int first = start;
-        if (start < 0) { first = _length - start; }
+        if (start < 0) { first = _length + start; }
         if (first < 0) { first = 0; }
         int last = first + length;
         if (length <= 0) { last = _length + length; }
@@ -217,10 +217,11 @@ class String extends OStream {
     }
     
     [int] at(int pos) {
-        if (pos < 0 || pos >= _length) { return -1; }
-        int i = 0;
+        int i = pos;
+        if (pos < 0) { i = _length + pos; }
+        if (i < 0 || i >= _length) { return 0; }
         StringElement cur = _first;
-        while (i < pos) { cur = cur.getNext(); i++; }
+        while (i--) { cur = cur.getNext(); }
         return cur.getChar();
     }
     

@@ -14,10 +14,15 @@ class StringTest extends test::TestCase {
         this.testInitializationClearAndLength();
         this.testHashAndEquals();
         this.testComparable();
+        this.testSubString();
+        this.testAt();
+        this.testToInt();
+        this.testToCString();
         this.testConversions();
         this.testIStream();
         this.testOStream();
         this.testPrintToStream();
+        this.testRawInt();
     }
     
     [int] testInitializationClearAndLength() {
@@ -114,10 +119,150 @@ class StringTest extends test::TestCase {
         return this.success();
     }
     
+    [int] testSubString() {
+        this.start("testSubString");
+        String digits = this.rt().createInstance(String:CLASSNAME); digits.assignCString("0123456789");
+        
+        {
+            String s = digits.subString(0, 0);
+            if (!s.cequals("0123456789")) { return this.fail("Test subString(0, 0)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(0, 5);
+            if (!s.cequals("01234")) { return this.fail("Test subString(0, 5)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(0, -4);
+            if (!s.cequals("012345")) { return this.fail("Test subString(0, -4)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(4, 0);
+            if (!s.cequals("456789")) { return this.fail("Test subString(4, 0)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(3, 3);
+            if (!s.cequals("345")) { return this.fail("Test subString(3, 3)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(2, -3);
+            if (!s.cequals("23456")) { return this.fail("Test subString(2, -3)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(-3, 0);
+            if (!s.cequals("789")) { return this.fail("Test subString(-3, 0)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(-2, 1);
+            if (!s.cequals("8")) { return this.fail("Test subString(-2, 1)"); }
+            s.destroy();
+        }
+        {
+            String s = digits.subString(-4, -1);
+            if (!s.cequals("678")) { return this.fail("Test subString(-4, -1)"); }
+            s.destroy();
+        }
+        
+        digits.destroy();
+        return this.success();
+    }
+    
+    [int] testAt() {
+        this.start("testAt");
+        String digits = this.rt().createInstance(String:CLASSNAME); digits.assignCString("0123456789");
+        
+        if (digits.at( 0) != '0') { return this.fail("Test at( 0)"); }
+        if (digits.at( 9) != '9') { return this.fail("Test at( 9)"); }
+        if (digits.at(10) !=  0 ) { return this.fail("Test at(10)"); }
+        if (digits.at(11) !=  0 ) { return this.fail("Test at(11)"); }
+        if (digits.at(-2) != '8') { return this.fail("Test at(-2)"); }
+        if (digits.at(-10) != '0') { return this.fail("Test at(-10)"); }
+        if (digits.at(-11) !=  0 ) { return this.fail("Test at(-11)"); }
+        if (digits.at(-12) !=  0 ) { return this.fail("Test at(-12)"); }
+        
+        digits.destroy();
+        return this.success();
+    }
+    
+    [int] testToInt() {
+        this.startCases("testToInt");
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        
+        this.caseToInt(""       , 0    );
+        this.caseToInt("0"      , 0    );
+        this.caseToInt("12345"  , 12345);
+        this.caseToInt("-2345"  , -2345);
+        this.caseToInt("01234"  , 668  );
+        this.caseToInt("-0234"  , -156 );
+        this.caseToInt("0B0"    , 0    );
+        this.caseToInt("0b10101", 21   );
+        this.caseToInt("-0b1111", -15  );
+        this.caseToInt("0X0"    , 0    );
+        this.caseToInt("0xaBc"  , 2748 );
+        this.caseToInt("-0x12"  , -18  );
+        
+        testString.destroy();
+        return this.successCases();
+    }
+    
+    [int] caseToInt(cstring val, int expected) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case '").printCString(val).printCString("' => ").printInt(expected);
+        String testString = this.rt().createInstance(String:CLASSNAME); testString.assignCString(val);
+        
+        if (testString.toInt() != expected) { return this.failCase(message); }
+        
+        IStream in = testString.toIStream();
+        if (in.readInt() != expected) { return this.failCase(message); }
+        in.destroy();
+        
+        testString.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] testToCString() {
+        this.start("testToCString");
+        sys::memory::MemoryInfo info = this.rt().getAllocator().allocate(20);
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        
+        if (!testString.cequals(testString.toCString(info.buf))) { return this.fail("Test \"\".toCString()"); }
+        
+        testString.assignCString("string");
+        if (!testString.cequals(testString.toCString(info.buf))) { return this.fail("Test \"string\".toCString()"); }
+        
+        testString.assignCString("s");
+        if (!testString.cequals(testString.toCString(info.buf))) { return this.fail("Test \"s\".toCString()"); }
+        
+        testString.destroy();
+        this.rt().getAllocator().free(info);
+        return this.success();
+    }
+    
     [int] testConversions() {
         this.start("testConversions");
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        testString.assignCString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789=!\"§$%&/()?\'_-+*#");
         
-        return this.skip();
+        String lower = testString.toLower();
+        if (!lower.cequals("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz0123456789=!\"§$%&/()?\'_-+*#")) {
+            return this.fail("Test toLower()");
+        }
+        String upper = testString.toUpper();
+        if (!upper.cequals("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789=!\"§$%&/()?\'_-+*#")) {
+            return this.fail("Test toUpper()");
+        }
+        
+        upper.destroy();
+        lower.destroy();
+        testString.destroy();
+        return this.success();
     }
     
     [int] testIStream() {
@@ -127,7 +272,8 @@ class StringTest extends test::TestCase {
             IStream testStream = testString.toIStream();
             
             if (!testStream.isEmpty()) { return this.fail("Empty string should have empty stream"); }
-            if (testStream.readChar() != 0) { return this.fail("Empty stream do not return 0"); }
+            if (testStream.peekChar() !=  0 ) { return this.fail("Empty stream does not peek 0"); }
+            if (testStream.readChar() !=  0 ) { return this.fail("Empty stream does not return 0"); }
             
             testStream.destroy();
             testString.destroy();
@@ -137,19 +283,24 @@ class StringTest extends test::TestCase {
             IStream testStream = testString.toIStream();
             
             if (testStream.isEmpty()) { return this.fail("Stream is empty after creation"); }
+            if (testStream.peekChar() != 't') { return this.fail("First char in steam peeks not 't'"); }
             if (testStream.readChar() != 't') { return this.fail("First char in steam is not 't'"); }
             
             if (testStream.isEmpty()) { return this.fail("Stream is empty after first char"); }
+            if (testStream.peekChar() != 'e') { return this.fail("Second char in steam peeks not 'e'"); }
             if (testStream.readChar() != 'e') { return this.fail("Second char in steam is not 'e'"); }
             
             if (testStream.isEmpty()) { return this.fail("Stream is empty after second char"); }
+            if (testStream.peekChar() != 's') { return this.fail("Third char in steam peeks not 's'"); }
             if (testStream.readChar() != 's') { return this.fail("Third char in steam is not 's'"); }
             
             if (testStream.isEmpty()) { return this.fail("Stream is empty after third char"); }
+            if (testStream.peekChar() != 't') { return this.fail("Forth char in steam peeks not 't'"); }
             if (testStream.readChar() != 't') { return this.fail("Forth char in steam is not 't'"); }
             
             if (!testStream.isEmpty()) { return this.fail("Stream is not empty after forth char"); }
-            if (testStream.readChar() != 0) { return this.fail("Empty stream do not return 0"); }
+            if (testStream.peekChar() !=  0 ) { return this.fail("Empty stream does not peek 0"); }
+            if (testStream.readChar() !=  0 ) { return this.fail("Empty stream does not return 0"); }
             
             testStream.destroy();
             testString.destroy();
@@ -168,8 +319,10 @@ class StringTest extends test::TestCase {
         
         String testString = this.rt().createInstance(String:CLASSNAME);
         
-        testString.printCString("ABC ").printInt(1).printChar(' ').print(null).printNewline();
-        if (!testString.cequals("ABC 1 NULL\n")) { return this.fail("String do not prints natives"); }
+        testString.printCString("ABC ").printInt(1).printChar(' ').print(null)
+            .printChar(' ').printHex(1234).printChar(' ').printPtr(0x12).printChar(' ').printAddr(null)
+            .printNewline();
+        if (!testString.cequals("ABC 1 NULL 0x4d2 0x00000012 0x00000000\n")) { return this.fail("String do not prints natives"); }
         
         testString.clear();
         IStream istream = s.toIStream();
@@ -182,7 +335,6 @@ class StringTest extends test::TestCase {
         c.destroy();
         b.destroy();
         testString.destroy();
-        
         return this.success();
     }
     
@@ -206,6 +358,24 @@ class StringTest extends test::TestCase {
         
         stream.destroy();
         s.destroy();
+        return this.success();
+    }
+    
+    [int] testRawInt() {
+        this.start("testRawInt");
+        
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        testString.printRawInt(0x74736554);
+        testString.printRawInt(0x65736163);
+        if (!testString.cequals("Testcase")) { return this.fail("Invalid raw ints written"); }
+        
+        IStream in = testString.toIStream();
+        if (in.readRawInt() != 0x74736554) { return this.fail("Invalid raw ints read"); }
+        if (in.readRawInt() != 0x65736163) { return this.fail("Invalid raw ints read"); }
+        if (!in.isEmpty()) { return this.fail("Invalid raw ints read"); }
+        in.destroy();
+        
+        testString.destroy();
         return this.success();
     }
 }
