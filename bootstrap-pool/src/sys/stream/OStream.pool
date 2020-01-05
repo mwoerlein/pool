@@ -113,11 +113,10 @@ class OStream extends Object {
         return this.printChar('0').printChar('x')._printUInt(d, 16, pad);
     }
     
-    [OStream] _printCString(int stringAddress) {
+    [OStream] _printCString(int cstringAddress) {
+        int p = cstringAddress;
         int c = 0;
-        while (c = Address:loadChar(stringAddress++)) {
-            this.printChar(c);
-        }
+        while (c = Address:loadChar(p++)) { this.printChar(c); }
         return this;
     }
     
