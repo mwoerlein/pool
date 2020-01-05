@@ -17,10 +17,12 @@ class TestCase extends sys::core::Object {
     cstring currentTest;
     int availableBytes;
     int result;
+    int caseResult;
     
     [] __init() {
         availableBytes = 0;
         result = true;
+        caseResult = true;
     }
     
     [int] getResult() { return result; }
@@ -48,6 +50,28 @@ class TestCase extends sys::core::Object {
         this.printMessage(this.rt().out(), " successful!").printNewline();
         availableBytes = 0;
         return true;
+    }
+    
+    [] startCases(cstring test) {
+        currentTest = test;
+        availableBytes = this.rt().getAllocator().getAvailableBytes();
+        caseResult = true;
+    }
+    
+    [int] failCase(String message) {
+        this.printMessage(this.rt().err(), " failed: ").print(message).printNewline();
+        caseResult = false;
+        result = false;
+        return false; 
+    }
+    
+    [int] successCase() {
+        return true;
+    }
+    
+    [int] successCases() {
+        if (!caseResult) { availableBytes = 0; return false; }
+        return this.success();
     }
     
     [int] checkMemory(int bytes) {

@@ -49,7 +49,7 @@ class TestSuite extends sys::core::utils::Owner {
         }
         
         TestRuntime testRt = this.rt().createInstance(TestRuntime:CLASSNAME);
-        TestCase test = testRt.init(0x3000).createInstanceAs(testClass.getCName(), TestCase:CLASSNAME);
+        TestCase test = testRt.init(0x100000).createInstanceAs(testClass.getCName(), TestCase:CLASSNAME);
         if (!test) {
             err.printCString("Invalid testcase registered for class '").print(classname).printCString("'").printNewline();
             return false;
