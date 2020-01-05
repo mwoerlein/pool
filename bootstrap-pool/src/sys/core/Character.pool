@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
 // TODO: extends Comparable<Character> for compare operator support, if available
@@ -13,7 +14,7 @@ class Character extends Object {
     int _c;
     
     // methods
-    [] assignChar(int c) { _c = c; }
+    [] assignChar(int c) { _c = Bitset:and(0xff, c); }
     [] assignCharacter(Character c) { _c = c.getChar(); }
     
     [int] getChar() { return _c; }
@@ -30,7 +31,7 @@ class Character extends Object {
         return _c;
     }
     
-    [int] compareChar(int c) { return _c - c; }
+    [int] compareChar(int c) { return _c - Bitset:and(0xff, c); }
     [int] compareCharacter(Character c) { return _c - c.getChar(); }
     
     [int] hash() { return _c; }

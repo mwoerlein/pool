@@ -57,7 +57,7 @@ class String extends OStream {
         }
         _length++;
         _hash *= 33;
-        _hash += c;
+        _hash += newElem.hash();
         
         return this.ostream();
     }

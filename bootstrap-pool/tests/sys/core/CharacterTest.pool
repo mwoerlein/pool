@@ -21,6 +21,8 @@ class CharacterTest extends test::TestCase {
         Character c1 = this.rt().createInstance(Character:CLASSNAME);
         c1.assignChar('a');
         if (c1.getChar() != 'a') { return this.fail("Assign native char"); }
+        c1.assignChar(0x1000 + 'a');
+        if (c1.getChar() != 'a') { return this.fail("Assign native char (out of bounds)"); }
         
         Character c2 = this.rt().createInstance(Character:CLASSNAME);
         c2.assignCharacter(c1);
@@ -81,8 +83,9 @@ class CharacterTest extends test::TestCase {
         if (c2.compareChar('B') <  0) { return this.fail("Test B >= B (char)"); }
         if (c4.compareChar('B') <= 0) { return this.fail("Test C >  B (char)"); }
         
-        if (c1.compareCharacter(c4) != -2) { return this.fail("Invalid distance from A to C"); }
-        if (c4.compareChar('A')     !=  2) { return this.fail("Invalid distance from C to A"); }
+        if (c1.compareCharacter(c4)     != -2) { return this.fail("Invalid distance from A to C"); }
+        if (c4.compareChar('A')         !=  2) { return this.fail("Invalid distance from C to A"); }
+        if (c4.compareChar(0x200 + 'A') !=  2) { return this.fail("Invalid distance from C to A (out of bounds)"); }
         
         c4.destroy();
         c3.destroy();

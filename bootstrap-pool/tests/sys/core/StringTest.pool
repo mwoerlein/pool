@@ -50,7 +50,7 @@ class StringTest extends test::TestCase {
         this.start("testHashAndEquals");
         
         String s1 = this.rt().createInstance(String:CLASSNAME); s1.assignCString("string");
-        String s2 = this.rt().createInstance(String:CLASSNAME); s2.assignCString("string");
+        String s2 = this.rt().createInstance(String:CLASSNAME); s2.assignCString("strin"); s2.printChar(0x2300 + 'g');
         String s3 = this.rt().createInstance(String:CLASSNAME); s3.assignCString("other string");
         
         if (s1.hash() != s1.hash()) { return this.fail("Hash value is not constant"); }
@@ -320,7 +320,7 @@ class StringTest extends test::TestCase {
         String testString = this.rt().createInstance(String:CLASSNAME);
         
         testString.printCString("ABC ").printInt(1).printChar(' ').print(null)
-            .printChar(' ').printHex(1234).printChar(' ').printPtr(0x12).printChar(' ').printAddr(null)
+            .printChar(' ').printHex(1234).printChar(0x2300 + ' ').printPtr(0x12).printChar(' ').printAddr(null)
             .printNewline();
         if (!testString.cequals("ABC 1 NULL 0x4d2 0x00000012 0x00000000\n")) { return this.fail("String do not prints natives"); }
         
