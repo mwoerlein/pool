@@ -5,6 +5,9 @@ version = 0.1.0
 */
 namespace sys::core;
 
+use sys::stream::IStream;
+use sys::stream::OStream;
+
 class StringTest extends test::TestCase {
 
     [] runAll() {
@@ -51,6 +54,7 @@ class StringTest extends test::TestCase {
         
         if (!s1.equals(s1)) { return this.fail("Identity check"); }
         if (!s1.equals(s2)) { return this.fail("Strings with same cstring value are not equal"); }
+        if (!s1.cequals("string")) { return this.fail("String do not cequals with same cstring"); }
         if (s1.equals(s3)) { return this.fail("Strings with different cstring value are equal"); }
         if (s1.equals(this)) { return this.fail("String is equal to non-String"); }
         
@@ -118,14 +122,68 @@ class StringTest extends test::TestCase {
     
     [int] testIStream() {
         this.start("testIStream");
+        { // test empty string
+            String testString = this.rt().createInstance(String:CLASSNAME);
+            IStream testStream = testString.toIStream();
+            
+            if (!testStream.isEmpty()) { return this.fail("Empty string should have empty stream"); }
+            if (testStream.readChar() != 0) { return this.fail("Empty stream do not return 0"); }
+            
+            testStream.destroy();
+            testString.destroy();
+        }
+        { // test filled string
+            String testString = this.rt().createInstance(String:CLASSNAME); testString.assignCString("test");
+            IStream testStream = testString.toIStream();
+            
+            if (testStream.isEmpty()) { return this.fail("Stream is empty after creation"); }
+            if (testStream.readChar() != 't') { return this.fail("First char in steam is not 't'"); }
+            
+            if (testStream.isEmpty()) { return this.fail("Stream is empty after first char"); }
+            if (testStream.readChar() != 'e') { return this.fail("Second char in steam is not 'e'"); }
+            
+            if (testStream.isEmpty()) { return this.fail("Stream is empty after second char"); }
+            if (testStream.readChar() != 's') { return this.fail("Third char in steam is not 's'"); }
+            
+            if (testStream.isEmpty()) { return this.fail("Stream is empty after third char"); }
+            if (testStream.readChar() != 't') { return this.fail("Forth char in steam is not 't'"); }
+            
+            if (!testStream.isEmpty()) { return this.fail("Stream is not empty after forth char"); }
+            if (testStream.readChar() != 0) { return this.fail("Empty stream do not return 0"); }
+            
+            testStream.destroy();
+            testString.destroy();
+        }
         
-        return this.skip();
+        return this.success();
     }
     
     [int] testOStream() {
         this.start("testOStream");
         
-        return this.skip();
+        Boolean b = this.rt().createInstance(Boolean:CLASSNAME); b.assignBool(false);
+        Character c = this.rt().createInstance(Character:CLASSNAME); c.assignChar('\n');
+        String s = this.rt().createInstance(String:CLASSNAME); s.assignCString("text");
+        Integer i = this.rt().createInstance(Integer:CLASSNAME);
+        
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        
+        testString.printCString("ABC ").printInt(1).printChar(' ').print(null).printNewline();
+        if (!testString.cequals("ABC 1 NULL\n")) { return this.fail("String do not prints natives"); }
+        
+        testString.clear();
+        IStream istream = s.toIStream();
+        testString.print(i).printChar(' ').print(s).print(c).print(istream).printCString(" ").print(b);
+        istream.destroy();
+        if (!testString.cequals("0 text\ntext false")) { return this.fail("String do not prints Char, String, Integer, IStream, and Bool"); }
+    
+        i.destroy();
+        s.destroy();
+        c.destroy();
+        b.destroy();
+        testString.destroy();
+        
+        return this.success();
     }
     
     [int] testPrintToStream() {
