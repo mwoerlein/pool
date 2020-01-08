@@ -8,17 +8,20 @@ namespace test;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
+use sys::log::Logger;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
 
 class TestSuite extends sys::core::utils::Owner {
 
     AnyMap knownTests;
+    TestOutput output;
     
     [] __init() {
         this._initOwner();
         knownTests = this.createOwn(AnyMap:CLASSNAME);
         knownTests.init(13);
+        output = this.createOwn(TestOutput:CLASSNAME);
         
         sys::__Tests__:setup(this);
     }
@@ -56,7 +59,7 @@ class TestSuite extends sys::core::utils::Owner {
         }
         
         int availableBytes = testRt.getAllocator().getAvailableBytes();
-        test.runAll();
+        test.setOutput(output).runAll();
         int success = test.getResult() && test.checkMemory(availableBytes);
         
         test.destroy();

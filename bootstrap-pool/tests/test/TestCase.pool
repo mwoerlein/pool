@@ -18,12 +18,14 @@ class TestCase extends sys::core::Object {
     int availableBytes;
     int result;
     int caseResult;
+    TestOutput tout;
     
     [] __init() {
         availableBytes = 0;
         result = true;
         caseResult = true;
     }
+    [TestCase] setOutput(TestOutput output) { tout = output; return this; }
     
     [int] getResult() { return result; }
     
@@ -33,21 +35,24 @@ class TestCase extends sys::core::Object {
     }
     
     [int] fail(cstring message) {
-        this.printError(this.rt().err(), message).printNewline();
+        this.printError(tout.error(), message);
+        tout.printError();
         availableBytes = 0;
         result = false;
         return false; 
     }
     
     [int] skip() {
-        this.printMessage(this.rt().err(), " skipped!").printNewline();
+        this.printMessage(tout.message(), " skipped!");
+        tout.printSkip();
         availableBytes = 0;
         return true;
     }
     
     [int] success() {
         if (availableBytes && !this.checkMemory(availableBytes)) { return false; }
-        this.printMessage(this.rt().out(), " successful!").printNewline();
+        this.printMessage(tout.message(), " successful!");
+        tout.printSuccess();
         availableBytes = 0;
         return true;
     }
@@ -59,7 +64,7 @@ class TestCase extends sys::core::Object {
     }
     
     [int] failCase(String message) {
-        this.printMessage(this.rt().err(), " failed: ").print(message).printNewline();
+        this.printMessage(tout.error(), " failed: ").print(message);
         caseResult = false;
         result = false;
         return false; 
@@ -70,7 +75,7 @@ class TestCase extends sys::core::Object {
     }
     
     [int] successCases() {
-        if (!caseResult) { availableBytes = 0; return false; }
+        if (!caseResult) { tout.printError(); availableBytes = 0; return false; }
         return this.success();
     }
     

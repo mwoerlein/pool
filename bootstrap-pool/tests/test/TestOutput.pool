@@ -1,0 +1,66 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace test;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+use sys::log::Logger;
+use sys::runtime::Runtime;
+use sys::stream::FOStream;
+use sys::stream::OStream;
+
+class TestOutput extends sys::log::Logger {
+
+    int MAX_POS := 70;
+    
+    int pos;
+    OStream out;
+    FOStream fout;
+    int error;
+    int skip;
+    int success;
+    
+    [] __init() {
+        this._initLogger();
+        pos = 0;
+        out = this.rt().out();
+        fout = this.rt().cast(FOStream:CLASSNAME, out);
+    }
+
+    [] __destruct() {
+        this.finalize();
+        this._destructLogger();
+    }
+
+    [OStream] error() { return this.newError(); }
+    [OStream] message() { return this.ignore(); }
+    
+    [] printError() { error++; this.printFChar('E', FOStream:BRIGHT_RED); }
+    [] printSkip() { skip++; this.printFChar('S', FOStream:BRIGHT_YELLOW); }
+    [] printSuccess() { success++; this.printFChar('.', FOStream:DEFAULT); }
+    
+    [] finalize() {
+        if ((++pos % MAX_POS) > 0) { out.printNewline(); }
+        OStream o = out;
+        if (this.hasErrors()) {
+            o = this.rt().err();
+            this.flushErrors(o);
+            o.printNewline().printCString("FAILURES!");
+        } else {
+            o.printNewline().printCString("OK!");
+        }
+        o.printCString(" (Tests: ").printInt(success+skip+error);
+        if (error) { o.printCString(", Failed: ").printInt(error); }
+        if (skip) { o.printCString(", Skipped: ").printInt(skip); }
+        o.printChar(')').printNewline();
+    }
+    
+    [] printFChar(int c, int fg) {
+        if (fout) { fout.printFChar(c, fg, FOStream:DEFAULT); } else { out.printChar(c); }
+        if ((++pos % MAX_POS) == 0) { out.printChar(' ').printInt(pos).printNewline(); }
+    }
+}
