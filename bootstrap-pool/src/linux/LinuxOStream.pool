@@ -6,8 +6,9 @@ version = 0.1.0
 namespace linux;
 
 use sys::stream::OStream;
+use sys::stream::FOStream;
 
-class LinuxOStream extends OStream {
+class LinuxOStream extends FOStream {
     
     int stream;
     
@@ -16,8 +17,43 @@ class LinuxOStream extends OStream {
         return this.ostream();
     }
     
-    [OStream] printChar(int c) {
-        SysCall:writeChar(stream, c);
-        return this.ostream();
+    [OStream] printChar(int c) { 
+        if (c == '\n') {
+            SysCall:writeChar(stream, c);
+            return this.ostream();
+        }
+        return this.printFChar(c, fg, bg).ostream();
     }
+    
+    [FOStream] printFChar(int c, int fg, int bg) {
+        if (fg == FOStream:DEFAULT && bg == FOStream:DEFAULT) {
+            SysCall:writeChar(stream, c);
+            return this.fostream();
+        }
+        SysCall:writeChar(stream, 0x1b);
+        SysCall:writeChar(stream, '[');
+        if (fg != FOStream:DEFAULT) {
+            SysCall:writeChar(stream, ';');
+            SysCall:writeChar(stream, '3');
+            SysCall:writeChar(stream, '0' + (fg % 10));
+        }
+        if (bg != FOStream:DEFAULT) {
+            SysCall:writeChar(stream, ';');
+            SysCall:writeChar(stream, '4');
+            SysCall:writeChar(stream, '0' + (bg % 10));
+        }
+        if (fg >= 10 || bg >= 10) {
+            SysCall:writeChar(stream, ';');
+            SysCall:writeChar(stream, '1');
+        }
+        SysCall:writeChar(stream, 'm');
+        SysCall:writeChar(stream, c);
+        SysCall:writeChar(stream, 0x1b);
+        SysCall:writeChar(stream, '[');
+        SysCall:writeChar(stream, '0');
+        SysCall:writeChar(stream, 'm');
+        
+        return this.fostream();
+    }
+
 }

@@ -22,6 +22,7 @@ class Runtime extends sys::runtime::RuntimeBuilder {
     [SysRuntime] _buildRuntime(__any__ context) {
         SysRuntime bsRt := this.rt();
         LinuxOStream bsLOut := this.rt().createInstance(LinuxOStream:CLASSNAME);
+        bsLOut.setForeground(LinuxOStream:BRIGHT_WHITE);
         OStream debug := bsLOut.initOStream(1);
         bsRt.setOut(debug);
         bsRt.setErr(debug);
@@ -50,8 +51,8 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         LinuxOStream ls1 = rt.createInstance(LinuxOStream:CLASSNAME);
         rt.setOut(ls1.initOStream(1));
         LinuxOStream ls2 = rt.createInstance(LinuxOStream:CLASSNAME);
-        FormattedOStream f2 = rt.createInstance(FormattedOStream:CLASSNAME);
-        rt.setErr(f2.initOStream(ls2.initOStream(2)));
+        ls2.setForeground(LinuxOStream:BRIGHT_RED);
+        rt.setErr(ls2.initOStream(2));
         
         bsLOut.destroy();
         bsPA.destroy();

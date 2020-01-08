@@ -1,0 +1,42 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::stream;
+
+
+class FOStream extends OStream {
+    
+    int DEFAULT := -1;
+    int BLACK   := 0;
+    int RED     := 1;
+    int GREEN   := 2;
+    int YELLOW  := 3;
+    int BLUE    := 4;
+    int MAGENTA := 5;
+    int CYAN    := 6;
+    int WHITE   := 7;
+    int BRIGHT_BLACK   := 10;
+    int BRIGHT_RED     := 11;
+    int BRIGHT_GREEN   := 12;
+    int BRIGHT_YELLOW  := 13;
+    int BRIGHT_BLUE    := 14;
+    int BRIGHT_MAGENTA := 15;
+    int BRIGHT_CYAN    := 16;
+    int BRIGHT_WHITE   := 17;
+    
+    int fg;
+    int bg;
+    
+    [FOStream] __init() { return this.setForeground(FOStream:DEFAULT).setBackground(FOStream:DEFAULT); }
+    
+    [FOStream] setForeground(int fg) { this.fg = fg; return this; }
+    [FOStream] setBackground(int bg) { this.bg = bg; return this; }
+    
+    abstract [FOStream] printFChar(int c, int fg, int bg);
+    [OStream] printChar(int c) { return this.printFChar(c, fg, bg).ostream(); }
+    
+    // TODO: remove with implicit cast
+    [FOStream] fostream() { return this; }
+}
