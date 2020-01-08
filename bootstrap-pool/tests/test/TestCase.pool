@@ -36,7 +36,7 @@ class TestCase extends sys::core::Object {
     
     [int] fail(cstring message) {
         this.printError(tout.error(), message);
-        tout.printError();
+        tout.printFail();
         availableBytes = 0;
         result = false;
         return false; 
@@ -75,7 +75,7 @@ class TestCase extends sys::core::Object {
     }
     
     [int] successCases() {
-        if (!caseResult) { tout.printError(); availableBytes = 0; return false; }
+        if (!caseResult) { tout.printFail(); availableBytes = 0; return false; }
         return this.success();
     }
     
