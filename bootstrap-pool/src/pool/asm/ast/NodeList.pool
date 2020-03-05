@@ -29,7 +29,9 @@ class NodeList extends Node, AnyList {
     [OStream] printToStream(OStream stream) {
         AnyIterator it = this.nodes();
         while (it.hasNext()) {
-            stream.print(it.next());
+            Node n = it.next();
+            if (n.isIndented()) { stream.printCString("    "); }
+            stream.print(n).printNewline();
         }
         it.destroy();
         return stream;

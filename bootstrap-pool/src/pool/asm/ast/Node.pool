@@ -12,6 +12,7 @@ use sys::stream::OStream;
 class Node extends Object {
 
     abstract [OStream] printToStream(OStream stream);
+    [int] isIndented() { return false; }
 
     [] __init() { this._initNode(); }
     [] _initNode() {}

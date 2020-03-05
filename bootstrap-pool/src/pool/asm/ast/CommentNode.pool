@@ -37,9 +37,9 @@ class CommentNode extends Node {
 
     [OStream] printToStream(OStream stream) {
         if (multiline) {
-           return stream.printCString("/*\n").print(comment).printCString("\n*/\n");
+           return stream.printCString("/*\n").print(comment).printCString("\n*/");
         } else {
-           return stream.printCString("//").print(comment).printChar('\n');
+           return stream.printCString("//").print(comment);
         }
     }
 
