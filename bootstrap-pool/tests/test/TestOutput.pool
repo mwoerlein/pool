@@ -31,18 +31,18 @@ class TestOutput extends sys::log::Logger {
     }
 
     [] __destruct() {
-        this.finalize();
+        this._finalize();
         this._destructLogger();
     }
 
     [OStream] error() { return this.newError(); }
     [OStream] message() { return this.ignore(); }
     
-    [] printFail() { failed++; this.printTest('F', FOStream:BRIGHT_RED); }
-    [] printSkip() { skipped++; this.printTest('S', FOStream:BRIGHT_YELLOW); }
-    [] printSuccess() { this.printTest('.', FOStream:DEFAULT); }
+    [] printFail() { failed++; this._printTest('F', FOStream:BRIGHT_RED); }
+    [] printSkip() { skipped++; this._printTest('S', FOStream:BRIGHT_YELLOW); }
+    [] printSuccess() { this._printTest('.', FOStream:DEFAULT); }
     
-    [] finalize() {
+    [] _finalize() {
         if ((tests % TESTS_PER_LINE) > 0) { out.printNewline(); }
         
         OStream o = out;
@@ -59,7 +59,7 @@ class TestOutput extends sys::log::Logger {
         o.printChar(')').printNewline();
     }
     
-    [] printTest(int c, int fg) {
+    [] _printTest(int c, int fg) {
         if (fout) { fout.printFChar(c, fg, FOStream:DEFAULT); } else { out.printChar(c); }
         if ((++tests % TESTS_PER_LINE) == 0) { out.printChar(' ').printInt(tests).printNewline(); }
     }

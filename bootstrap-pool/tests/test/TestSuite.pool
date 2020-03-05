@@ -24,6 +24,7 @@ class TestSuite extends sys::core::utils::Owner {
         output = this.createOwn(TestOutput:CLASSNAME);
         
         sys::__Tests__:setup(this);
+        pool::__Tests__:setup(this);
     }
     
     [] register(cstring classname, cstring testname) {
@@ -60,7 +61,7 @@ class TestSuite extends sys::core::utils::Owner {
         
         int availableBytes = testRt.getAllocator().getAvailableBytes();
         test.setOutput(output).runAll();
-        int success = test.getResult() && test.checkMemory(availableBytes);
+        int success = test.getResult();// && test.checkMemory(availableBytes);
         
         test.destroy();
         testRt.destroy();

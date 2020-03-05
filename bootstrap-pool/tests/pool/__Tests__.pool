@@ -1,0 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool;
+
+class __Tests__ {
+    
+    global [] setup(test::TestSuite suite) {
+        suite.register(pool::asm::i386::Compiler:CLASSNAME, pool::asm::i386::CompilerTest:CLASSNAME);
+    }
+}

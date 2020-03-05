@@ -1,0 +1,42 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::test;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+use sys::core::String;
+use sys::memory::Address;
+use sys::stream::OStream;
+
+class TestData extends sys::core::Object {
+    String name;
+    String input;
+    String binary;
+    int startAddress;
+    
+    [] __init() {
+        this.name = this.rt().createInstance(String:CLASSNAME);
+        this.input = this.rt().createInstance(String:CLASSNAME);
+        this.binary = this.rt().createInstance(String:CLASSNAME);
+        this.startAddress = 0;
+    }
+
+    [] __destruct() {
+        this.name.destroy();
+        this.input.destroy();
+        this.binary.destroy();
+    }
+    
+    [TestData] setName(cstring name) { this.name.assignCString(name); return this; }
+    [TestData] in(cstring line) { this.input.printCString(line).printNewline(); return this; }
+    [TestData] bin(int c) { this.binary.printChar(c); return this; }
+    [TestData] setStartAddress(int startAddress) { this.startAddress = startAddress; return this; }
+    
+    [String] getName() { return input; }
+    [String] getInput() { return input; }
+    [String] getBinary() { return binary; }
+    [int] getStartAddress() { return startAddress; }
+}

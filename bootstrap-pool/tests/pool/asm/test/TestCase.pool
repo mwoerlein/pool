@@ -1,0 +1,62 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::test;
+
+use pool::asm::Parser;
+use pool::asm::CompilationUnit;
+use pool::asm::i386::Compiler;
+use sys::core::String;
+use sys::stream::IStream;
+
+class TestCase extends test::TestCase {
+    
+    [int] failUnit(CompilationUnit unit) {
+        unit.flushErrors(this.printMessage(tout.error(), " failed:").printNewline());
+        tout.printFail();
+        availableBytes = 0;
+        result = false;
+        return false; 
+    }
+    
+    [TestData] newTestData(cstring name) {
+        this.start(name);
+        TestData data = this.rt().createInstance(TestData:CLASSNAME);
+        return data.setName(name);
+    }
+    
+    [int] runTest(TestData data) {
+        Parser parser = this.rt().createInstance(Parser:CLASSNAME);
+        Compiler compiler = this.rt().createInstance(Compiler:CLASSNAME);
+        CompilationUnit unit = this.rt().createInstance(CompilationUnit:CLASSNAME);
+        String buffer = this.rt().createInstance(String:CLASSNAME);
+
+/*        
+        IStream in = data.getInput().toIStream();
+        parser.parse(in, data.getName(), unit);
+        in.destroy();
+        if (unit.hasErrors()) { return this.failUnit(unit); }
+        
+        compiler.prepare(unit);
+        if (unit.hasErrors()) { return this.failUnit(unit); }
+        
+        compiler.compile(unit);
+        if (unit.hasErrors()) { return this.failUnit(unit); }
+        
+        compiler.finalize(unit, data.getStartAddress());
+        if (unit.hasErrors()) { return this.failUnit(unit); }
+        
+        unit.rawToStream(buffer.ostream());
+        if (!buffer.equals(data.getBinary())) { return this.fail("invalid binary"); }
+*/
+        
+        buffer.destroy();
+        unit.destroy();
+        compiler.destroy();
+        parser.destroy();
+        data.destroy();
+        return this.success();
+    }
+}
