@@ -20,7 +20,8 @@ class NodeList extends Node, AnyList {
 
     [] __destruct() { this._destructNodeList(); }
     [] _destructNodeList() {
-        this._destructNode(); 
+        this.destroyAll();
+        this._destructNode();
     }
     
     [AnyIterator] nodes() { return this.iterator(); }

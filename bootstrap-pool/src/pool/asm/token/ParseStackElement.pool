@@ -14,6 +14,12 @@ class ParseStackElement extends Object {
     int state;
     __any__ value;
     
+    [] __destruct() {
+        // parse stack is owner of tokens, yet
+        Token t = this.rt().cast(Token:CLASSNAME, value);
+        if (t) { t.destroy(); }
+    }
+    
     [ParseStackElement] init(ParseStackElement n, int s, __any__ v) {
         next = n;
         state = s;

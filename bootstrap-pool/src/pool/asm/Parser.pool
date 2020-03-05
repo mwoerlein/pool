@@ -117,6 +117,7 @@ class Parser extends pool::asm::token::Grammar {
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
         in.init(input, name);
         this._parse(in);
+        in.destroy();
         this.unit = null;
     }
 
@@ -451,6 +452,7 @@ class Parser extends pool::asm::token::Grammar {
             int type = t.getType();
             if (type == Token:SPACER || type == Token:COMMENT) {
                 // ignore
+                t.destroy();
                 t = tokens.next();
             } else {
                 [int action, int param] = this.action(stack.getState(), type);
@@ -506,12 +508,18 @@ class Parser extends pool::asm::token::Grammar {
     
     [RegisterNode] createRegister(Token t) {
         RegisterNode reg = this.rt().createInstance(RegisterNode:CLASSNAME);
-        return reg.setRegister(t.getValue().subString(1, 0));
+        String sub = t.getValue().subString(1, 0);
+        reg.setRegister(sub);
+        sub.destroy();
+        return reg;
     }
     
     [StringNode] createString(Token t) {
         StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
-        return s.setOperand(t.getValue().subString(1, -1));
+        String sub = t.getValue().subString(1, -1);
+        s.setOperand(sub);
+        sub.destroy();
+        return s;
     }
     
     [LabelNode] createLabel(Token t) {

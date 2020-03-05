@@ -33,12 +33,12 @@ class TestCase extends test::TestCase {
         CompilationUnit unit = this.rt().createInstance(CompilationUnit:CLASSNAME);
         String buffer = this.rt().createInstance(String:CLASSNAME);
 
-/*        
         IStream in = data.getInput().toIStream();
         parser.parse(in, data.getName(), unit);
         in.destroy();
         if (unit.hasErrors()) { return this.failUnit(unit); }
         
+/*        
         compiler.prepare(unit);
         if (unit.hasErrors()) { return this.failUnit(unit); }
         
