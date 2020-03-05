@@ -1,0 +1,161 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Character;
+use sys::core::Integer;
+
+class AnyListTest extends test::TestCase {
+
+    [] runAll() {
+        this.testAddAndRemove();
+        this.testIterableAndClear();
+    }
+    
+    [int] testAddAndRemove() {
+        this.start("testAddAndRemove");
+        Character a = this.rt().createInstance(Character:CLASSNAME); a.assignChar('a');
+        Character b = this.rt().createInstance(Character:CLASSNAME); b.assignChar('b');
+        Character c = this.rt().createInstance(Character:CLASSNAME); c.assignChar('c');
+
+        AnyList testList = this.rt().createInstance(AnyList:CLASSNAME);
+        if (!testList.isEmpty())  { return this.fail("new list is not empty"); }
+        if (testList.size() != 0) { return this.fail("new list has not size 0"); }
+        if (testList.contains(a)) { return this.fail("new list contains 'a'"); }
+        if (testList.contains(b)) { return this.fail("new list contains 'b'"); }
+        if (testList.contains(c)) { return this.fail("new list contains 'c'"); }
+        
+        if (!testList.add(a))      { return this.fail("list () does not add element 'a'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a') is empty"); }
+        if (testList.size() != 1)  { return this.fail("list ('a') has not size 1"); }
+        if (!testList.contains(a)) { return this.fail("list ('a') does not contain 'a'"); }
+        if (testList.contains(b))  { return this.fail("list ('a') contains 'b'"); }
+        if (testList.contains(c))  { return this.fail("list ('a') contains 'c'"); }
+        
+        if (!testList.add(b))      { return this.fail("list ('a') does not add element 'b'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','b') is empty"); }
+        if (testList.size() != 2)  { return this.fail("list ('a','b') has not size 2"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','b') does not contain 'a'"); }
+        if (!testList.contains(b)) { return this.fail("list ('a','b') does not contain 'b'"); }
+        if (testList.contains(c))  { return this.fail("list ('a','b') contains 'c'"); }
+        
+        if (!testList.add(a))      { return this.fail("list ('a','b') does not add element 'a'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','b','a') is empty"); }
+        if (testList.size() != 3)  { return this.fail("list ('a','b','a') has not size 3"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','b','a') does not contain 'a'"); }
+        if (!testList.contains(b)) { return this.fail("list ('a','b','a') does not contain 'b'"); }
+        if (testList.contains(c))  { return this.fail("list ('a','b','a') contains 'c'"); }
+        
+        if (!testList.add(b))      { return this.fail("list ('a','b','a') does not add element 'b'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','b','a','b') is empty"); }
+        if (testList.size() != 4)  { return this.fail("list ('a','b','a','b') has not size 4"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','b','a','b') does not contain 'a'"); }
+        if (!testList.contains(b)) { return this.fail("list ('a','b','a','b') does not contain 'b'"); }
+        if (testList.contains(c))  { return this.fail("list ('a','b','a','b') contains 'c'"); }
+        
+        if (!testList.add(c))      { return this.fail("list ('a','b','a','b') does not add element 'a'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','b','a','b','c') is empty"); }
+        if (testList.size() != 5)  { return this.fail("list ('a','b','a','b','c') has not size 5"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','b','a','b','c') does not contain 'a'"); }
+        if (!testList.contains(b)) { return this.fail("list ('a','b','a','b','c') does not contain 'b'"); }
+        if (!testList.contains(c)) { return this.fail("list ('a','b','a','b','c') does not contain 'c'"); }
+        
+        if (!testList.remove(b))   { return this.fail("list ('a','b','a','b','c') does not remove element 'b'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','a','b','c') is empty"); }
+        if (testList.size() != 4)  { return this.fail("list ('a','a','b','c') has not size 4"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','a','b','c') does not contain 'a'"); }
+        if (!testList.contains(b)) { return this.fail("list ('a','a','b','c') does not contain 'b'"); }
+        if (!testList.contains(c)) { return this.fail("list ('a','a','b','c') does not contain 'c'"); }
+        
+        if (!testList.remove(b))   { return this.fail("list ('a','a','b','c') does not remove element 'b'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','a','c') is empty"); }
+        if (testList.size() != 3)  { return this.fail("list ('a','a','c') has not size 3"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','a','c') does not contain 'a'"); }
+        if (testList.contains(b))  { return this.fail("list ('a','a','c') contains 'b'"); }
+        if (!testList.contains(c)) { return this.fail("list ('a','a','c') does not contain 'c'"); }
+        
+        if (testList.remove(b))    { return this.fail("list ('a','a','c') removes element 'b'"); }
+        
+        if (!testList.remove(a))   { return this.fail("list ('a','a','c') does not remove element 'a'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a','c') is empty"); }
+        if (testList.size() != 2)  { return this.fail("list ('a','c') has not size 2"); }
+        if (!testList.contains(a)) { return this.fail("list ('a','c') does not contain 'a'"); }
+        if (testList.contains(b))  { return this.fail("list ('a','c') contains 'b'"); }
+        if (!testList.contains(c)) { return this.fail("list ('a','c') does not contain 'c'"); }
+        
+        if (!testList.remove(c))   { return this.fail("list ('a','c') does not remove element 'c'"); }
+        if (testList.isEmpty())    { return this.fail("list ('a') is empty"); }
+        if (testList.size() != 1)  { return this.fail("list ('a') has not size 1"); }
+        if (!testList.contains(a)) { return this.fail("list ('a') does not contain 'a'"); }
+        if (testList.contains(b))  { return this.fail("list ('a') contains 'b'"); }
+        if (testList.contains(c))  { return this.fail("list ('a') contains 'c'"); }
+        
+        if (testList.remove(c))    { return this.fail("list ('a') removes element 'c'"); }
+        
+        if (!testList.remove(a))   { return this.fail("list ('a') does not remove element 'a'"); }
+        if (!testList.isEmpty())   { return this.fail("list () is not empty"); }
+        if (testList.size() != 0)  { return this.fail("list () has not size 0"); }
+        if (testList.contains(a))  { return this.fail("list () contains 'a'"); }
+        if (testList.contains(b))  { return this.fail("list () contains 'b'"); }
+        if (testList.contains(c))  { return this.fail("list () contains 'c'"); }
+        
+        if (testList.remove(a))    { return this.fail("list () removes element 'a'"); }
+
+        testList.destroy();
+        c.destroy();
+        b.destroy();
+        a.destroy();
+        return this.success();
+    }
+    
+    [int] testIterableAndClear() {
+        this.start("testIterableAndClear");
+        Integer a = this.rt().createInstance(Integer:CLASSNAME); a.assignInt(0);
+        Integer b = this.rt().createInstance(Integer:CLASSNAME); b.assignInt(1);
+        Integer c = this.rt().createInstance(Integer:CLASSNAME); c.assignInt(6);
+
+        AnyList testList = this.rt().createInstance(AnyList:CLASSNAME);
+
+        {    
+            AnyIterator it = testList.iterator();
+            if (it.hasNext()) { return this.fail("empty list iterator has elements"); }
+            it.destroy();
+        }
+        
+        testList.add(a); testList.add(b); testList.add(c); testList.add(a);
+        if (testList.isEmpty())    { return this.fail("filled list is empty"); }
+        if (testList.size() != 4)  { return this.fail("filled list has not size 4"); }
+    
+        {    
+            AnyIterator it = testList.iterator();
+            if (!it.hasNext())              { return this.fail("filled list iterator has not first element"); }
+            if (!this.isSame(a, it.next())) { return this.fail("filled list iterator has not first element 0"); }
+            if (!it.hasNext())              { return this.fail("filled list iterator has not second element"); }
+            if (!this.isSame(b, it.next())) { return this.fail("filled list iterator has not second element 1"); }
+            if (!it.hasNext())              { return this.fail("filled list iterator has not third element"); }
+            if (!this.isSame(c, it.next())) { return this.fail("filled list iterator has not third element 6"); }
+            if (!it.hasNext())              { return this.fail("filled list iterator has not forth element"); }
+            if (!this.isSame(a, it.next())) { return this.fail("filled list iterator has not forth element 1"); }
+            if (it.hasNext())               { return this.fail("filled list iterator has fifth element"); }
+            it.destroy();
+        }
+    
+        testList.clear();
+        if (!testList.isEmpty())   { return this.fail("cleared list is not empty"); }
+        if (testList.size() != 0)  { return this.fail("cleared list has not size 0"); }
+        {    
+            AnyIterator it = testList.iterator();
+            if (it.hasNext()) { return this.fail("cleared list iterator has elements"); }
+            it.destroy();
+        }
+        
+        testList.destroy();
+        c.destroy();
+        b.destroy();
+        a.destroy();
+        return this.success();
+    }
+}

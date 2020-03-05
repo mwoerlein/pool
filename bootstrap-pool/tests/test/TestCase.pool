@@ -8,6 +8,7 @@ namespace test;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::String;
+use sys::memory::Address;
 use sys::stream::OStream;
 
 class TestCase extends sys::core::Object {
@@ -63,7 +64,7 @@ class TestCase extends sys::core::Object {
         caseResult = true;
     }
     
-    [int] failCase(String message) {
+    [int] failCase(OStream message) {
         this.printMessage(tout.error(), " failed: ").print(message);
         caseResult = false;
         result = false;
@@ -91,5 +92,13 @@ class TestCase extends sys::core::Object {
         stream.printCString(this.getClass().getCName());
         if (availableBytes) { stream.printChar(':').printCString(currentTest).printChar('(').printChar(')'); }
         return stream.printCString(message);
+    }
+    
+    [int] isNull(__any__ a) {
+        return !a;
+    }
+    
+    [int] isSame(__any__ a, __any__ b) {
+        return Address:compare(a, b) == 0;
     }
 }

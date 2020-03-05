@@ -1,0 +1,127 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Boolean;
+use sys::core::String;
+
+class AnyArrayTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testSetGetClear();
+    }
+    
+    [int] testInitialization() {
+        this.startCases("testInitialization");
+        Boolean b = this.rt().createInstance(Boolean:CLASSNAME);
+
+        this.caseInit(0);
+        this.caseInit(1);
+        this.caseInit(17);
+        
+        this.caseInitWith(0, null);
+        this.caseInitWith(1, this);
+        this.caseInitWith(2, null);
+        this.caseInitWith(17, b);
+        
+        b.destroy();
+        return this.successCases();
+    }
+    
+    [int] caseInit(int size) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case 'init(").printInt(size).printCString(")'");
+        
+        AnyArray testArray = this.rt().createInstance(AnyArray:CLASSNAME);
+        testArray.init(size);
+        
+        if (testArray.size() != size) { return this.failCase(
+            message.printCString(" has invalid size '").printInt(testArray.size()).printCString("'")
+        );}
+        
+        int i = 0;
+        while (i < size) {
+            if (!this.isNull(testArray.get(i))) {
+                return this.failCase(message.printCString(" contains non-NULL element at index ").printInt(i));
+            }
+            i++;
+        }
+        
+        testArray.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] caseInitWith(int size, __any__ value) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case 'initWith(").printInt(size).printCString(", ").print(value).printCString(")'");
+        
+        AnyArray testArray = this.rt().createInstance(AnyArray:CLASSNAME);
+        testArray.initWith(size, value);
+        
+        if (testArray.size() != size) { return this.failCase(
+            message.printCString(" has invalid size '").printInt(testArray.size()).printCString("'")
+        );}
+        
+        int i = 0;
+        while (i < size) {
+            if (!this.isSame(value, testArray.get(i))) {
+                return this.failCase(message.printCString(" contains unexpected element at index ").printInt(i));
+            }
+            i++;
+        }
+        
+        testArray.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] testSetGetClear() {
+        this.start("testSetGetClear");
+        
+        int size = 5;
+        Boolean b1 = this.rt().createInstance(Boolean:CLASSNAME); b1.assignBool(true);
+        Boolean b2 = this.rt().createInstance(Boolean:CLASSNAME); b2.assignBool(false);
+
+        AnyArray testArray = this.rt().createInstance(AnyArray:CLASSNAME);
+        testArray.initWith(size, b1);
+        
+        if (!this.isNull(testArray.set(-1, b2))) { return this.fail("Unexpected return value of out-of-bounds set"); }
+        if (!this.isNull(testArray.set(-1, b2))) { return this.fail("Unexpected return value of out-of-bounds set"); }
+        if (!this.isNull(testArray.set( 5, b2))) { return this.fail("Unexpected return value of out-of-bounds set"); }
+        
+        if (!this.isSame(b1, testArray.set(0,   b2))) { return this.fail("Invalid return value of set"); }
+        if (!this.isSame(b1, testArray.set(1,   b2))) { return this.fail("Invalid return value of set"); }
+        if (!this.isSame(b1, testArray.set(2, null))) { return this.fail("Invalid return value of set"); }
+        if (!this.isSame(b2, testArray.set(0, this))) { return this.fail("Invalid return value of set"); }
+        if (!this.isSame(b1, testArray.set(3, this))) { return this.fail("Invalid return value of set"); }
+        
+        if (!this.isNull(testArray.get(-2))) { return this.fail("Unexpected return value of out-of-bounds get"); }
+        if (!this.isNull(testArray.get(-1))) { return this.fail("Unexpected return value of out-of-bounds get"); }
+        if (!this.isNull(testArray.get( 5))) { return this.fail("Unexpected return value of out-of-bounds get"); }
+        if (!this.isNull(testArray.get( 6))) { return this.fail("Unexpected return value of out-of-bounds get"); }
+
+        if (!this.isSame(this, testArray.get(0))) { return this.fail("Invalid return value of get"); }
+        if (!this.isSame(  b2, testArray.get(1))) { return this.fail("Invalid return value of get"); }
+        if (!this.isSame(null, testArray.get(2))) { return this.fail("Invalid return value of get"); }
+        if (!this.isSame(this, testArray.get(3))) { return this.fail("Invalid return value of get"); }
+        if (!this.isSame(  b1, testArray.get(4))) { return this.fail("Invalid return value of get"); }
+        
+        testArray.clear();
+        while (size--) {
+            if (!this.isNull(testArray.get(size))) {
+                return this.fail("Array contains non-NULL elements after clear");
+            }
+        }
+        
+        testArray.destroy();
+        b2.destroy();
+        b1.destroy();
+        return this.success();
+    }
+    
+}

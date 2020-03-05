@@ -1,0 +1,322 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Character;
+use sys::core::Integer;
+use sys::core::String;
+
+class AnyMapTest extends test::TestCase {
+
+    [] runAll() {
+        this.testAddAndRemove();
+        this.testIterableAndClear();
+    }
+    
+    [int] testAddAndRemove() {
+        this.start("testAddAndRemove");
+        Character k1 = this.rt().createInstance(Character:CLASSNAME); k1.assignChar('a');
+        Character k2 = this.rt().createInstance(Character:CLASSNAME); k2.assignChar('b');
+        Character k3 = this.rt().createInstance(Character:CLASSNAME); k3.assignChar('c');
+        Character k4 = this.rt().createInstance(Character:CLASSNAME); k4.assignChar('c');
+        
+        String v1 = this.rt().createInstance(String:CLASSNAME); v1.assignCString("Peter");
+        String v2 = this.rt().createInstance(String:CLASSNAME); v2.assignCString("Paul");
+        String v3 = this.rt().createInstance(String:CLASSNAME); v3.assignCString("Mary");
+        String v4 = this.rt().createInstance(String:CLASSNAME); v4.assignCString("Mary");
+
+        AnyMap testMap = this.rt().createInstance(AnyMap:CLASSNAME);
+        testMap.init(1);
+        
+        if (!testMap.isEmpty())                    { return this.fail("new map is not empty"); }
+        if (testMap.size() != 0)                   { return this.fail("new map has not size 0"); }
+        if (testMap.has(k1))                       { return this.fail("new map has 'a'"); }
+        if (testMap.has(k2))                       { return this.fail("new map has 'b'"); }
+        if (testMap.has(k3))                       { return this.fail("new map has 'c'"); }
+        if (testMap.has(k4))                       { return this.fail("new map has other 'c'"); }
+        if (!this.isNull(testMap.get(k1)))         { return this.fail("new map gets something for 'a'"); }
+        if (!this.isNull(testMap.get(k2)))         { return this.fail("new map gets something for 'b'"); }
+        if (!this.isNull(testMap.get(k3)))         { return this.fail("new map gets something for 'c'"); }
+        if (!this.isNull(testMap.get(k4)))         { return this.fail("new map gets something for other 'c'"); }
+        if (testMap.contains(v1))                  { return this.fail("new map contains 'Peter'"); }
+        if (testMap.contains(v2))                  { return this.fail("new map contains 'Paul'"); }
+        if (testMap.contains(v3))                  { return this.fail("new map contains 'Mary'"); }
+        if (testMap.contains(v4))                  { return this.fail("new map contains other 'Mary'"); }
+        
+        if (!this.isNull(testMap.set(k1, v1)))     { return this.fail("map () does not set element 'a'=>'Peter' as new entry"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Peter') is empty"); }
+        if (testMap.size() != 1)                   { return this.fail("map ('a'=>'Peter') has not size 1"); }
+        if (!testMap.has(k1))                      { return this.fail("map ('a'=>'Peter') has not 'a'"); }
+        if (testMap.has(k2))                       { return this.fail("map ('a'=>'Peter') has 'b'"); }
+        if (testMap.has(k3))                       { return this.fail("map ('a'=>'Peter') has 'c'"); }
+        if (testMap.has(k4))                       { return this.fail("map ('a'=>'Peter') has other 'c'"); }
+        if (!this.isSame(v1, testMap.get(k1)))     { return this.fail("map ('a'=>'Peter') does not get 'Peter' for 'a'"); }
+        if (!this.isNull(testMap.get(k2)))         { return this.fail("map ('a'=>'Peter') gets something for 'b'"); }
+        if (!this.isNull(testMap.get(k3)))         { return this.fail("map ('a'=>'Peter') gets something for 'c'"); }
+        if (!this.isNull(testMap.get(k4)))         { return this.fail("map ('a'=>'Peter') gets something for other 'c'"); }
+        if (!testMap.contains(v1))                 { return this.fail("map ('a'=>'Peter') does not contain 'Peter'"); }
+        if (testMap.contains(v2))                  { return this.fail("map ('a'=>'Peter') contains 'Paul'"); }
+        if (testMap.contains(v3))                  { return this.fail("map ('a'=>'Peter') contains 'Mary'"); }
+        if (testMap.contains(v4))                  { return this.fail("map ('a'=>'Peter') contains other 'Mary'"); }
+        
+        if (!this.isNull(testMap.set(k2, v2)))     { return this.fail("map ('a'=>'Peter') does not set element 'b'=>'Paul' as new entry"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Peter','b'=>'Paul') is empty"); }
+        if (testMap.size() != 2)                   { return this.fail("map ('a'=>'Peter','b'=>'Paul') has not size 2"); }
+        if (!testMap.has(k1))                      { return this.fail("map ('a'=>'Peter','b'=>'Paul') has not 'a'"); }
+        if (!testMap.has(k2))                      { return this.fail("map ('a'=>'Peter','b'=>'Paul') has not 'b'"); }
+        if (testMap.has(k3))                       { return this.fail("map ('a'=>'Peter','b'=>'Paul') has 'c'"); }
+        if (testMap.has(k4))                       { return this.fail("map ('a'=>'Peter','b'=>'Paul') has other 'c'"); }
+        if (!this.isSame(v1, testMap.get(k1)))     { return this.fail("map ('a'=>'Peter','b'=>'Paul') does not get 'Peter' for 'a'"); }
+        if (!this.isSame(v2, testMap.get(k2)))     { return this.fail("map ('a'=>'Peter','b'=>'Paul') does not get 'Paul' for 'b'"); }
+        if (!this.isNull(testMap.get(k3)))         { return this.fail("map ('a'=>'Peter','b'=>'Paul') gets something for 'c'"); }
+        if (!this.isNull(testMap.get(k4)))         { return this.fail("map ('a'=>'Peter','b'=>'Paul') gets something for other 'c'"); }
+        if (!testMap.contains(v1))                 { return this.fail("map ('a'=>'Peter','b'=>'Paul') does not contain 'Peter'"); }
+        if (!testMap.contains(v2))                 { return this.fail("map ('a'=>'Peter','b'=>'Paul') does not contain 'Paul'"); }
+        if (testMap.contains(v3))                  { return this.fail("map ('a'=>'Peter','b'=>'Paul') contains 'Mary'"); }
+        if (testMap.contains(v4))                  { return this.fail("map ('a'=>'Peter','b'=>'Paul') contains other 'Mary'"); }
+        
+        if (!this.isSame(v1, testMap.set(k1, v2))) { return this.fail("map ('a'=>'Peter','b'=>'Paul') does not replace element 'a'=>'Peter' with 'a'=>'Paul'"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Paul','b'=>'Paul') is empty"); }
+        if (testMap.size() != 2)                   { return this.fail("map ('a'=>'Paul','b'=>'Paul') has not size 2"); }
+        if (!testMap.has(k1))                      { return this.fail("map ('a'=>'Paul','b'=>'Paul') has not 'a'"); }
+        if (!testMap.has(k2))                      { return this.fail("map ('a'=>'Paul','b'=>'Paul') has not 'b'"); }
+        if (testMap.has(k3))                       { return this.fail("map ('a'=>'Paul','b'=>'Paul') has 'c'"); }
+        if (testMap.has(k4))                       { return this.fail("map ('a'=>'Paul','b'=>'Paul') has other 'c'"); }
+        if (!this.isSame(v2, testMap.get(k1)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul') does not get 'Paul' for 'a'"); }
+        if (!this.isSame(v2, testMap.get(k2)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul') does not get 'Paul' for 'b'"); }
+        if (!this.isNull(testMap.get(k3)))         { return this.fail("map ('a'=>'Paul','b'=>'Paul') gets something for 'c'"); }
+        if (!this.isNull(testMap.get(k4)))         { return this.fail("map ('a'=>'Paul','b'=>'Paul') gets something for other 'c'"); }
+        if (testMap.contains(v1))                  { return this.fail("map ('a'=>'Paul','b'=>'Paul') contains 'Peter'"); }
+        if (!testMap.contains(v2))                 { return this.fail("map ('a'=>'Paul','b'=>'Paul') does not contain 'Paul'"); }
+        if (testMap.contains(v3))                  { return this.fail("map ('a'=>'Paul','b'=>'Paul') contains 'Mary'"); }
+        if (testMap.contains(v4))                  { return this.fail("map ('a'=>'Paul','b'=>'Paul') contains other 'Mary'"); }
+        
+        if (!this.isNull(testMap.set(k3, v3)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul') does not set element c'=>'Mary' as new entry"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') is empty"); }
+        if (testMap.size() != 3)                   { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') has not size 3"); }
+        if (!testMap.has(k1))                      { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') has not 'a'"); }
+        if (!testMap.has(k2))                      { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') has not 'b'"); }
+        if (!testMap.has(k3))                      { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') has not 'c'"); }
+        if (!testMap.has(k4))                      { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') has not other 'c'"); }
+        if (!this.isSame(v2, testMap.get(k1)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not get 'Paul' for 'a'"); }
+        if (!this.isSame(v2, testMap.get(k2)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not get 'Paul' for 'b'"); }
+        if (!this.isSame(v3, testMap.get(k3)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not get 'Mary' for 'c'"); }
+        if (!this.isSame(v3, testMap.get(k4)))     { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not get 'Mary' for other 'c'"); }
+        if (testMap.contains(v1))                  { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') contains 'Peter'"); }
+        if (!testMap.contains(v2))                 { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not contain 'Paul'"); }
+        if (!testMap.contains(v3))                 { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not contain 'Mary'"); }
+        if (!testMap.contains(v4))                 { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not contain other 'Mary'"); }
+        
+        if (!this.isSame(v2, testMap.unset(k2)))   { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not return 'Paul' for unset 'b'"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Paul','c'=>'Mary') is empty"); }
+        if (testMap.size() != 2)                   { return this.fail("map ('a'=>'Paul','c'=>'Mary') has not size 2"); }
+        if (!testMap.has(k1))                      { return this.fail("map ('a'=>'Paul','c'=>'Mary') has not 'a'"); }
+        if (testMap.has(k2))                       { return this.fail("map ('a'=>'Paul','c'=>'Mary') has 'b'"); }
+        if (!testMap.has(k3))                      { return this.fail("map ('a'=>'Paul','c'=>'Mary') has not 'c'"); }
+        if (!testMap.has(k4))                      { return this.fail("map ('a'=>'Paul','c'=>'Mary') has not other 'c'"); }
+        if (!this.isSame(v2, testMap.get(k1)))     { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not get 'Paul' for 'a'"); }
+        if (!this.isNull(testMap.get(k2)))         { return this.fail("map ('a'=>'Paul','c'=>'Mary') gets something for 'b'"); }
+        if (!this.isSame(v3, testMap.get(k3)))     { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not get 'Mary' for 'c'"); }
+        if (!this.isSame(v3, testMap.get(k4)))     { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not get 'Mary' for other 'c'"); }
+        if (testMap.contains(v1))                  { return this.fail("map ('a'=>'Paul','c'=>'Mary') contains 'Peter'"); }
+        if (!testMap.contains(v2))                 { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not contain 'Paul'"); }
+        if (!testMap.contains(v3))                 { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not contain 'Mary'"); }
+        if (!testMap.contains(v4))                 { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not contain other 'Mary'"); }
+
+        if (!this.isNull(testMap.unset(k2)))       { return this.fail("map ('a'=>'Paul','b'=>'Paul','c'=>'Mary') does not return NULL for unset 'b' again"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Paul','c'=>'Mary') is empty"); }
+        if (testMap.size() != 2)                   { return this.fail("map ('a'=>'Paul','c'=>'Mary') has not size 2"); }
+        
+        if (!this.isSame(v3, testMap.unset(k3)))   { return this.fail("map ('a'=>'Paul','c'=>'Mary') does not return 'Mary' for unset 'c'"); }
+        if (testMap.isEmpty())                     { return this.fail("map ('a'=>'Paul') is empty"); }
+        if (testMap.size() != 1)                   { return this.fail("map ('a'=>'Paul') has not size 1"); }
+        if (!testMap.has(k1))                      { return this.fail("map ('a'=>'Paul') has not 'a'"); }
+        if (testMap.has(k2))                       { return this.fail("map ('a'=>'Paul') has 'b'"); }
+        if (testMap.has(k3))                       { return this.fail("map ('a'=>'Paul') has 'c'"); }
+        if (testMap.has(k4))                       { return this.fail("map ('a'=>'Paul') has other 'c'"); }
+        if (!this.isSame(v2, testMap.get(k1)))     { return this.fail("map ('a'=>'Paul') does not get 'Paul' for 'a'"); }
+        if (!this.isNull(testMap.get(k2)))         { return this.fail("map ('a'=>'Paul') gets something for 'b'"); }
+        if (!this.isNull(testMap.get(k3)))         { return this.fail("map ('a'=>'Paul') gets something for 'c'"); }
+        if (!this.isNull(testMap.get(k4)))         { return this.fail("map ('a'=>'Paul') gets something for other 'c'"); }
+        if (testMap.contains(v1))                  { return this.fail("map ('a'=>'Paul') contains 'Peter'"); }
+        if (!testMap.contains(v2))                 { return this.fail("map ('a'=>'Paul') does not contain 'Paul'"); }
+        if (testMap.contains(v3))                  { return this.fail("map ('a'=>'Paul') contains 'Mary'"); }
+        if (testMap.contains(v4))                  { return this.fail("map ('a'=>'Paul') contains other 'Mary'"); }
+        
+        if (!this.isSame(v2, testMap.unset(k1)))   { return this.fail("map ('a'=>'Paul') does not return 'Paul' for unset 'a'"); }
+        if (!testMap.isEmpty())                    { return this.fail("map () is not empty"); }
+        if (testMap.size() != 0)                   { return this.fail("map () has not size 0"); }
+        if (testMap.has(k1))                       { return this.fail("map () has 'a'"); }
+        if (testMap.has(k2))                       { return this.fail("map () has 'b'"); }
+        if (testMap.has(k3))                       { return this.fail("map () has 'c'"); }
+        if (testMap.has(k4))                       { return this.fail("map () has other 'c'"); }
+        if (!this.isNull(testMap.get(k1)))         { return this.fail("map () gets something for'a'"); }
+        if (!this.isNull(testMap.get(k2)))         { return this.fail("map () gets something for 'b'"); }
+        if (!this.isNull(testMap.get(k3)))         { return this.fail("map () gets something for 'c'"); }
+        if (!this.isNull(testMap.get(k4)))         { return this.fail("map () gets something for other 'c'"); }
+        if (testMap.contains(v1))                  { return this.fail("map () contains 'Peter'"); }
+        if (testMap.contains(v2))                  { return this.fail("map () contains 'Paul'"); }
+        if (testMap.contains(v3))                  { return this.fail("map () contains 'Mary'"); }
+        if (testMap.contains(v4))                  { return this.fail("map () contains other 'Mary'"); }
+        
+        testMap.destroy();
+        v4.destroy();
+        v3.destroy();
+        v2.destroy();
+        v1.destroy();
+        k4.destroy();
+        k3.destroy();
+        k2.destroy();
+        k1.destroy();
+        return this.success();
+    }
+    
+    [int] testIterableAndClear() {
+        this.start("testIterableAndClear");
+        String k1 = this.rt().createInstance(String:CLASSNAME); k1.assignCString("Peter");
+        String k2 = this.rt().createInstance(String:CLASSNAME); k2.assignCString("Paul");
+        String k3 = this.rt().createInstance(String:CLASSNAME); k3.assignCString("Mary");
+        
+        Integer v1 = this.rt().createInstance(Integer:CLASSNAME); v1.assignInt(0);
+        Integer v2 = this.rt().createInstance(Integer:CLASSNAME); v2.assignInt(1);
+        Integer v3 = this.rt().createInstance(Integer:CLASSNAME); v3.assignInt(6);
+
+        AnyMap testMap = this.rt().createInstance(AnyMap:CLASSNAME);
+        testMap.init(1);
+        
+        {    
+            AnyIterator kit = testMap.keys();
+            if (kit.hasNext()) { return this.fail("empty map keys-iterator has elements"); }
+            kit.destroy();
+            
+            AnyIterator vit = testMap.values();
+            if (vit.hasNext()) { return this.fail("empty map values-iterator has elements"); }
+            vit.destroy();
+            
+            AnyMapEntryIterator eit = testMap.entries();
+            if (eit.hasNext()) { return this.fail("empty map entires-iterator has elements"); }
+            eit.destroy();
+        }
+    
+        testMap.set(k1, v1); testMap.set(k3, v3); testMap.set(k2, v2);
+        if (testMap.isEmpty())   { return this.fail("filled map is empty"); }
+        if (testMap.size() != 3) { return this.fail("filled map has not size 3"); }
+
+        {    
+            AnyIterator kit = testMap.keys();
+            if (!kit.hasNext())               { return this.fail("filled map keys-iterator has not first element"); }
+            if (!this.isSame(k1, kit.next())) { return this.fail("filled map keys-iterator has not first element 'Peter'"); }
+            if (!kit.hasNext())               { return this.fail("filled map keys-iterator has not second element"); }
+            if (!this.isSame(k3, kit.next())) { return this.fail("filled map keys-iterator has not second element 'Mary'"); }
+            if (!kit.hasNext())               { return this.fail("filled map keys-iterator has not third element"); }
+            if (!this.isSame(k2, kit.next())) { return this.fail("filled map keys-iterator has not third element 'Paul"); }
+            if (kit.hasNext())                { return this.fail("filled map keys-iterator has forth element"); }
+            kit.destroy();
+            
+            AnyIterator vit = testMap.values();
+            if (!vit.hasNext())               { return this.fail("filled map values-iterator has not first element"); }
+            if (!this.isSame(v1, vit.next())) { return this.fail("filled map values-iterator has not first element 0"); }
+            if (!vit.hasNext())               { return this.fail("filled map values-iterator has not second element"); }
+            if (!this.isSame(v3, vit.next())) { return this.fail("filled map values-iterator has not second element 6"); }
+            if (!vit.hasNext())               { return this.fail("filled map values-iterator has not third element"); }
+            if (!this.isSame(v2, vit.next())) { return this.fail("filled map values-iterator has not third element 1"); }
+            if (vit.hasNext())                { return this.fail("filled map values-iterator has forth element"); }
+            vit.destroy();
+            
+            AnyMapEntryIterator eit = testMap.entries();
+            AnyMapEntry e = null;
+            if (!eit.hasNext())                 { return this.fail("filled map entires-iterator has not first element"); }
+            e = eit.next();
+            if (!this.isSame(k1, e.getKey()))   { return this.fail("filled map entires-iterator has not first key 'Peter'"); }
+            if (!this.isSame(v1, e.getValue())) { return this.fail("filled map entires-iterator has not first value 0"); }
+            
+            if (!eit.hasNext())                 { return this.fail("filled map entires-iterator has not second element"); }
+            e = eit.next();
+            if (!this.isSame(k3, e.getKey()))   { return this.fail("filled map entires-iterator has not second key 'Mary'"); }
+            if (!this.isSame(v3, e.getValue())) { return this.fail("filled map entires-iterator has not second value 6"); }
+            
+            if (!eit.hasNext())                 { return this.fail("filled map entires-iterator has not third element"); }
+            e = eit.next();
+            if (!this.isSame(k2, e.getKey()))   { return this.fail("filled map entires-iterator has not third key 'Paul'"); }
+            if (!this.isSame(v2, e.getValue())) { return this.fail("filled map entires-iterator has not third value 1"); }
+            
+            if (eit.hasNext())                  { return this.fail("filled map entires-iterator has forth element"); }
+            eit.destroy();
+        }
+        
+        // change values do not reorder keys
+        testMap.set(k2, v3); testMap.set(k3, v2);
+        
+        {    
+            AnyIterator kit = testMap.keys();
+            if (!kit.hasNext())               { return this.fail("changed map keys-iterator has not first element"); }
+            if (!this.isSame(k1, kit.next())) { return this.fail("changed map keys-iterator has not first element 'Peter'"); }
+            if (!kit.hasNext())               { return this.fail("changed map keys-iterator has not second element"); }
+            if (!this.isSame(k3, kit.next())) { return this.fail("changed map keys-iterator has not second element 'Mary'"); }
+            if (!kit.hasNext())               { return this.fail("changed map keys-iterator has not third element"); }
+            if (!this.isSame(k2, kit.next())) { return this.fail("changed map keys-iterator has not third element 'Paul"); }
+            if (kit.hasNext())                { return this.fail("changed map keys-iterator has forth element"); }
+            kit.destroy();
+            
+            AnyIterator vit = testMap.values();
+            if (!vit.hasNext())               { return this.fail("changed map values-iterator has not first element"); }
+            if (!this.isSame(v1, vit.next())) { return this.fail("changed map values-iterator has not first element 0"); }
+            if (!vit.hasNext())               { return this.fail("changed map values-iterator has not second element"); }
+            if (!this.isSame(v2, vit.next())) { return this.fail("changed map values-iterator has not second element 1"); }
+            if (!vit.hasNext())               { return this.fail("changed map values-iterator has not third element"); }
+            if (!this.isSame(v3, vit.next())) { return this.fail("changed map values-iterator has not third element 6"); }
+            if (vit.hasNext())                { return this.fail("changed map values-iterator has forth element"); }
+            vit.destroy();
+            
+            AnyMapEntryIterator eit = testMap.entries();
+            AnyMapEntry e = null;
+            if (!eit.hasNext())                 { return this.fail("changed map entires-iterator has not first element"); }
+            e = eit.next();
+            if (!this.isSame(k1, e.getKey()))   { return this.fail("changed map entires-iterator has not first key 'Peter'"); }
+            if (!this.isSame(v1, e.getValue())) { return this.fail("changed map entires-iterator has not first value 0"); }
+            
+            if (!eit.hasNext())                 { return this.fail("changed map entires-iterator has not second element"); }
+            e = eit.next();
+            if (!this.isSame(k3, e.getKey()))   { return this.fail("changed map entires-iterator has not second key 'Mary'"); }
+            if (!this.isSame(v2, e.getValue())) { return this.fail("changed map entires-iterator has not second value 1"); }
+            
+            if (!eit.hasNext())                 { return this.fail("changed map entires-iterator has not third element"); }
+            e = eit.next();
+            if (!this.isSame(k2, e.getKey()))   { return this.fail("changed map entires-iterator has not third key 'Paul'"); }
+            if (!this.isSame(v3, e.getValue())) { return this.fail("changed map entires-iterator has not third value 6"); }
+            
+            if (eit.hasNext())                  { return this.fail("changed map entires-iterator has forth element"); }
+            eit.destroy();
+        }
+        
+        testMap.clear();
+        if (!testMap.isEmpty())  { return this.fail("cleared map is not empty"); }
+        if (testMap.size() != 0) { return this.fail("cleared map has not size 0"); }
+        
+        {    
+            AnyIterator kit = testMap.keys();
+            if (kit.hasNext()) { return this.fail("cleared map keys-iterator has elements"); }
+            kit.destroy();
+            
+            AnyIterator vit = testMap.values();
+            if (vit.hasNext()) { return this.fail("cleared map values-iterator has elements"); }
+            vit.destroy();
+            
+            AnyMapEntryIterator eit = testMap.entries();
+            if (eit.hasNext()) { return this.fail("cleared map entires-iterator has elements"); }
+            eit.destroy();
+        }
+        
+        testMap.destroy();
+        v3.destroy();
+        v2.destroy();
+        v1.destroy();
+        k3.destroy();
+        k2.destroy();
+        k1.destroy();
+        return this.success();
+    }
+}

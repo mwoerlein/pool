@@ -216,10 +216,10 @@ class StringTest extends test::TestCase {
         message.printCString("Case '").printCString(val).printCString("' => ").printInt(expected);
         String testString = this.rt().createInstance(String:CLASSNAME); testString.assignCString(val);
         
-        if (testString.toInt() != expected) { return this.failCase(message); }
+        if (testString.toInt() != expected) { return this.failCase(message.ostream()); }
         
         IStream in = testString.toIStream();
-        if (in.readInt() != expected) { return this.failCase(message); }
+        if (in.readInt() != expected) { return this.failCase(message.ostream()); }
         in.destroy();
         
         testString.destroy();

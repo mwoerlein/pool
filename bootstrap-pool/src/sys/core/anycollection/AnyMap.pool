@@ -111,7 +111,7 @@ class AnyMap extends AnyCollection {
         
         // remove from ordered list
         if (found) {
-            __all__ ret = found.getValue();
+            ret = found.getValue();
             if (found.getOrderedPrev()) {
                 found.getOrderedPrev().setOrderedNext(found.getOrderedNext());
             } else { // first element
