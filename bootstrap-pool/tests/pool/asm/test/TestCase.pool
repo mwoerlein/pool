@@ -28,35 +28,56 @@ class TestCase extends test::TestCase {
     }
     
     [int] runTest(TestData data) {
-        Parser parser = this.rt().createInstance(Parser:CLASSNAME);
-        Compiler compiler = this.rt().createInstance(Compiler:CLASSNAME);
-        CompilationUnit unit = this.rt().createInstance(CompilationUnit:CLASSNAME);
         String buffer = this.rt().createInstance(String:CLASSNAME);
-
-        IStream in = data.getInput().toIStream();
-        parser.parse(in, data.getName(), unit);
-        in.destroy();
-        if (unit.hasErrors()) { return this.failUnit(unit); }
+        CompilationUnit unit = null;
+        {
+            unit = this.parseAndCompile(data.getInput(), data.getName(), data.getStartAddress());
+            if (unit.hasErrors()) { return this.failUnit(unit); }
         
-/*        
-        compiler.prepare(unit);
-        if (unit.hasErrors()) { return this.failUnit(unit); }
+            unit.rawToStream(buffer.ostream());
+            if (!buffer.equals(data.getBinary())) { return this.fail("invalid binary"); }
+        }
+        { // test stable compilation of pretty-printed node list
+            String input = this.rt().createInstance(String:CLASSNAME);
+            input.print(unit.getNodeList());
+            buffer.clear();
+            
+            unit.destroy();
+            unit = this.parseAndCompile(input, data.getName(), data.getStartAddress());
+            if (unit.hasErrors()) { return this.failUnit(unit); }
         
-        compiler.compile(unit);
-        if (unit.hasErrors()) { return this.failUnit(unit); }
-        
-        compiler.finalize(unit, data.getStartAddress());
-        if (unit.hasErrors()) { return this.failUnit(unit); }
-        
-        unit.rawToStream(buffer.ostream());
-        if (!buffer.equals(data.getBinary())) { return this.fail("invalid binary"); }
-*/
-        
+            unit.rawToStream(buffer.ostream());
+            if (!buffer.equals(data.getBinary())) { return this.fail("invalid stable binary"); }
+            
+            input.destroy();
+        }
         buffer.destroy();
         unit.destroy();
-        compiler.destroy();
-        parser.destroy();
         data.destroy();
         return this.success();
+    }
+    
+    [CompilationUnit] parseAndCompile(String input, String name, int startAddress) {
+        CompilationUnit unit = this.rt().createInstance(CompilationUnit:CLASSNAME);
+        Parser parser = this.rt().createInstance(Parser:CLASSNAME);
+        Compiler compiler = this.rt().createInstance(Compiler:CLASSNAME);
+        
+        IStream in = input.toIStream();
+        parser.parse(in, name, unit);
+        in.destroy();
+        if (unit.hasErrors()) { return unit; }
+        
+        compiler.prepare(unit);
+        if (unit.hasErrors()) { return unit; }
+        
+        compiler.compile(unit);
+        if (unit.hasErrors()) { return unit; }
+        
+        compiler.finalize(unit, startAddress);
+        if (unit.hasErrors()) { return unit; }
+        
+        compiler.destroy();
+        parser.destroy();
+        return unit;
     }
 }

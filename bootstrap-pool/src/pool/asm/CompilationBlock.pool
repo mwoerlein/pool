@@ -12,6 +12,10 @@ class CompilationBlock extends AnyList { // LinkedList<Instruction>
     
     int mode;
     CompilationUnit unit;
+
+    [] __destruct() {
+        this.destroyAll();
+    }
     
     [] init(int mode, CompilationUnit unit) {
         this.mode = mode;

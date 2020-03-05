@@ -131,7 +131,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
                 
             } else if (state == Tokenizer:MINUS) {
                 if (c == '0') { this._consume(); state = Tokenizer:NUMBER_ZERO; }
-                if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
+                else if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
                 else { return this._buildToken(Token:OPERATOR); }
                 
             } else if (state == Tokenizer:NEWLINE) {
