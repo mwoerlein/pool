@@ -14,12 +14,14 @@ use sys::stream::OStream;
 class TestData extends sys::core::Object {
     String name;
     String input;
+    String pretty;
     String binary;
     int startAddress;
     
     [] __init() {
         this.name = this.rt().createInstance(String:CLASSNAME);
         this.input = this.rt().createInstance(String:CLASSNAME);
+        this.pretty = this.rt().createInstance(String:CLASSNAME);
         this.binary = this.rt().createInstance(String:CLASSNAME);
         this.startAddress = 0;
     }
@@ -27,16 +29,22 @@ class TestData extends sys::core::Object {
     [] __destruct() {
         this.name.destroy();
         this.input.destroy();
+        this.pretty.destroy();
         this.binary.destroy();
     }
     
     [TestData] setName(cstring name) { this.name.assignCString(name); return this; }
     [TestData] in(cstring line) { this.input.printCString(line).printNewline(); return this; }
+    [TestData] pretty(cstring line) { this.pretty.printCString(line).printNewline(); return this; }
     [TestData] bin(int c) { this.binary.printChar(c); return this; }
     [TestData] setStartAddress(int startAddress) { this.startAddress = startAddress; return this; }
     
-    [String] getName() { return input; }
+    [String] getName() { return name; }
     [String] getInput() { return input; }
+    [String] getPretty() {
+        if (pretty.length() == 0) { return input; }
+        return pretty;
+    }
     [String] getBinary() { return binary; }
     [int] getStartAddress() { return startAddress; }
 }

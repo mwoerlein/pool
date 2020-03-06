@@ -12,23 +12,23 @@ class CompilerTest extends pool::asm::test::TestCase {
         
         t.in("cga_lastline := 0xb8f00");
         t.in("blinking:");
-        t.in("    movl 0, %ebx // column = 0");
-        t.in("    movl 0, %ecx // charOffset = 0");
+        t.in("    movl 0,  %ebx // column = 0");
+        t.in("    movl 0,  %ecx // charOffset = 0");
         t.in("blinking_loop:");
         t.in("    // charTmp = charOffset");
-        t.in("    movl %ecx, %eax");
+        t.in("    movl %ecx,%eax");
         t.in("    // show 'a'+charOffset at column");
         t.in("    addl 0x761, %ecx");
-        t.in("    movw %cx, cga_lastline(,%ebx,2)");
+        t.in("    movw %cx, cga_lastline(, %ebx, 2)");
         t.in("    // charOffset = (charTmp + 1) % 26");
-        t.in("    addl 1, %eax");
+        t.in("    addl  1, %eax");
         t.in("    movl 26, %ecx");
         t.in("    divb %cl; movb %ah, %cl");
         t.in("    //movw 0, %dx; divw %cx; movw %dx, %cx");
         t.in("    //movl 0, %edx; divl %ecx; movl %edx, %ecx");
         t.in("    // column = (column + 1) % 80");
         t.in("    movl %ebx, %eax");
-        t.in("    addl 1, %eax");
+        t.in("    addl  1, %eax");
         t.in("    movl 80, %ebx");
         t.in("    divb %bl; movb %ah, %bl");
         t.in("    //movw 0, %dx; divw %bx; movw %dx, %bx");
@@ -40,6 +40,30 @@ class CompilerTest extends pool::asm::test::TestCase {
         t.in("    jnz wait");
         t.in("    // endless loop");
         t.in("    jmp blinking_loop");
+
+        t.pretty("cga_lastline := 0xb8f00");
+        t.pretty("blinking:");
+        t.pretty("    movl 0x0, %ebx");
+        t.pretty("    movl 0x0, %ecx");
+        t.pretty("blinking_loop:");
+        t.pretty("    movl %ecx, %eax");
+        t.pretty("    addl 0x761, %ecx");
+        t.pretty("    movw %cx, cga_lastline(,%ebx,2)");
+        t.pretty("    addl 0x1, %eax");
+        t.pretty("    movl 0x1a, %ecx");
+        t.pretty("    divb %cl");
+        t.pretty("    movb %ah, %cl");
+        t.pretty("    movl %ebx, %eax");
+        t.pretty("    addl 0x1, %eax");
+        t.pretty("    movl 0x50, %ebx");
+        t.pretty("    divb %bl");
+        t.pretty("    movb %ah, %bl");
+        t.pretty("    movl 0x3fffff, %eax");    
+        t.pretty("wait:");
+        t.pretty("    addl -0x1, %eax");
+        t.pretty("    jnz wait");
+        t.pretty("    jmp blinking_loop");
+        
                                                                       // blinking:
         t.bin(0xbb).bin(0x00).bin(0x00).bin(0x00).bin(0x00)           //     movl 0, %ebx
          .bin(0xb9).bin(0x00).bin(0x00).bin(0x00).bin(0x00)           //     movl 0, %ecx
@@ -48,18 +72,18 @@ class CompilerTest extends pool::asm::test::TestCase {
          .bin(0x81).bin(0xc1).bin(0x61).bin(0x07).bin(0x00).bin(0x00) //     addl 0x761, %ecx
          .bin(0x66).bin(0x89).bin(0x0c).bin(0x5d)                     //     movw %cx, cga_lastline(,%ebx,2)
             .bin(0x00).bin(0x8f).bin(0x0b).bin(0x00)
-         .bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00)           //     addl 1, %eax
-         .bin(0xb9).bin(0x1a).bin(0x00).bin(0x00).bin(0x00)           //     movl 26, %ecx
+         .bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00)           //     addl 0x1, %eax
+         .bin(0xb9).bin(0x1a).bin(0x00).bin(0x00).bin(0x00)           //     movl 0x1a, %ecx
          .bin(0xf6).bin(0xf1)                                         //     divb %cl
          .bin(0x88).bin(0xe1)                                         //     movb %ah, %cl
          .bin(0x89).bin(0xd8)                                         //     movl %ebx, %eax
-         .bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00)           //     addl 1, %eax
-         .bin(0xbb).bin(0x50).bin(0x00).bin(0x00).bin(0x00)           //     movl 80, %ebx
+         .bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00)           //     addl 0x1, %eax
+         .bin(0xbb).bin(0x50).bin(0x00).bin(0x00).bin(0x00)           //     movl 0x50, %ebx
          .bin(0xf6).bin(0xf3)                                         //     divb %bl
          .bin(0x88).bin(0xe3)                                         //     movb %ah, %bl
          .bin(0xb8).bin(0xff).bin(0xff).bin(0x3f).bin(0x00)           //     movl 0x3fffff, %eax
                                                                       // wait:
-         .bin(0x05).bin(0xff).bin(0xff).bin(0xff).bin(0xff)           //     addl -1, %eax
+         .bin(0x05).bin(0xff).bin(0xff).bin(0xff).bin(0xff)           //     addl -0x1, %eax
          .bin(0x75).bin(0xf9)                                         //     jnz wait
          .bin(0xeb).bin(0xc4)                                         //     jmp blinking_loop
         ;

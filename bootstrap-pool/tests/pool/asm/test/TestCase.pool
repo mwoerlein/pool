@@ -29,30 +29,35 @@ class TestCase extends test::TestCase {
     
     [int] runTest(TestData data) {
         String buffer = this.rt().createInstance(String:CLASSNAME);
-        CompilationUnit unit = null;
         {
-            unit = this.parseAndCompile(data.getInput(), data.getName(), data.getStartAddress());
+            CompilationUnit unit = this.parseAndCompile(data.getInput(), data.getName(), data.getStartAddress());
             if (unit.hasErrors()) { return this.failUnit(unit); }
         
+            buffer.clear();
+            buffer.print(unit.getNodeList());
+            if (!buffer.equals(data.getPretty())) { return this.fail("invalid pretty"); }
+        
+            buffer.clear();
             unit.rawToStream(buffer.ostream());
             if (!buffer.equals(data.getBinary())) { return this.fail("invalid binary"); }
-        }
-        { // test stable compilation of pretty-printed node list
-            String input = this.rt().createInstance(String:CLASSNAME);
-            input.print(unit.getNodeList());
-            buffer.clear();
             
             unit.destroy();
-            unit = this.parseAndCompile(input, data.getName(), data.getStartAddress());
+        }
+        { // test stable compilation of pretty-printed node list
+            CompilationUnit unit = this.parseAndCompile(data.getPretty(), data.getName(), data.getStartAddress());
             if (unit.hasErrors()) { return this.failUnit(unit); }
         
+            buffer.clear();
+            buffer.print(unit.getNodeList());
+            if (!buffer.equals(data.getPretty())) { return this.fail("invalid stable pretty"); }
+        
+            buffer.clear();
             unit.rawToStream(buffer.ostream());
             if (!buffer.equals(data.getBinary())) { return this.fail("invalid stable binary"); }
             
-            input.destroy();
+            unit.destroy();
         }
         buffer.destroy();
-        unit.destroy();
         data.destroy();
         return this.success();
     }
