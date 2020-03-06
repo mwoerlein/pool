@@ -1,0 +1,274 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class JumpTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.testI_32bit();
+        this.testI_16bit();
+        this.testI_0x80_backwards();
+        this.testM_32bit();
+        this.testM_16bit();
+    }
+        
+    [int] testI_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testI_32bit");
+        
+        t.setStartAddress(0x10000);
+        
+        t.in("startDef := 0x10000");
+        t.in("start:");
+        t.in("    jmp near_start"); // 0 <= offset <= 127
+        t.in("    call near_start");// 0 <= offset <= 127
+        t.in("    jmp end");        // 127 < offset <= 32767
+        t.in("    call end");       // 127 < offset <= 32767
+        t.in("    jmp 0x10025");    // 0 <= offset <= 127
+        t.in("    call 0x10025");   // 0 <= offset <= 127
+        t.in("    jmp 0x10195");    // 127 < offset <= 32767
+        t.in("    call 0x10195");   // 127 < offset <= 32767
+        t.in("    jmp 0x1ffff");    // 32767 < offset
+        t.in("    call 0x1ffff");   // 32767 < offset
+        t.in("near_start:");
+        t.in("    .org 0x80");
+        t.in("near_end:");
+        t.in("    jmp 0x0");        // offset < -32768
+        t.in("    call 0x0");       // offset < -32768
+        t.in("    jmp startDef");   // -32768 <= offset < -128
+        t.in("    call startDef");  // -32768 <= offset < -128
+        t.in("    jmp 0x1007e");    // -128 <= offset <= 0
+        t.in("    call 0x1007e");   // -128 <= offset <= 0
+        t.in("    jmp start");      // -32768 <= offset < -128
+        t.in("    call start");     // -32768 <= offset < -128
+        t.in("    jmp near_end");   // -128 <= offset <= 0
+        t.in("    call near_end");  // -128 <= offset <= 0
+        t.in("end:");
+
+        t.bin(0xEB).bin(0x2D);
+        t.bin(0xE8).bin(0x28).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xE9).bin(0xA3).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xE8).bin(0x9E).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xE9).bin(0x0F).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xE8).bin(0x0A).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xE9).bin(0x75).bin(0x01).bin(0x00).bin(0x00);
+        t.bin(0xE8).bin(0x70).bin(0x01).bin(0x00).bin(0x00);
+        t.bin(0xE9).bin(0xD5).bin(0xFF).bin(0x00).bin(0x00);
+        t.bin(0xE8).bin(0xD0).bin(0xFF).bin(0x00).bin(0x00);
+        int i = 0x80 - t.getBinary().length();
+        while (i--) { t.bin(0x00); }
+        t.bin(0xE9).bin(0x7b).bin(0xFF).bin(0xFE).bin(0xFF);
+        t.bin(0xE8).bin(0x76).bin(0xFF).bin(0xFE).bin(0xFF);
+        t.bin(0xE9).bin(0x71).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0xE8).bin(0x6C).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0xE9).bin(0xE5).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0xE8).bin(0xE0).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0xE9).bin(0x5D).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0xE8).bin(0x58).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0xEB).bin(0xD6);
+        t.bin(0xE8).bin(0xD1).bin(0xFF).bin(0xFF).bin(0xFF);
+
+        return this.runTest(t);
+    }
+    
+    [int] testI_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testI_16bit");
+        
+        t.setStartAddress(0x1000);
+        
+        t.in("    .code16");
+        t.in("startDef := 0x1000");
+        t.in("start:");
+        t.in("    jmp near_start"); // 0 <= offset <= 127
+        t.in("    call near_start");// 0 <= offset <= 127
+        t.in("    jmp end");        // 127 < offset <= 32767
+        t.in("    call end");       // 127 < offset <= 32767
+        t.in("    jmp 0x1025");     // 0 <= offset <= 127
+        t.in("    call 0x1025");    // 0 <= offset <= 127
+        t.in("    jmp 0x1195");     // 127 < offset <= 32767
+        t.in("    call 0x1195");    // 127 < offset <= 32767
+        t.in("    jmp 0x1fff");     // 32767 < offset
+        t.in("    call 0x1fff");    // 32767 < offset
+        t.in("near_start:");
+        t.in("    .org 0x80");
+        t.in("near_end:");
+        t.in("    jmp 0x0");        // offset < -32768
+        t.in("    call 0x0");       // offset < -32768
+        t.in("    jmp startDef");   // -32768 <= offset < -128
+        t.in("    call startDef");  // -32768 <= offset < -128
+        t.in("    jmp 0x107e");     // -128 <= offset <= 0
+        t.in("    call 0x107e");    // -128 <= offset <= 0
+        t.in("    jmp start");      // -32768 <= offset < -128
+        t.in("    call start");     // -32768 <= offset < -128
+        t.in("    jmp near_end");   // -128 <= offset <= 0
+        t.in("    call near_end");  // -128 <= offset <= 0
+        t.in("end:");
+
+        t.bin(0xEB).bin(0x1B);
+        t.bin(0xE8).bin(0x18).bin(0x00);
+        t.bin(0xE9).bin(0x95).bin(0x00);
+        t.bin(0xE8).bin(0x92).bin(0x00);
+        t.bin(0xE9).bin(0x17).bin(0x00);
+        t.bin(0xE8).bin(0x14).bin(0x00);
+        t.bin(0xE9).bin(0x81).bin(0x01);
+        t.bin(0xE8).bin(0x7E).bin(0x01);
+        t.bin(0xE9).bin(0xE5).bin(0x0F);
+        t.bin(0xE8).bin(0xE2).bin(0x0F);
+        int i = 0x80 - t.getBinary().length();
+        while (i--) { t.bin(0x00); }
+        t.bin(0xE9).bin(0x7D).bin(0xEF);
+        t.bin(0xE8).bin(0x7A).bin(0xEF);
+        t.bin(0xE9).bin(0x77).bin(0xFF);
+        t.bin(0xE8).bin(0x74).bin(0xFF);
+        t.bin(0xE9).bin(0xEF).bin(0xFF);
+        t.bin(0xE8).bin(0xEC).bin(0xFF);
+        t.bin(0xE9).bin(0x6B).bin(0xFF);
+        t.bin(0xE8).bin(0x68).bin(0xFF);
+        t.bin(0xEB).bin(0xE6);
+        t.bin(0xE8).bin(0xE3).bin(0xFF);
+
+        return this.runTest(t);
+    }
+    
+    [int] testI_0x80_backwards() {
+        pool::asm::test::TestData t = this.newTestData("testI_0x80_backwards");
+        
+        t.setStartAddress(0x0);
+        
+        t.in("    .code32");
+        t.in("zero:");
+        t.in("    .org 0x80");
+        t.in("    jmp zero");
+        
+        int i = 0x80;
+        while (i--) { t.bin(0x00); }
+        t.bin(0xE9).bin(0x7b).bin(0xFF).bin(0xFF).bin(0xFF);
+
+        return this.runTest(t);
+    }
+
+    [int] testM_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testM_32bit");
+        
+        t.in("    .code32");
+        t.in("    jmp %ebx");
+        t.in("    call %ebx");
+        t.in("    jmp (%ecx)");
+        t.in("    call (%ecx)");
+        t.in("    jmp 0x2(%ecx,%eax)");
+        t.in("    call 0x2(%ecx,%eax)");
+        t.in("    jmp 0x200(%edx,%eax,4)");
+        t.in("    call 0x200(%edx,%eax,4)");
+        t.in("    jmp (0x1e)");
+        t.in("    call (0x1e)");
+        
+        t.in("    jmp %bx");
+        t.in("    call %bx");
+        t.in("    jmp (%bp)");
+        t.in("    call (%bp)");
+        t.in("    jmp (%di)");
+        t.in("    call (%di)");
+        t.in("    jmp (%bp,%di)");
+        t.in("    call (%bp,%di)");
+        t.in("    jmp 0x2(%bx,%si)");
+        t.in("    call 0x2(%bx,%si)");
+        t.in("    jmp 0xabcd(%si)");
+        t.in("    call 0xabcd(%si)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr16 jmp (0x16)");
+        //t.in("    .addr16 call (0x16)");
+
+        t.bin(0xFF).bin(0xE3);
+        t.bin(0xFF).bin(0xD3);
+        t.bin(0xFF).bin(0x21);
+        t.bin(0xFF).bin(0x11);
+        t.bin(0xFF).bin(0x64).bin(0x01).bin(0x02);
+        t.bin(0xFF).bin(0x54).bin(0x01).bin(0x02);
+        t.bin(0xFF).bin(0xA4).bin(0x82).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0xFF).bin(0x94).bin(0x82).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0xFF).bin(0x25).bin(0x1E).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xFF).bin(0x15).bin(0x1E).bin(0x00).bin(0x00).bin(0x00);
+        
+        t.bin(0x66).bin(0xFF).bin(0xE3);
+        t.bin(0x66).bin(0xFF).bin(0xD3);
+        t.bin(0x67).bin(0xFF).bin(0x66).bin(0x00);
+        t.bin(0x67).bin(0xFF).bin(0x56).bin(0x00);
+        t.bin(0x67).bin(0xFF).bin(0x25);
+        t.bin(0x67).bin(0xFF).bin(0x15);
+        t.bin(0x67).bin(0xFF).bin(0x23);
+        t.bin(0x67).bin(0xFF).bin(0x13);
+        t.bin(0x67).bin(0xFF).bin(0x60).bin(0x02);
+        t.bin(0x67).bin(0xFF).bin(0x50).bin(0x02);
+        t.bin(0x67).bin(0xFF).bin(0xA4).bin(0xCD).bin(0xAB);
+        t.bin(0x67).bin(0xFF).bin(0x94).bin(0xCD).bin(0xAB);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x67).bin(0xFF).bin(0x26).bin(0x16).bin(0x00);
+        //t.bin(0x67).bin(0xFF).bin(0x16).bin(0x16).bin(0x00);
+
+        return this.runTest(t);
+    }
+    
+    [int] testM_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testM_16bit");
+        
+        t.in("    .code16");
+        t.in("    jmp %ebx");
+        t.in("    call %ebx");
+        t.in("    jmp (%ecx)");
+        t.in("    call (%ecx)");
+        t.in("    jmp 0x2(%ecx,%eax)");
+        t.in("    call 0x2(%ecx,%eax)");
+        t.in("    jmp 0x200(%edx,%eax,4)");
+        t.in("    call 0x200(%edx,%eax,4)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr32 jmp (0x1e)");
+        //t.in("    .addr32 jmp (0x1e)");
+        
+        t.in("    jmp %bx");
+        t.in("    call %bx");
+        t.in("    jmp (%bp)");
+        t.in("    call (%bp)");
+        t.in("    jmp (%di)");
+        t.in("    call (%di)");
+        t.in("    jmp (%bp,%di)");
+        t.in("    call (%bp,%di)");
+        t.in("    jmp 0x2(%bx,%si)");
+        t.in("    call 0x2(%bx,%si)");
+        t.in("    jmp 0xabcd(%si)");
+        t.in("    call 0xabcd(%si)");
+        t.in("    jmp (0x16)");
+        t.in("    call (0x16)");
+
+        t.bin(0x66).bin(0xFF).bin(0xE3);
+        t.bin(0x66).bin(0xFF).bin(0xD3);
+        t.bin(0x67).bin(0xFF).bin(0x21);
+        t.bin(0x67).bin(0xFF).bin(0x11);
+        t.bin(0x67).bin(0xFF).bin(0x64).bin(0x01).bin(0x02);
+        t.bin(0x67).bin(0xFF).bin(0x54).bin(0x01).bin(0x02);
+        t.bin(0x67).bin(0xFF).bin(0xA4).bin(0x82).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0x67).bin(0xFF).bin(0x94).bin(0x82).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x67).bin(0xFF).bin(0x25).bin(0x1E).bin(0x00).bin(0x00).bin(0x00);
+        //t.bin(0x67).bin(0xFF).bin(0x15).bin(0x1E).bin(0x00).bin(0x00).bin(0x00);
+        
+        t.bin(0xFF).bin(0xE3);
+        t.bin(0xFF).bin(0xD3);
+        t.bin(0xFF).bin(0x66).bin(0x00);
+        t.bin(0xFF).bin(0x56).bin(0x00);
+        t.bin(0xFF).bin(0x25);
+        t.bin(0xFF).bin(0x15);
+        t.bin(0xFF).bin(0x23);
+        t.bin(0xFF).bin(0x13);
+        t.bin(0xFF).bin(0x60).bin(0x02);
+        t.bin(0xFF).bin(0x50).bin(0x02);
+        t.bin(0xFF).bin(0xA4).bin(0xCD).bin(0xAB);
+        t.bin(0xFF).bin(0x94).bin(0xCD).bin(0xAB);
+        t.bin(0xFF).bin(0x26).bin(0x16).bin(0x00);
+        t.bin(0xFF).bin(0x16).bin(0x16).bin(0x00);
+
+        return this.runTest(t);
+    }
+    
+}
