@@ -1,0 +1,131 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class NoOperandTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.test_any();
+        this.test_32bit();
+        this.test_16bit();
+    }
+        
+    [int] test_any() {
+        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+        
+        t.in("HLT");
+        t.in("Clc");
+        t.in("ClD");
+        t.in("ClI");
+        t.in("Clts");
+        t.in("STC");
+        t.in("STd");
+        t.in("STi");
+        t.in("nOP");
+        t.in("Int0");
+        t.in("iNt1");
+        t.in("InT3");
+        t.in("leave");
+        t.in("ret");
+        t.in("iret");
+
+        t.pretty("    hlt");
+        t.pretty("    clc");
+        t.pretty("    cld");
+        t.pretty("    cli");
+        t.pretty("    clts");
+        t.pretty("    stc");
+        t.pretty("    std");
+        t.pretty("    sti");
+        t.pretty("    nop");
+        t.pretty("    int0");
+        t.pretty("    int1");
+        t.pretty("    int3");
+        t.pretty("    leave");
+        t.pretty("    ret");
+        t.pretty("    iret");
+
+        t.bin(0xF4);
+        t.bin(0xF8);
+        t.bin(0xFC);
+        t.bin(0xFA);
+        t.bin(0x0F).bin(0x06);
+        t.bin(0xF9);
+        t.bin(0xFD);
+        t.bin(0xFB);
+        t.bin(0x90);
+        t.bin(0xCE);
+        t.bin(0xF1);
+        t.bin(0xCC);
+        t.bin(0xC9);
+        t.bin(0xC3);
+        t.bin(0xCF);
+        
+        return this.runTest(t);
+    }
+    
+    [int] test_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+
+        t.in("    pusha");
+        t.in("    pushad");
+        t.in("    pushf");
+        t.in("    pushfd");
+        t.in("    popa");
+        t.in("    popad");
+        t.in("    popf");
+        t.in("    popfd");
+        t.in("    lodsb");
+        t.in("    lodsw");
+        t.in("    lodsd");
+        
+        t.bin(0x66).bin(0x60);
+        t.bin(0x60);
+        t.bin(0x66).bin(0x9C);
+        t.bin(0x9C);
+        t.bin(0x66).bin(0x61);
+        t.bin(0x61);
+        t.bin(0x66).bin(0x9D);
+        t.bin(0x9D);
+        t.bin(0xAC);
+        t.bin(0x66).bin(0xAD);
+        t.bin(0xAD);
+
+        return this.runTest(t);
+    }
+    
+    [int] test_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+
+        t.in("    .code16");
+        t.in("    pusha");
+        t.in("    pushad");
+        t.in("    pushf");
+        t.in("    pushfd");
+        t.in("    popa");
+        t.in("    popad");
+        t.in("    popf");
+        t.in("    popfd");
+        t.in("    lodsb");
+        t.in("    lodsw");
+        t.in("    lodsd");
+        
+        t.bin(0x60);
+        t.bin(0x66).bin(0x60);
+        t.bin(0x9C);
+        t.bin(0x66).bin(0x9C);
+        t.bin(0x61);
+        t.bin(0x66).bin(0x61);
+        t.bin(0x9D);
+        t.bin(0x66).bin(0x9D);
+        t.bin(0xAC);
+        t.bin(0xAD);
+        t.bin(0x66).bin(0xAD);
+
+        return this.runTest(t);
+    }
+
+}

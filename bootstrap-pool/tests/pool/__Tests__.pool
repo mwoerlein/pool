@@ -10,5 +10,6 @@ class __Tests__ {
     global [] setup(test::TestSuite suite) {
         suite.register(pool::asm::i386::Compiler:CLASSNAME, pool::asm::i386::CompilerTest:CLASSNAME);
         suite.register(pool::asm::i386::instruction::Move:CLASSNAME, pool::asm::i386::instruction::MoveTest:CLASSNAME);
+        suite.register(pool::asm::i386::instruction::NoOperand:CLASSNAME, pool::asm::i386::instruction::NoOperandTest:CLASSNAME);
     }
 }
