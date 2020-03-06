@@ -67,7 +67,7 @@ class CompilerTest extends pool::asm::test::TestCase {
         t.pretty("    movb %ah, %bl");
         t.pretty("    movl 0x3fffff, %eax");    
         t.pretty("wait:");
-        t.pretty("    addl -0x1, %eax");
+        t.pretty("    addl 0xffffffff, %eax");
         t.pretty("    jnz wait");
         t.pretty("    jmp blinking_loop");
         t.pretty("ONE := 0x1");

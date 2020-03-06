@@ -21,6 +21,10 @@ class OStream extends Object {
         return this._printHex(i, 0);
     }
     
+    [OStream] printUHex(int i) {
+        return this._printUHex(i, 0);
+    }
+    
     [OStream] printPtr(int i) {
         return this._printUHex(i, 8);
     }

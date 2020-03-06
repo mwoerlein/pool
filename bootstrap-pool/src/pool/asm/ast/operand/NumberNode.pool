@@ -30,7 +30,7 @@ class NumberNode extends OperandNode {
     [int] getOperand() { return operand; }
     
     [OStream] printToStream(OStream stream) {
-        return stream.printHex(operand);
+        return stream.printUHex(operand);
     }
 
 }
