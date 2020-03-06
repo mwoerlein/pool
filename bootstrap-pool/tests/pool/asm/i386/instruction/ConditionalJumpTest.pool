@@ -1,0 +1,170 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class ConditionalJumpTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.testD_32bit();
+        this.testD_16bit();
+    }
+        
+    [int] testD_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testD_32bit");
+        
+        t.in("start:");
+        t.in("    ja start");
+        t.in("    jae end");
+        t.in("    jb start");
+        t.in("    jbe end");
+        t.in("    jc start");
+        t.in("    je end");
+        t.in("    jg start");
+        t.in("    jge end");
+        t.in("    jl start");
+        t.in("    jle end");
+        t.in("    jo start");
+        t.in("    jp end");
+        t.in("    js start");
+        t.in("    jz end");
+        t.in("    .org 0x80");
+        t.in("    jna start");
+        t.in("    jnae end");
+        t.in("    jnb start");
+        t.in("    jnbe end");
+        t.in("    jnc start");
+        t.in("    jne end");
+        t.in("    jng start");
+        t.in("    jnge end");
+        t.in("    jnl start");
+        t.in("    jnle end");
+        t.in("    jno start");
+        t.in("    jnp end");
+        t.in("    jns start");
+        t.in("    jnz end");
+        t.in("    jpe start");
+        t.in("    jpo end");
+        t.in("end:");
+        t.in("    jcxz end");
+        t.in("    jecxz end");
+
+        t.bin(0x77).bin(0xFE);
+        t.bin(0x0F).bin(0x83).bin(0xB8).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x72).bin(0xF6);
+        t.bin(0x0F).bin(0x86).bin(0xB0).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x72).bin(0xEE);
+        t.bin(0x0F).bin(0x84).bin(0xA8).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x7F).bin(0xE6);
+        t.bin(0x0F).bin(0x8D).bin(0xA0).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x7C).bin(0xDE);
+        t.bin(0x0F).bin(0x8E).bin(0x98).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x70).bin(0xD6);
+        t.bin(0x0F).bin(0x8A).bin(0x90).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x78).bin(0xCE);
+        t.bin(0x0F).bin(0x84).bin(0x88).bin(0x00).bin(0x00).bin(0x00);
+        int i = 0x80 - t.getBinary().length();
+        while (i--) { t.bin(0x00); }
+        t.bin(0x0F).bin(0x86).bin(0x7A).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x72).bin(0x38);
+        t.bin(0x0F).bin(0x83).bin(0x72).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x77).bin(0x30);
+        t.bin(0x0F).bin(0x83).bin(0x6A).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x75).bin(0x28);
+        t.bin(0x0F).bin(0x8E).bin(0x62).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x7C).bin(0x20);
+        t.bin(0x0F).bin(0x8D).bin(0x5A).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x7F).bin(0x18);
+        t.bin(0x0F).bin(0x81).bin(0x52).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x7B).bin(0x10);
+        t.bin(0x0F).bin(0x89).bin(0x4A).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x75).bin(0x08);
+        t.bin(0x0F).bin(0x8A).bin(0x42).bin(0xFF).bin(0xFF).bin(0xFF);
+        t.bin(0x7B).bin(0x00);
+        t.bin(0x67).bin(0xE3).bin(0xFD);
+        t.bin(0xE3).bin(0xFB);
+
+        return this.runTest(t);
+    }
+    
+    [int] testD_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testD_16bit");
+        
+        t.in("    .code16");
+        t.in("start:");
+        t.in("    ja start");
+        t.in("    jae end");
+        t.in("    jb start");
+        t.in("    jbe end");
+        t.in("    jc start");
+        t.in("    je end");
+        t.in("    jg start");
+        t.in("    jge end");
+        t.in("    jl start");
+        t.in("    jle end");
+        t.in("    jo start");
+        t.in("    jp end");
+        t.in("    js start");
+        t.in("    jz end");
+        t.in("    .org 0x80");
+        t.in("    jna start");
+        t.in("    jnae end");
+        t.in("    jnb start");
+        t.in("    jnbe end");
+        t.in("    jnc start");
+        t.in("    jne end");
+        t.in("    jng start");
+        t.in("    jnge end");
+        t.in("    jnl start");
+        t.in("    jnle end");
+        t.in("    jno start");
+        t.in("    jnp end");
+        t.in("    jns start");
+        t.in("    jnz end");
+        t.in("    jpe start");
+        t.in("    jpo end");
+        t.in("end:");
+        t.in("    jcxz end");
+        t.in("    jecxz end");
+
+        t.bin(0x77).bin(0xFE);
+        t.bin(0x0F).bin(0x83).bin(0xAA).bin(0x00);
+        t.bin(0x72).bin(0xF8);
+        t.bin(0x0F).bin(0x86).bin(0xA4).bin(0x00);
+        t.bin(0x72).bin(0xF2);
+        t.bin(0x0F).bin(0x84).bin(0x9E).bin(0x00);
+        t.bin(0x7F).bin(0xEC);
+        t.bin(0x0F).bin(0x8D).bin(0x98).bin(0x00);
+        t.bin(0x7C).bin(0xE6);
+        t.bin(0x0F).bin(0x8E).bin(0x92).bin(0x00);
+        t.bin(0x70).bin(0xE0);
+        t.bin(0x0F).bin(0x8A).bin(0x8C).bin(0x00);
+        t.bin(0x78).bin(0xDA);
+        t.bin(0x0F).bin(0x84).bin(0x86).bin(0x00);
+        int i = 0x80 - t.getBinary().length();
+        while (i--) { t.bin(0x00); }
+        t.bin(0x0F).bin(0x86).bin(0x7C).bin(0xFF);
+        t.bin(0x72).bin(0x2A);
+        t.bin(0x0F).bin(0x83).bin(0x76).bin(0xFF);
+        t.bin(0x77).bin(0x24);
+        t.bin(0x0F).bin(0x83).bin(0x70).bin(0xFF);
+        t.bin(0x75).bin(0x1E);
+        t.bin(0x0F).bin(0x8E).bin(0x6A).bin(0xFF);
+        t.bin(0x7C).bin(0x18);
+        t.bin(0x0F).bin(0x8D).bin(0x64).bin(0xFF);
+        t.bin(0x7F).bin(0x12);
+        t.bin(0x0F).bin(0x81).bin(0x5E).bin(0xFF);
+        t.bin(0x7B).bin(0x0C);
+        t.bin(0x0F).bin(0x89).bin(0x58).bin(0xFF);
+        t.bin(0x75).bin(0x06);
+        t.bin(0x0F).bin(0x8A).bin(0x52).bin(0xFF);
+        t.bin(0x7B).bin(0x00);
+        t.bin(0xE3).bin(0xFE);
+        t.bin(0x67).bin(0xE3).bin(0xFB);
+
+        return this.runTest(t);
+    }
+    
+}

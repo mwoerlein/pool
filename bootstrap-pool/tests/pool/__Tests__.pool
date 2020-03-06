@@ -9,6 +9,7 @@ class __Tests__ {
     
     global [] setup(test::TestSuite suite) {
         suite.register(pool::asm::i386::Compiler:CLASSNAME, pool::asm::i386::CompilerTest:CLASSNAME);
+        suite.register(pool::asm::i386::instruction::ConditionalJump:CLASSNAME, pool::asm::i386::instruction::ConditionalJumpTest:CLASSNAME);
         suite.register(pool::asm::i386::instruction::In:CLASSNAME, pool::asm::i386::instruction::InOutTest:CLASSNAME);
         suite.register(pool::asm::i386::instruction::Interrupt:CLASSNAME, pool::asm::i386::instruction::InterruptTest:CLASSNAME);
         suite.register(pool::asm::i386::instruction::Jump:CLASSNAME, pool::asm::i386::instruction::JumpTest:CLASSNAME);
