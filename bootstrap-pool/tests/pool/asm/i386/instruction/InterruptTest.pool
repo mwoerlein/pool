@@ -8,11 +8,11 @@ namespace pool::asm::i386::instruction;
 class InterruptTest extends pool::asm::test::TestCase {
 
     [] runAll() {
-        this.test_I();
+        this.testI();
     }
         
-    [int] test_I() {
-        pool::asm::test::TestData t = this.newTestData("test_I");
+    [int] testI() {
+        pool::asm::test::TestData t = this.newTestData("testI");
         
         t.in("    .code32");
         t.in("    int 0x0");

@@ -8,12 +8,12 @@ namespace pool::asm::i386::instruction;
 class InOutTest extends pool::asm::test::TestCase {
 
     [] runAll() {
-        this.test_I();
-        this.test_ZO();
+        this.testI();
+        this.testZO();
     }
         
-    [int] test_I() {
-        pool::asm::test::TestData t = this.newTestData("test_I");
+    [int] testI() {
+        pool::asm::test::TestData t = this.newTestData("testI");
         
         t.in("    in 0x1, %al");
         t.in("    in 0x2, %ax");
@@ -47,8 +47,8 @@ class InOutTest extends pool::asm::test::TestCase {
         return this.runTest(t);
     }
     
-    [int] test_ZO() {
-        pool::asm::test::TestData t = this.newTestData("test_ZO");
+    [int] testZO() {
+        pool::asm::test::TestData t = this.newTestData("testZO");
         
         t.in("    in %dx, %al");
         t.in("    in %dx, %ax");
