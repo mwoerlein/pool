@@ -34,8 +34,6 @@ class Push extends OneOperand {
             return;
         }
         if (r1 && r1.isSegment()) {
-            // ignore operand size for segment registers
-            operandSize = addr;
             return;
         }
         this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');

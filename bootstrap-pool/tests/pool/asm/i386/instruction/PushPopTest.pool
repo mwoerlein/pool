@@ -1,0 +1,265 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class PushPopTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.testM_ind_32bit();
+        this.testM_ind_16bit();
+        this.testO_reg();
+        this.testI_imm();
+        this.testZO_sreg_32bit();
+        this.testZO_sreg_16bit();
+    }
+    
+    [int] testM_ind_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testM_ind_32bit");
+        
+        t.in("    pushw (%eax)");
+        t.in("    push 0x2(%eax)");
+        t.in("    pushw (%ebx,%eax)");
+        t.in("    push 0x6(%ebx,%ebp,4)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr32 pushw (0x20)");
+        
+        t.in("    pushl (%bx)");
+        t.in("    pushw 0x6(%bp,%si)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr16 pushl (0x20)");
+
+        t.in("    popw 0x2(%eax)");
+        t.in("    pop (%ebx,%eax)");
+        t.in("    popw (%ecx,%edi,8)");
+        t.in("    pop 0xbf000(,%esi,2)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr32 popw (0x20)");
+        
+        t.in("    popl (%bp)");
+        t.in("    popw (%bx,%di)");
+        t.in("    popl (%di)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr16 popw (0x20)");
+        
+        t.bin(0x66).bin(0xFF).bin(0x30);
+        t.bin(0xFF).bin(0x70).bin(0x02);
+        t.bin(0x66).bin(0xFF).bin(0x34).bin(0x03);
+        t.bin(0xFF).bin(0x74).bin(0xAB).bin(0x06);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x66).bin(0xFF).bin(0x35).bin(0x20).bin(0x00).bin(0x00).bin(0x00);
+
+        t.bin(0x67).bin(0xFF).bin(0x37);
+        t.bin(0x66).bin(0x67).bin(0xFF).bin(0x72).bin(0x06);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x67).bin(0xFF).bin(0x36).bin(0x20).bin(0x00);
+        
+        t.bin(0x66).bin(0x8F).bin(0x40).bin(0x02);
+        t.bin(0x8F).bin(0x04).bin(0x03);
+        t.bin(0x66).bin(0x8F).bin(0x04).bin(0xF9);
+        t.bin(0x8F).bin(0x04).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x66).bin(0x8F).bin(0x05).bin(0x20).bin(0x00).bin(0x00).bin(0x00);
+
+        t.bin(0x67).bin(0x8F).bin(0x46).bin(0x00);
+        t.bin(0x66).bin(0x67).bin(0x8F).bin(0x01);
+        t.bin(0x67).bin(0x8F).bin(0x05);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x66).bin(0x67).bin(0x8F).bin(0x06).bin(0x20).bin(0x00);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testM_ind_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testM_ind_16bit");
+        
+        t.in("    .code16");
+        t.in("    push (%eax)");
+        t.in("    pushl 0x2(%eax)");
+        t.in("    push (%ebx,%eax)");
+        t.in("    pushl 0x6(%ebx,%ebp,4)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr32 pushw (0x20)");
+        
+        t.in("    pushl (%bx)");
+        t.in("    pushw 0x6(%bp,%si)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr16 pushl (0x20)");
+
+        t.in("    pop 0x2(%eax)");
+        t.in("    popl (%ebx,%eax)");
+        t.in("    pop (%ecx,%edi,8)");
+        t.in("    popl 0xbf000(,%esi,2)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr32 popw (0x20)");
+        
+        t.in("    popl (%bp)");
+        t.in("    popw (%bx,%di)");
+        t.in("    popl (%di)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr16 popw (0x20)");
+
+        t.bin(0x67).bin(0xFF).bin(0x30);
+        t.bin(0x66).bin(0x67).bin(0xFF).bin(0x70).bin(0x02);
+        t.bin(0x67).bin(0xFF).bin(0x34).bin(0x03);
+        t.bin(0x66).bin(0x67).bin(0xFF).bin(0x74).bin(0xAB).bin(0x06);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x67).bin(0xFF).bin(0x35).bin(0x20).bin(0x00).bin(0x00).bin(0x00);
+        
+        t.bin(0x66).bin(0xFF).bin(0x37);
+        t.bin(0xFF).bin(0x72).bin(0x06);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x66).bin(0xFF).bin(0x36).bin(0x20).bin(0x00);
+        
+        t.bin(0x67).bin(0x8F).bin(0x40).bin(0x02);
+        t.bin(0x66).bin(0x67).bin(0x8F).bin(0x04).bin(0x03);
+        t.bin(0x67).bin(0x8F).bin(0x04).bin(0xF9);
+        t.bin(0x66).bin(0x67).bin(0x8F).bin(0x04).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x67).bin(0x8F).bin(0x05).bin(0x20).bin(0x00).bin(0x00).bin(0x00);
+
+        t.bin(0x66).bin(0x8F).bin(0x46).bin(0x00);
+        t.bin(0x8F).bin(0x01);
+        t.bin(0x66).bin(0x8F).bin(0x05);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x8F).bin(0x06).bin(0x20).bin(0x00);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testO_reg() {
+        pool::asm::test::TestData t = this.newTestData("testO_reg");
+        
+        t.in("    push %ax");
+        t.in("    push %ebx");
+        t.in("    pushw %di");
+        t.in("    pushl %esp");
+        t.in("    pop %sp");
+        t.in("    pop %ebp");
+        t.in("    popw %bx");
+        t.in("    popl %esi");
+        
+        t.in("    .code16");
+        t.in("    push %di");
+        t.in("    push %esp");
+        t.in("    popw %sp");
+        t.in("    popl %ebp");
+
+        t.bin(0x66).bin(0x50);
+        t.bin(0x53);
+        t.bin(0x66).bin(0x57);
+        t.bin(0x54);
+        t.bin(0x66).bin(0x5C);
+        t.bin(0x5D);
+        t.bin(0x66).bin(0x5B);
+        t.bin(0x5E);
+        
+        t.bin(0x57);
+        t.bin(0x66).bin(0x54);
+        t.bin(0x5C);
+        t.bin(0x66).bin(0x5D);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testI_imm() {
+        pool::asm::test::TestData t = this.newTestData("testI_imm");
+        
+        t.in("start:");
+        t.in("    push 0xd");
+        t.in("    pushw 0xd");
+        t.in("    pushl 0xd");
+        t.in("    pushw start");
+        t.in("    pushl BEEF");
+        
+        t.in("    .code16");
+        t.in("    push 0xd");
+        t.in("    pushw 0xd");
+        t.in("    pushl 0xd");
+        t.in("    pushw start");
+        t.in("    pushl BEEF");
+        t.in("BEEF := 0xdeadbeef");
+
+        t.bin(0x6A).bin(0x0D);
+        t.bin(0x66).bin(0x6A).bin(0x0D);
+        t.bin(0x6A).bin(0x0D);
+        t.bin(0x66).bin(0x68).bin(0x00).bin(0x00);
+        t.bin(0x68).bin(0xEF).bin(0xBE).bin(0xAD).bin(0xDE);
+        
+        t.bin(0x6A).bin(0x0D);
+        t.bin(0x6A).bin(0x0D);
+        t.bin(0x66).bin(0x6A).bin(0x0D);
+        t.bin(0x68).bin(0x00).bin(0x00);
+        t.bin(0x66).bin(0x68).bin(0xEF).bin(0xBE).bin(0xAD).bin(0xDE);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testZO_sreg_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testZO_sreg_32bit");
+        
+        t.in("    push %ss");
+        t.in("    push %cs");
+        t.in("    pushl %ds");
+        t.in("    push %es");
+        t.in("    push %fs");
+        t.in("    pushw %gs");
+
+        t.in("    pop %ss");
+        t.in("    pop %ds");
+        t.in("    popl %es");
+        t.in("    pop %fs");
+        t.in("    popw %gs");
+
+        t.bin(0x16);
+        t.bin(0x0E);
+        t.bin(0x1E);
+        t.bin(0x06);
+        t.bin(0x0F).bin(0xA0);
+        t.bin(0x66).bin(0x0F).bin(0xA8);
+        
+        t.bin(0x17);
+        t.bin(0x1F);
+        t.bin(0x07);
+        t.bin(0x0F).bin(0xA1);
+        t.bin(0x66).bin(0x0F).bin(0xA9);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testZO_sreg_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testZO_sreg_16bit");
+        
+        t.in("    .code16");
+        t.in("    push %ss");
+        t.in("    push %cs");
+        t.in("    pushl %ds");
+        t.in("    push %es");
+        t.in("    push %fs");
+        t.in("    pushw %gs");
+
+        t.in("    pop %ss");
+        t.in("    pop %ds");
+        t.in("    popl %es");
+        t.in("    pop %fs");
+        t.in("    popw %gs");
+
+        t.bin(0x16);
+        t.bin(0x0E);
+        t.bin(0x66).bin(0x1E);
+        t.bin(0x06);
+        t.bin(0x0F).bin(0xA0);
+        t.bin(0x0F).bin(0xA8);
+        
+        t.bin(0x17);
+        t.bin(0x1F);
+        t.bin(0x66).bin(0x07);
+        t.bin(0x0F).bin(0xA1);
+        t.bin(0x0F).bin(0xA9);
+        
+        return this.runTest(t);
+    }
+
+}
