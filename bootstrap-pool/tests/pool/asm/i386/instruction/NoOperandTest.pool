@@ -14,7 +14,7 @@ class NoOperandTest extends pool::asm::test::TestCase {
     }
         
     [int] test_any() {
-        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+        pool::asm::test::TestData t = this.newTestData("test_any");
         
         t.in("HLT");
         t.in("Clc");
@@ -68,7 +68,7 @@ class NoOperandTest extends pool::asm::test::TestCase {
     }
     
     [int] test_32bit() {
-        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+        pool::asm::test::TestData t = this.newTestData("test_32bit");
 
         t.in("    pusha");
         t.in("    pushad");
@@ -98,7 +98,7 @@ class NoOperandTest extends pool::asm::test::TestCase {
     }
     
     [int] test_16bit() {
-        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+        pool::asm::test::TestData t = this.newTestData("test_16bit");
 
         t.in("    .code16");
         t.in("    pusha");

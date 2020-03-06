@@ -1,0 +1,55 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class OrganizeInlineAsciiTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.test_org_inline();
+        this.test_ascii();
+    }
+        
+    [int] test_org_inline() {
+        pool::asm::test::TestData t = this.newTestData("test_org_inline");
+        
+        t.in("    .byte 0x0");
+        t.in("    .byte 0x12");
+        t.in("    .align 0x4");
+        t.in("    .word 0x12");
+        t.in("    .word (0x1200 + 0x34)");
+        t.in("    .align 0x8");
+        t.in("    .long 0x12345678");
+        t.in("    .align (0x2 * 0x4)");
+        t.in("    .org ((0x1 << 0x4) + 0x6)");
+        t.in("    .align 0x20");
+        t.in("    .long 0x87654321");
+        
+        t.bin(0x00).bin(0x12).bin(0x90).bin(0x90);
+        t.bin(0x12).bin(0x00).bin(0x34).bin(0x12);
+        t.bin(0x78).bin(0x56).bin(0x34).bin(0x12);
+        t.bin(0x90).bin(0x90).bin(0x90).bin(0x90);
+        t.bin(0x00).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x00).bin(0x00).bin(0x90).bin(0x90);
+        t.bin(0x90).bin(0x90).bin(0x90).bin(0x90);
+        t.bin(0x90).bin(0x90).bin(0x90).bin(0x90);
+        t.bin(0x21).bin(0x43).bin(0x65).bin(0x87);
+        
+        return this.runTest(t);
+    }
+        
+    [int] test_ascii() {
+        pool::asm::test::TestData t = this.newTestData("test_ascii");
+        
+        t.in("    .ascii \"Hello \\\"World\\\"\"");
+        t.in("    .asciz \"\\n\\t\\r'\\\"\"");
+        
+        t.getBinary().printCString("Hello \"World\"");
+        t.bin('\n').bin('\t').bin('\r').bin('\'').bin('"').bin(0x00);
+        
+        return this.runTest(t);
+    }
+    
+}
