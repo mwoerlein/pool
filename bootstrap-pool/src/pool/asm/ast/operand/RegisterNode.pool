@@ -32,7 +32,10 @@ class RegisterNode extends OperandNode {
     [String] getRegister() { return reg; }
     
     [OStream] printToStream(OStream stream) {
-        return stream.printChar('%').print(reg);
+        String lowReg = reg.toLower();
+        stream.printChar('%').print(lowReg);
+        lowReg.destroy();
+        return stream;
     }
 
 }

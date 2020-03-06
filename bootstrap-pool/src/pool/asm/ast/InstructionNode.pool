@@ -89,9 +89,15 @@ class InstructionNode extends LineNode {
             stream.printCString(".addr").printInt(addr).printChar(' ');
         }
         if (prefix) {
-            stream.print(prefix).printChar(' ');
+            String lowPrefix = prefix.toLower();
+            stream.print(lowPrefix).printChar(' ');
+            lowPrefix.destroy();
         }
-        stream.print(operation);
+        {
+            String lowOp = operation.toLower();
+            stream.print(lowOp);
+            lowOp.destroy();
+        }
         if (o1) {
             stream.printChar(' ').print(o1);
         }
