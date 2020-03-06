@@ -1,0 +1,70 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class InOutTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.test_I();
+        this.test_ZO();
+    }
+        
+    [int] test_I() {
+        pool::asm::test::TestData t = this.newTestData("test_I");
+        
+        t.in("    in 0x1, %al");
+        t.in("    in 0x2, %ax");
+        t.in("    in 0x3, %eax");
+        t.in("    out %al, 0xff");
+        t.in("    out %ax, 0xfe");
+        t.in("    out %eax, 0xfd");
+        
+        t.in("    .code16");
+        t.in("    inb 0x4, %al");
+        t.in("    inw 0x5, %ax");
+        t.in("    inl 0x80, %eax");
+        t.in("    outb %al, 0x7f");
+        t.in("    outw %ax, 0xe9");
+        t.in("    outl %eax, 0xc8");
+        
+        t.bin(0xE4).bin(0x01);
+        t.bin(0x66).bin(0xE5).bin(0x02);
+        t.bin(0xE5).bin(0x03);
+        t.bin(0xE6).bin(0xFF);
+        t.bin(0x66).bin(0xE7).bin(0xFE);
+        t.bin(0xE7).bin(0xFD);
+        
+        t.bin(0xE4).bin(0x04);
+        t.bin(0xE5).bin(0x05);
+        t.bin(0x66).bin(0xE5).bin(0x80);
+        t.bin(0xE6).bin(0x7F);
+        t.bin(0xE7).bin(0xE9);
+        t.bin(0x66).bin(0xE7).bin(0xC8);
+        
+        return this.runTest(t);
+    }
+    
+    [int] test_ZO() {
+        pool::asm::test::TestData t = this.newTestData("test_ZO");
+        
+        t.in("    in %dx, %al");
+        t.in("    in %dx, %ax");
+        t.in("    in %dx, %eax");
+        t.in("    out %al, %dx");
+        t.in("    out %ax, %dx");
+        t.in("    out %eax, %dx");
+        
+        t.bin(0xEC);
+        t.bin(0x66).bin(0xED);
+        t.bin(0xED);
+        t.bin(0xEE);
+        t.bin(0x66).bin(0xEF);
+        t.bin(0xEF);
+
+        return this.runTest(t);
+    }
+    
+}

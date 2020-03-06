@@ -1,0 +1,36 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class InterruptTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.test_I();
+    }
+        
+    [int] test_I() {
+        pool::asm::test::TestData t = this.newTestData("test_I");
+        
+        t.in("    .code32");
+        t.in("    int 0x0");
+        t.in("    int 0x1");
+        t.in("    int (0x2 * 0x6f)");
+        t.in("    .code16");
+        t.in("    int 0x3");
+        t.in("    int 0xd");
+        t.in("    int 0xff");
+        
+        t.bin(0xCD).bin(0x00);
+        t.bin(0xCD).bin(0x01);
+        t.bin(0xCD).bin(0xDE);
+        t.bin(0xCD).bin(0x03);
+        t.bin(0xCD).bin(0x0D);
+        t.bin(0xCD).bin(0xFF);
+        
+        return this.runTest(t);
+    }
+    
+}
