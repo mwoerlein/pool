@@ -47,4 +47,5 @@ class TestData extends sys::core::Object {
     }
     [String] getBinary() { return binary; }
     [int] getStartAddress() { return startAddress; }
+    [int] hasExplicitPretty() { return pretty.length() != 0; }
 }

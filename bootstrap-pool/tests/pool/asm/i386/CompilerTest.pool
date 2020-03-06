@@ -8,11 +8,16 @@ namespace pool::asm::i386;
 class CompilerTest extends pool::asm::test::TestCase {
 
     [] runAll() {
-        pool::asm::test::TestData t = this.newTestData("\"Blinking\"-Test");
+        this.testBlinking();
+        this.testCodeAddrData();
+    }
+    
+    [int] testBlinking() {
+        pool::asm::test::TestData t = this.newTestData("testBlinking");
         
         t.in("cga_lastline := 0xb8f00");
         t.in("blinking:");
-        t.in("    movl 0,  %ebx // column = 0");
+        t.in("    movl zero,  %ebx // column = 0");
         t.in("    movl 0,  %ecx // charOffset = 0");
         t.in("blinking_loop:");
         t.in("    // charTmp = charOffset");
@@ -40,10 +45,12 @@ class CompilerTest extends pool::asm::test::TestCase {
         t.in("    jnz wait");
         t.in("    // endless loop");
         t.in("    jmp blinking_loop");
+        t.in("ONE := 1");
+        t.in("zero := (ONE - 1)");
 
         t.pretty("cga_lastline := 0xb8f00");
         t.pretty("blinking:");
-        t.pretty("    movl 0x0, %ebx");
+        t.pretty("    movl zero, %ebx");
         t.pretty("    movl 0x0, %ecx");
         t.pretty("blinking_loop:");
         t.pretty("    movl %ecx, %eax");
@@ -63,31 +70,100 @@ class CompilerTest extends pool::asm::test::TestCase {
         t.pretty("    addl -0x1, %eax");
         t.pretty("    jnz wait");
         t.pretty("    jmp blinking_loop");
+        t.pretty("ONE := 0x1");
+        t.pretty("zero := (ONE - 0x1)");
         
-                                                                      // blinking:
-        t.bin(0xbb).bin(0x00).bin(0x00).bin(0x00).bin(0x00)           //     movl 0, %ebx
-         .bin(0xb9).bin(0x00).bin(0x00).bin(0x00).bin(0x00)           //     movl 0, %ecx
-                                                                      // blinking_loop:
-         .bin(0x89).bin(0xc8)                                         //     movl %ecx, %eax
-         .bin(0x81).bin(0xc1).bin(0x61).bin(0x07).bin(0x00).bin(0x00) //     addl 0x761, %ecx
-         .bin(0x66).bin(0x89).bin(0x0c).bin(0x5d)                     //     movw %cx, cga_lastline(,%ebx,2)
-            .bin(0x00).bin(0x8f).bin(0x0b).bin(0x00)
-         .bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00)           //     addl 0x1, %eax
-         .bin(0xb9).bin(0x1a).bin(0x00).bin(0x00).bin(0x00)           //     movl 0x1a, %ecx
-         .bin(0xf6).bin(0xf1)                                         //     divb %cl
-         .bin(0x88).bin(0xe1)                                         //     movb %ah, %cl
-         .bin(0x89).bin(0xd8)                                         //     movl %ebx, %eax
-         .bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00)           //     addl 0x1, %eax
-         .bin(0xbb).bin(0x50).bin(0x00).bin(0x00).bin(0x00)           //     movl 0x50, %ebx
-         .bin(0xf6).bin(0xf3)                                         //     divb %bl
-         .bin(0x88).bin(0xe3)                                         //     movb %ah, %bl
-         .bin(0xb8).bin(0xff).bin(0xff).bin(0x3f).bin(0x00)           //     movl 0x3fffff, %eax
-                                                                      // wait:
-         .bin(0x05).bin(0xff).bin(0xff).bin(0xff).bin(0xff)           //     addl -0x1, %eax
-         .bin(0x75).bin(0xf9)                                         //     jnz wait
-         .bin(0xeb).bin(0xc4)                                         //     jmp blinking_loop
-        ;
+                                                                       // blinking:
+        t.bin(0xbb).bin(0x00).bin(0x00).bin(0x00).bin(0x00);           //     movl 0, %ebx
+        t.bin(0xb9).bin(0x00).bin(0x00).bin(0x00).bin(0x00);           //     movl 0, %ecx
+                                                                       // blinking_loop:
+        t.bin(0x89).bin(0xc8);                                         //     movl %ecx, %eax
+        t.bin(0x81).bin(0xc1).bin(0x61).bin(0x07).bin(0x00).bin(0x00); //     addl 0x761, %ecx
+        t.bin(0x66).bin(0x89).bin(0x0c).bin(0x5d)                      //     movw %cx, cga_lastline(,%ebx,2)
+            .bin(0x00).bin(0x8f).bin(0x0b).bin(0x00);
+        t.bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00);           //     addl 0x1, %eax
+        t.bin(0xb9).bin(0x1a).bin(0x00).bin(0x00).bin(0x00);           //     movl 0x1a, %ecx
+        t.bin(0xf6).bin(0xf1);                                         //     divb %cl
+        t.bin(0x88).bin(0xe1);                                         //     movb %ah, %cl
+        t.bin(0x89).bin(0xd8);                                         //     movl %ebx, %eax
+        t.bin(0x05).bin(0x01).bin(0x00).bin(0x00).bin(0x00);           //     addl 0x1, %eax
+        t.bin(0xbb).bin(0x50).bin(0x00).bin(0x00).bin(0x00);           //     movl 0x50, %ebx
+        t.bin(0xf6).bin(0xf3);                                         //     divb %bl
+        t.bin(0x88).bin(0xe3);                                         //     movb %ah, %bl
+        t.bin(0xb8).bin(0xff).bin(0xff).bin(0x3f).bin(0x00);           //     movl 0x3fffff, %eax
+                                                                       // wait:
+        t.bin(0x05).bin(0xff).bin(0xff).bin(0xff).bin(0xff);           //     addl -0x1, %eax
+        t.bin(0x75).bin(0xf9);                                         //     jnz wait
+        t.bin(0xeb).bin(0xc4);                                         //     jmp blinking_loop
         
-        this.runTest(t);
+        return this.runTest(t);
     }
+
+    [int] testCodeAddrData() {
+        pool::asm::test::TestData t = this.newTestData("testCodeAddrData");
+        // TODO: activate with .addr and .data support in parser
+        return this.skip();
+        
+        t.in(".code16");
+        t.in("    .addr16 .data16 movw 0x16, (0x16)");
+        t.in("    .addr16 .data32 movw 0x32, (0x16)");
+        t.in("    .addr32 .data16 movw 0x16, (0x32)");
+        t.in("    .addr32 .data32 movw 0x32, (0x32)");
+        t.in("    .addr16 .data16 addl 0x16, (0x16)");
+        t.in("    .addr16 .data32 addl 0x32, (0x16)");
+        t.in("    .addr32 .data16 addl 0x16, (0x32)");
+        t.in("    .addr32 .data32 addl 0x32, (0x32)");
+        t.in(".code32");
+        t.in("    .addr16 .data16 addw 0x16, (0x16)");
+        t.in("    .addr16 .data32 addw 0x32, (0x16)");
+        t.in("    .addr32 .data16 addw 0x16, (0x32)");
+        t.in("    .addr32 .data32 addw 0x32, (0x32)");
+        t.in("    .addr16 .data16 movl 0x16, (0x16)");
+        t.in("    .addr16 .data32 movl 0x32, (0x16)");
+        t.in("    .addr32 .data16 movl 0x16, (0x32)");
+        t.in("    .addr32 .data32 movl 0x32, (0x32)");
+        
+        t.pretty(".code16");
+        t.pretty("    movw 0x16, (0x16)");
+        t.pretty("    .data32 movw 0x32, (0x16)");
+        t.pretty("    .addr32 movw 0x16, (0x32)");
+        t.pretty("    .data32 .addr32 movw 0x32, (0x32)");
+        t.pretty("    addl 0x16, (0x16)");
+        t.pretty("    .data32 addl 0x32, (0x16)");
+        t.pretty("    .addr32 addl 0x16, (0x32)");
+        t.pretty("    .data32 .addr32 addl 0x32, (0x32)");
+        t.pretty(".code32");
+        t.pretty("    .data16 .addr16 addw 0x16, (0x16)");
+        t.pretty("    .addr16 addw 0x32, (0x16)");
+        t.pretty("    .data16 addw 0x16, (0x32)");
+        t.pretty("    addw 0x32, (0x32)");
+        t.pretty("    .data16 .addr16 movl 0x16, (0x16)");
+        t.pretty("    .addr16 movl 0x32, (0x16)");
+        t.pretty("    .data16 movl 0x16, (0x32)");
+        t.pretty("    movl 0x32, (0x32)");
+
+        // .code16 movw
+        t.bin(0xc7).bin(0x06).bin(0x16).bin(0x00).bin(0x16).bin(0x00);
+        t.bin(0x66).bin(0xc7).bin(0x06).bin(0x16).bin(0x00).bin(0x32).bin(0x00);
+        t.bin(0x67).bin(0xc7).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x16).bin(0x00);
+        t.bin(0x66).bin(0x67).bin(0xc7).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x32).bin(0x00);
+        // .code16 addl imm8
+        t.bin(0x66).bin(0x83).bin(0x06).bin(0x16).bin(0x00).bin(0x16);
+        t.bin(0x83).bin(0x06).bin(0x16).bin(0x00).bin(0x32);
+        t.bin(0x66).bin(0x67).bin(0x83).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x16);
+        t.bin(0x67).bin(0x83).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x32);
+        // .code32 addw imm8
+        t.bin(0x67).bin(0x83).bin(0x06).bin(0x16).bin(0x00).bin(0x16);
+        t.bin(0x66).bin(0x67).bin(0x83).bin(0x06).bin(0x16).bin(0x00).bin(0x32);
+        t.bin(0x83).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x16);
+        t.bin(0x66).bin(0x83).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x32);
+        // .code32 movl
+        t.bin(0x66).bin(0x67).bin(0xc7).bin(0x06).bin(0x16).bin(0x00).bin(0x16).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x67).bin(0xc7).bin(0x06).bin(0x16).bin(0x00).bin(0x32).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x66).bin(0xc7).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x16).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0xc7).bin(0x05).bin(0x32).bin(0x00).bin(0x00).bin(0x00).bin(0x32).bin(0x00).bin(0x00).bin(0x00);
+        
+        return this.runTest(t);
+    }
+
 }

@@ -43,7 +43,7 @@ class TestCase extends test::TestCase {
             
             unit.destroy();
         }
-        { // test stable compilation of pretty-printed node list
+        if (data.hasExplicitPretty()) { // test stable compilation of pretty-printed code
             CompilationUnit unit = this.parseAndCompile(data.getPretty(), data.getName(), data.getStartAddress());
             if (unit.hasErrors()) { return this.failUnit(unit); }
         

@@ -1,0 +1,384 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class MoveTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.testMR_reg_reg();
+        this.testMR_reg_ind_32bit();
+        this.testMR_reg_ind_16bit();
+        this.testMR_sreg_reg();
+        this.testMR_sreg_ind();
+        this.testRM_ind_reg_32bit();
+        this.testRM_ind_reg_16bit();
+        this.testRM_reg_sreg();
+        this.testRM_ind_sreg();
+        this.testOI_imm_reg();
+        this.testMI_imm_ind_32bit();
+        this.testMI_imm_ind_16bit();
+    }
+        
+    [int] testMR_reg_reg() {
+        pool::asm::test::TestData t = this.newTestData("testMR_reg_reg");
+        
+        t.in("    mov %eax, %eax");
+        t.in("    mov %al, %bh");
+        t.in("    mov %bx, %ax");
+        t.in("    movw %cx, %bx");
+        t.in("    movb %dh, %cl");
+        t.in("    movl %edi, %edx");
+        t.in("    movl %esi, %edi");
+        t.in("    movl %ebp, %esi");
+        t.in("    movl %esp, %ebp");
+        t.in("    movl %esp, %esp");
+        
+        t.bin(0x89).bin(0xC0);
+        t.bin(0x88).bin(0xC7);
+        t.bin(0x66).bin(0x89).bin(0xD8);
+        t.bin(0x66).bin(0x89).bin(0xCB);
+        t.bin(0x88).bin(0xF1);
+        t.bin(0x89).bin(0xFA);
+        t.bin(0x89).bin(0xF7);
+        t.bin(0x89).bin(0xEE);
+        t.bin(0x89).bin(0xE5);
+        t.bin(0x89).bin(0xE4);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testMR_reg_ind_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testMR_reg_ind_32bit");
+        
+        t.in("SIX := 0x6");
+        t.in("six := SIX");
+        t.in("buffer := (0xbf000 + _start)");
+        t.in("foo := 0x200");
+        t.in("_start:");
+        t.in("    movb %al, (%eax)");
+        t.in("    movb %bh, 0x2(%eax)");
+        t.in("    movw %ax, (%ebx,%eax)");
+        t.in("    movw %cx, six(%ebx,%ebp,4)");
+        t.in("    movl %edx, (%ecx,%edi,8)");
+        t.in("    movl %esp, buffer(,%esi,2)");
+            
+        t.in("    movl %edi, (0x20)");
+        t.in("    movl %ebx, (foo)");
+        t.in("    mov %al, (_start)");
+        t.in("    mov %ax, (foo)");
+        t.in("    mov %eax, (0x200)");
+
+        t.bin(0x88).bin(0x00);
+        t.bin(0x88).bin(0x78).bin(0x02);
+        t.bin(0x66).bin(0x89).bin(0x04).bin(0x03);
+        t.bin(0x66).bin(0x89).bin(0x4C).bin(0xAB).bin(0x06);
+        t.bin(0x89).bin(0x14).bin(0xF9);
+        t.bin(0x89).bin(0x24).bin(0x75).bin(0x00).bin(0xF2).bin(0x0B).bin(0x00);
+            
+        t.bin(0x89).bin(0x3D).bin(0x20).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x89).bin(0x1D).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0xA2).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0x66).bin(0xA3).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0xA3).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        
+        t.setStartAddress(0x200);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testMR_reg_ind_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testMR_reg_ind_16bit");
+        
+        t.in("    .code16");
+        t.in("buffer := 0xbf000");
+        t.in("foo := 0x200");
+        t.in("_start:");
+        t.in("    movb %al, (%eax)");
+        t.in("    movb %bh, 0x2(%eax)");
+        t.in("    movw %ax, (%ebx,%eax)");
+        t.in("    movw %cx, 0x6(%ebx,%ebp,4)");
+        t.in("    movl %edx, (%ecx,%edi,8)");
+        t.in("    movl %esp, buffer(,%esi,2)");
+            
+        t.in("    movl %edi, (0x20)");
+        t.in("    movl %ebx, (foo)");
+        t.in("    mov %al, (_start)");
+        t.in("    mov %ax, (foo)");
+        t.in("    mov %eax, (0x200)");
+
+        t.bin(0x67).bin(0x88).bin(0x00);
+        t.bin(0x67).bin(0x88).bin(0x78).bin(0x02);
+        t.bin(0x67).bin(0x89).bin(0x04).bin(0x03);
+        t.bin(0x67).bin(0x89).bin(0x4C).bin(0xAB).bin(0x06);
+        t.bin(0x66).bin(0x67).bin(0x89).bin(0x14).bin(0xF9);
+        t.bin(0x66).bin(0x67).bin(0x89).bin(0x24).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00);
+            
+        t.bin(0x66).bin(0x89).bin(0x3E).bin(0x20).bin(0x00);
+        t.bin(0x66).bin(0x89).bin(0x1E).bin(0x00).bin(0x02);
+        t.bin(0xA2).bin(0x00).bin(0x02);
+        t.bin(0xA3).bin(0x00).bin(0x02);
+        t.bin(0x66).bin(0xA3).bin(0x00).bin(0x02);
+        
+        t.setStartAddress(0x200);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testMR_sreg_reg() {
+        pool::asm::test::TestData t = this.newTestData("testMR_sreg_reg");
+        
+        t.in("    movl %cs, %eax");
+        t.in("    movl %ds, %ebp");
+        t.in("    mov %es, %esp");
+        t.in("    mov %fs, %bx");
+        t.in("    movw %gs, %di");
+        t.in("    movw %ss, %dx");
+
+        t.bin(0x8C).bin(0xC8);
+        t.bin(0x8C).bin(0xDD);
+        t.bin(0x8C).bin(0xC4);
+        t.bin(0x66).bin(0x8C).bin(0xE3);
+        t.bin(0x66).bin(0x8C).bin(0xEF);
+        t.bin(0x66).bin(0x8C).bin(0xD2);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testMR_sreg_ind() {
+        pool::asm::test::TestData t = this.newTestData("testMR_sreg_ind");
+        
+        t.in("    movw %cs, (%eax)");
+        t.in("    movw %ds, 0x12c(%esp)");
+        t.in("    mov %es, (,%esi,8)");
+        t.in("    mov %fs, 0x8(%edi,%eax)");
+
+        t.bin(0x8C).bin(0x08);
+        t.bin(0x8C).bin(0x9C).bin(0x24).bin(0x2C).bin(0x01).bin(0x00).bin(0x00);
+        t.bin(0x8C).bin(0x04).bin(0xF5).bin(0x00).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x8C).bin(0x64).bin(0x07).bin(0x08);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testRM_ind_reg_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testRM_ind_reg_32bit");
+        
+        t.in("    movb (%eax), %dl");
+        t.in("    movb 0x5(%ebx), %ch");
+        t.in("    movw (%eax,%ecx), %bx");
+        t.in("    movw 0x7f(%ecx,%ebx,4), %bp");
+        t.in("    movl (%edx,%edi,8), %ecx");
+        t.in("    movl 0xbf000(,%esi,2), %esp");
+            
+        t.in("    movl (0x20), %edi");
+        t.in("    movl (0x200), %ebx");
+        t.in("    mov (0x200), %al");
+        t.in("    mov (0x200), %ax");
+        t.in("    mov (0x200), %eax");
+
+        t.bin(0x8A).bin(0x10);
+        t.bin(0x8A).bin(0x6B).bin(0x05);
+        t.bin(0x66).bin(0x8B).bin(0x1C).bin(0x08);
+        t.bin(0x66).bin(0x8B).bin(0x6C).bin(0x99).bin(0x7F);
+        t.bin(0x8B).bin(0x0C).bin(0xFA);
+        t.bin(0x8B).bin(0x24).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00);
+            
+        t.bin(0x8B).bin(0x3D).bin(0x20).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x8B).bin(0x1D).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0xA0).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0x66).bin(0xA1).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        t.bin(0xA1).bin(0x00).bin(0x02).bin(0x00).bin(0x00);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testRM_ind_reg_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testRM_ind_reg_16bit");
+        
+        t.in("    .code16");
+        t.in("    movb (%eax), %dl");
+        t.in("    movb 0x5(%ebx), %ch");
+        t.in("    movw (%eax,%ecx), %bx");
+        t.in("    movw 0x7f(%ecx,%ebx,4), %bp");
+        t.in("    movl (%edx,%edi,8), %ecx");
+        t.in("    movl 0xbf000(,%esi,2), %esp");
+            
+        t.in("    movl (0x20), %edi");
+        t.in("    movl (0x200), %ebx");
+        t.in("    mov (0x200), %al");
+        t.in("    mov (0x200), %ax");
+        t.in("    mov (0x200), %eax");
+
+        t.bin(0x67).bin(0x8A).bin(0x10);
+        t.bin(0x67).bin(0x8A).bin(0x6B).bin(0x05);
+        t.bin(0x67).bin(0x8B).bin(0x1C).bin(0x08);
+        t.bin(0x67).bin(0x8B).bin(0x6C).bin(0x99).bin(0x7F);
+        t.bin(0x66).bin(0x67).bin(0x8B).bin(0x0C).bin(0xFA);
+        t.bin(0x66).bin(0x67).bin(0x8B).bin(0x24).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00);
+            
+        t.bin(0x66).bin(0x8B).bin(0x3E).bin(0x20).bin(0x00);
+        t.bin(0x66).bin(0x8B).bin(0x1E).bin(0x00).bin(0x02);
+        t.bin(0xA0).bin(0x00).bin(0x02);
+        t.bin(0xA1).bin(0x00).bin(0x02);
+        t.bin(0x66).bin(0xA1).bin(0x00).bin(0x02);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testRM_reg_sreg() {
+        pool::asm::test::TestData t = this.newTestData("testRM_reg_sreg");
+        
+        t.in("    movl %eax, %cs");
+        t.in("    movl %ebp, %ds");
+        t.in("    mov %esp, %es");
+        t.in("    mov %bx, %fs");
+        t.in("    movw %di, %gs");
+        t.in("    movw %dx, %ss");
+
+        t.bin(0x8E).bin(0xC8);
+        t.bin(0x8E).bin(0xDD);
+        t.bin(0x8E).bin(0xC4);
+        t.bin(0x66).bin(0x8E).bin(0xE3);
+        t.bin(0x66).bin(0x8E).bin(0xEF);
+        t.bin(0x66).bin(0x8E).bin(0xD2);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testRM_ind_sreg() {
+        pool::asm::test::TestData t = this.newTestData("testRM_ind_sreg");
+        
+        t.in("    movw (%eax), %cs");
+        t.in("    movw 0x12c(%ebp), %ds");
+        t.in("    movw (,%esi,2), %es");
+        t.in("    movw 0x6(%eax,%ebx,8), %ss");
+
+        t.bin(0x8E).bin(0x08);
+        t.bin(0x8E).bin(0x9D).bin(0x2C).bin(0x01).bin(0x00).bin(0x00);
+        t.bin(0x8E).bin(0x04).bin(0x75).bin(0x00).bin(0x00).bin(0x00).bin(0x00);
+        t.bin(0x8E).bin(0x54).bin(0xD8).bin(0x06);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testOI_imm_reg() {
+        pool::asm::test::TestData t = this.newTestData("testOI_imm_reg");
+        
+        t.in("_zero:");
+        t.in("    movb 0x0, %al");
+        t.in("    movb 0x1a, %bh");
+        t.in("    movw 0x1, %sp");
+        t.in("    movl 0xbc614e, %esi");
+        t.in("    movl 0x12345678, %esi");
+        t.in("    movl (0x1234 + _zero), %esi");
+
+        t.bin(0xB0).bin(0x00);
+        t.bin(0xB7).bin(0x1A);
+        t.bin(0x66).bin(0xBC).bin(0x01).bin(0x00);
+        t.bin(0xBE).bin(0x4E).bin(0x61).bin(0xBC).bin(0x00);
+        t.bin(0xBE).bin(0x78).bin(0x56).bin(0x34).bin(0x12);
+        t.bin(0xBE).bin(0x34).bin(0x12).bin(0x00).bin(0x00);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testMI_imm_ind_32bit() {
+        pool::asm::test::TestData t = this.newTestData("testMI_imm_ind_32bit");
+        
+        t.in("    .code32");
+        t.in("start:");
+        t.in("    movb start, (%eax)");
+        t.in("    movb 0xff, 0x2(%eax)");
+        t.in("    movw 0xc, (%ebx,%eax)");
+        t.in("    movw 0x400, 0x6(%ebx,%ebp,4)");
+        t.in("    movl 0xc0ffee, (%ecx,%edi,8)");
+        t.in("    movl 0xfefe, 0xbf000(,%esi,2)");
+        t.in("    movl 0xfefe, 0xbf000(%ebp,%eax)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    movl 0xdeadbeef, (0x20)");
+        
+        t.in("    movb start, (%bx)");
+        t.in("    movb start, (%bp)");
+        t.in("    movb 0xff, 0x2(%bx)");
+        t.in("    movw 0xc, (%bx,%di)");
+        t.in("    movw 0x400, 0x6(%bp,%si)");
+        t.in("    movl 0xc0ffee, (%di)");
+        t.in("    movl 0xfefe, 0xabcd(%si)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr16 movl 0xdeadbeef, (0x20)");
+
+        t.bin(0xC6).bin(0x00).bin(0x00);
+        t.bin(0xC6).bin(0x40).bin(0x02).bin(0xFF);
+        t.bin(0x66).bin(0xC7).bin(0x04).bin(0x03).bin(0x0C).bin(0x00);
+        t.bin(0x66).bin(0xC7).bin(0x44).bin(0xAB).bin(0x06).bin(0x00).bin(0x04);
+        t.bin(0xC7).bin(0x04).bin(0xF9).bin(0xEE).bin(0xFF).bin(0xC0).bin(0x00);
+        t.bin(0xC7).bin(0x04).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00).bin(0xFE).bin(0xFE).bin(0x00).bin(0x00);
+        t.bin(0xC7).bin(0x84).bin(0x05).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00).bin(0xFE).bin(0xFE).bin(0x00).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0xC7).bin(0x05).bin(0x20).bin(0x00).bin(0x00).bin(0x00).bin(0xEF).bin(0xBE).bin(0xAD).bin(0xDE);
+    
+        t.bin(0x67).bin(0xC6).bin(0x07).bin(0x00);
+        t.bin(0x67).bin(0xC6).bin(0x46).bin(0x00).bin(0x00);
+        t.bin(0x67).bin(0xC6).bin(0x47).bin(0x02).bin(0xFF);
+        t.bin(0x66).bin(0x67).bin(0xC7).bin(0x01).bin(0x0C).bin(0x00);
+        t.bin(0x66).bin(0x67).bin(0xC7).bin(0x42).bin(0x06).bin(0x00).bin(0x04);
+        t.bin(0x67).bin(0xC7).bin(0x05).bin(0xEE).bin(0xFF).bin(0xC0).bin(0x00);
+        t.bin(0x67).bin(0xC7).bin(0x84).bin(0xCD).bin(0xAB).bin(0xFE).bin(0xFE).bin(0x00).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x67).bin(0xC7).bin(0x06).bin(0x20).bin(0x00).bin(0xEF).bin(0xBE).bin(0xAD).bin(0xDE);
+        
+        return this.runTest(t);
+    }
+    
+    [int] testMI_imm_ind_16bit() {
+        pool::asm::test::TestData t = this.newTestData("testMI_imm_ind_16bit");
+        
+        t.in("    .code16");
+        t.in("start:");
+        t.in("    movb start, (%eax)");
+        t.in("    movb 0xff, 0x2(%eax)");
+        t.in("    movw 0xc, (%ebx,%eax)");
+        t.in("    movw 0x400, 0x6(%ebx,%ebp,4)");
+        t.in("    movl 0xc0ffee, (%ecx,%edi,8)");
+        t.in("    movl 0xfefe, 0xbf000(,%esi,2)");
+        t.in("    movl 0xfefe, 0xbf000(%ebp,%eax)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    .addr32 movl 0xdeadbeef, (0x20)");
+        
+        t.in("    movb start, (%bx)");
+        t.in("    movb start, (%bp)");
+        t.in("    movb 0xff, 0x2(%bx)");
+        t.in("    movw 0xc, (%bx,%di)");
+        t.in("    movw 0x400, 0x6(%bp,%si)");
+        t.in("    movl 0xc0ffee, (%di)");
+        t.in("    movl 0xfefe, 0xabcd(%si)");
+        // TODO: activate with .addr and .data support in parser
+        //t.in("    movl 0xdeadbeef, (0x20)");
+        
+        t.bin(0x67).bin(0xC6).bin(0x00).bin(0x00);
+        t.bin(0x67).bin(0xC6).bin(0x40).bin(0x02).bin(0xFF);
+        t.bin(0x67).bin(0xC7).bin(0x04).bin(0x03).bin(0x0C).bin(0x00);
+        t.bin(0x67).bin(0xC7).bin(0x44).bin(0xAB).bin(0x06).bin(0x00).bin(0x04);
+        t.bin(0x66).bin(0x67).bin(0xC7).bin(0x04).bin(0xF9).bin(0xEE).bin(0xFF).bin(0xC0).bin(0x00);
+        t.bin(0x66).bin(0x67).bin(0xC7).bin(0x04).bin(0x75).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00).bin(0xFE).bin(0xFE).bin(0x00).bin(0x00);
+        t.bin(0x66).bin(0x67).bin(0xC7).bin(0x84).bin(0x05).bin(0x00).bin(0xF0).bin(0x0B).bin(0x00).bin(0xFE).bin(0xFE).bin(0x00).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x66).bin(0x67).bin(0xC7).bin(0x05).bin(0x20).bin(0x00).bin(0x00).bin(0x00).bin(0xEF).bin(0xBE).bin(0xAD).bin(0xDE);
+    
+        t.bin(0xC6).bin(0x07).bin(0x00);
+        t.bin(0xC6).bin(0x46).bin(0x00).bin(0x00);
+        t.bin(0xC6).bin(0x47).bin(0x02).bin(0xFF);
+        t.bin(0xC7).bin(0x01).bin(0x0C).bin(0x00);
+        t.bin(0xC7).bin(0x42).bin(0x06).bin(0x00).bin(0x04);
+        t.bin(0x66).bin(0xC7).bin(0x05).bin(0xEE).bin(0xFF).bin(0xC0).bin(0x00);
+        t.bin(0x66).bin(0xC7).bin(0x84).bin(0xCD).bin(0xAB).bin(0xFE).bin(0xFE).bin(0x00).bin(0x00);
+        // TODO: activate with .addr and .data support in parser
+        //t.bin(0x66).bin(0xC7).bin(0x06).bin(0x20).bin(0x00).bin(0xEF).bin(0xBE).bin(0xAD).bin(0xDE);
+        
+        return this.runTest(t);
+    }
+
+}
