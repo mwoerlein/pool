@@ -1,0 +1,55 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+class GroupThreeInstructionTest extends pool::asm::test::TestCase {
+
+    [] runAll() {
+        this.testM_reg();
+        this.testM_ind();
+    }
+        
+    [int] testM_reg() {
+        pool::asm::test::TestData t = this.newTestData("testM_reg");
+        
+        t.in("    not %ah");
+        t.in("    neg %bx");
+        t.in("    mul %sp");
+        t.in("    imul %esp");
+        t.in("    div %ecx");
+        t.in("    idiv %edi");
+
+        t.bin(0xF6).bin(0xD4);
+        t.bin(0x66).bin(0xF7).bin(0xDB);
+        t.bin(0x66).bin(0xF7).bin(0xE4);
+        t.bin(0xF7).bin(0xEC);
+        t.bin(0xF7).bin(0xF1);
+        t.bin(0xF7).bin(0xFF);
+        
+        return this.runTest(t);
+    }
+        
+    [int] testM_ind() {
+        pool::asm::test::TestData t = this.newTestData("testM_ind");
+        
+        t.in("    notb 0x2(%edi)");
+        t.in("    negb 0x2(%ebp,%eax)");
+        t.in("    mulw (%eax,%ebx,8)");
+        t.in("    imulw 0x5(%eax,%ebx,8)");
+        t.in("    divl (0x12345678)");
+        t.in("    idivl (0x0)");
+
+        t.bin(0xF6).bin(0x57).bin(0x02);
+        t.bin(0xF6).bin(0x5C).bin(0x05).bin(0x02);
+        t.bin(0x66).bin(0xF7).bin(0x24).bin(0xD8);
+        t.bin(0x66).bin(0xF7).bin(0x6C).bin(0xD8).bin(0x05);
+        t.bin(0xF7).bin(0x35).bin(0x78).bin(0x56).bin(0x34).bin(0x12);
+        t.bin(0xF7).bin(0x3D).bin(0x00).bin(0x00).bin(0x00).bin(0x00);
+        
+        return this.runTest(t);
+    }
+    
+}
