@@ -11,11 +11,11 @@ use pool::asm::i386::value::RegisterValue;
 
 use sys::stream::OStream;
 
-class GroupTwoInstruction extends OneOperand {
+class GroupThreeInstruction extends OneOperand {
 
     int regO;
     
-    [GroupTwoInstruction] setRegO(int regO) {
+    [GroupThreeInstruction] setRegO(int regO) {
         this.regO = regO;
         return this;
     }
