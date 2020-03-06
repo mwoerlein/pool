@@ -1,7 +1,7 @@
-#include "pasm/i386/Instruction/GroupTwoInstruction.hpp"
+#include "pasm/i386/Instruction/GroupThreeInstruction.hpp"
 
 // protected
-size_t GroupTwoInstruction::approximateSizeInBytes() {
+size_t GroupThreeInstruction::approximateSizeInBytes() {
     Indirect *i1 = o1->as<Indirect>(indirect);
     
     size_t size = 2; //opcode, modrm
@@ -19,7 +19,7 @@ size_t GroupTwoInstruction::approximateSizeInBytes() {
     return size;
 }
 
-void GroupTwoInstruction::checkOperands() {
+void GroupThreeInstruction::checkOperands() {
     if (!o1) {
         list->err<<"Missing operand!\n";
     }
@@ -40,7 +40,7 @@ void GroupTwoInstruction::checkOperands() {
     }
 }
 
-void GroupTwoInstruction::validateOperands() {
+void GroupThreeInstruction::validateOperands() {
     Register *r1 = o1->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
     
@@ -59,7 +59,7 @@ void GroupTwoInstruction::validateOperands() {
     return;
 }
 
-size_t GroupTwoInstruction::compileOperands() {
+size_t GroupThreeInstruction::compileOperands() {
     size_t size = 0;
     Register *r1 = o1->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
@@ -84,7 +84,7 @@ size_t GroupTwoInstruction::compileOperands() {
     return -1;
 }
 
-void GroupTwoInstruction::writeOperandsToStream(OStream & stream) {
+void GroupThreeInstruction::writeOperandsToStream(OStream & stream) {
     Register *r1 = o1->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
     if (r1) {

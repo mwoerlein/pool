@@ -9,7 +9,7 @@
 #include "pasm/i386/Instruction/Call.hpp"
 #include "pasm/i386/Instruction/ConditionalJump.hpp"
 #include "pasm/i386/Instruction/GroupOneInstruction.hpp"
-#include "pasm/i386/Instruction/GroupTwoInstruction.hpp"
+#include "pasm/i386/Instruction/GroupThreeInstruction.hpp"
 #include "pasm/i386/Instruction/In.hpp"
 #include "pasm/i386/Instruction/Inline.hpp"
 #include "pasm/i386/Instruction/Int.hpp"
@@ -586,22 +586,22 @@ ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * o
         }
         [nN][oO][tT] @o1 bitwidth? @o2 {
             if (!op1 || op2 || op3) return 0;
-            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+            return &env().create<GroupThreeInstruction, const char *, int, ASMOperand*, BitWidth>
                 ("div", 2, op1, parseOperandSize(o1, o2));
         }
         [nN][eE][gG] @o1 bitwidth? @o2 {
             if (!op1 || op2 || op3) return 0;
-            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+            return &env().create<GroupThreeInstruction, const char *, int, ASMOperand*, BitWidth>
                 ("div", 3, op1, parseOperandSize(o1, o2));
         }
         [mM][uU][lL] @o1 bitwidth? @o2 {
             if (!op1 || op2 || op3) return 0;
-            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+            return &env().create<GroupThreeInstruction, const char *, int, ASMOperand*, BitWidth>
                 ("mul", 4, op1, parseOperandSize(o1, o2));
         }
         [iI][mM][uU][lL] @o1 bitwidth? @o2 {
             if (op1 && !op2 && !op3) {
-                return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+                return &env().create<GroupThreeInstruction, const char *, int, ASMOperand*, BitWidth>
                     ("imul", 5, op1, parseOperandSize(o1, o2));
             }
             String s(env(), *notAnInfo, start, operandsEnd);
@@ -610,12 +610,12 @@ ASMInstruction * PasmParser::parseInstruction(char * start, char * end, char * o
         }
         [dD][iI][vV] @o1 bitwidth? @o2 {
             if (!op1 || op2 || op3) return 0;
-            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+            return &env().create<GroupThreeInstruction, const char *, int, ASMOperand*, BitWidth>
                 ("div", 6, op1, parseOperandSize(o1, o2));
         }
         [iI][dD][iI][vV] @o1 bitwidth? @o2 {
             if (!op1 || op2 || op3) return 0;
-            return &env().create<GroupTwoInstruction, const char *, int, ASMOperand*, BitWidth>
+            return &env().create<GroupThreeInstruction, const char *, int, ASMOperand*, BitWidth>
                 ("idiv", 7, op1, parseOperandSize(o1, o2));
         }
         [iI][nN] @o1 bitwidth? @o2 {

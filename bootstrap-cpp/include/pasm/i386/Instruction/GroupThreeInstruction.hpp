@@ -3,7 +3,7 @@
 
 #include "pasm/i386/ASMInstruction.hpp"
 
-class GroupTwoInstruction: public ASMInstruction {
+class GroupThreeInstruction: public ASMInstruction {
     protected:
     int regO;
     
@@ -14,9 +14,9 @@ class GroupTwoInstruction: public ASMInstruction {
     virtual void writeOperandsToStream(OStream &stream) override;
     
     public:
-    GroupTwoInstruction(Environment &env, MemoryInfo &mi, const char * mnemonic, int regO, ASMOperand *o1, BitWidth operandSize = bit_auto)
+    GroupThreeInstruction(Environment &env, MemoryInfo &mi, const char * mnemonic, int regO, ASMOperand *o1, BitWidth operandSize = bit_auto)
         :ASMInstruction(env, mi, mnemonic, operandSize, o1), Object(env, mi), regO(regO) {}
-    virtual ~GroupTwoInstruction() {}
+    virtual ~GroupThreeInstruction() {}
 };
 
 #endif //PASM_I386_INSTRUCTION_GROUPTWOINSTRUCTION_HPP_LOCK
