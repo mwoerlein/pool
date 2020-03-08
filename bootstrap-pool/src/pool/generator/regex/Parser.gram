@@ -1,0 +1,34 @@
+%class   pool::generator::regex::Parser
+%extends pool::generator::regex::BaseParser
+
+CHAR      := /[^\\\(\)\[\]\?\*\+\-\^\|\.\/]|\\[nrt\\\(\)\[\]\?\*\+\-\^\|\.\/]/
+OBRACKET  := /\(/
+CBRACKET  := /\)/
+OSBRACKET := /\[/
+CSBRACKET := /\]/
+QMARK     := /\?/
+STAR      := /\*/
+PLUS      := /\+/
+MINUS     := /\-/
+DACH      := /\^/
+PIPE      := /\|/
+DOT       := /\./
+OTHER     := /.*/
+
+expression: exprlist                         { $$ = null; }
+expression: expression PIPE exprlist         { $$ = null; }
+exprlist:                                    { $$ = null; }
+exprlist: exprlist expr                      { $$ = null; }
+expr: elem                                   { $$ = null; }
+expr: elem QUESTIONMARK                      { $$ = null; }
+expr: elem STAR                              { $$ = null; }
+expr: elem PLUS                              { $$ = null; }
+elem: charset                                { $$ = null; }
+elem: OBRACKET expression CBRACKET           { $$ = null; }
+charset: DOT                                 { $$ = null; }
+charset: OSBRACKET charlist CSBRACKET        { $$ = null; }
+charset: OSBRACKET DACH charlist CSBRACKET   { $$ = null; }
+charlist: CHAR                               { $$ = null; }
+charlist: CHAR MINUS CHAR                    { $$ = null; }
+charlist: charlist CHAR                      { $$ = null; }
+charlist: charlist CHAR MINUS CHAR           { $$ = null; }

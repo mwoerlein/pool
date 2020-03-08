@@ -1,0 +1,62 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::node;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class List extends Node, AnyList {
+    
+    int KIND_ALTERNATIVE    := 0;
+    int KIND_CONCAT         := 1;
+    
+    int kind;
+    
+    [] __destruct() { this.destroyAll(); }
+    
+    [List] init(int kind) { this.kind = kind; return this; }
+    [List] addNode(Node node) { this.add(node); return this; }
+    
+    [AnyIterator] nodes() { return this.iterator(); }
+    
+    [int] equals(__any__ obj) {
+        List l = this.rt().cast(List:CLASSNAME, obj);
+        if (l && (this.kind == l.kind) && (this.size() == l.size())) {
+            AnyIterator tit = this.nodes();
+            AnyIterator lit = l.nodes();
+            while (tit.hasNext()) {
+                Node tn = tit.next();
+                Node ln = lit.next();
+                if (!tn.equals(ln)) {
+                    tit.destroy();
+                    lit.destroy();
+                    return false;
+                }
+            }
+            tit.destroy();
+            lit.destroy();
+            return true;
+        }
+        return false;
+    }
+
+    [OStream] printToStream(OStream stream) {
+        stream.printChar('(');
+        
+        AnyIterator it = this.nodes();
+        if (kind == List:KIND_ALTERNATIVE) {
+            if (it.hasNext()) { stream.print(it.next()); }
+            while (it.hasNext()) { stream.printChar('|').print(it.next()); }
+        } else {
+            while (it.hasNext()) { stream.print(it.next()); }
+        }
+        it.destroy();
+        
+        return stream.printChar(')');
+    }
+    
+}

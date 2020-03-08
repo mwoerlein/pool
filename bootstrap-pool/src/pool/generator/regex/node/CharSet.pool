@@ -1,0 +1,129 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::node;
+
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+class CharSet extends Node {
+
+    int exclusive;
+    int bits0;
+    int bits1;
+    int bits2;
+    int bits3;
+    int bits4;
+    int bits5;
+    int bits6;
+    int bits7;
+    int _count;
+    
+    [CharSet] setExclusive() { this.exclusive = true; return this; }
+        
+    [CharSet] setAll() {
+        bits0 = bits1 = bits2 = bits3 = bits4 = bits5 = bits6 = bits7 = -1;
+        _count = 256;
+        return this;
+    }
+    
+    [CharSet] setRange(int a, int b) {
+        int i = a;
+        while (i <= b) { this.setChar(i++); }    
+        return this;
+    }
+    
+    [CharSet] setChar(int c) {
+        if (c < 0 || c > 255) { return this; }
+        
+        int _b := Bitset:and(0x1f, c);
+        _count++;
+        if (c <  32) { bits0 = Bitset:set(bits0, _b); return this; }
+        if (c <  64) { bits1 = Bitset:set(bits1, _b); return this; }
+        if (c <  96) { bits2 = Bitset:set(bits2, _b); return this; }
+        if (c < 128) { bits3 = Bitset:set(bits3, _b); return this; }
+        if (c < 160) { bits4 = Bitset:set(bits4, _b); return this; }
+        if (c < 192) { bits5 = Bitset:set(bits5, _b); return this; }
+        if (c < 224) { bits6 = Bitset:set(bits6, _b); return this; }
+        if (c < 256) { bits7 = Bitset:set(bits7, _b); return this; }
+        return this;
+    }
+    
+    [int] hasChar(int c) {
+        if (c < 0 || c > 255) { return false; }
+        
+        int _b := Bitset:and(0x1f, c);
+        if (c <  32) { return Bitset:isset(bits0, _b); }
+        if (c <  64) { return Bitset:isset(bits1, _b); }
+        if (c <  96) { return Bitset:isset(bits2, _b); }
+        if (c < 128) { return Bitset:isset(bits3, _b); }
+        if (c < 160) { return Bitset:isset(bits4, _b); }
+        if (c < 192) { return Bitset:isset(bits5, _b); }
+        if (c < 224) { return Bitset:isset(bits6, _b); }
+        if (c < 256) { return Bitset:isset(bits7, _b); }
+        return false;
+    }
+
+    [int] equals(__any__ obj) {
+        CharSet c = this.rt().cast(CharSet:CLASSNAME, obj);
+        if (c && (this.exclusive == c.exclusive)) {
+            return (this.bits0 == c.bits0)
+                && (this.bits1 == c.bits1)
+                && (this.bits2 == c.bits2)
+                && (this.bits3 == c.bits3)
+                && (this.bits4 == c.bits4)
+                && (this.bits5 == c.bits5)
+                && (this.bits6 == c.bits6)
+                && (this.bits7 == c.bits7);
+        }
+        return false;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        if (!exclusive) {
+            if (_count == 1) {
+                int cur = 0;
+                while (cur < 256) {
+                    if (this.hasChar(cur)) { return this._formatChar(stream, cur); }
+                    cur++;
+                }
+            }
+            if ((bits0 == -1) && (bits1 == -1) && (bits2 == -1) && (bits3 == -1)
+                && (bits4 == -1) && (bits5 == -1) && (bits6 == -1) && (bits7 == -1)) {
+                return stream.printChar('.');
+            }
+            
+            stream.printChar('[');
+        } else {
+            stream.printChar('[').printChar('^');
+        }
+        
+        int cur = 0;
+        while (cur < 256) {
+            if (this.hasChar(cur)) {
+                this._formatChar(stream, cur);
+                if (this.hasChar(cur+1) && this.hasChar(cur+2)) {
+                    // skip consecutive characters
+                    while (this.hasChar(++cur)) {}
+                    this._formatChar(stream.printChar('-'), --cur);
+                }
+            }
+            cur++;
+        }
+        return stream.printChar(']');
+    }
+    
+    [OStream] _formatChar(OStream stream, int c) {
+        if ((c == '\\') || (c == '(') || (c == ')') || (c == '[') || (c == ']') || (c == '?') || (c == '*')
+            || (c == '+') || (c == '-') || (c == '^') || (c == '|') || (c == '.') || (c == '/')) {
+            return stream.printChar('\\').printChar(c);
+        }
+        if (c == '\n') { return stream.printChar('\\').printChar('n'); }
+        if (c == '\r') { return stream.printChar('\\').printChar('r'); }
+        if (c == '\t') { return stream.printChar('\\').printChar('t'); }
+        return stream.printChar(c);
+    }
+
+}

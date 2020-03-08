@@ -1,0 +1,44 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::node;
+
+use sys::stream::OStream;
+
+class Repeat extends Node {
+    int KIND_ANY            := 0;
+    int KIND_AT_LEAST_ONCE  := 1;
+    int KIND_AT_MOST_ONCE   := 2;
+    
+    int kind;
+    Node inner;
+    
+    [Repeat] init(int kind, Node inner) {
+        this.kind = kind;
+        this.inner = inner;
+        return this;
+    }
+    [] __destruct() { if (inner) { inner.destroy(); } }
+    
+    [Node] getInner() { return inner; }
+    
+    [int] equals(__any__ obj) {
+        Repeat r = this.rt().cast(Repeat:CLASSNAME, obj);
+        if (r && (this.kind == r.kind)) {
+            return this.inner.equals(r.inner);
+        }
+        return false;
+    }
+
+    [OStream] printToStream(OStream stream) {
+        stream.print(inner);
+        
+        if (kind == Repeat:KIND_ANY) { return stream.printChar('*'); }
+        if (kind == Repeat:KIND_AT_LEAST_ONCE) { return stream.printChar('+'); }
+        // KIND_AT_MOST_ONCE
+        return stream.printChar('?');
+    }
+    
+}

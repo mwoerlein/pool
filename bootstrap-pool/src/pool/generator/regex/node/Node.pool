@@ -1,0 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::node;
+
+class Node extends sys::core::Object {
+
+    // TODO: remove with implicit cast
+    [Node] node() { return this; }
+    
+}
