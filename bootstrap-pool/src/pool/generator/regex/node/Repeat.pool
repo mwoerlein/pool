@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::regex::node;
 
+use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
 class Repeat extends Node {
@@ -24,6 +25,7 @@ class Repeat extends Node {
     
     [Node] getInner() { return inner; }
     
+    [int] hash() { return Bitset:lrotate(this.inner.hash(), kind); }
     [int] equals(__any__ obj) {
         Repeat r = this.rt().cast(Repeat:CLASSNAME, obj);
         if (r && (this.kind == r.kind)) {

@@ -73,6 +73,18 @@ class Bitset {
         return ret;
     }
     
+    global [int] rrotate(int a, int bits) {
+        int ret = 0;
+        __pasm__(".byte 0xD3; .byte 0xC8  #// rorl %eax, %cl", {"%eax": a, "%ecx": bits}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] lrotate(int a, int bits) {
+        int ret = 0;
+        __pasm__(".byte 0xD3; .byte 0xC0  #// roll %eax, %cl", {"%eax": a, "%ecx": bits}, {"%eax": ret});
+        return ret;
+    }
+    
     global [int] isPowerOfTwo(int n) {
         return n && !(Bitset:and(n, n-1));
     }

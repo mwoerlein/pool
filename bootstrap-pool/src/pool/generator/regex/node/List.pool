@@ -7,6 +7,7 @@ namespace pool::generator::regex::node;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
 class List extends Node, AnyList {
@@ -15,14 +16,16 @@ class List extends Node, AnyList {
     int KIND_CONCAT         := 1;
     
     int kind;
+    int _hash;
     
     [] __destruct() { this.destroyAll(); }
     
-    [List] init(int kind) { this.kind = kind; return this; }
-    [List] addNode(Node node) { this.add(node); return this; }
+    [List] init(int kind) { this.kind = kind; _hash = kind; return this; }
+    [List] addNode(Node node) { this.add(node); _hash = Bitset:xor(_hash, node.hash()); return this; }
     
     [AnyIterator] nodes() { return this.iterator(); }
     
+    [int] hash() { return _hash; }
     [int] equals(__any__ obj) {
         List l = this.rt().cast(List:CLASSNAME, obj);
         if (l && (this.kind == l.kind) && (this.size() == l.size())) {
@@ -45,6 +48,9 @@ class List extends Node, AnyList {
     }
 
     [OStream] printToStream(OStream stream) {
+        if (this.size() == 0) { return stream; }
+        if (this.size() == 1) { return stream.print(this.first()); }
+        
         stream.printChar('(');
         
         AnyIterator it = this.nodes();

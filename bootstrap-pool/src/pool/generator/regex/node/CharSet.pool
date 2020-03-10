@@ -66,6 +66,16 @@ class CharSet extends Node {
         return false;
     }
 
+    [int] hash() {
+        int h = Bitset:xor(bits0, bits1);
+        h = Bitset:xor(h, bits2);
+        h = Bitset:xor(h, bits3);
+        h = Bitset:xor(h, bits4);
+        h = Bitset:xor(h, bits5);
+        h = Bitset:xor(h, bits6);
+        h = Bitset:xor(h, bits7);
+        return Bitset:lrotate(h, exclusive);
+    }
     [int] equals(__any__ obj) {
         CharSet c = this.rt().cast(CharSet:CLASSNAME, obj);
         if (c && (this.exclusive == c.exclusive)) {
