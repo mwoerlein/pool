@@ -1,0 +1,36 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::tokenizer::dfa;
+
+use pool::generator::regex::node::CharSet;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+
+class State extends sys::core::Object {
+
+    int id;
+    AnyMap actions; // HashMap<CharSet, Action>
+
+    [] __init() {
+        actions = this.rt().createInstance(AnyMap:CLASSNAME);
+        actions.init(13);
+    }
+
+    [] __destruct() {
+        actions.destroy();
+    }
+    
+    [State] setId(int id) { this.id = id; return this; }
+    [int] getId() { return id; }
+    
+    [State] addAction(CharSet cs, Action a) { actions.set(cs, a); }
+    [ActionIterator] actions() {
+        ActionIterator ret = this.rt().createInstance(ActionIterator:CLASSNAME);
+        return ret.init(actions.entries());
+    }
+    
+}

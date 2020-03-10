@@ -1,0 +1,26 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::tokenizer::dfa;
+
+use sys::core::utils::Bitset;
+
+class Action extends sys::core::Object {
+
+    int action; // bit 0: shift; bit 1: return; bit 2: goto;
+    Type type;
+    State target;
+    
+    [Action] setShift() { action = Bitset:set(action, 0); return this; }
+    [Action] setReturn(Type type) { action = Bitset:set(action, 1); this.type = type; return this; }
+    [Action] setGoto(State target) { action = Bitset:set(action, 2); this.target = target; return this; }
+    
+    [int] isShift()  { return Bitset:isset(action, 0); }
+    [int] isReturn() { return Bitset:isset(action, 1); }
+    [int] isGoto()   { return Bitset:isset(action, 2); }
+    [Type] getType() { return type; }
+    [State] getTarget() { return target; }
+    
+}

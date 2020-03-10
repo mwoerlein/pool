@@ -1,0 +1,43 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::tokenizer::dfa;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::utils::Owner;
+
+class DFA extends Owner {
+
+    AnyList types; // ArrayList<Type>
+    AnyList states; // ArrayList<State>
+    State init;
+
+    [] __init() {
+        this._initOwner();
+        this.types = this.createOwn(AnyList:CLASSNAME);
+        this.states = this.createOwn(AnyList:CLASSNAME);
+    }
+    
+    [Type] addType(cstring name) {
+        Type t = this.createOwn(Type:CLASSNAME);
+        t.cinit(name).setId(types.size());
+        types.add(t);
+        return t;
+    }
+    
+    [State] newState() {
+        State s = this.createOwn(State:CLASSNAME);
+        s.setId(states.size());
+        states.add(s);
+        return s;
+    }
+    [State] newInitState() { return init = this.newState(); }
+    
+    [State] getInitState() { return init; }
+    [AnyIterator] types() { return types.iterator(); }
+    [AnyIterator] states() { return states.iterator(); }
+    
+}
