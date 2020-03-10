@@ -5,7 +5,16 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer;
 
+use pool::generator::regex::node::CharSet;
+
+use pool::generator::tokenizer::dfa::Action;
+use pool::generator::tokenizer::dfa::ActionIterator;
+use pool::generator::tokenizer::dfa::DFA;
+use pool::generator::tokenizer::dfa::State;
+use pool::generator::tokenizer::dfa::Type;
+
 use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::memory::Address;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -74,5 +83,102 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         nextToken = t.init(tmp, type).setLocation(inputName, startLine, startColumn, curLine, curColumn);
         tmp.clear();
         return true;
+    }
+    
+    global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
+        State init = d.getInitState();
+        out.printCString(<"
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+">).printNewline();
+        out.printCString("namespace ").printCString(ns).printCString("::token;").printNewline();
+        out.printNewline();
+        out.printCString("class Tokenizer extends pool::generator::tokenizer::Tokenizer {").printNewline();
+        out.printNewline();
+        out.printCString("    [int] _detectToken() {").printNewline();
+        if (init) {
+            out.printCString("        int state = ").printInt(init.getId()).printChar(';').printNewline();
+            out.printCString("        while (!input.isEmpty()) {").printNewline();
+            out.printCString("            int c = input.peekChar();").printNewline();
+            
+            out.printCString("            if (state == ").printInt(init.getId()).printCString(") {").printNewline();
+            Tokenizer:_genRulesForState(init, out);
+            
+            {
+                AnyIterator sit = d.states();
+                while (sit.hasNext()) {
+                    State s = sit.next();
+                    if (s.getId() != init.getId()) {
+                        out.printCString("            } else if (state == ").printInt(s.getId()).printCString(") {").printNewline();
+                        Tokenizer:_genRulesForState(s, out);
+                    }
+                }
+                sit.destroy();
+            }
+            out.printCString("            } else {").printNewline();
+            out.printCString("                this.rt().err().printCString(\"Unexpected state: \").printInt(state).printNewline();").printNewline();
+            out.printCString("                return false;").printNewline();
+            out.printCString("            }").printNewline();
+            out.printCString("        }").printNewline();
+        }
+        out.printCString("        return false;").printNewline();
+        out.printCString("    }").printNewline();
+        out.printNewline();
+        out.printCString(<"
+    [int] _buildToken(int type) {
+        Token t = this.rt().createInstance(Token:CLASSNAME);
+        return this._setNextToken(t.token(), type);
+    }
+">).printNewline();
+        out.printCString("}").printNewline();
+    }
+    
+    global [] _genRulesForState(State s, OStream out) {
+        int pos = 0;
+        ActionIterator ait = s.actions();
+        while ((pos >= 0) && ait.hasNext()) {
+            [CharSet cs, Action a] := ait.next();
+            if (pos++ == 0) {
+                out.printCString("               ");
+            } else {
+                out.printCString("                else");
+            }
+            if (cs.isSingle()) {
+                out.printCString(" if (c == ").escapeChar(cs.getSingle()).printChar(')');
+            } else if (cs.isAll()) {
+                // abort after this action
+                pos = -1;
+            } else {
+                // TODO
+                out.printCString(" if (");
+                int i = 0;
+                int cur = 0;
+                while (cur < 256) {
+                    if (cs.hasChar(cur)) {
+                        if (i++) { out.printCString(" || "); }
+                        if (cs.hasChar(cur+1) && cs.hasChar(cur+2)) {
+                            int start = cur;
+                            // skip consecutive characters
+                            while (cs.hasChar(++cur)) {}
+                            out.printCString("((c >= ").escapeChar(start).printCString(") && (c <= ").escapeChar(--cur).printCString("))");
+                        } else {
+                            out.printCString("(c == ").escapeChar(cur).printChar(')');
+                        }
+                    }
+                    cur++;
+                }
+                out.printCString(" )");
+            }
+            
+            out.printCString(" {");
+            if (a.isShift()) { out.printCString(" this._consume();"); }
+            if (a.isGoto()) { out.printCString(" state = ").printInt(a.getTarget().getId()).printChar(';'); }
+            if (a.isReturn()) { out.printCString(" return this._buildToken(Token:").print(a.getType().getName()).printCString(");"); }
+            out.printCString(" }").printNewline();
+        }
+        ait.destroy();
     }
 }

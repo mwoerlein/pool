@@ -5,8 +5,12 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer;
 
+use pool::generator::tokenizer::dfa::DFA;
+use pool::generator::tokenizer::dfa::Type;
+
 use sys::core::Object;
 use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 
 class Token extends Object {
@@ -68,6 +72,43 @@ class Token extends Object {
     
     [] debugType(OStream stream) {
         if (type == Token:EOI) { stream.printCString("EOI"); }
+    }
+    
+    global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
+        out.printCString(<"
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+">).printNewline();
+        out.printCString("namespace ").printCString(ns).printCString("::token;").printNewline();
+        out.printNewline();
+        out.printCString("class Token extends pool::generator::tokenizer::Token {").printNewline();
+        out.printNewline();
+        {
+            AnyIterator tit = d.types();
+            while (tit.hasNext()) {
+                Type t = tit.next();
+                out.printCString("    int ").print(t.getName()).printCString(" := ")
+                    .printInt(t.getId()).printChar(';').printNewline();
+            }
+            tit.destroy();
+        }
+        out.printNewline();
+        out.printCString("    [] debugType(sys::stream::OStream stream) {").printNewline();
+        out.printCString("        if (type == Token:EOI) { stream.printCString(\"EOI\"); }").printNewline();
+        {
+            AnyIterator tit = d.types();
+            while (tit.hasNext()) {
+                Type t = tit.next();
+                out.printCString("        else if (type == Token:").print(t.getName())
+                    .printCString(") { stream.printCString(").escapeString(t.getName()).printCString("); }").printNewline();
+            }
+            tit.destroy();
+        }
+        out.printCString("    }").printNewline();
+        out.printCString("}").printNewline();
     }
     
     // TODO: remove with implicit cast

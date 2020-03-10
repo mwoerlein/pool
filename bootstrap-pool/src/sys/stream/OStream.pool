@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::stream;
 
 use sys::core::Object;
+use sys::core::String;
 use sys::core::utils::Bitset;
 use sys::memory::Address;
 
@@ -60,6 +61,20 @@ class OStream extends Object {
         n = Bitset:rshift(n, 8);
         this.printChar(Bitset:and(n, 0xff));
         return this;
+    }
+    
+    [OStream] escapeString(String s) {
+        return s.escapeToStream(this);
+    }
+    
+    [OStream] escapeChar(int c) {
+        this.printChar('\'');
+        if (c == '\\') { this.printChar('\\').printChar('\\'); }
+        else if (c == '\n') { this.printChar('\\').printChar('n'); }
+        else if (c == '\r') { this.printChar('\\').printChar('r'); }
+        else if (c == '\t') { this.printChar('\\').printChar('t'); }
+        else { this.printChar(c); }
+        return this.printChar('\'');
     }
 
     // private

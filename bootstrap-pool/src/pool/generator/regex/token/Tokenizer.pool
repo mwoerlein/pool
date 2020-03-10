@@ -12,7 +12,6 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         while (!input.isEmpty()) {
             int c = input.peekChar();
             if (state == 0) {
-                
                 if (c == '(') { this._consume(); return this._buildToken(Token:OBRACKET); }
                 else if (c == ')') { this._consume(); return this._buildToken(Token:CBRACKET); }
                 else if (c == '[') { this._consume(); return this._buildToken(Token:OSBRACKET); }
@@ -26,22 +25,14 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == '.') { this._consume(); return this._buildToken(Token:DOT); }
                 else if (c == '\\') { this._consume(); state = 1; }
                 else { this._consume(); return this._buildToken(Token:CHAR); }
-                
             } else if (state == 1) {
-
-                if ((c == 'n') || (c == 'r') || (c == 't') || (c == '\\') 
-                    || (c == '(') || (c == ')') || (c == '[') || (c == ']')
-                    || (c == '?') || (c == '*') || (c == '+') || (c == '-')
-                    || (c == '^') || (c == '|') || (c == '.') || (c == '/')
-                 ) { this._consume(); return this._buildToken(Token:CHAR); }
+                if (((c >= '(') && (c <= '+')) || ((c >= '-') && (c <= '/')) || (c == '?') || ((c >= '[') && (c <= '^')) || (c == 'n') || (c == 'r') || (c == 't') || (c == '|') ) { this._consume(); return this._buildToken(Token:CHAR); }
                 else { this._consume(); return this._buildToken(Token:OTHER); }
-                
             } else {
                 this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
                 return false;
             }
         }
-        
         return false;
     }
 
@@ -49,5 +40,4 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         Token t = this.rt().createInstance(Token:CLASSNAME);
         return this._setNextToken(t.token(), type);
     }
-
 }
