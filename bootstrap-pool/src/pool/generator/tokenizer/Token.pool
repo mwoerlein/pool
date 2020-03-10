@@ -1,0 +1,75 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::tokenizer;
+
+use sys::core::Object;
+use sys::core::String;
+use sys::stream::OStream;
+
+class Token extends Object {
+
+    int EOI       := -1;
+    
+    int type;
+    String value;
+    
+    // Location
+    String inputName;
+    int firstLine;
+    int firstColumn;
+    int lastLine;
+    int lastColumn;
+    
+    [Token] init(String v, int t) {
+        value = this.rt().createInstance(String:CLASSNAME);
+        value.assignString(v);
+        type = t;
+        return this;
+    }
+    [Token] cinit(cstring v, int t) {
+        value = this.rt().createInstance(String:CLASSNAME);
+        value.assignCString(v);
+        type = t;
+        return this;
+    }
+    [] __destruct() {
+        value.destroy();
+    }
+    
+    [int] getType() { return type; }
+    [String] getValue() { return value; }
+    [int] toInt() { return value.toInt(); }
+    
+    [Token] setLocation(String inputName, int firstLine, int firstColumn, int lastLine, int lastColumn) {
+        this.inputName = inputName;
+        this.firstLine = firstLine;
+        this.firstColumn = firstColumn;
+        this.lastLine = lastLine;
+        this.lastColumn = lastColumn;
+        return this;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.print(value);
+    }
+    
+    [OStream] debugToStream(OStream stream) {
+        this.debugType(stream);
+        stream.printChar('(')
+            .printInt(firstLine).printChar('/').printInt(firstColumn)
+            .printChar('-')
+            .printInt(lastLine).printChar('/').printInt(lastColumn)
+            .printChar(')');
+        return value.escapeToStream(stream.printChar(':'));
+    }
+    
+    [] debugType(OStream stream) {
+        if (type == Token:EOI) { stream.printCString("EOI"); }
+    }
+    
+    // TODO: remove with implicit cast
+    [Token] token() { return this; }
+}

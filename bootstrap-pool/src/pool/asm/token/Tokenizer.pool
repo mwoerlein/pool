@@ -10,46 +10,7 @@ use sys::memory::Address;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
-class Tokenizer extends sys::core::anycollection::AnyIterator {
-
-    LocationAwareIStream input;
-    String tmp;
-    String inputName;
-    int startLine;
-    int startColumn;
-    int curLine;
-    int curColumn;
-    
-    Token nextToken;
-    Token eoi;
-    
-    [Tokenizer] init(IStream in, String inName) {
-        input = this.rt().createInstance(LocationAwareIStream:CLASSNAME);
-        input.init(in);
-        inputName = inName;
-        tmp = this.rt().createInstance(String:CLASSNAME);
-        eoi = this.rt().createInstance(Token:CLASSNAME);
-        eoi.init(tmp, Token:EOI);
-        return this;
-    }
-    [] __destruct() {
-        input.destroy();
-        tmp.destroy();
-        eoi.destroy();
-    }
-    
-    [int] hasNext() {
-        return this._fillToken();
-    }
-    
-    [__all__] next() {
-        if (this._fillToken()) {
-            Token ret = nextToken;
-            nextToken = null;
-            return Address:convert(ret);
-        }
-        return Address:convert(eoi);
-    }
+class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     
     // Tokenizer states
     int START       :=  0;
@@ -80,11 +41,8 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
     int SLASH       := 27;
     int SPACER      := 28;
     
-    [int] _fillToken() {
-        if (nextToken) { return true; }
+    [int] _detectToken() {
         int state = Tokenizer:START;
-        startLine = input.getLine();
-        startColumn = input.getColumn();
         while (!input.isEmpty()) {
             int c = input.peekChar();
             if (state == Tokenizer:START) {
@@ -266,20 +224,8 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         return false;
     }
     
-    [] _consume() {
-        curLine = input.getLine();
-        curColumn = input.getColumn();
-        tmp.printChar(input.readChar());
-    }
-    [] _skip() {
-        curLine = input.getLine();
-        curColumn = input.getColumn();
-        input.readChar();
-    }
     [int] _buildToken(int type) {
         Token t = this.rt().createInstance(Token:CLASSNAME);
-        nextToken = t.init(tmp, type).setLocation(inputName, startLine, startColumn, curLine, curColumn);
-        tmp.clear();
-        return true;
+        return this._setNextToken(t.token(), type);
     }
 }

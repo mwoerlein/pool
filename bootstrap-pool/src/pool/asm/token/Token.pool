@@ -5,11 +5,8 @@ version = 0.1.0
 */
 namespace pool::asm::token;
 
-use sys::core::Object;
-use sys::core::String;
-use sys::stream::OStream;
 
-class Token extends Object {
+class Token extends pool::generator::tokenizer::Token {
 
     // terminals
     int EOI         := -1;
@@ -30,50 +27,7 @@ class Token extends Object {
     int SEMICOLON   := 14;
     int COMMA       := 15;
     
-    int type;
-    String value;
-    
-    // Location
-    String inputName;
-    int firstLine;
-    int firstColumn;
-    int lastLine;
-    int lastColumn;
-    
-    [Token] init(String v, int t) {
-        value = this.rt().createInstance(String:CLASSNAME);
-        value.assignString(v);
-        type = t;
-        return this;
-    }
-    [Token] cinit(cstring v, int t) {
-        value = this.rt().createInstance(String:CLASSNAME);
-        value.assignCString(v);
-        type = t;
-        return this;
-    }
-    [] __destruct() {
-        value.destroy();
-    }
-    
-    [int] getType() { return type; }
-    [String] getValue() { return value; }
-    [int] toInt() { return value.toInt(); }
-    
-    [Token] setLocation(String inputName, int firstLine, int firstColumn, int lastLine, int lastColumn) {
-        this.inputName = inputName;
-        this.firstLine = firstLine;
-        this.firstColumn = firstColumn;
-        this.lastLine = lastLine;
-        this.lastColumn = lastColumn;
-        return this;
-    }
-    
-    [OStream] printToStream(OStream stream) {
-        return stream.print(value);
-    }
-    
-    [OStream] debugToStream(OStream stream) {
+    [] debugType(sys::stream::OStream stream) {
         if (type == Token:OTHER) { stream.printCString("OTHER"); }
         else if (type == Token:IDENTIFIER) { stream.printCString("IDENTIFIER"); }
         else if (type == Token:REGISTER) { stream.printCString("REGISTER"); }
@@ -90,11 +44,5 @@ class Token extends Object {
         else if (type == Token:COLON) { stream.printCString("COLON"); }
         else if (type == Token:SEMICOLON) { stream.printCString("SEMICOLON"); }
         else if (type == Token:COMMA) { stream.printCString("COMMA"); }
-        stream.printChar('(')
-            .printInt(firstLine).printChar('/').printInt(firstColumn)
-            .printChar('-')
-            .printInt(lastLine).printChar('/').printInt(lastColumn)
-            .printChar(')');
-        return value.escapeToStream(stream.printChar(':'));
     }
 }

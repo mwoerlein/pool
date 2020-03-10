@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::token;
+namespace pool::generator::tokenizer;
 
 use sys::stream::IStream;
 
