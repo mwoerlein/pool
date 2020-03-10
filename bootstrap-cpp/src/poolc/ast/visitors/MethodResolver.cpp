@@ -213,6 +213,12 @@ bool MethodResolver::visit(VariableInitInstNode & variableInit) {
     variableInit.initializer.accept(*this);
     // variable declarations *after* initializers to make them unaccessable *in* initializers
     variableInit.variables.acceptAll(*this);
+    
+    // mark (first) variable scope as final
+    if (variableInit.final) {
+        variableInit.variables.first()->scope->isVariable()->finalInitializer = &variableInit.initializer;
+    }
+
     curInit = 0;
     return true;
 }

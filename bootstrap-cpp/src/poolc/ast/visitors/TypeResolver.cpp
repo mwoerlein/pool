@@ -146,9 +146,6 @@ bool TypeResolver::visit(VariableInitInstNode & variableInit) {
     variableInit.variables.acceptAll(*this);
     variableInit.initializer.accept(*this);
     // TODO: compare initializer.resolvedType with variables.resolvedType
-    if (variableInit.final) {
-        variableInit.variables.first()->scope->isVariable()->finalInitializer = &variableInit.initializer;
-    }
     return true;
 }
 
