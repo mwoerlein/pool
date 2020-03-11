@@ -1,0 +1,101 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm;
+
+use pool::asm::ast::InstructionNode;
+use pool::asm::ast::LabelNode;
+use pool::asm::ast::Node;
+use pool::asm::ast::NodeList;
+use pool::asm::ast::DefinitionNode;
+use pool::asm::ast::OperandNode;
+use pool::asm::ast::operand::FormulaNode;
+use pool::asm::ast::operand::IdentifierNode;
+use pool::asm::ast::operand::IndirectNode;
+use pool::asm::ast::operand::NumberNode;
+use pool::asm::ast::operand::RegisterNode;
+use pool::asm::ast::operand::StringNode;
+
+use pool::asm::token::Tokenizer;
+use pool::generator::tokenizer::Token;
+
+use sys::core::String;
+use sys::stream::IStream;
+
+class BaseParser extends pool::generator::parser::Parser {
+    
+    CompilationUnit unit;
+    
+    [sys::stream::OStream] newError() { return unit.newError(); }
+    
+    [] parse(IStream input, String name, CompilationUnit unit) {
+        this.unit = unit;
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        this._parse(in.init(input, name));
+        in.destroy();
+        this.unit = null;
+    }
+
+    // Node creation helper
+    [int] toInt(Token t) { return t.toInt(); }
+    
+    [NodeList] pushToList(NodeList list, Node n) { list.add(n); return list; }
+    
+    [IdentifierNode] createIdentifier(Token t) {
+        IdentifierNode id = this.rt().createInstance(IdentifierNode:CLASSNAME);
+        return id.setIdentifier(t.getValue());
+    }
+
+    [NumberNode] createNumber(Token t) {
+        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
+        return n.setOperand(t.toInt());
+    }
+    
+    [NumberNode] createChar(Token t) {
+        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
+        return n.setOperand(t.getValue().at(1)); // TODO: validate correct length of char (in parser or lexer?)
+    }
+    
+    [RegisterNode] createRegister(Token t) {
+        RegisterNode reg = this.rt().createInstance(RegisterNode:CLASSNAME);
+        String sub = t.getValue().subString(1, 0);
+        reg.setRegister(sub);
+        sub.destroy();
+        return reg;
+    }
+    
+    [StringNode] createString(Token t) {
+        StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
+        String sub = t.getValue().subString(1, -1);
+        s.setOperand(sub);
+        sub.destroy();
+        return s;
+    }
+    
+    [LabelNode] createLabel(Token t) {
+        LabelNode label = this.rt().createInstance(LabelNode:CLASSNAME);
+        return label.setLabel(t.getValue());
+    }
+    
+    [DefinitionNode] createDefinition(Token t, OperandNode v) {
+        DefinitionNode def = this.rt().createInstance(DefinitionNode:CLASSNAME);
+        return def.initDefinition(t.getValue(), v);
+    }
+    
+    [InstructionNode] createInstruction(Token t) {
+        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
+        return inst.setOperation(t.getValue());
+    }
+    
+    [IndirectNode] createIndirect() {
+        IndirectNode indirect = this.rt().createInstance(IndirectNode:CLASSNAME);
+        return indirect;
+    }
+    
+    [FormulaNode] createFormula(OperandNode o1, Token t, OperandNode o2) {
+        FormulaNode formula = this.rt().createInstance(FormulaNode:CLASSNAME);
+        return formula.initFormula(o1, t.getValue(), o2);
+    }
+}

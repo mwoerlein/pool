@@ -1,5 +1,6 @@
-%class   pool::asm::Parser
-%extends pool::asm::BaseParser
+%namespace  pool::asm
+%classname  Parser
+%extends BaseParser
 %ignores SPACER
 %ignores COMMENT
 %ignores MLCOMMENT
@@ -23,9 +24,9 @@ COMMA       := /,/
 OTHER       := /.*/
 
 compilation_unit:                                                              { $$ = unit.getNodeList(); }
-compilation_unit: compilation_unit label                                       { NodeList list = $0; list.add($1); $$ = $0; }
-compilation_unit: compilation_unit definition                                  { NodeList list = $0; list.add($1); $$ = $0; }
-compilation_unit: compilation_unit instruction                                 { NodeList list = $0; list.add($1); $$ = $0; }
+compilation_unit: compilation_unit label                                       { $$ = this.push($0, $1); }
+compilation_unit: compilation_unit definition                                  { $$ = this.push($0, $1); }
+compilation_unit: compilation_unit instruction                                 { $$ = this.push($0, $1); }
 compilation_unit: compilation_unit eol                                         { $$ = $0; }
 label           : IDENTIFIER SEMICOLON                                         { $$ = this.createLabel($0).node(); }
 instruction     : IDENTIFIER eol                                               { $$ = this.createInstruction($0).node(); }
@@ -44,12 +45,12 @@ operand         : indirect                                                     {
 operand         : formula                                                      { $$ = $0; }
 indirect        : OBRACKET operand CBRACKET                                    { $$ = this.createIndirect().setBase($1).operand(); }
 indirect        : OBRACKET operand COMMA operand CBRACKET                      { $$ = this.createIndirect().setBase($1).setIndex($3).operand(); }
-indirect        : OBRACKET operand COMMA operand COMMA NUMBER CBRACKET         { Token scale = $6; $$ = this.createIndirect().setBase($1).setIndex($3).setScale(scale.toInt()).operand(); }
+indirect        : OBRACKET operand COMMA operand COMMA NUMBER CBRACKET         { $$ = this.createIndirect().setBase($1).setIndex($3).setScale(this.toInt($6)).operand(); }
 indirect        : OBRACKET COMMA operand CBRACKET                              { $$ = this.createIndirect().setIndex($2).operand(); }
-indirect        : OBRACKET COMMA operand COMMA NUMBER CBRACKET                 { Token scale = $5; $$ = this.createIndirect().setIndex($2).setScale(scale.toInt()).operand(); }
+indirect        : OBRACKET COMMA operand COMMA NUMBER CBRACKET                 { $$ = this.createIndirect().setIndex($2).setScale(this.toInt($5)).operand(); }
 indirect        : operand OBRACKET operand CBRACKET                            { $$ = this.createIndirect().setDisplacement($0).setBase($2).operand(); }
 indirect        : operand OBRACKET operand COMMA operand CBRACKET              { $$ = this.createIndirect().setDisplacement($0).setBase($2).setIndex($4).operand(); }
-indirect        : operand OBRACKET operand COMMA operand COMMA NUMBER CBRACKET { Token scale = $7; $$ = this.createIndirect().setDisplacement($0).setBase($2).setIndex($4).setScale(scale.toInt()).operand(); }
+indirect        : operand OBRACKET operand COMMA operand COMMA NUMBER CBRACKET { $$ = this.createIndirect().setDisplacement($0).setBase($2).setIndex($4).setScale(this.toInt($7)).operand(); }
 indirect        : operand OBRACKET COMMA operand CBRACKET                      { $$ = this.createIndirect().setDisplacement($0).setIndex($3).operand(); }
-indirect        : operand OBRACKET COMMA operand COMMA NUMBER CBRACKET         { Token scale = $6; $$ = this.createIndirect().setDisplacement($0).setIndex($3).setScale(scale.toInt()).operand(); }
+indirect        : operand OBRACKET COMMA operand COMMA NUMBER CBRACKET         { $$ = this.createIndirect().setDisplacement($0).setIndex($3).setScale(this.toInt($6)).operand(); }
 formula         : OBRACKET operand OPERATOR operand CBRACKET                   { $$ = this.createFormula($1, $2, $3).operand(); }

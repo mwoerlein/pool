@@ -3,14 +3,13 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::token;
+namespace pool::generator::parser;
 
-use sys::core::Object;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::stream::OStream;
 
-class ParseStack extends Object {
+class ParseStack extends sys::core::Object {
 
     ParseStackElement head;
     
@@ -20,7 +19,6 @@ class ParseStack extends Object {
             head = head.getNext();
             kill.destroy();
         }
-        if (head) { head.destroy(); }
     }
     
     [] push(int state, __any__ value) {

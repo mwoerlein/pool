@@ -1,0 +1,74 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser;
+
+use pool::generator::parser::grammar::Grammar;
+use pool::generator::parser::grammar::Rule;
+use pool::generator::tokenizer::Token;
+use pool::generator::tokenizer::Tokenizer;
+
+class Parser extends Grammar {
+
+    // actions    
+    int UNKNOWN      := -2;
+    int ERROR        := -1;
+    int ACCEPT       := 0;
+    int SHIFT        := 1;
+    int REDUCE       := 2;
+    int SHIFT_REDUCE := 3;
+    int IGNORE       := 4;
+
+    abstract [sys::stream::OStream] newError();
+    
+    abstract [__any__] executeRule(int rule, ParseStack s);
+    abstract [int] goto(int state, int symbol);
+    abstract [int, int] action(int state, int type);
+    
+    [int] _parse(Tokenizer tokens) {
+        
+        ParseStack stack = this.rt().createInstance(ParseStack:CLASSNAME);
+        stack.push(0, null);
+        int result = Parser:UNKNOWN;
+        
+        Token t = tokens.next();
+        while (result == Parser:UNKNOWN) {
+            [int action, int param] = this.action(stack.getState(), t.getType());
+            if (action == Parser:IGNORE) {
+                t.destroy();
+                t = tokens.next();
+            } else if (action == Parser:ACCEPT) {
+                result = Parser:ACCEPT;
+            } else if (action == Parser:SHIFT) {
+                stack.push(param, t);
+                t = tokens.next();
+            } else if (action == Parser:REDUCE) {
+                Rule rule = this.getRule(param);
+                __any__ v = this.executeRule(rule.getId(), stack);
+                stack.pop(rule.getRhSize());
+                int goto = this.goto(stack.getState(), rule.getLHS());
+                if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
+            } else if (action == Parser:SHIFT_REDUCE) {
+                stack.push(Parser:UNKNOWN, t);
+                Rule rule = this.getRule(param);
+                __any__ v = this.executeRule(rule.getId(), stack);
+                stack.pop(rule.getRhSize());
+                int goto = this.goto(stack.getState(), rule.getLHS());
+                if (goto < 0) {
+                    result = Parser:ERROR;
+                    t.debugToStream(this.newError().printCString("Parsing error near "));
+                } else {
+                    stack.push(goto, v);
+                    t = tokens.next();
+                }
+            } else if (action == Parser:ERROR) {
+                result = Parser:ERROR;
+                t.debugToStream(this.newError().printCString("Parsing error near "));
+            }
+        }
+        stack.destroy();
+        return result == Parser:ACCEPT;
+    }
+}

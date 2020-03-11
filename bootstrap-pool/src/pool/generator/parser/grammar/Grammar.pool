@@ -3,14 +3,13 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::token;
+namespace pool::generator::parser::grammar;
 
-use sys::core::Object;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::stream::OStream;
 
-class Grammar extends Object {
+class Grammar extends sys::core::Object {
 
     AnyList rules;
     
@@ -23,7 +22,6 @@ class Grammar extends Object {
         rules.destroy();
     }
     abstract [] initRules();
-    abstract [__any__] executeRule(int r, ParseStack s);
     
     [Rule] addRule(int lhs) {
         Rule r = this.rt().createInstance(Rule:CLASSNAME);

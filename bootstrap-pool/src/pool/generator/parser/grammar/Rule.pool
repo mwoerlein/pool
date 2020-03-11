@@ -3,12 +3,11 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::token;
+namespace pool::generator::parser::grammar;
 
-use sys::core::Object;
 use sys::stream::OStream;
 
-class Rule extends Object {
+class Rule extends sys::core::Object {
 
     int id;
     int lhs;

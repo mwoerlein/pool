@@ -3,12 +3,12 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::token;
+namespace pool::generator::parser;
 
-use sys::core::Object;
+use pool::generator::tokenizer::Token;
 use sys::memory::Address;
 
-class ParseStackElement extends Object {
+class ParseStackElement extends sys::core::Object {
 
     ParseStackElement next;
     int state;

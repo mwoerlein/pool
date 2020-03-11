@@ -5,27 +5,20 @@ version = 0.1.0
 */
 namespace pool::asm;
 
-use pool::asm::ast::InstructionNode;
-use pool::asm::ast::LabelNode;
-use pool::asm::ast::NodeList;
-use pool::asm::ast::DefinitionNode;
-use pool::asm::ast::OperandNode;
-use pool::asm::ast::operand::FormulaNode;
-use pool::asm::ast::operand::IdentifierNode;
-use pool::asm::ast::operand::IndirectNode;
-use pool::asm::ast::operand::NumberNode;
-use pool::asm::ast::operand::RegisterNode;
-use pool::asm::ast::operand::StringNode;
-
-use pool::asm::token::ParseStack;
-use pool::asm::token::Rule;
 use pool::asm::token::Token;
-use pool::asm::token::Tokenizer;
+use pool::generator::parser::ParseStack;
 
-use sys::core::String;
-use sys::stream::IStream;
+class Parser extends BaseParser {
 
-class Parser extends pool::asm::token::Grammar {
+    // symbols
+    int COMPILATION_UNIT    := 0;    
+    int LABEL               := 1;
+    int DEFINITION          := 2;
+    int INSTRUCTION         := 3;
+    int EOL                 := 4;
+    int OPERAND             := 5;
+    int INDIRECT            := 6;
+    int FORMULA             := 7;
     
     [] initRules() {
         // compilation_unit:
@@ -110,43 +103,14 @@ class Parser extends pool::asm::token::Grammar {
                     .terminal(Token:CBRACKET);
     }
 
-    CompilationUnit unit;
-    
-    [] parse(IStream input, String name, CompilationUnit unit) {
-        this.unit = unit;
-        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
-        in.init(input, name);
-        this._parse(in);
-        in.destroy();
-        this.unit = null;
-    }
-
-    // symbols
-    int COMPILATION_UNIT    := 0;    
-    int LABEL               := 1;
-    int DEFINITION          := 2;
-    int INSTRUCTION         := 3;
-    int EOL                 := 4;
-    int OPERAND             := 5;
-    int INDIRECT            := 6;
-    int FORMULA             := 7;
-    
-    // actions    
-    int UNKNOWN      := -2;
-    int ERROR        := -1;
-    int ACCEPT       := 0;
-    int SHIFT        := 1;
-    int REDUCE       := 2;
-    int SHIFT_REDUCE := 3;
-    
     [__any__] executeRule(int rule, ParseStack s) {
         __any__ result = null;
         
         // compilation_unit:
         if (rule ==  0) { result = unit.getNodeList(); }
-        else if (rule ==  1) { NodeList list = s.at(1); list.add(s.at(0)); result = s.at(1); }
-        else if (rule ==  2) { NodeList list = s.at(1); list.add(s.at(0)); result = s.at(1); }
-        else if (rule ==  3) { NodeList list = s.at(1); list.add(s.at(0)); result = s.at(1); }
+        else if (rule ==  1) { result = this.pushToList(s.at(1), s.at(0)); }
+        else if (rule ==  2) { result = this.pushToList(s.at(1), s.at(0)); }
+        else if (rule ==  3) { result = this.pushToList(s.at(1), s.at(0)); }
         else if (rule ==  4) { result = s.at(1); }
         
         // label:
@@ -177,14 +141,14 @@ class Parser extends pool::asm::token::Grammar {
         // indirect:
         else if (rule ==  20) { result = this.createIndirect().setBase(s.at(1)).operand(); }
         else if (rule ==  21) { result = this.createIndirect().setBase(s.at(3)).setIndex(s.at(1)).operand(); }
-        else if (rule ==  22) { Token scale = s.at(1); result = this.createIndirect().setBase(s.at(5)).setIndex(s.at(3)).setScale(scale.toInt()).operand(); }
+        else if (rule ==  22) { result = this.createIndirect().setBase(s.at(5)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
         else if (rule ==  23) { result = this.createIndirect().setIndex(s.at(1)).operand(); }
-        else if (rule ==  24) { Token scale = s.at(1); result = this.createIndirect().setIndex(s.at(3)).setScale(scale.toInt()).operand(); }
+        else if (rule ==  24) { result = this.createIndirect().setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
         else if (rule ==  25) { result = this.createIndirect().setDisplacement(s.at(3)).setBase(s.at(1)).operand(); }
         else if (rule ==  26) { result = this.createIndirect().setDisplacement(s.at(5)).setBase(s.at(3)).setIndex(s.at(1)).operand(); }
-        else if (rule ==  27) { Token scale = s.at(1); result = this.createIndirect().setDisplacement(s.at(7)).setBase(s.at(5)).setIndex(s.at(3)).setScale(scale.toInt()).operand(); }
+        else if (rule ==  27) { result = this.createIndirect().setDisplacement(s.at(7)).setBase(s.at(5)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
         else if (rule ==  28) { result = this.createIndirect().setDisplacement(s.at(4)).setIndex(s.at(1)).operand(); }
-        else if (rule ==  29) { Token scale = s.at(1); result = this.createIndirect().setDisplacement(s.at(6)).setIndex(s.at(3)).setScale(scale.toInt()).operand(); }
+        else if (rule ==  29) { result = this.createIndirect().setDisplacement(s.at(6)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
         
         // formula:
         else if (rule ==  30) { result = this.createFormula(s.at(3), s.at(2), s.at(1)).operand(); }
@@ -255,6 +219,9 @@ class Parser extends pool::asm::token::Grammar {
     }
     
     [int, int] action(int state, int type) {
+        if ((type == Token:SPACER) || (type == Token:COMMENT) || (type == Token:MLCOMMENT)) {
+            return [Parser:IGNORE, 0];
+        }
         int isEOL = (type == Token:EOI || type == Token:SEMICOLON || type == Token:NEWLINE);
         if (state == 0) { // <EMPTY>
             if (isEOL)                          { return [Parser:REDUCE, 0]; }
@@ -440,110 +407,5 @@ class Parser extends pool::asm::token::Grammar {
         else if (state == 10030) { return [Parser:REDUCE, 30]; } // formula: '(' operand OPERATOR operand ')'
         
         return [Parser:ERROR, 0];
-    }
-
-    [int] _parse(Tokenizer tokens) {
-        ParseStack stack = this.rt().createInstance(ParseStack:CLASSNAME);
-        stack.push(0, null);
-        int result = Parser:UNKNOWN;
-        
-        Token t = tokens.next();
-        while (result == Parser:UNKNOWN) {
-            int type = t.getType();
-            if (type == Token:SPACER || type == Token:COMMENT || type == Token:MLCOMMENT) {
-                // ignore
-                t.destroy();
-                t = tokens.next();
-            } else {
-                [int action, int param] = this.action(stack.getState(), type);
-                if (action == Parser:ACCEPT) {
-                    result = Parser:ACCEPT;
-                } else if (action == Parser:SHIFT) {
-                    stack.push(param, t);
-                    t = tokens.next();
-                } else if (action == Parser:REDUCE) {
-                    Rule rule = this.getRule(param);
-                    __any__ v = this.executeRule(rule.getId(), stack);
-                    stack.pop(rule.getRhSize());
-                    int goto = this.goto(stack.getState(), rule.getLHS());
-                    if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
-                } else if (action == Parser:SHIFT_REDUCE) {
-                    stack.push(Parser:UNKNOWN, t);
-                    Rule rule = this.getRule(param);
-                    __any__ v = this.executeRule(rule.getId(), stack);
-                    stack.pop(rule.getRhSize());
-                    int goto = this.goto(stack.getState(), rule.getLHS());
-                    if (goto < 0) {
-                        result = Parser:ERROR;
-                        t.debugToStream(unit.newError().printCString("Parsing error near "));
-                    } else {
-                        stack.push(goto, v);
-                        t = tokens.next();
-                    }
-                } else if (action == Parser:ERROR) {
-                    result = Parser:ERROR;
-                    t.debugToStream(unit.newError().printCString("Parsing error near "));
-                }
-            }
-        }
-        stack.destroy();
-        return result == Parser:ACCEPT;
-    }
-
-    // Node creation helper
-    [IdentifierNode] createIdentifier(Token t) {
-        IdentifierNode id = this.rt().createInstance(IdentifierNode:CLASSNAME);
-        return id.setIdentifier(t.getValue());
-    }
-
-    [NumberNode] createNumber(Token t) {
-        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
-        return n.setOperand(t.toInt());
-    }
-    
-    [NumberNode] createChar(Token t) {
-        NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
-        return n.setOperand(t.getValue().at(1)); // TODO: validate correct length of char (in parser or lexer?)
-    }
-    
-    [RegisterNode] createRegister(Token t) {
-        RegisterNode reg = this.rt().createInstance(RegisterNode:CLASSNAME);
-        String sub = t.getValue().subString(1, 0);
-        reg.setRegister(sub);
-        sub.destroy();
-        return reg;
-    }
-    
-    [StringNode] createString(Token t) {
-        StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
-        String sub = t.getValue().subString(1, -1);
-        s.setOperand(sub);
-        sub.destroy();
-        return s;
-    }
-    
-    [LabelNode] createLabel(Token t) {
-        LabelNode label = this.rt().createInstance(LabelNode:CLASSNAME);
-        return label.setLabel(t.getValue());
-    }
-    
-    [DefinitionNode] createDefinition(Token t, OperandNode v) {
-        DefinitionNode def = this.rt().createInstance(DefinitionNode:CLASSNAME);
-        return def.initDefinition(t.getValue(), v);
-    }
-    
-    [InstructionNode] createInstruction(Token t) {
-        InstructionNode inst = this.rt().createInstance(InstructionNode:CLASSNAME);
-        return inst.setOperation(t.getValue());
-    }
-    
-    [IndirectNode] createIndirect() {
-        IndirectNode indirect = this.rt().createInstance(IndirectNode:CLASSNAME);
-        return indirect;
-    }
-    
-    [FormulaNode] createFormula(OperandNode o1, Token t, OperandNode o2) {
-        FormulaNode formula = this.rt().createInstance(FormulaNode:CLASSNAME);
-        return formula.initFormula(o1, t.getValue(), o2);
     }
 }
