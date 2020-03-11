@@ -5,22 +5,59 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
+use sys::core::String;
 use sys::core::utils::Bitset;
 
 class Action extends sys::core::Object {
 
-    int action; // bit 0: shift; bit 1: return; bit 2: goto;
+    int action;
     Type type;
     State target;
+    int push;
+    String error;
     
-    [Action] setShift() { action = Bitset:set(action, 0); return this; }
-    [Action] setReturn(Type type) { action = Bitset:set(action, 1); this.type = type; return this; }
-    [Action] setGoto(State target) { action = Bitset:set(action, 2); this.target = target; return this; }
+    [] __init() { error = this.rt().createInstance(String:CLASSNAME); }
+    [] __destruct() { error.destroy(); }
     
     [int] isShift()  { return Bitset:isset(action, 0); }
-    [int] isReturn() { return Bitset:isset(action, 1); }
-    [int] isGoto()   { return Bitset:isset(action, 2); }
+    [int] isSkip()   { return Bitset:isset(action, 1); }
+    [int] isPush()   { return Bitset:isset(action, 2); }
+    [int] isGoto()   { return Bitset:isset(action, 3); }
+    [int] isReturn() { return Bitset:isset(action, 4); }
+    [int] isError()  { return Bitset:isset(action, 5); }
+    
+    [Action] setShift() {
+        action = Bitset:set(action, 0);
+        return this;
+    }
+    [Action] setSkip() {
+        action = Bitset:set(action, 1);
+        return this;
+    }
+    [Action] setPush(int c) {
+        action = Bitset:set(action, 2);
+        this.push = c;
+        return this;
+    }
+    [Action] setGoto(State target) {
+        action = Bitset:set(action, 3);
+        this.target = target;
+        return this;
+    }
+    [Action] setReturn(Type type) {
+        action = Bitset:set(action, 4);
+        this.type = type;
+        return this;
+    }
+    [Action] setError(cstring msg) {
+        action = Bitset:set(action, 5);
+        this.error.assignCString(msg);
+        return this;
+    }
+    
+    [int] getPush() { return push; }
     [Type] getType() { return type; }
     [State] getTarget() { return target; }
+    [String] getError() { return error; }
     
 }

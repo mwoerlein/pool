@@ -14,6 +14,7 @@ class State extends sys::core::Object {
 
     int id;
     AnyMap actions; // HashMap<CharSet, Action>
+    Action terminal;
 
     [] __init() {
         actions = this.rt().createInstance(AnyMap:CLASSNAME);
@@ -27,10 +28,13 @@ class State extends sys::core::Object {
     [State] setId(int id) { this.id = id; return this; }
     [int] getId() { return id; }
     
-    [State] addAction(CharSet cs, Action a) { actions.set(cs, a); }
+    [State] addAction(CharSet cs, Action a) { actions.set(cs, a); return this; }
     [ActionIterator] actions() {
         ActionIterator ret = this.rt().createInstance(ActionIterator:CLASSNAME);
         return ret.init(actions.entries());
     }
+    
+    [State] addTerminalAction(Action a) { terminal = a; return this; }
+    [Action] getTerminalAction() { return terminal; } 
     
 }

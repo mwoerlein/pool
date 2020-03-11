@@ -70,6 +70,7 @@ class OStream extends Object {
     [OStream] escapeChar(int c) {
         this.printChar('\'');
         if (c == '\\') { this.printChar('\\').printChar('\\'); }
+        else if (c == '\'') { this.printChar('\\').printChar('\''); }
         else if (c == '\n') { this.printChar('\\').printChar('n'); }
         else if (c == '\r') { this.printChar('\\').printChar('r'); }
         else if (c == '\t') { this.printChar('\\').printChar('t'); }

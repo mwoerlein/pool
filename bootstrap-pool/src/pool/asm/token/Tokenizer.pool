@@ -5,225 +5,152 @@ version = 0.1.0
 */
 namespace pool::asm::token;
 
-use sys::core::String;
-use sys::memory::Address;
-use sys::stream::IStream;
-use sys::stream::OStream;
-
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
-    
-    // Tokenizer states
-    int START       :=  0;
-    
-    int IDENTIFIER  :=  1;
-    int REGISTER    :=  2;
-    int STRING      :=  3;
-    int STRING_ESC  :=  4;
-    int CHAR        :=  5;
-    int CHAR_ESC    :=  6;
-    int LINECOMMENT :=  7;
-    int MLCOMMENT   :=  8;
-    int MLC_STAR    :=  9;
-    
-    int NUMBER_ZERO := 10;
-    int NUMBER_BIN  := 11;
-    int NUMBER_OCT  := 12;
-    int NUMBER_DEC  := 13;
-    int NUMBER_HEX  := 14;
-    
-    int ABC         := 20;
-    int ABO         := 21;
-    int COLON       := 22;
-    int DOT         := 23;
-    int MINUS       := 24;
-    int NEWLINE     := 25;
-    int PERCENTAGE  := 26;
-    int SLASH       := 27;
-    int SPACER      := 28;
-    
+
     [int] _detectToken() {
-        int state = Tokenizer:START;
+        int state = 0;
         while (!input.isEmpty()) {
             int c = input.peekChar();
-            if (state == Tokenizer:START) {
-                this._consume();
-                if (c == ' ' || c == '\t') { state = Tokenizer:SPACER; }
-                else if (c == '\n' || c == '\r') { state = Tokenizer:NEWLINE; }
-                else if (c == '"') { state = Tokenizer:STRING; }
-                else if (c == '\'') { state = Tokenizer:CHAR; }
-                else if (c == '>') { state = Tokenizer:ABC; }
-                else if (c == '<') { state = Tokenizer:ABO; }
-                else if (c == ':') { state = Tokenizer:COLON; }
-                else if (c == '.') { state = Tokenizer:DOT; }
-                else if (c == '%') { state = Tokenizer:PERCENTAGE; }
-                else if (c == '/') { state = Tokenizer:SLASH; }
-                else if (c == '#') { state = Tokenizer:LINECOMMENT; }
-                else if (c == '0') { state = Tokenizer:NUMBER_ZERO; }
-                else if (c == '_') { state = Tokenizer:IDENTIFIER; }
-                else if (c == '-') { state = Tokenizer:MINUS; }
-                else if ('a' <= c && c <= 'z') { state = Tokenizer:IDENTIFIER; }
-                else if ('A' <= c && c <= 'Z') { state = Tokenizer:IDENTIFIER; }
-                else if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
-                else if (c == '(') { return this._buildToken(Token:OBRACKET); }
-                else if (c == ')') { return this._buildToken(Token:CBRACKET); }
-                else if (c == ';') { return this._buildToken(Token:SEMICOLON); }
-                else if (c == ',') { return this._buildToken(Token:COMMA); }
-                else if (c == '+' || c == '*') { return this._buildToken(Token:OPERATOR); }
-                else { return this._buildToken(Token:OTHER); }
-                
-            } else if (state == Tokenizer:ABC) {
+            if (state == 0) {
+                if ((c == '\t') || (c == ' ')) { this._consume(); state = 23; }
+                else if ((c == '\n') || (c == '\r')) { this._consume(); state = 20; }
+                else if (c == '"') { this._consume(); state = 3; }
+                else if (c == '\'') { this._consume(); state = 5; }
+                else if (c == '>') { this._consume(); state = 15; }
+                else if (c == '<') { this._consume(); state = 16; }
+                else if (c == ':') { this._consume(); state = 17; }
+                else if (c == '.') { this._consume(); state = 18; }
+                else if (c == '%') { this._consume(); state = 21; }
+                else if (c == '/') { this._consume(); state = 22; }
+                else if (c == '#') { this._consume(); state = 7; }
+                else if (c == '0') { this._consume(); state = 10; }
+                else if (c == '-') { this._consume(); state = 19; }
+                else if (((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); state = 1; }
+                else if (((c >= '1') && (c <= '9'))) { this._consume(); state = 13; }
+                else if (c == '(') { this._consume(); return this._buildToken(Token:OBRACKET); }
+                else if (c == ')') { this._consume(); return this._buildToken(Token:CBRACKET); }
+                else if (c == ';') { this._consume(); return this._buildToken(Token:SEMICOLON); }
+                else if (c == ',') { this._consume(); return this._buildToken(Token:COMMA); }
+                else if ((c == '*') || (c == '+')) { this._consume(); return this._buildToken(Token:OPERATOR); }
+                else { this._consume(); return this._buildToken(Token:OTHER); }
+            } else if (state == 1) {
+                if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); }
+                else { return this._buildToken(Token:IDENTIFIER); }
+            } else if (state == 2) {
+                if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); }
+                else { return this._buildToken(Token:REGISTER); }
+            } else if (state == 3) {
+                if ((c == '\n') || (c == '\r')) { return this._error("Unterminated string"); }
+                else if (c == '"') { this._consume(); return this._buildToken(Token:STRING); }
+                else if (c == '\\') { this._skip(); state = 4; }
+                else { this._consume(); }
+            } else if (state == 4) {
+                if ((c == '\n') || (c == '\r')) { return this._error("Unterminated string"); }
+                else if (c == 'n') { this._push('\n'); this._skip(); state = 3; }
+                else if (c == 'r') { this._push('\r'); this._skip(); state = 3; }
+                else if (c == 't') { this._push('\t'); this._skip(); state = 3; }
+                else if ((c == '"') || (c == '\\')) { this._consume(); state = 3; }
+                else { this._push('\\'); this._consume(); state = 3; }
+            } else if (state == 5) {
+                if (c == '\'') { this._consume(); return this._buildToken(Token:CHAR); }
+                else if (c == '\\') { this._skip(); state = 6; }
+                else if ((c == '\n') || (c == '\r')) { return this._error("Unterminated char sequence"); }
+                else { this._consume(); }
+            } else if (state == 6) {
+                if ((c == '\n') || (c == '\r')) { return this._error("Unterminated char sequence"); }
+                else if (c == 'n') { this._push('\n'); this._skip(); state = 5; }
+                else if (c == 'r') { this._push('\r'); this._skip(); state = 5; }
+                else if (c == 't') { this._push('\t'); this._skip(); state = 5; }
+                else if ((c == '\'') || (c == '\\')) { this._consume(); state = 5; }
+                else { this._push('\\'); this._consume(); state = 5; }
+            } else if (state == 7) {
+                if ((c == '\n') || (c == '\r')) { return this._buildToken(Token:COMMENT); }
+                else { this._consume(); }
+            } else if (state == 8) {
+                if (c == '*') { this._consume(); state = 9; }
+                else { this._consume(); }
+            } else if (state == 9) {
+                if (c == '/') { this._consume(); return this._buildToken(Token:MLCOMMENT); }
+                else if (c == '*') { this._consume(); }
+                else { this._consume(); state = 8; }
+            } else if (state == 10) {
+                if ((c == 'B') || (c == 'b')) { this._consume(); state = 11; }
+                else if ((c == 'X') || (c == 'x')) { this._consume(); state = 14; }
+                else if (((c >= '0') && (c <= '7'))) { this._consume(); state = 12; }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == 11) {
+                if ((c == '0') || (c == '1')) { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == 12) {
+                if (((c >= '0') && (c <= '7'))) { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == 13) {
+                if (((c >= '0') && (c <= '9'))) { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == 14) {
+                if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'F')) || ((c >= 'a') && (c <= 'f'))) { this._consume(); }
+                else { return this._buildToken(Token:NUMBER); }
+            } else if (state == 15) {
                 if (c == '>') { this._consume(); return this._buildToken(Token:OPERATOR); }
                 else { return this._buildToken(Token:OTHER); }
-                
-            } else if (state == Tokenizer:ABO) {
+            } else if (state == 16) {
                 if (c == '<') { this._consume(); return this._buildToken(Token:OPERATOR); }
                 else { return this._buildToken(Token:OTHER); }
-                
-            } else if (state == Tokenizer:COLON) {
+            } else if (state == 17) {
                 if (c == '=') { this._consume(); return this._buildToken(Token:ASSIGN); }
                 else { return this._buildToken(Token:COLON); }
-                
-            } else if (state == Tokenizer:DOT) {
-                if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:IDENTIFIER; }
+            } else if (state == 18) {
+                if (((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); state = 1; }
                 else { return this._buildToken(Token:OPERATOR); }
-                
-            } else if (state == Tokenizer:MINUS) {
-                if (c == '0') { this._consume(); state = Tokenizer:NUMBER_ZERO; }
-                else if ('1' <= c && c <= '9') { state = Tokenizer:NUMBER_DEC; }
+            } else if (state == 19) {
+                if (c == '0') { this._consume(); state = 10; }
+                else if (((c >= '1') && (c <= '9'))) { this._consume(); state = 13; }
                 else { return this._buildToken(Token:OPERATOR); }
-                
-            } else if (state == Tokenizer:NEWLINE) {
-                if (c == '\n' || c == '\r') { this._consume(); }
+            } else if (state == 20) {
+                if ((c == '\n') || (c == '\r')) { this._consume(); }
                 else { return this._buildToken(Token:NEWLINE); }
-                
-            } else if (state == Tokenizer:PERCENTAGE) {
-                if (('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')) { state = Tokenizer:REGISTER; }
+            } else if (state == 21) {
+                if (((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))) { this._consume(); state = 2; }
                 else { return this._buildToken(Token:OPERATOR); }
-                
-            } else if (state == Tokenizer:SLASH) {
-                if (c == '/') { this._consume(); state = Tokenizer:LINECOMMENT; }
-                else if (c == '*') { this._consume(); state = Tokenizer:MLCOMMENT; }
+            } else if (state == 22) {
+                if (c == '/') { this._consume(); state = 7; }
+                else if (c == '*') { this._consume(); state = 8; }
                 else { return this._buildToken(Token:OPERATOR); }
-                
-            } else if (state == Tokenizer:SPACER) {
-                if (c == ' ' || c == '\t') { this._consume(); }
+            } else if (state == 23) {
+                if ((c == '\t') || (c == ' ')) { this._consume(); }
                 else { return this._buildToken(Token:SPACER); }
-                
-            } else if (state == Tokenizer:STRING) {
-                if (c == '"') { this._consume(); return this._buildToken(Token:STRING); }
-                else if (c == '\\') { this._skip(); state = Tokenizer:STRING_ESC; }
-                else if (c == '\n' || c == '\r') {
-                    this.rt().err().printCString("Unterminated string").printNewline();
-                    return false;
-                } else { this._consume(); }
-            } else if (state == Tokenizer:STRING_ESC) {
-                if (c == '\n' || c == '\r') {
-                    this.rt().err().printCString("Unterminated string").printNewline();
-                    return false;
-                } else if (c == 'n') { tmp.printChar('\n'); this._skip(); state = Tokenizer:STRING; }
-                else if (c == 'r') { tmp.printChar('\r'); this._skip(); state = Tokenizer:STRING; }
-                else if (c == 't') { tmp.printChar('\t'); this._skip(); state = Tokenizer:STRING; }
-                else if (c == '\\') { tmp.printChar('\\'); this._skip(); state = Tokenizer:STRING; }
-                else if (c == '"') { tmp.printChar('"'); this._skip(); state = Tokenizer:STRING; }
-                else { tmp.printChar('\\'); this._consume(); state = Tokenizer:STRING; }
-                
-            } else if (state == Tokenizer:CHAR) {
-                if (c == '\'') { this._consume(); return this._buildToken(Token:CHAR); }
-                else if (c == '\\') { this._skip(); state = Tokenizer:CHAR_ESC; }
-                else if (c == '\n' || c == '\r') {
-                    this.rt().err().printCString("Unterminated char sequence").printNewline();
-                    return false;
-                } else { this._consume(); }
-            } else if (state == Tokenizer:CHAR_ESC) {
-                if (c == '\n' || c == '\r') {
-                    this.rt().err().printCString("Unterminated char sequence").printNewline();
-                    return false;
-                } else if (c == 'n') { tmp.printChar('\n'); this._skip(); state = Tokenizer:CHAR; }
-                else if (c == 'r') { tmp.printChar('\r'); this._skip(); state = Tokenizer:CHAR; }
-                else if (c == 't') { tmp.printChar('\t'); this._skip(); state = Tokenizer:CHAR; }
-                else if (c == '\\') { tmp.printChar('\\'); this._skip(); state = Tokenizer:CHAR; }
-                else if (c == '\'') { tmp.printChar('\''); this._skip(); state = Tokenizer:CHAR; }
-                else { tmp.printChar('\\'); this._consume(); state = Tokenizer:CHAR; }
-                
-            } else if (state == Tokenizer:LINECOMMENT) {
-                if (c == '\n' || c == '\r') { return this._buildToken(Token:COMMENT); }
-                else { this._consume(); }
-            } else if (state == Tokenizer:MLCOMMENT) {
-                if (c == '*') { this._consume(); state = Tokenizer:MLC_STAR; }
-                else { this._consume(); }
-            } else if (state == Tokenizer:MLC_STAR) {
-                if (c == '/') { this._consume(); return this._buildToken(Token:COMMENT); }
-                else if (c == '*') { this._consume(); }
-                else { this._consume(); state = Tokenizer:MLCOMMENT; }
-                
-            } else if (state == Tokenizer:IDENTIFIER) {
-                if (
-                    ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
-                    || ('0' <= c && c <= '9')
-                    || (c == '_')
-                ) { this._consume(); }
-                else { return this._buildToken(Token:IDENTIFIER); }
-            } else if (state == Tokenizer:REGISTER) {
-                if (
-                    ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
-                    || ('0' <= c && c <= '9')
-                    || (c == '_')
-                ) { this._consume(); }
-                else { return this._buildToken(Token:REGISTER); }
-                
-            } else if (state == Tokenizer:NUMBER_ZERO) {
-                if (c == 'b' || c == 'B') { this._consume(); state = Tokenizer:NUMBER_BIN; }
-                else if (c == 'x' || c == 'X') { this._consume(); state = Tokenizer:NUMBER_HEX; }
-                else if ('0' <= c && c <= '9') { this._consume(); state = Tokenizer:NUMBER_OCT; }
-                else { return this._buildToken(Token:NUMBER); }
-            } else if (state == Tokenizer:NUMBER_BIN) {
-                if (c == '0' || c == '1') { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
-            } else if (state == Tokenizer:NUMBER_OCT) {
-                if ('0' <= c && c <= '7') { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
-            } else if (state == Tokenizer:NUMBER_DEC) {
-                if ('0' <= c && c <= '9') { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
-            } else if (state == Tokenizer:NUMBER_HEX) {
-                if ('0' <= c && c <= '9') { this._consume(); }
-                else if ('a' <= c && c <= 'f') { this._consume(); }
-                else if ('A' <= c && c <= 'F') { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
-                
             } else {
                 this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
                 return false;
             }
         }
-        
-        if (state == Tokenizer:ABC) { return this._buildToken(Token:OTHER); }
-        else if (state == Tokenizer:ABO) { return this._buildToken(Token:OTHER); }
-        else if (state == Tokenizer:COLON) { return this._buildToken(Token:COLON); }
-        else if (state == Tokenizer:DOT) { return this._buildToken(Token:OPERATOR); }
-        else if (state == Tokenizer:MINUS) { return this._buildToken(Token:OPERATOR); }
-        else if (state == Tokenizer:NEWLINE) { return this._buildToken(Token:NEWLINE); }
-        else if (state == Tokenizer:PERCENTAGE) { return this._buildToken(Token:OPERATOR); }
-        else if (state == Tokenizer:SLASH) { return this._buildToken(Token:OPERATOR); }
-        else if (state == Tokenizer:SPACER) { return this._buildToken(Token:SPACER); }
-        else if (state == Tokenizer:LINECOMMENT) { return this._buildToken(Token:COMMENT); }
-        else if (state == Tokenizer:IDENTIFIER) { return this._buildToken(Token:IDENTIFIER); }
-        else if (state == Tokenizer:REGISTER) { return this._buildToken(Token:REGISTER); }
-        else if (state == Tokenizer:NUMBER_ZERO) { return this._buildToken(Token:NUMBER); }
-        else if (state == Tokenizer:NUMBER_BIN) { return this._buildToken(Token:NUMBER); }
-        else if (state == Tokenizer:NUMBER_OCT) { return this._buildToken(Token:NUMBER); }
-        else if (state == Tokenizer:NUMBER_DEC) { return this._buildToken(Token:NUMBER); }
-        else if (state == Tokenizer:NUMBER_HEX) { return this._buildToken(Token:NUMBER); }
-        else if (state == Tokenizer:STRING || state == Tokenizer:STRING_ESC) {
-            this.rt().err().printCString("Unterminated string").printNewline();
-        } else if (state == Tokenizer:CHAR || state == Tokenizer:CHAR_ESC) {
-            this.rt().err().printCString("Unterminated char sequence").printNewline();
-        } else if (state == Tokenizer:MLCOMMENT || state == Tokenizer:MLC_STAR) {
-            this.rt().err().printCString("Unterminated comment").printNewline();
-        }
+
+        if (state == 1) { return this._buildToken(Token:IDENTIFIER); }
+        else if (state == 2) { return this._buildToken(Token:REGISTER); }
+        else if (state == 3) { return this._error("Unterminated string"); }
+        else if (state == 4) { return this._error("Unterminated string"); }
+        else if (state == 5) { return this._error("Unterminated char sequence"); }
+        else if (state == 6) { return this._error("Unterminated char sequence"); }
+        else if (state == 7) { return this._buildToken(Token:COMMENT); }
+        else if (state == 8) { return this._error("Unterminated comment"); }
+        else if (state == 9) { return this._error("Unterminated comment"); }
+        else if (state == 10) { return this._buildToken(Token:NUMBER); }
+        else if (state == 11) { return this._buildToken(Token:NUMBER); }
+        else if (state == 12) { return this._buildToken(Token:NUMBER); }
+        else if (state == 13) { return this._buildToken(Token:NUMBER); }
+        else if (state == 14) { return this._buildToken(Token:NUMBER); }
+        else if (state == 15) { return this._buildToken(Token:OTHER); }
+        else if (state == 16) { return this._buildToken(Token:OTHER); }
+        else if (state == 17) { return this._buildToken(Token:COLON); }
+        else if (state == 18) { return this._buildToken(Token:OPERATOR); }
+        else if (state == 19) { return this._buildToken(Token:OPERATOR); }
+        else if (state == 20) { return this._buildToken(Token:NEWLINE); }
+        else if (state == 21) { return this._buildToken(Token:OPERATOR); }
+        else if (state == 22) { return this._buildToken(Token:OPERATOR); }
+        else if (state == 23) { return this._buildToken(Token:SPACER); }
         return false;
     }
-    
+
     [int] _buildToken(int type) {
         Token t = this.rt().createInstance(Token:CLASSNAME);
         return this._setNextToken(t.token(), type);

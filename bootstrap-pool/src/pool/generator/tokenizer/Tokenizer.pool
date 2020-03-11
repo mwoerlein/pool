@@ -78,6 +78,13 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         curColumn = input.getColumn();
         input.readChar();
     }
+    [] _push(int c) {
+        tmp.printChar(c);
+    }
+    [int] _error(cstring msg) {
+        this.rt().err().printCString(msg).printNewline();
+        return false;
+    }
     
     [int] _setNextToken(Token t, int type) {
         nextToken = t.init(tmp, type).setLocation(inputName, startLine, startColumn, curLine, curColumn);
@@ -124,6 +131,26 @@ version = 0.1.0
             out.printCString("            }").printNewline();
             out.printCString("        }").printNewline();
         }
+        out.printNewline();
+        {
+            AnyIterator sit = d.states();
+            int pos = 0;
+            while (sit.hasNext()) {
+                State s = sit.next();
+                Action terminal = s.getTerminalAction();
+                if (terminal) {
+                    if (pos++ == 0) {
+                        out.printCString("       ");
+                    } else {
+                        out.printCString("        else");
+                    }
+                    out.printCString(" if (state == ").printInt(s.getId()).printChar(')');
+                    this._genBlockForAction(terminal, out);
+                }
+            }
+            sit.destroy();
+        }
+        
         out.printCString("        return false;").printNewline();
         out.printCString("    }").printNewline();
         out.printNewline();
@@ -152,7 +179,6 @@ version = 0.1.0
                 // abort after this action
                 pos = -1;
             } else {
-                // TODO
                 out.printCString(" if (");
                 int i = 0;
                 int cur = 0;
@@ -170,15 +196,33 @@ version = 0.1.0
                     }
                     cur++;
                 }
-                out.printCString(" )");
+                out.printChar(')');
             }
-            
-            out.printCString(" {");
+            this._genBlockForAction(a, out);
+        }
+        Action terminal = s.getTerminalAction();
+        if (terminal && (pos != -1)) {
+            if (pos == 0) {
+                out.printCString("               ");
+            } else {
+                out.printCString("                else");
+            }
+            this._genBlockForAction(terminal, out);
+        }
+        ait.destroy();
+    }
+    
+    global [] _genBlockForAction(Action a, OStream out) {
+        out.printCString(" {");
+        if (a.isError()) {
+            out.printCString(" return this._error(").escapeString(a.getError()).printCString(");");
+        } else {
+            if (a.isPush()) { out.printCString(" this._push(").escapeChar(a.getPush()).printCString(");"); }
+            if (a.isSkip()) { out.printCString(" this._skip();"); }
             if (a.isShift()) { out.printCString(" this._consume();"); }
             if (a.isGoto()) { out.printCString(" state = ").printInt(a.getTarget().getId()).printChar(';'); }
             if (a.isReturn()) { out.printCString(" return this._buildToken(Token:").print(a.getType().getName()).printCString(");"); }
-            out.printCString(" }").printNewline();
         }
-        ait.destroy();
+        out.printCString(" }").printNewline();
     }
 }

@@ -450,7 +450,7 @@ class Parser extends pool::asm::token::Grammar {
         Token t = tokens.next();
         while (result == Parser:UNKNOWN) {
             int type = t.getType();
-            if (type == Token:SPACER || type == Token:COMMENT) {
+            if (type == Token:SPACER || type == Token:COMMENT || type == Token:MLCOMMENT) {
                 // ignore
                 t.destroy();
                 t = tokens.next();

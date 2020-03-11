@@ -5,30 +5,29 @@ version = 0.1.0
 */
 namespace pool::asm::token;
 
-
 class Token extends pool::generator::tokenizer::Token {
 
-    // terminals
-    int EOI         := -1;
-    int OTHER       := 0;
-    int IDENTIFIER  := 1;
-    int REGISTER    := 2;
-    int CHAR        := 3;
-    int STRING      := 4;
-    int NUMBER      := 5;
-    int NEWLINE     := 6;
-    int SPACER      := 7;
-    int COMMENT     := 8;
-    int OPERATOR    := 9;
-    int ASSIGN      := 10;
-    int OBRACKET    := 11;
-    int CBRACKET    := 12;
-    int COLON       := 13;
-    int SEMICOLON   := 14;
-    int COMMA       := 15;
-    
+    int OTHER := 0;
+    int IDENTIFIER := 1;
+    int REGISTER := 2;
+    int CHAR := 3;
+    int STRING := 4;
+    int NUMBER := 5;
+    int NEWLINE := 6;
+    int SPACER := 7;
+    int COMMENT := 8;
+    int MLCOMMENT := 9;
+    int OPERATOR := 10;
+    int ASSIGN := 11;
+    int OBRACKET := 12;
+    int CBRACKET := 13;
+    int COLON := 14;
+    int SEMICOLON := 15;
+    int COMMA := 16;
+
     [] debugType(sys::stream::OStream stream) {
-        if (type == Token:OTHER) { stream.printCString("OTHER"); }
+        if (type == Token:EOI) { stream.printCString("EOI"); }
+        else if (type == Token:OTHER) { stream.printCString("OTHER"); }
         else if (type == Token:IDENTIFIER) { stream.printCString("IDENTIFIER"); }
         else if (type == Token:REGISTER) { stream.printCString("REGISTER"); }
         else if (type == Token:CHAR) { stream.printCString("CHAR"); }
@@ -37,6 +36,7 @@ class Token extends pool::generator::tokenizer::Token {
         else if (type == Token:NEWLINE) { stream.printCString("NEWLINE"); }
         else if (type == Token:SPACER) { stream.printCString("SPACER"); }
         else if (type == Token:COMMENT) { stream.printCString("COMMENT"); }
+        else if (type == Token:MLCOMMENT) { stream.printCString("MLCOMMENT"); }
         else if (type == Token:OPERATOR) { stream.printCString("OPERATOR"); }
         else if (type == Token:ASSIGN) { stream.printCString("ASSIGN"); }
         else if (type == Token:OBRACKET) { stream.printCString("OBRACKET"); }
