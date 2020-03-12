@@ -74,6 +74,10 @@ class Token extends Object {
         if (type == Token:EOI) { stream.printCString("EOI"); }
     }
     
+    // TODO: remove with implicit cast
+    [Token] token() { return this; }
+    
+    // TODO: extract model based src-code generation
     global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
         out.printCString(<"
 /*[meta]
@@ -110,7 +114,4 @@ version = 0.1.0
         out.printCString("    }").printNewline();
         out.printCString("}").printNewline();
     }
-    
-    // TODO: remove with implicit cast
-    [Token] token() { return this; }
 }

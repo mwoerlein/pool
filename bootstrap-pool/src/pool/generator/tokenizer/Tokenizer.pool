@@ -92,6 +92,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         return true;
     }
     
+    // TODO: extract model based src-code generation
     global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
         State init = d.getInitState();
         out.printCString(<"
