@@ -1,5 +1,6 @@
-%class   pool::generator::regex::Parser
-%extends pool::generator::regex::BaseParser
+%namespace  pool::generator::regex
+%classname  Parser
+%extends BaseParser
 
 CHAR      := /[^\\\(\)\[\]\?\*\+\-\^\|\.\/]|\\[nrt\\\(\)\[\]\?\*\+\-\^\|\.\/]/
 OBRACKET  := /\(/
@@ -15,20 +16,22 @@ PIPE      := /\|/
 DOT       := /\./
 OTHER     := /.*/
 
-expression: exprlist                         { $$ = null; }
-expression: expression PIPE exprlist         { $$ = null; }
-exprlist:                                    { $$ = null; }
-exprlist: exprlist expr                      { $$ = null; }
-expr: elem                                   { $$ = null; }
-expr: elem QMARK                             { $$ = null; }
-expr: elem STAR                              { $$ = null; }
-expr: elem PLUS                              { $$ = null; }
-elem: charset                                { $$ = null; }
-elem: OBRACKET expression CBRACKET           { $$ = null; }
-charset: DOT                                 { $$ = null; }
-charset: OSBRACKET charlist CSBRACKET        { $$ = null; }
-charset: OSBRACKET CFLEX charlist CSBRACKET  { $$ = null; }
-charlist: CHAR                               { $$ = null; }
-charlist: CHAR MINUS CHAR                    { $$ = null; }
-charlist: charlist CHAR                      { $$ = null; }
-charlist: charlist CHAR MINUS CHAR           { $$ = null; }
+expression: alter                       { $$ = this.expression = $0; }
+expression: concat                      { $$ = this.expression = $0; }
+alter: concat                           { $$ = this.listAddNode(this.alter(), this.listToNode($0)); }
+alter: alter PIPE concat                { $$ = this.listAddNode($0, this.listToNode($2)); }
+concat: elem                            { $$ = this.listAddNode(this.concat(), $0); }
+concat: concat elem                     { $$ = this.listAddNode($0, $1); }
+elem: expr                              { $$ = $0; }
+expr: expr QMARK                        { $$ = this.atMostOnce($0); }
+expr: expr STAR                         { $$ = this.any($0); }
+expr: expr PLUS                         { $$ = this.atLeastOnce($0); }
+expr: DOT                               { $$ = this.all(); }
+expr: CHAR                              { $$ = this.single(this.toChar($0)); }
+expr: OSBRACKET charset CSBRACKET       { $$ = this.csToNode($1); }
+expr: OSBRACKET CFLEX charset CSBRACKET { $$ = this.csToExclusiveNode($1); }
+expr: OBRACKET alter CBRACKET           { $$ = this.listToNode($1); }
+charset: CHAR                           { $$ = this.csAddChar(this.cs(), this.toChar($0)); }
+charset: CHAR MINUS CHAR                { $$ = this.csAddRange(this.cs(), this.toChar($0), this.toChar($2)); }
+charset: charset CHAR                   { $$ = this.csAddChar($0, this.toChar($1)); }
+charset: charset CHAR MINUS CHAR        { $$ = this.csAddRange($0, this.toChar($1), this.toChar($3)); }

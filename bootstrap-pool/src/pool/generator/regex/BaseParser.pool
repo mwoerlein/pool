@@ -1,0 +1,66 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex;
+
+use pool::generator::regex::node::Node;
+use pool::generator::regex::node::List;
+use pool::generator::regex::node::Repeat;
+use pool::generator::regex::node::CharSet;
+use pool::generator::regex::token::Tokenizer;
+
+use pool::generator::tokenizer::Token;
+
+use sys::core::String;
+use sys::stream::IStream;
+
+class BaseParser extends pool::generator::parser::Parser {
+
+    List expression;
+    
+    [sys::stream::OStream] newError() { return this.rt().err(); }
+    
+    [List] parse(IStream input, String name) {
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        this._parse(in.init(input, name));
+        in.destroy();
+        List ret = this.expression;
+        this.expression = null;
+        return ret;
+    }
+
+    // Node creation helper
+    [int] toChar(Token t) {
+        String s = t.getValue();
+        if (s.length() == 1) { return s.at(0); }
+        if ((s.length() == 2) && (s.at(0) == '\\')) {
+            int c = s.at(1);
+            if (c == 'n') { return '\n'; }
+            if (c == 'r') { return '\r'; }
+            if (c == 't') { return '\t'; }
+            return c;
+        }
+        return 0;
+    }
+    [List] listAddNode(List l, Node n) { return l.addNode(n); }
+    [Node] listToNode(List l) { return l.node(); }
+    [Node] csToNode(CharSet cs) { return cs.node(); }
+    [Node] csToExclusiveNode(CharSet cs) { return cs.setExclusive().node(); }
+    [CharSet] csAddChar(CharSet cs, int a) { return cs.setChar(a); }
+    [CharSet] csAddRange(CharSet cs, int a, int b) { return cs.setRange(a, b); }
+    
+    [CharSet] cs() { return this.rt().createInstance(CharSet:CLASSNAME); }
+    [List] list() { return this.rt().createInstance(List:CLASSNAME); }
+    [Repeat] rep() { return this.rt().createInstance(Repeat:CLASSNAME); }
+    
+    [Node] all()                { return this.cs().setAll().node(); }
+    [Node] single(int a)        { return this.cs().setChar(a).node(); }
+    [Node] range(int a, int b)  { return this.cs().setRange(a, b).node(); }
+    [Node] any(Node n)          { return this.rep().init(Repeat:KIND_ANY, n).node(); }
+    [Node] atLeastOnce(Node n)  { return this.rep().init(Repeat:KIND_AT_LEAST_ONCE, n).node(); }
+    [Node] atMostOnce(Node n)   { return this.rep().init(Repeat:KIND_AT_MOST_ONCE, n).node(); }
+    [List] concat()             { return this.list().init(List:KIND_CONCAT); }
+    [List] alter()              { return this.list().init(List:KIND_ALTERNATIVE); }
+}
