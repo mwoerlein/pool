@@ -1,0 +1,243 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::tokenizer::dfa;
+
+use pool::generator::regex::node::CharSet; //TODO: extract and use generic CharSet outside of regex node model
+
+class Factory extends sys::core::Object {
+
+    [DFA] dfa() { return this.rt().createInstance(DFA:CLASSNAME); }
+    [Action] action() { return this.rt().createInstance(Action:CLASSNAME); }
+    [CharSet] cs() { return this.rt().createInstance(CharSet:CLASSNAME); }
+    
+    [Action] shift() { return this.action().setShift(); }
+    [Action] goto(State s) { return this.action().setGoto(s); }
+    [Action] sgoto(State s) { return this.action().setShift().setGoto(s); }
+    [Action] ret(Type t) { return this.action().setReturn(t); }
+    [Action] sret(Type t) { return this.action().setShift().setReturn(t); }
+    [Action] error(cstring msg) { return this.action().setError(msg); }
+    
+    /* 
+     * use manually built tokenizer dfa for regexes until pool::generator is finalized
+     */
+    [DFA] buildRegexDFA() {
+        DFA d = this.dfa();
+        Type tCHAR      := d.addType("CHAR");
+        Type tOBRACKET  := d.addType("OBRACKET");
+        Type tCBRACKET  := d.addType("CBRACKET");
+        Type tOSBRACKET := d.addType("OSBRACKET");
+        Type tCSBRACKET := d.addType("CSBRACKET");
+        Type tQMARK     := d.addType("QMARK");
+        Type tSTAR      := d.addType("STAR");
+        Type tPLUS      := d.addType("PLUS");
+        Type tMINUS     := d.addType("MINUS");
+        Type tCFLEX     := d.addType("CFLEX");
+        Type tPIPE      := d.addType("PIPE");
+        Type tDOT       := d.addType("DOT");
+        Type tOTHER     := d.addType("OTHER");
+        
+        State sSTART := d.newInitState();
+        State sSlash := d.newState();
+        
+        sSTART.addAction(this.cs().setChar('('), this.sret(tOBRACKET));
+        sSTART.addAction(this.cs().setChar(')'), this.sret(tCBRACKET));
+        sSTART.addAction(this.cs().setChar('['), this.sret(tOSBRACKET));
+        sSTART.addAction(this.cs().setChar(']'), this.sret(tCSBRACKET));
+        sSTART.addAction(this.cs().setChar('?'), this.sret(tQMARK));
+        sSTART.addAction(this.cs().setChar('*'), this.sret(tSTAR));
+        sSTART.addAction(this.cs().setChar('+'), this.sret(tPLUS));
+        sSTART.addAction(this.cs().setChar('-'), this.sret(tMINUS));
+        sSTART.addAction(this.cs().setChar('^'), this.sret(tCFLEX));
+        sSTART.addAction(this.cs().setChar('|'), this.sret(tPIPE));
+        sSTART.addAction(this.cs().setChar('.'), this.sret(tDOT));
+        sSTART.addAction(this.cs().setChar('\\'), this.sgoto(sSlash));
+        sSTART.addAction(this.cs().setAll(), this.sret(tCHAR));
+        
+        sSlash.addAction(
+            this.cs()
+                .setChar('n').setChar('r').setChar('t').setChar('\\')
+                .setChar('(').setChar(')').setChar('[').setChar(']')
+                .setChar('?').setChar('*').setChar('+').setChar('-')
+                .setChar('^').setChar('|').setChar('.').setChar('/'),
+            this.sret(tCHAR)
+        );
+        sSlash.addAction(this.cs().setAll(), this.sret(tOTHER));
+        sSlash.addTerminalAction(this.error("Unterminated escape sequence"));
+        
+        return d;
+    }
+    
+    /* 
+     * use manually built tokenizer dfa for pasm until pool::generator is finalized
+     */
+    [DFA] buildPasmDFA() {
+        DFA d = this.dfa();
+        
+        Type tOTHER      := d.addType("OTHER");
+        Type tIDENTIFIER := d.addType("IDENTIFIER");
+        Type tREGISTER   := d.addType("REGISTER");
+        Type tCHAR       := d.addType("CHAR");
+        Type tSTRING     := d.addType("STRING");
+        Type tNUMBER     := d.addType("NUMBER");
+        Type tNEWLINE    := d.addType("NEWLINE");
+        Type tSPACER     := d.addType("SPACER");
+        Type tCOMMENT    := d.addType("COMMENT");
+        Type tMLCOMMENT  := d.addType("MLCOMMENT");
+        Type tOPERATOR   := d.addType("OPERATOR");
+        Type tASSIGN     := d.addType("ASSIGN");
+        Type tOBRACKET   := d.addType("OBRACKET");
+        Type tCBRACKET   := d.addType("CBRACKET");
+        Type tCOLON      := d.addType("COLON");
+        Type tSEMICOLON  := d.addType("SEMICOLON");
+        Type tCOMMA      := d.addType("COMMA");
+        
+        State sSTART       := d.newInitState();
+        State sIDENTIFIER  := d.newState();
+        State sREGISTER    := d.newState();
+        State sSTRING      := d.newState();
+        State sSTRING_ESC  := d.newState();
+        State sCHAR        := d.newState();
+        State sCHAR_ESC    := d.newState();
+        State sLINECOMMENT := d.newState();
+        State sMLCOMMENT   := d.newState();
+        State sMLC_STAR    := d.newState();
+        State sNUMBER_ZERO := d.newState();
+        State sNUMBER_BIN  := d.newState();
+        State sNUMBER_OCT  := d.newState();
+        State sNUMBER_DEC  := d.newState();
+        State sNUMBER_HEX  := d.newState();
+        State sABC         := d.newState();
+        State sABO         := d.newState();
+        State sCOLON       := d.newState();
+        State sDOT         := d.newState();
+        State sMINUS       := d.newState();
+        State sNEWLINE     := d.newState();
+        State sPERCENTAGE  := d.newState();
+        State sSLASH       := d.newState();
+        State sSPACER      := d.newState();
+
+        sSTART.addAction(this.cs().setChar(' ').setChar('\t'), this.sgoto(sSPACER));
+        sSTART.addAction(this.cs().setChar('\n').setChar('\r'), this.sgoto(sNEWLINE));
+        sSTART.addAction(this.cs().setChar('"'), this.sgoto(sSTRING));
+        sSTART.addAction(this.cs().setChar('\''), this.sgoto(sCHAR));
+        sSTART.addAction(this.cs().setChar('>'), this.sgoto(sABC));
+        sSTART.addAction(this.cs().setChar('<'), this.sgoto(sABO));
+        sSTART.addAction(this.cs().setChar(':'), this.sgoto(sCOLON));
+        sSTART.addAction(this.cs().setChar('.'), this.sgoto(sDOT));
+        sSTART.addAction(this.cs().setChar('%'), this.sgoto(sPERCENTAGE));
+        sSTART.addAction(this.cs().setChar('/'), this.sgoto(sSLASH));
+        sSTART.addAction(this.cs().setChar('#'), this.sgoto(sLINECOMMENT));
+        sSTART.addAction(this.cs().setChar('0'), this.sgoto(sNUMBER_ZERO));
+        sSTART.addAction(this.cs().setChar('-'), this.sgoto(sMINUS));
+        sSTART.addAction(this.cs().setChar('_').setRange('a', 'z').setRange('A', 'Z'), this.sgoto(sIDENTIFIER));
+        sSTART.addAction(this.cs().setRange('1', '9'), this.sgoto(sNUMBER_DEC));
+        sSTART.addAction(this.cs().setChar('('), this.sret(tOBRACKET));
+        sSTART.addAction(this.cs().setChar(')'), this.sret(tCBRACKET));
+        sSTART.addAction(this.cs().setChar(';'), this.sret(tSEMICOLON));
+        sSTART.addAction(this.cs().setChar(','), this.sret(tCOMMA));
+        sSTART.addAction(this.cs().setChar('+').setChar('*'), this.sret(tOPERATOR));
+        sSTART.addAction(this.cs().setAll(), this.sret(tOTHER));
+        
+        sABC.addAction(this.cs().setChar('>'), this.sret(tOPERATOR));
+        sABC.addTerminalAction(this.ret(tOTHER));
+                
+        sABO.addAction(this.cs().setChar('<'), this.sret(tOPERATOR));
+        sABO.addTerminalAction(this.ret(tOTHER));
+                
+        sCOLON.addAction(this.cs().setChar('='), this.sret(tASSIGN));
+        sCOLON.addTerminalAction(this.ret(tCOLON));
+                
+        sDOT.addAction(this.cs().setChar('_').setRange('a', 'z').setRange('A', 'Z'), this.sgoto(sIDENTIFIER));
+        sDOT.addTerminalAction(this.ret(tOPERATOR));
+                
+        sMINUS.addAction(this.cs().setChar('0'), this.sgoto(sNUMBER_ZERO));
+        sMINUS.addAction(this.cs().setRange('1', '9'), this.sgoto(sNUMBER_DEC));
+        sMINUS.addTerminalAction(this.ret(tOPERATOR));
+        
+        sNEWLINE.addAction(this.cs().setChar('\n').setChar('\r'), this.shift());
+        sNEWLINE.addTerminalAction(this.ret(tNEWLINE));
+        
+        sSPACER.addAction(this.cs().setChar(' ').setChar('\t'), this.shift());
+        sSPACER.addTerminalAction(this.ret(tSPACER));
+        
+        sPERCENTAGE.addAction(this.cs().setRange('a', 'z').setRange('A', 'Z'), this.sgoto(sREGISTER));
+        sPERCENTAGE.addTerminalAction(this.ret(tOPERATOR));
+        
+        sSLASH.addAction(this.cs().setChar('/'), this.sgoto(sLINECOMMENT));
+        sSLASH.addAction(this.cs().setChar('*'), this.sgoto(sMLCOMMENT));
+        sSLASH.addTerminalAction(this.ret(tOPERATOR));
+
+        Action unterminatedString = this.error("Unterminated string");
+        sSTRING.addAction(this.cs().setChar('\n').setChar('\r'), unterminatedString);
+        sSTRING.addAction(this.cs().setChar('"'), this.sret(tSTRING));
+        sSTRING.addAction(this.cs().setChar('\\'), this.goto(sSTRING_ESC).setSkip());
+        sSTRING.addAction(this.cs().setAll(), this.shift());
+        sSTRING.addTerminalAction(unterminatedString);
+        
+        sSTRING_ESC.addAction(this.cs().setChar('\n').setChar('\r'), unterminatedString);
+        sSTRING_ESC.addAction(this.cs().setChar('n'), this.goto(sSTRING).setSkip().setPush('\n'));
+        sSTRING_ESC.addAction(this.cs().setChar('r'), this.goto(sSTRING).setSkip().setPush('\r'));
+        sSTRING_ESC.addAction(this.cs().setChar('t'), this.goto(sSTRING).setSkip().setPush('\t'));
+        sSTRING_ESC.addAction(this.cs().setChar('"').setChar('\\'), this.sgoto(sSTRING));
+        sSTRING_ESC.addAction(this.cs().setAll(), this.sgoto(sSTRING).setPush('\\'));
+        sSTRING_ESC.addTerminalAction(unterminatedString);
+        
+        Action unterminatedChar = this.error("Unterminated char sequence");
+        sCHAR.addAction(this.cs().setChar('\''), this.sret(tCHAR));
+        sCHAR.addAction(this.cs().setChar('\\'), this.goto(sCHAR_ESC).setSkip());
+        sCHAR.addAction(this.cs().setChar('\n').setChar('\r'), unterminatedChar);
+        sCHAR.addAction(this.cs().setAll(), this.shift());
+        sCHAR.addTerminalAction(unterminatedChar);
+        
+        sCHAR_ESC.addAction(this.cs().setChar('\n').setChar('\r'), unterminatedChar);
+        sCHAR_ESC.addAction(this.cs().setChar('n'), this.goto(sCHAR).setSkip().setPush('\n'));
+        sCHAR_ESC.addAction(this.cs().setChar('r'), this.goto(sCHAR).setSkip().setPush('\r'));
+        sCHAR_ESC.addAction(this.cs().setChar('t'), this.goto(sCHAR).setSkip().setPush('\t'));
+        sCHAR_ESC.addAction(this.cs().setChar('\'').setChar('\\'), this.sgoto(sCHAR));
+        sCHAR_ESC.addAction(this.cs().setAll(), this.sgoto(sCHAR).setPush('\\'));
+        sCHAR_ESC.addTerminalAction(unterminatedChar);
+        
+        sLINECOMMENT.addAction(this.cs().setChar('\n').setChar('\r'), this.ret(tCOMMENT));
+        sLINECOMMENT.addAction(this.cs().setAll(), this.shift());
+        sLINECOMMENT.addTerminalAction(this.ret(tCOMMENT));
+        
+        Action unterminatedMLC = this.error("Unterminated comment");
+        sMLCOMMENT.addAction(this.cs().setChar('*'), this.sgoto(sMLC_STAR));
+        sMLCOMMENT.addAction(this.cs().setAll(), this.shift());
+        sMLCOMMENT.addTerminalAction(unterminatedMLC);
+        
+        sMLC_STAR.addAction(this.cs().setChar('/'), this.sret(tMLCOMMENT));
+        sMLC_STAR.addAction(this.cs().setChar('*'), this.shift());
+        sMLC_STAR.addAction(this.cs().setAll(), this.sgoto(sMLCOMMENT));
+        sMLC_STAR.addTerminalAction(unterminatedMLC);
+        
+        sIDENTIFIER.addAction(this.cs().setChar('_').setRange('a', 'z').setRange('A', 'Z').setRange('0', '9'), this.shift());
+        sIDENTIFIER.addTerminalAction(this.ret(tIDENTIFIER));
+        
+        sREGISTER.addAction(this.cs().setChar('_').setRange('a', 'z').setRange('A', 'Z').setRange('0', '9'), this.shift());
+        sREGISTER.addTerminalAction(this.ret(tREGISTER));
+        
+        sNUMBER_ZERO.addAction(this.cs().setChar('b').setChar('B'), this.sgoto(sNUMBER_BIN));
+        sNUMBER_ZERO.addAction(this.cs().setChar('x').setChar('X'), this.sgoto(sNUMBER_HEX));
+        sNUMBER_ZERO.addAction(this.cs().setRange('0', '7'), this.sgoto(sNUMBER_OCT));
+        sNUMBER_ZERO.addTerminalAction(this.ret(tNUMBER));
+        
+        sNUMBER_BIN.addAction(this.cs().setRange('0', '1'), this.shift());
+        sNUMBER_BIN.addTerminalAction(this.ret(tNUMBER));
+        
+        sNUMBER_OCT.addAction(this.cs().setRange('0', '7'), this.shift());
+        sNUMBER_OCT.addTerminalAction(this.ret(tNUMBER));
+        
+        sNUMBER_DEC.addAction(this.cs().setRange('0', '9'), this.shift());
+        sNUMBER_DEC.addTerminalAction(this.ret(tNUMBER));
+        
+        sNUMBER_HEX.addAction(this.cs().setRange('0', '9').setRange('a', 'f').setRange('A', 'F'), this.shift());
+        sNUMBER_HEX.addTerminalAction(this.ret(tNUMBER));
+
+        return d;
+    }
+    
+}

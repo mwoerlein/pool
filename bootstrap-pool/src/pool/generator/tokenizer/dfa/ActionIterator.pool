@@ -5,7 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
-use pool::generator::regex::node::CharSet;
+use pool::generator::regex::node::CharSet; //TODO: extract and use generic CharSet outside of regex node model
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntry;
