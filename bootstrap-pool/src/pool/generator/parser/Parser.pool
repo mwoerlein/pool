@@ -23,9 +23,9 @@ class Parser extends Grammar {
 
     abstract [sys::stream::OStream] newError();
     
-    abstract [__any__] executeRule(int rule, ParseStack s);
-    abstract [int] goto(int state, int symbol);
-    abstract [int, int] action(int state, int type);
+    abstract [__any__] __executeRule(int rule, ParseStack s);
+    abstract [int] __goto(int state, int symbol);
+    abstract [int, int] __action(int state, int type);
     
     [int] _parse(Tokenizer tokens) {
         
@@ -46,14 +46,14 @@ class Parser extends Grammar {
                 t = tokens.next();
             } else if (action == Parser:REDUCE) {
                 Rule rule = this.getRule(param);
-                __any__ v = this.executeRule(rule.getId(), stack);
+                __any__ v = this.__executeRule(rule.getId(), stack);
                 stack.pop(rule.getRhSize());
                 int goto = this.goto(stack.getState(), rule.getLHS());
                 if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
             } else if (action == Parser:SHIFT_REDUCE) {
                 stack.push(Parser:UNKNOWN, t);
                 Rule rule = this.getRule(param);
-                __any__ v = this.executeRule(rule.getId(), stack);
+                __any__ v = this.__executeRule(rule.getId(), stack);
                 stack.pop(rule.getRhSize());
                 int goto = this.goto(stack.getState(), rule.getLHS());
                 if (goto < 0) {

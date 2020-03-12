@@ -20,7 +20,7 @@ class Parser extends BaseParser {
     int INDIRECT            := 6;
     int FORMULA             := 7;
     
-    [] initRules() {
+    [] __initRules() {
         // compilation_unit:
         /*  0 */ this.addRule(Parser:COMPILATION_UNIT);
         /*  1 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:LABEL);
@@ -103,7 +103,7 @@ class Parser extends BaseParser {
                     .terminal(Token:CBRACKET);
     }
 
-    [__any__] executeRule(int rule, ParseStack s) {
+    [__any__] __executeRule(int rule, ParseStack s) {
         __any__ result = null;
         
         // compilation_unit:
@@ -159,7 +159,7 @@ class Parser extends BaseParser {
         return result;
     }
     
-    [int] goto(int state, int symbol) {
+    [int] __goto(int state, int symbol) {
         if (state == 0) { // <EMPTY>
             if (symbol == Parser:COMPILATION_UNIT)  { return 1; }
         } else if (state == 1) { // compilation_unit
@@ -218,7 +218,7 @@ class Parser extends BaseParser {
         return Parser:ERROR;
     }
     
-    [int, int] action(int state, int type) {
+    [int, int] __action(int state, int type) {
         if ((type == Token:SPACER) || (type == Token:COMMENT) || (type == Token:MLCOMMENT)) {
             return [Parser:IGNORE, 0];
         }
