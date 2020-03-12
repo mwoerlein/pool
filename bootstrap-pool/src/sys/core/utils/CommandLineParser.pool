@@ -107,17 +107,17 @@ class CommandLineParser extends Object {
         } else {
             if (mode == MODE_START) {
                 mode = MODE_ARG;
-                arg.printChar(c);
+                if (c) { arg.printChar(c); }
             } else if (mode == MODE_ARG) {
                 if (!this._pushArgument(arg)) { return false; }
-                arg.printChar(c);
+                if (c) { arg.printChar(c); }
             } else if (mode == MODE_SHORT_OPT || mode == MODE_LONG_OPT) {
                 mode = MODE_OPT_VALUE;
-                value.printChar(c);
+                if (c) { value.printChar(c); }
             } else if (mode == MODE_OPT_VALUE) {
                 if (!this._pushValueOption(opt, value)) { return false; }
                 mode = MODE_ARG;
-                arg.printChar(c);
+                if (c) { arg.printChar(c); }
             }
         }
         return true;
@@ -191,10 +191,6 @@ class CommandLineParser extends Object {
     }
     
     [int] _pushArgument(String arg) {
-        if (!arg.length()) {
-            this.rt().err().printCString("no argument to push").printNewline();
-            return false;
-        }
         int ret = cl.pushCLArgument(arg);
         arg.clear();
         return ret;
