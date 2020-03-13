@@ -124,6 +124,24 @@ class String extends OStream {
         return stream;
     }
     
+    [OStream] printToLowerStream(OStream stream) {
+        StringElement cur = _first;
+        while (cur) {
+            stream.printChar(cur.getLowerChar());
+            cur = cur.getNext();
+        }
+        return stream;
+    }
+    
+    [OStream] printToUpperStream(OStream stream) {
+        StringElement cur = _first;
+        while (cur) {
+            stream.printChar(cur.getUpperChar());
+            cur = cur.getNext();
+        }
+        return stream;
+    }
+    
     [OStream] escapeToStream(OStream stream) {
         return this._escapeToStream(stream, '"', '\\');
     }
@@ -177,21 +195,13 @@ class String extends OStream {
     
     [String] toLower() {
         String s = this.rt().createInstance(String:CLASSNAME);
-        StringElement cur = _first;
-        while (cur) {
-            s.printChar(cur.getLowerChar());
-            cur = cur.getNext();
-        }
+        this.printToLowerStream(s.ostream());
         return s;
     }
     
     [String] toUpper() {
         String s = this.rt().createInstance(String:CLASSNAME);
-        StringElement cur = _first;
-        while (cur) {
-            s.printChar(cur.getUpperChar());
-            cur = cur.getNext();
-        }
+        this.printToUpperStream(s.ostream());
         return s;
     }
     

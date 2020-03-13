@@ -63,6 +63,14 @@ class OStream extends Object {
         return this;
     }
     
+    [OStream] lowerString(String s) {
+        return s.printToLowerStream(this);
+    }
+    
+    [OStream] upperString(String s) {
+        return s.printToUpperStream(this);
+    }
+    
     [OStream] escapeString(String s) {
         return s.escapeToStream(this);
     }
