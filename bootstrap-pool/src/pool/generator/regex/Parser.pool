@@ -114,8 +114,6 @@ class Parser extends BaseParser {
         } else if (state == 300) { // .. '[' '^'
             if (symbol == Parser:CHARSET)       { return 303; }
         }
-        
-        this.rt().out().printCString("missing goto ").printInt(state).printChar(' ').printInt(symbol).printNewline();
         return Parser:ERROR;
     }
     
