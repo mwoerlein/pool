@@ -26,4 +26,13 @@ class AnyMapEntryIterator extends AnyIterator {
         _next = _next.getOrderedNext();
         return entry;
     }
+    
+    [__all__, __all__] nextPair() {
+        if (!_next) {
+            return null;
+        }
+        AnyMapEntry entry = _next.entry();
+        _next = _next.getOrderedNext();
+        return [entry.getKey(), entry.getValue()];
+    }
 }

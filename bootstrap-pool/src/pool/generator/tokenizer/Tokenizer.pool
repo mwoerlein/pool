@@ -8,13 +8,13 @@ namespace pool::generator::tokenizer;
 use pool::generator::regex::node::CharSet;
 
 use pool::generator::tokenizer::dfa::Action;
-use pool::generator::tokenizer::dfa::ActionIterator;
 use pool::generator::tokenizer::dfa::DFA;
 use pool::generator::tokenizer::dfa::State;
 use pool::generator::tokenizer::dfa::Type;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
 use sys::memory::Address;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -166,9 +166,9 @@ version = 0.1.0
     
     global [] _genRulesForState(State s, OStream out) {
         int pos = 0;
-        ActionIterator ait = s.actions();
+        AnyMapEntryIterator ait = s.actions();
         while ((pos >= 0) && ait.hasNext()) {
-            [CharSet cs, Action a] := ait.next();
+            [CharSet cs, Action a] := ait.nextPair();
             if (pos++ == 0) {
                 out.printCString("               ");
             } else {

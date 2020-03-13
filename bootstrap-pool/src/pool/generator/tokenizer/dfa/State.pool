@@ -9,6 +9,7 @@ use pool::generator::regex::node::CharSet; // TODO: extract and use generic Char
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
 
 class State extends sys::core::Object {
 
@@ -29,10 +30,7 @@ class State extends sys::core::Object {
     [int] getId() { return id; }
     
     [State] addAction(CharSet cs, Action a) { actions.set(cs, a); return this; }
-    [ActionIterator] actions() {
-        ActionIterator ret = this.rt().createInstance(ActionIterator:CLASSNAME);
-        return ret.init(actions.entries());
-    }
+    [AnyMapEntryIterator] actions() { return actions.entries(); }
     
     [State] addTerminalAction(Action a) { terminal = a; return this; }
     [Action] getTerminalAction() { return terminal; } 
