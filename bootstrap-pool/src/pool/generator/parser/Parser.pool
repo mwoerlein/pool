@@ -5,10 +5,20 @@ version = 0.1.0
 */
 namespace pool::generator::parser;
 
+use pool::generator::parser::dfa::Action;
+use pool::generator::parser::dfa::DFA;
+use pool::generator::parser::dfa::Rule as DFARule;
+use pool::generator::parser::dfa::State;
+use pool::generator::parser::dfa::Symbol;
+
 use pool::generator::parser::grammar::Grammar;
 use pool::generator::parser::grammar::Rule;
 use pool::generator::tokenizer::Token;
 use pool::generator::tokenizer::Tokenizer;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::OStream;
 
 class Parser extends Grammar {
 
@@ -21,7 +31,7 @@ class Parser extends Grammar {
     int SHIFT_REDUCE := 3;
     int IGNORE       := 4;
 
-    abstract [sys::stream::OStream] newError();
+    abstract [OStream] newError();
     
     abstract [__any__] __executeRule(int rule, ParseStack s);
     abstract [int] __goto(int state, int symbol);
@@ -70,5 +80,186 @@ class Parser extends Grammar {
         }
         stack.destroy();
         return result == Parser:ACCEPT;
+    }
+
+    // TODO: extract model based src-code generation
+    global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
+        out.printCString(<"
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+">).printNewline();
+        out.printCString("namespace ").printCString(ns).printCString(";").printNewline();
+        out.printNewline();
+        out.printCString("use ").printCString(ns).printCString("::token::Token;").printNewline();
+        out.printCString("use pool::generator::parser::ParseStack;").printNewline();
+        out.printNewline();
+        out.printCString("class Parser extends BaseParser {").printNewline();
+        out.printNewline();
+        {
+            AnyIterator sit = d.nonTerminals();
+            while (sit.hasNext()) {
+                Symbol s = sit.next();
+                out.printCString("    int ").upperString(s.getName()).printCString(" := ").printInt(s.getId()).printChar(';').printNewline();
+            }
+            sit.destroy();
+        }
+        out.printNewline();
+        out.printCString("    [] __initRules() {").printNewline();
+        {
+            AnyIterator rit = d.rules();
+            while (rit.hasNext()) {
+                DFARule r = rit.next();
+                out.printCString("        this.addRule(Parser:").upperString(r.getLHS().getName()).printChar(')');
+                AnyIterator it = r.getRHS();
+                while (it.hasNext()) {
+                    Symbol s = it.next();
+                    if (s.isTerminal()) {
+                        out.printCString(".terminal(Token:").upperString(s.getName()).printChar(')');
+                    } else {
+                        out.printCString(".symbol(Parser:").upperString(s.getName()).printChar(')');
+                    }
+                }
+                it.destroy();
+                out.printChar(';').printNewline();
+            }
+            rit.destroy();
+        }
+        out.printCString("    }").printNewline();
+        out.printNewline();
+        out.printCString("    [__any__] __executeRule(int rule, ParseStack s) {").printNewline();
+        out.printCString("        __any__ result = null;").printNewline();
+        {
+            int pos = 0;
+            AnyIterator rit = d.rules();
+            while (rit.hasNext()) {
+                DFARule r = rit.next();
+                if (pos++ == 0) {
+                    out.printCString("        ");
+                } else {
+                    out.printCString("        else ");
+                }
+                out.printCString("if (rule == ").printInt(r.getId()).printCString(") ").print(r.getCode()).printNewline();
+            }
+            rit.destroy();
+        }
+        out.printNewline();        
+        out.printCString("        return result;").printNewline();
+        out.printCString("    }").printNewline();
+        out.printNewline();
+        out.printCString("    [int] __goto(int state, int symbol) {").printNewline();
+        {
+            int pos = 0;
+            AnyIterator sit = d.states();
+            while (sit.hasNext()) {
+                State s = sit.next();
+                if (s.hasGotos()) {
+                    if (pos++ == 0) {
+                        out.printCString("        ");
+                    } else {
+                        out.printCString("        } else ");
+                    }
+                    out.printCString("if (state == ").printInt(s.getId()).printCString(") {").printNewline();
+                    {
+                        int mpos = 0;
+                        AnyMapEntryIterator mit = s.gotos();
+                        while (mit.hasNext()) {
+                            [Symbol nt, State g] = mit.nextPair();
+                            if (mpos++ == 0) {
+                                out.printCString("            ");
+                            } else {
+                                out.printCString("            else ");
+                            }
+                            out.printCString("if (symbol == Parser:").upperString(nt.getName())
+                                .printCString(") { return ").printInt(g.getId()).printCString("; }").printNewline();
+                        }
+                        mit.destroy();
+                    }
+                }
+            }
+            if (pos > 0) {
+                out.printCString("        }").printNewline();
+            }
+            sit.destroy();
+        }
+        out.printNewline();        
+        out.printCString("        return Parser:ERROR;").printNewline();
+        out.printCString("    }").printNewline();
+        out.printNewline();
+        out.printCString("    [int, int] __action(int state, int type) {").printNewline();
+        {
+            int pos = 0;
+            AnyIterator sit = d.terminals();
+            while (sit.hasNext()) {
+                Symbol s = sit.next();
+                if (s.isIgnore()) {
+                    if (pos++ == 0) {
+                        out.printCString("        if ((type == Token:");
+                    } else {
+                        out.printCString(") || (type == Token:");
+                    }
+                    out.upperString(s.getName());
+                }
+            }
+            if (pos > 0) {
+                    out.printCString(")) { return [Parser:IGNORE, 0]; }").printNewline();
+            }
+            sit.destroy();
+        }
+        {
+            int pos = 0;
+            AnyIterator sit = d.states();
+            while (sit.hasNext()) {
+                State s = sit.next();
+                if (s.hasActions()) {
+                    if (pos++ == 0) {
+                        out.printCString("        ");
+                    } else {
+                        out.printCString("        } else ");
+                    }
+                    out.printCString("if (state == ").printInt(s.getId()).printCString(") {").printNewline();
+                    {
+                        int mpos = 0;
+                        AnyMapEntryIterator mit = s.actions();
+                        while (mit.hasNext()) {
+                            [Symbol t, Action a] = mit.nextPair();
+                            if (mpos++ == 0) {
+                                out.printCString("            ");
+                            } else {
+                                out.printCString("            else ");
+                            }
+                            out.printCString("if (type == Token:").upperString(t.getName()).printCString(") { ");
+                            Parser:_genReturnForAction(a, out);
+                            out.printCString(" }").printNewline();
+                        }
+                        mit.destroy();
+                        Action defaultAction = s.getDefaultAction();
+                        if (defaultAction) {
+                            out.printCString("            ");
+                            Parser:_genReturnForAction(defaultAction, out);
+                            out.printNewline();
+                        }
+                    }
+                }
+            }
+            if (pos > 0) {
+                out.printCString("        }").printNewline();
+            }
+            sit.destroy();
+        }
+        out.printNewline();        
+        out.printCString("        return [Parser:ERROR, 0];").printNewline();
+        out.printCString("    }").printNewline();
+        out.printNewline();
+        out.printCString("}").printNewline();
+    }
+    
+    global [] _genReturnForAction(Action a, OStream out) {
+        if (a.isAccept()) { out.printCString("return [Parser:ACCEPT, 0];"); }
+        else if (a.isShiftReduce()) { out.printCString("return [Parser:SHIFT_REDUCE, ").printInt(a.getRule().getId()).printCString("];");}
+        else if (a.isReduce()) { out.printCString("return [Parser:REDUCE, ").printInt(a.getRule().getId()).printCString("];");}
+        else if (a.isShift()) { out.printCString("return [Parser:SHIFT, ").printInt(a.getState().getId()).printCString("];");}
     }
 }

@@ -10,402 +10,319 @@ use pool::generator::parser::ParseStack;
 
 class Parser extends BaseParser {
 
-    // symbols
-    int COMPILATION_UNIT    := 0;    
-    int LABEL               := 1;
-    int DEFINITION          := 2;
-    int INSTRUCTION         := 3;
-    int EOL                 := 4;
-    int OPERAND             := 5;
-    int INDIRECT            := 6;
-    int FORMULA             := 7;
-    
+    int COMPILATION_UNIT := 0;
+    int LABEL := 1;
+    int DEFINITION := 2;
+    int INSTRUCTION := 3;
+    int EOL := 4;
+    int OPERAND := 5;
+    int INDIRECT := 6;
+    int FORMULA := 7;
+
     [] __initRules() {
-        // compilation_unit:
-        /*  0 */ this.addRule(Parser:COMPILATION_UNIT);
-        /*  1 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:LABEL);
-        /*  2 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:DEFINITION);
-        /*  3 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:INSTRUCTION);
-        /*  4 */ this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:EOL);
-        
-        // label:
-        /*  5 */ this.addRule(Parser:LABEL).terminal(Token:IDENTIFIER).terminal(Token:COLON);
-        
-        // instruction:
-        /*  6 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:EOL);
-        /*  7 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        /*  8 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        /*  9 */ this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
-            
-        // definition:
-        /* 10 */ this.addRule(Parser:DEFINITION).terminal(Token:IDENTIFIER)
-                    .terminal(Token:ASSIGN).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        
-        // eol:
-        /* 11 */ this.addRule(Parser:EOL).terminal(Token:SEMICOLON);
-        /* 12 */ this.addRule(Parser:EOL).terminal(Token:NEWLINE);
-        
-        // operand:
-        /* 13 */ this.addRule(Parser:OPERAND).terminal(Token:IDENTIFIER);
-        /* 14 */ this.addRule(Parser:OPERAND).terminal(Token:REGISTER);
-        /* 15 */ this.addRule(Parser:OPERAND).terminal(Token:NUMBER);
-        /* 16 */ this.addRule(Parser:OPERAND).terminal(Token:CHAR);
-        /* 17 */ this.addRule(Parser:OPERAND).terminal(Token:STRING);
-        /* 18 */ this.addRule(Parser:OPERAND).symbol(Parser:INDIRECT);
-        /* 19 */ this.addRule(Parser:OPERAND).symbol(Parser:FORMULA);
-        
-        // indirect:
-        /* 20 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
-        /* 21 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
-        /* 22 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).terminal(Token:NUMBER)
-                    .terminal(Token:CBRACKET);
-        /* 23 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
-        /* 24 */ this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).terminal(Token:NUMBER)
-                    .terminal(Token:CBRACKET);
-            
-        /* 25 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
-                    .terminal(Token:OBRACKET).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
-        /* 26 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
-                    .terminal(Token:OBRACKET).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
-        /* 27 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
-                    .terminal(Token:OBRACKET).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).terminal(Token:NUMBER)
-                    .terminal(Token:CBRACKET);
-        /* 28 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
-                    .terminal(Token:OBRACKET)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
-        /* 29 */ this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND)
-                    .terminal(Token:OBRACKET)
-                    .terminal(Token:COMMA).symbol(Parser:OPERAND)
-                    .terminal(Token:COMMA).terminal(Token:NUMBER)
-                    .terminal(Token:CBRACKET);
-            
-        // formula:
-        /* 30 */ this.addRule(Parser:FORMULA).terminal(Token:OBRACKET)
-                    .symbol(Parser:OPERAND).terminal(Token:OPERATOR).symbol(Parser:OPERAND)
-                    .terminal(Token:CBRACKET);
+        this.addRule(Parser:COMPILATION_UNIT);
+        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:LABEL);
+        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:DEFINITION);
+        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:INSTRUCTION);
+        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:EOL);
+        this.addRule(Parser:LABEL).terminal(Token:IDENTIFIER).terminal(Token:COLON);
+        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:EOL);
+        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        this.addRule(Parser:DEFINITION).terminal(Token:IDENTIFIER).terminal(Token:ASSIGN).symbol(Parser:OPERAND).symbol(Parser:EOL);
+        this.addRule(Parser:EOL).terminal(Token:SEMICOLON);
+        this.addRule(Parser:EOL).terminal(Token:NEWLINE);
+        this.addRule(Parser:OPERAND).terminal(Token:IDENTIFIER);
+        this.addRule(Parser:OPERAND).terminal(Token:REGISTER);
+        this.addRule(Parser:OPERAND).terminal(Token:NUMBER);
+        this.addRule(Parser:OPERAND).terminal(Token:CHAR);
+        this.addRule(Parser:OPERAND).terminal(Token:STRING);
+        this.addRule(Parser:OPERAND).symbol(Parser:INDIRECT);
+        this.addRule(Parser:OPERAND).symbol(Parser:FORMULA);
+        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
+        this.addRule(Parser:FORMULA).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:OPERATOR).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
     }
 
     [__any__] __executeRule(int rule, ParseStack s) {
         __any__ result = null;
-        
-        // compilation_unit:
-        if (rule ==  0) { result = unit.getNodeList(); }
-        else if (rule ==  1) { result = this.pushToList(s.at(1), s.at(0)); }
-        else if (rule ==  2) { result = this.pushToList(s.at(1), s.at(0)); }
-        else if (rule ==  3) { result = this.pushToList(s.at(1), s.at(0)); }
-        else if (rule ==  4) { result = s.at(1); }
-        
-        // label:
-        else if (rule ==  5) { result = this.createLabel(s.at(1)).node(); }
-        
-        // instruction:
-        else if (rule ==  6) { result = this.createInstruction(s.at(1)).node(); }
-        else if (rule ==  7) { result = this.createInstruction(s.at(2)).setOperand1(s.at(1)).node(); }
-        else if (rule ==  8) { result = this.createInstruction(s.at(4)).setOperand1(s.at(3)).setOperand2(s.at(1)).node(); }
-        else if (rule ==  9) { result = this.createInstruction(s.at(6)).setOperand1(s.at(5)).setOperand2(s.at(3)).setOperand3(s.at(1)).node(); }
-        
-        // definition:
-        else if (rule ==  10) { result = this.createDefinition(s.at(3), s.at(1)).node(); }
-        
-        // eol:
-        else if (rule ==  11) { result = s.at(0); }
-        else if (rule ==  12) { result = s.at(0); }
-        
-        // operand:
-        else if (rule ==  13) { result = this.createIdentifier(s.at(0)).operand(); }
-        else if (rule ==  14) { result = this.createRegister(s.at(0)).operand(); }
-        else if (rule ==  15) { result = this.createNumber(s.at(0)).operand(); }
-        else if (rule ==  16) { result = this.createChar(s.at(0)).operand(); }
-        else if (rule ==  17) { result = this.createString(s.at(0)).operand(); }
-        else if (rule ==  18) { result = s.at(0); }
-        else if (rule ==  19) { result = s.at(0); }
-        
-        // indirect:
-        else if (rule ==  20) { result = this.createIndirect().setBase(s.at(1)).operand(); }
-        else if (rule ==  21) { result = this.createIndirect().setBase(s.at(3)).setIndex(s.at(1)).operand(); }
-        else if (rule ==  22) { result = this.createIndirect().setBase(s.at(5)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
-        else if (rule ==  23) { result = this.createIndirect().setIndex(s.at(1)).operand(); }
-        else if (rule ==  24) { result = this.createIndirect().setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
-        else if (rule ==  25) { result = this.createIndirect().setDisplacement(s.at(3)).setBase(s.at(1)).operand(); }
-        else if (rule ==  26) { result = this.createIndirect().setDisplacement(s.at(5)).setBase(s.at(3)).setIndex(s.at(1)).operand(); }
-        else if (rule ==  27) { result = this.createIndirect().setDisplacement(s.at(7)).setBase(s.at(5)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
-        else if (rule ==  28) { result = this.createIndirect().setDisplacement(s.at(4)).setIndex(s.at(1)).operand(); }
-        else if (rule ==  29) { result = this.createIndirect().setDisplacement(s.at(6)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
-        
-        // formula:
-        else if (rule ==  30) { result = this.createFormula(s.at(3), s.at(2), s.at(1)).operand(); }
-        
-        // unknown rule
-        else {}
-        
+        if (rule == 0) { result = unit.getNodeList(); }
+        else if (rule == 1) { result = this.pushToList(s.at(1), s.at(0)); }
+        else if (rule == 2) { result = this.pushToList(s.at(1), s.at(0)); }
+        else if (rule == 3) { result = this.pushToList(s.at(1), s.at(0)); }
+        else if (rule == 4) { result = s.at(1); }
+        else if (rule == 5) { result = this.createLabel(s.at(1)).node(); }
+        else if (rule == 6) { result = this.createInstruction(s.at(1)).node(); }
+        else if (rule == 7) { result = this.createInstruction(s.at(2)).setOperand1(s.at(1)).node(); }
+        else if (rule == 8) { result = this.createInstruction(s.at(4)).setOperand1(s.at(3)).setOperand2(s.at(1)).node(); }
+        else if (rule == 9) { result = this.createInstruction(s.at(6)).setOperand1(s.at(5)).setOperand2(s.at(3)).setOperand3(s.at(1)).node(); }
+        else if (rule == 10) { result = this.createDefinition(s.at(3), s.at(1)).node(); }
+        else if (rule == 11) { result = s.at(0); }
+        else if (rule == 12) { result = s.at(0); }
+        else if (rule == 13) { result = this.createIdentifier(s.at(0)).operand(); }
+        else if (rule == 14) { result = this.createRegister(s.at(0)).operand(); }
+        else if (rule == 15) { result = this.createNumber(s.at(0)).operand(); }
+        else if (rule == 16) { result = this.createChar(s.at(0)).operand(); }
+        else if (rule == 17) { result = this.createString(s.at(0)).operand(); }
+        else if (rule == 18) { result = s.at(0); }
+        else if (rule == 19) { result = s.at(0); }
+        else if (rule == 20) { result = this.createIndirect().setBase(s.at(1)).operand(); }
+        else if (rule == 21) { result = this.createIndirect().setBase(s.at(3)).setIndex(s.at(1)).operand(); }
+        else if (rule == 22) { result = this.createIndirect().setBase(s.at(5)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
+        else if (rule == 23) { result = this.createIndirect().setIndex(s.at(1)).operand(); }
+        else if (rule == 24) { result = this.createIndirect().setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
+        else if (rule == 25) { result = this.createIndirect().setDisplacement(s.at(3)).setBase(s.at(1)).operand(); }
+        else if (rule == 26) { result = this.createIndirect().setDisplacement(s.at(5)).setBase(s.at(3)).setIndex(s.at(1)).operand(); }
+        else if (rule == 27) { result = this.createIndirect().setDisplacement(s.at(7)).setBase(s.at(5)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
+        else if (rule == 28) { result = this.createIndirect().setDisplacement(s.at(4)).setIndex(s.at(1)).operand(); }
+        else if (rule == 29) { result = this.createIndirect().setDisplacement(s.at(6)).setIndex(s.at(3)).setScale(this.toInt(s.at(1))).operand(); }
+        else if (rule == 30) { result = this.createFormula(s.at(3), s.at(2), s.at(1)).operand(); }
+
         return result;
     }
-    
+
     [int] __goto(int state, int symbol) {
-        if (state == 0) { // <EMPTY>
-            if (symbol == Parser:COMPILATION_UNIT)  { return 1; }
-        } else if (state == 1) { // compilation_unit
-            if (symbol == Parser:COMPILATION_UNIT)  { return 1; }
-            else if (symbol == Parser:LABEL)        { return 10001; }
-            else if (symbol == Parser:DEFINITION)   { return 10002; }
-            else if (symbol == Parser:INSTRUCTION)  { return 10003; }
-            else if (symbol == Parser:EOL)          { return 10004; }
-        } else if (state == 2) { // compilation_unit IDENTIFIER
-            if (symbol == Parser:OPERAND)           { return 5; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 3) { // compilation_unit IDENTIFIER ASSIGN
-            if (symbol == Parser:OPERAND)           { return 4; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 6) { // compilation_unit IDENTIFIER operand ','
-            if (symbol == Parser:OPERAND)           { return 7; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 8) { // compilation_unit IDENTIFIER operand ',' operand ','
-            if (symbol == Parser:OPERAND)           { return 9; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-            
-        } else if (state == 100) { // .. '('
-            if (symbol == Parser:OPERAND)           { return 101; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 102) { // .. '(' operand ','
-            if (symbol == Parser:OPERAND)           { return 103; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 106) { // .. '(' ','
-            if (symbol == Parser:OPERAND)           { return 107; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 110) { // .. '(' operand OPERATION
-            if (symbol == Parser:OPERAND)           { return 111; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-            
-        } else if (state == 200) { // .. operand '('
-            if (symbol == Parser:OPERAND)           { return 201; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 202) { // .. operand '(' operand ','
-            if (symbol == Parser:OPERAND)           { return 203; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
-        } else if (state == 206) { // .. operand '(' ','
-            if (symbol == Parser:OPERAND)           { return 207; }
-            else if (symbol == Parser:INDIRECT)     { return 10018; }
-            else if (symbol == Parser:FORMULA)      { return 10019; }
+        if (state == 0) {
+            if (symbol == Parser:COMPILATION_UNIT) { return 1; }
+        } else if (state == 1) {
+            if (symbol == Parser:LABEL) { return 32; }
+            else if (symbol == Parser:DEFINITION) { return 33; }
+            else if (symbol == Parser:INSTRUCTION) { return 34; }
+            else if (symbol == Parser:EOL) { return 35; }
+        } else if (state == 2) {
+            if (symbol == Parser:OPERAND) { return 5; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 3) {
+            if (symbol == Parser:OPERAND) { return 4; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 6) {
+            if (symbol == Parser:OPERAND) { return 7; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 8) {
+            if (symbol == Parser:OPERAND) { return 9; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 10) {
+            if (symbol == Parser:OPERAND) { return 11; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 12) {
+            if (symbol == Parser:OPERAND) { return 13; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 16) {
+            if (symbol == Parser:OPERAND) { return 17; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 20) {
+            if (symbol == Parser:OPERAND) { return 21; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 22) {
+            if (symbol == Parser:OPERAND) { return 23; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 24) {
+            if (symbol == Parser:OPERAND) { return 25; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
+        } else if (state == 28) {
+            if (symbol == Parser:OPERAND) { return 29; }
+            else if (symbol == Parser:INDIRECT) { return 36; }
+            else if (symbol == Parser:FORMULA) { return 37; }
         }
+
         return Parser:ERROR;
     }
-    
+
     [int, int] __action(int state, int type) {
-        if ((type == Token:SPACER) || (type == Token:COMMENT) || (type == Token:MLCOMMENT)) {
-            return [Parser:IGNORE, 0];
+        if ((type == Token:SPACER) || (type == Token:COMMENT) || (type == Token:MLCOMMENT)) { return [Parser:IGNORE, 0]; }
+        if (state == 0) {
+            if (type == Token:EOI) { return [Parser:REDUCE, 0]; }
+            else if (type == Token:SEMICOLON) { return [Parser:REDUCE, 0]; }
+            else if (type == Token:NEWLINE) { return [Parser:REDUCE, 0]; }
+            else if (type == Token:IDENTIFIER) { return [Parser:REDUCE, 0]; }
+        } else if (state == 1) {
+            if (type == Token:EOI) { return [Parser:ACCEPT, 0]; }
+            else if (type == Token:SEMICOLON) { return [Parser:SHIFT_REDUCE, 4]; }
+            else if (type == Token:NEWLINE) { return [Parser:SHIFT_REDUCE, 4]; }
+            else if (type == Token:IDENTIFIER) { return [Parser:SHIFT, 2]; }
+        } else if (state == 2) {
+            if (type == Token:COLON) { return [Parser:SHIFT_REDUCE, 5]; }
+            else if (type == Token:EOI) { return [Parser:SHIFT_REDUCE, 6]; }
+            else if (type == Token:SEMICOLON) { return [Parser:SHIFT_REDUCE, 6]; }
+            else if (type == Token:NEWLINE) { return [Parser:SHIFT_REDUCE, 6]; }
+            else if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:ASSIGN) { return [Parser:SHIFT, 3]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 3) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 4) {
+            if (type == Token:EOI) { return [Parser:SHIFT_REDUCE, 10]; }
+            else if (type == Token:SEMICOLON) { return [Parser:SHIFT_REDUCE, 10]; }
+            else if (type == Token:NEWLINE) { return [Parser:SHIFT_REDUCE, 10]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+        } else if (state == 5) {
+            if (type == Token:EOI) { return [Parser:SHIFT_REDUCE, 7]; }
+            else if (type == Token:SEMICOLON) { return [Parser:SHIFT_REDUCE, 7]; }
+            else if (type == Token:NEWLINE) { return [Parser:SHIFT_REDUCE, 7]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 6]; }
+        } else if (state == 6) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 7) {
+            if (type == Token:EOI) { return [Parser:SHIFT_REDUCE, 8]; }
+            else if (type == Token:SEMICOLON) { return [Parser:SHIFT_REDUCE, 8]; }
+            else if (type == Token:NEWLINE) { return [Parser:SHIFT_REDUCE, 8]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 8]; }
+        } else if (state == 8) {
+            if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+            else if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+        } else if (state == 9) {
+            if (type == Token:EOI) { return [Parser:SHIFT_REDUCE, 9]; }
+            else if (type == Token:SEMICOLON) { return [Parser:SHIFT_REDUCE, 9]; }
+            else if (type == Token:NEWLINE) { return [Parser:SHIFT_REDUCE, 9]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+        } else if (state == 10) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 16]; }
+        } else if (state == 11) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 20]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 12]; }
+            else if (type == Token:OPERATOR) { return [Parser:SHIFT, 20]; }
+        } else if (state == 12) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 13) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 21]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 14]; }
+        } else if (state == 14) {
+            if (type == Token:NUMBER) { return [Parser:SHIFT, 15]; }
+        } else if (state == 15) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 22]; }
+        } else if (state == 16) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 17) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 23]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 18]; }
+        } else if (state == 18) {
+            if (type == Token:NUMBER) { return [Parser:SHIFT, 19]; }
+        } else if (state == 19) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 24]; }
+        } else if (state == 20) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 21) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 30]; }
+        } else if (state == 22) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 28]; }
+        } else if (state == 23) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 25]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 24]; }
+        } else if (state == 24) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 25) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 26]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 26]; }
+        } else if (state == 26) {
+            if (type == Token:NUMBER) { return [Parser:SHIFT, 27]; }
+        } else if (state == 27) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 27]; }
+        } else if (state == 28) {
+            if (type == Token:IDENTIFIER) { return [Parser:SHIFT_REDUCE, 13]; }
+            else if (type == Token:REGISTER) { return [Parser:SHIFT_REDUCE, 14]; }
+            else if (type == Token:NUMBER) { return [Parser:SHIFT_REDUCE, 15]; }
+            else if (type == Token:CHAR) { return [Parser:SHIFT_REDUCE, 16]; }
+            else if (type == Token:STRING) { return [Parser:SHIFT_REDUCE, 17]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 10]; }
+        } else if (state == 29) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 28]; }
+            else if (type == Token:OBRACKET) { return [Parser:SHIFT, 22]; }
+            else if (type == Token:COMMA) { return [Parser:SHIFT, 30]; }
+        } else if (state == 30) {
+            if (type == Token:NUMBER) { return [Parser:SHIFT, 31]; }
+        } else if (state == 31) {
+            if (type == Token:CBRACKET) { return [Parser:SHIFT_REDUCE, 29]; }
+        } else if (state == 32) {
+            return [Parser:REDUCE, 1];
+        } else if (state == 33) {
+            return [Parser:REDUCE, 2];
+        } else if (state == 34) {
+            return [Parser:REDUCE, 3];
+        } else if (state == 35) {
+            return [Parser:REDUCE, 4];
+        } else if (state == 36) {
+            return [Parser:REDUCE, 18];
+        } else if (state == 37) {
+            return [Parser:REDUCE, 19];
         }
-        int isEOL = (type == Token:EOI || type == Token:SEMICOLON || type == Token:NEWLINE);
-        if (state == 0) { // <EMPTY>
-            if (isEOL)                          { return [Parser:REDUCE, 0]; }
-            else if (type == Token:IDENTIFIER)  { return [Parser:REDUCE, 0]; }
-        } else if (state == 1) { // compilation_unit
-            if (type == Token:EOI)              { return [Parser:ACCEPT, 0]; }
-            else if (isEOL)                     { return [Parser:SHIFT_REDUCE, 4]; }
-            else if (type == Token:IDENTIFIER)  { return [Parser:SHIFT, 2]; }
-        } else if (state == 2) { // compilation_unit IDENTIFIER
-            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 6]; }
-            else if (type == Token:COLON)       { return [Parser:SHIFT_REDUCE, 5]; }
-            else if (type == Token:ASSIGN)      { return [Parser:SHIFT, 3]; }
-            else if (type == Token:IDENTIFIER)  { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 3) { // compilation_unit IDENTIFIER ASSIGN
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 4) { // compilation_unit IDENTIFIER ASSIGN operand
-            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 10]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-        } else if (state == 5) { // compilation_unit IDENTIFIER operand
-            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 7]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 6]; }
-        } else if (state == 6) { // compilation_unit IDENTIFIER operand ','
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 7) { // compilation_unit IDENTIFIER operand ',' operand
-            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 8]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 8]; }
-        } else if (state == 8) { // compilation_unit IDENTIFIER operand ',' operand ','
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 9) { // compilation_unit IDENTIFIER operand ',' operand ',' operand
-            if (isEOL)                          { return [Parser:SHIFT_REDUCE, 9]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            
-        } else if (state == 100) { // .. '('
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 106]; }
-        } else if (state == 101) { // .. '(' operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 20]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 102]; }
-            else if (type == Token:OPERATOR)    { return [Parser:SHIFT, 110]; }
-        } else if (state == 102) { // .. '(' operand ','
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 103) { // .. '(' operand ',' operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 21]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 104]; }
-        } else if (state == 104) { // .. '(' operand ',' operand ','
-            if (type == Token:NUMBER)           { return [Parser:SHIFT, 105]; }
-        } else if (state == 105) { // .. '(' operand ',' operand ',' NUMBER
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 22]; }
-        } else if (state == 106) { // .. '(' ','
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 107) { // .. '(' ',' operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 23]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 108]; }
-        } else if (state == 108) { // .. '(' ',' operand ','
-            if (type == Token:NUMBER)           { return [Parser:SHIFT, 109]; }
-        } else if (state == 109) { // .. '(' ',' operand ',' NUMBER
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 24]; }
-        } else if (state == 110) { // .. '(' operand OPERATOR
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 111) { // .. '(' operand OPERATOR operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 30]; }
-            
-        } else if (state == 200) { // .. operand '('
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 206]; }
-        } else if (state == 201) { // .. operand '(' operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 25]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 202]; }
-        } else if (state == 202) { // .. operand '(' operand ','
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 203) { // .. operand '(' operand ',' operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 26]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 204]; }
-        } else if (state == 204) { // .. operand '(' operand ',' operand ','
-            if (type == Token:NUMBER)           { return [Parser:SHIFT, 205]; }
-        } else if (state == 205) { // .. operand '(' operand ',' operand ',' NUMBER
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 27]; }
-        } else if (state == 206) { // .. operand '(' ','
-            if (type == Token:IDENTIFIER)       { return [Parser:SHIFT_REDUCE, 13]; }
-            else if (type == Token:REGISTER)    { return [Parser:SHIFT_REDUCE, 14]; }
-            else if (type == Token:NUMBER)      { return [Parser:SHIFT_REDUCE, 15]; }
-            else if (type == Token:CHAR)        { return [Parser:SHIFT_REDUCE, 16]; }
-            else if (type == Token:STRING)      { return [Parser:SHIFT_REDUCE, 17]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 100]; }
-        } else if (state == 207) { // .. operand '(' ',' operand
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 28]; }
-            else if (type == Token:OBRACKET)    { return [Parser:SHIFT, 200]; }
-            else if (type == Token:COMMA)       { return [Parser:SHIFT, 208]; }
-        } else if (state == 208) { // .. operand '(' ',' operand ','
-            if (type == Token:NUMBER)           { return [Parser:SHIFT, 209]; }
-        } else if (state == 209) { // .. operand '(' ',' operand ',' NUMBER
-            if (type == Token:CBRACKET)         { return [Parser:SHIFT_REDUCE, 29]; }
-        }
-        
-        // goto reduce targets
-        else if (state == 10000) { return [Parser:REDUCE,  0]; } // compilation_unit: // empty
-        else if (state == 10001) { return [Parser:REDUCE,  1]; } // compilation_unit: compilation_unit label
-        else if (state == 10002) { return [Parser:REDUCE,  2]; } // compilation_unit: compilation_unit definition
-        else if (state == 10003) { return [Parser:REDUCE,  3]; } // compilation_unit: compilation_unit instruction
-        else if (state == 10004) { return [Parser:REDUCE,  4]; } // compilation_unit: compilation_unit eol
-        else if (state == 10005) { return [Parser:REDUCE,  5]; } // label: IDENTIFIER ':'    
-        else if (state == 10006) { return [Parser:REDUCE,  6]; } // instruction: IDENTIFIER eol
-        else if (state == 10007) { return [Parser:REDUCE,  7]; } // instruction: IDENTIFIER operand eol
-        else if (state == 10008) { return [Parser:REDUCE,  8]; } // instruction: IDENTIFIER operand ',' operand eol
-        else if (state == 10009) { return [Parser:REDUCE,  9]; } // instruction: IDENTIFIER operand ',' operand ',' operand eol
-        else if (state == 10010) { return [Parser:REDUCE, 10]; } // definition: IDENTIFIER ASSIGN operand eol
-        else if (state == 10011) { return [Parser:REDUCE, 11]; } // eol: ';'
-        else if (state == 10012) { return [Parser:REDUCE, 12]; } // eol: NEWLINE
-        else if (state == 10013) { return [Parser:REDUCE, 13]; } // operand: IDENTIFIER
-        else if (state == 10014) { return [Parser:REDUCE, 14]; } // operand: REGISTER
-        else if (state == 10015) { return [Parser:REDUCE, 15]; } // operand: NUMBER
-        else if (state == 10016) { return [Parser:REDUCE, 16]; } // operand: CHAR
-        else if (state == 10017) { return [Parser:REDUCE, 17]; } // operand: STRING
-        else if (state == 10018) { return [Parser:REDUCE, 18]; } // operand: indirect
-        else if (state == 10019) { return [Parser:REDUCE, 19]; } // operand: formula
-        else if (state == 10020) { return [Parser:REDUCE, 20]; } // indirect: '(' operand ')'
-        else if (state == 10021) { return [Parser:REDUCE, 21]; } // indirect: '(' operand ',' operand ')'
-        else if (state == 10022) { return [Parser:REDUCE, 22]; } // indirect: '(' operand ',' operand ',' NUMBER ')'
-        else if (state == 10023) { return [Parser:REDUCE, 23]; } // indirect: '(' ',' operand ')'
-        else if (state == 10024) { return [Parser:REDUCE, 24]; } // indirect: '(' ',' operand ',' NUMBER ')'
-        else if (state == 10025) { return [Parser:REDUCE, 25]; } // indirect: operand '(' operand ')'
-        else if (state == 10026) { return [Parser:REDUCE, 26]; } // indirect: operand '(' operand ',' operand ')'
-        else if (state == 10027) { return [Parser:REDUCE, 27]; } // indirect: operand '(' operand ',' operand ',' NUMBER ')'
-        else if (state == 10028) { return [Parser:REDUCE, 28]; } // indirect: operand '(' ',' operand ')'
-        else if (state == 10029) { return [Parser:REDUCE, 29]; } // indirect: operand '(' ',' operand ',' NUMBER ')'
-        else if (state == 10030) { return [Parser:REDUCE, 30]; } // formula: '(' operand OPERATOR operand ')'
-        
+
         return [Parser:ERROR, 0];
     }
+
 }
