@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::generator::parser::dfa;
+namespace pool::generator::parser::grammar;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;

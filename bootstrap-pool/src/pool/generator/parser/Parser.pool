@@ -5,11 +5,11 @@ version = 0.1.0
 */
 namespace pool::generator::parser;
 
-use pool::generator::parser::dfa::Action;
-use pool::generator::parser::dfa::DFA;
-use pool::generator::parser::dfa::Rule as DFARule;
-use pool::generator::parser::dfa::State;
-use pool::generator::parser::dfa::Symbol;
+use pool::generator::parser::grammar::Action;
+use pool::generator::parser::grammar::Grammar;
+use pool::generator::parser::grammar::Rule;
+use pool::generator::parser::grammar::State;
+use pool::generator::parser::grammar::Symbol;
 
 use pool::generator::tokenizer::Token;
 use pool::generator::tokenizer::Tokenizer;
@@ -86,7 +86,7 @@ class Parser extends sys::core::Object {
     }
 
     // TODO: extract model based src-code generation
-    global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
+    global [] genClassFromGrammar(Grammar gram, cstring ns, OStream out) {
         out.printCString(<"
 /*[meta]
 mimetype = text/x-pool
@@ -102,7 +102,7 @@ version = 0.1.0
         out.printCString("class Parser extends BaseParser {").printNewline();
         out.printNewline();
         {
-            AnyIterator sit = d.nonTerminals();
+            AnyIterator sit = gram.nonTerminals();
             while (sit.hasNext()) {
                 Symbol s = sit.next();
                 out.printCString("    int ").upperString(s.getName()).printCString(" := ").printInt(s.getId()).printChar(';').printNewline();
@@ -113,9 +113,9 @@ version = 0.1.0
         out.printCString("    [int, int] __getRule(int rule) {").printNewline();
         {
             int pos = 0;
-            AnyIterator rit = d.rules();
+            AnyIterator rit = gram.rules();
             while (rit.hasNext()) {
-                DFARule r = rit.next();
+                Rule r = rit.next();
                 if (pos++ == 0) {
                     out.printCString("        ");
                 } else {
@@ -134,9 +134,9 @@ version = 0.1.0
         out.printCString("        __any__ result = null;").printNewline();
         {
             int pos = 0;
-            AnyIterator rit = d.rules();
+            AnyIterator rit = gram.rules();
             while (rit.hasNext()) {
-                DFARule r = rit.next();
+                Rule r = rit.next();
                 if (pos++ == 0) {
                     out.printCString("        ");
                 } else {
@@ -155,7 +155,7 @@ version = 0.1.0
         out.printCString("    [int] __goto(int state, int symbol) {").printNewline();
         {
             int pos = 0;
-            AnyIterator sit = d.states();
+            AnyIterator sit = gram.states();
             while (sit.hasNext()) {
                 State s = sit.next();
                 if (s.hasGotos()) {
@@ -194,7 +194,7 @@ version = 0.1.0
         out.printCString("    [int, int] __action(int state, int type) {").printNewline();
         {
             int pos = 0;
-            AnyIterator sit = d.terminals();
+            AnyIterator sit = gram.terminals();
             while (sit.hasNext()) {
                 Symbol s = sit.next();
                 if (s.isIgnore()) {
@@ -213,7 +213,7 @@ version = 0.1.0
         }
         {
             int pos = 0;
-            AnyIterator sit = d.states();
+            AnyIterator sit = gram.states();
             while (sit.hasNext()) {
                 State s = sit.next();
                 if (s.hasActions()) {
@@ -266,7 +266,7 @@ version = 0.1.0
         else if (a.isShift()) { out.printCString("return [Parser:SHIFT, ").printInt(a.getState().getId()).printCString("];");}
     }
     
-    global [] _genCodeForRule(DFARule r, OStream out) {
+    global [] _genCodeForRule(Rule r, OStream out) {
         IStream in = r.getCode().toIStream();
         int size = r.getRHSSize();
         while (!in.isEmpty()) {

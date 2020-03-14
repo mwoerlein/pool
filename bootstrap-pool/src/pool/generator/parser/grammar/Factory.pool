@@ -3,12 +3,12 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::generator::parser::dfa;
+namespace pool::generator::parser::grammar;
 
 
 class Factory extends sys::core::Object {
 
-    [DFA] dfa() { return this.rt().createInstance(DFA:CLASSNAME); }
+    [Grammar] grammar() { return this.rt().createInstance(Grammar:CLASSNAME); }
     [Action] action() { return this.rt().createInstance(Action:CLASSNAME); }
     
     [Action] accept() { return this.action().setAccept(); }
@@ -17,10 +17,10 @@ class Factory extends sys::core::Object {
     [Action] shiftReduce(Rule r) { return this.action().setShift(null).setReduce(r); }
     
     /* 
-     * use manually built parse dfa for regexes until pool::generator is finalized
+     * use manually built parse grammar for regexes until pool::generator is finalized
      */
-    [DFA] buildRegexDFA() {
-        DFA d = this.dfa();
+    [Grammar] buildRegexGrammar() {
+        Grammar d = this.grammar();
         
         Symbol tEOI       := d.getEOI();
         Symbol tCHAR      := d.addTerminal("CHAR");
@@ -248,10 +248,10 @@ class Factory extends sys::core::Object {
     }
     
     /* 
-     * use manually built parser dfa for pasm until pool::generator is finalized
+     * use manually built parser grammar for pasm until pool::generator is finalized
      */
-    [DFA] buildPasmDFA() {
-        DFA d = this.dfa();
+    [Grammar] buildPasmGrammar() {
+        Grammar d = this.grammar();
         
         Symbol tEOI        := d.getEOI();
         Symbol tOTHER      := d.addTerminal("OTHER");

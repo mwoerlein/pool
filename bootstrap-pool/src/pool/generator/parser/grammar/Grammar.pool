@@ -3,13 +3,13 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::generator::parser::dfa;
+namespace pool::generator::parser::grammar;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::utils::Owner;
 
-class DFA extends Owner {
+class Grammar extends Owner {
 
     AnyList terminals; // ArrayList<Symbol>
     AnyList nonTerminals; // ArrayList<Symbol>
