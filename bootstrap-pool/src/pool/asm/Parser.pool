@@ -19,38 +19,39 @@ class Parser extends BaseParser {
     int INDIRECT := 6;
     int FORMULA := 7;
 
-    [] __initRules() {
-        this.addRule(Parser:COMPILATION_UNIT);
-        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:LABEL);
-        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:DEFINITION);
-        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:INSTRUCTION);
-        this.addRule(Parser:COMPILATION_UNIT).symbol(Parser:COMPILATION_UNIT).symbol(Parser:EOL);
-        this.addRule(Parser:LABEL).terminal(Token:IDENTIFIER).terminal(Token:COLON);
-        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:EOL);
-        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        this.addRule(Parser:INSTRUCTION).terminal(Token:IDENTIFIER).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        this.addRule(Parser:DEFINITION).terminal(Token:IDENTIFIER).terminal(Token:ASSIGN).symbol(Parser:OPERAND).symbol(Parser:EOL);
-        this.addRule(Parser:EOL).terminal(Token:SEMICOLON);
-        this.addRule(Parser:EOL).terminal(Token:NEWLINE);
-        this.addRule(Parser:OPERAND).terminal(Token:IDENTIFIER);
-        this.addRule(Parser:OPERAND).terminal(Token:REGISTER);
-        this.addRule(Parser:OPERAND).terminal(Token:NUMBER);
-        this.addRule(Parser:OPERAND).terminal(Token:CHAR);
-        this.addRule(Parser:OPERAND).terminal(Token:STRING);
-        this.addRule(Parser:OPERAND).symbol(Parser:INDIRECT);
-        this.addRule(Parser:OPERAND).symbol(Parser:FORMULA);
-        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
-        this.addRule(Parser:INDIRECT).symbol(Parser:OPERAND).terminal(Token:OBRACKET).terminal(Token:COMMA).symbol(Parser:OPERAND).terminal(Token:COMMA).terminal(Token:NUMBER).terminal(Token:CBRACKET);
-        this.addRule(Parser:FORMULA).terminal(Token:OBRACKET).symbol(Parser:OPERAND).terminal(Token:OPERATOR).symbol(Parser:OPERAND).terminal(Token:CBRACKET);
+    [int, int] __getRule(int rule) {
+        if (rule == 0) { return [Parser:COMPILATION_UNIT, 0]; }
+        else if (rule == 1) { return [Parser:COMPILATION_UNIT, 2]; }
+        else if (rule == 2) { return [Parser:COMPILATION_UNIT, 2]; }
+        else if (rule == 3) { return [Parser:COMPILATION_UNIT, 2]; }
+        else if (rule == 4) { return [Parser:COMPILATION_UNIT, 2]; }
+        else if (rule == 5) { return [Parser:LABEL, 2]; }
+        else if (rule == 6) { return [Parser:INSTRUCTION, 2]; }
+        else if (rule == 7) { return [Parser:INSTRUCTION, 3]; }
+        else if (rule == 8) { return [Parser:INSTRUCTION, 5]; }
+        else if (rule == 9) { return [Parser:INSTRUCTION, 7]; }
+        else if (rule == 10) { return [Parser:DEFINITION, 4]; }
+        else if (rule == 11) { return [Parser:EOL, 1]; }
+        else if (rule == 12) { return [Parser:EOL, 1]; }
+        else if (rule == 13) { return [Parser:OPERAND, 1]; }
+        else if (rule == 14) { return [Parser:OPERAND, 1]; }
+        else if (rule == 15) { return [Parser:OPERAND, 1]; }
+        else if (rule == 16) { return [Parser:OPERAND, 1]; }
+        else if (rule == 17) { return [Parser:OPERAND, 1]; }
+        else if (rule == 18) { return [Parser:OPERAND, 1]; }
+        else if (rule == 19) { return [Parser:OPERAND, 1]; }
+        else if (rule == 20) { return [Parser:INDIRECT, 3]; }
+        else if (rule == 21) { return [Parser:INDIRECT, 5]; }
+        else if (rule == 22) { return [Parser:INDIRECT, 7]; }
+        else if (rule == 23) { return [Parser:INDIRECT, 4]; }
+        else if (rule == 24) { return [Parser:INDIRECT, 6]; }
+        else if (rule == 25) { return [Parser:INDIRECT, 4]; }
+        else if (rule == 26) { return [Parser:INDIRECT, 6]; }
+        else if (rule == 27) { return [Parser:INDIRECT, 8]; }
+        else if (rule == 28) { return [Parser:INDIRECT, 5]; }
+        else if (rule == 29) { return [Parser:INDIRECT, 7]; }
+        else if (rule == 30) { return [Parser:FORMULA, 5]; }
+        return [Parser:ERROR, 0];
     }
 
     [__any__] __executeRule(int rule, ParseStack s) {

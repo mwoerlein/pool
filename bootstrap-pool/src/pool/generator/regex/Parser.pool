@@ -17,26 +17,27 @@ class Parser extends BaseParser {
     int EXPR := 4;
     int CHARSET := 5;
 
-    [] __initRules() {
-        this.addRule(Parser:EXPRESSION).symbol(Parser:ALTER);
-        this.addRule(Parser:EXPRESSION).symbol(Parser:CONCAT);
-        this.addRule(Parser:ALTER).symbol(Parser:CONCAT);
-        this.addRule(Parser:ALTER).symbol(Parser:ALTER).terminal(Token:PIPE).symbol(Parser:CONCAT);
-        this.addRule(Parser:CONCAT).symbol(Parser:ELEM);
-        this.addRule(Parser:CONCAT).symbol(Parser:CONCAT).symbol(Parser:ELEM);
-        this.addRule(Parser:ELEM).symbol(Parser:EXPR);
-        this.addRule(Parser:EXPR).symbol(Parser:EXPR).terminal(Token:QMARK);
-        this.addRule(Parser:EXPR).symbol(Parser:EXPR).terminal(Token:STAR);
-        this.addRule(Parser:EXPR).symbol(Parser:EXPR).terminal(Token:PLUS);
-        this.addRule(Parser:EXPR).terminal(Token:DOT);
-        this.addRule(Parser:EXPR).terminal(Token:CHAR);
-        this.addRule(Parser:EXPR).terminal(Token:OSBRACKET).symbol(Parser:CHARSET).terminal(Token:CSBRACKET);
-        this.addRule(Parser:EXPR).terminal(Token:OSBRACKET).terminal(Token:CFLEX).symbol(Parser:CHARSET).terminal(Token:CSBRACKET);
-        this.addRule(Parser:EXPR).terminal(Token:OBRACKET).symbol(Parser:ALTER).terminal(Token:CBRACKET);
-        this.addRule(Parser:CHARSET).terminal(Token:CHAR);
-        this.addRule(Parser:CHARSET).terminal(Token:CHAR).terminal(Token:MINUS).terminal(Token:CHAR);
-        this.addRule(Parser:CHARSET).symbol(Parser:CHARSET).terminal(Token:CHAR);
-        this.addRule(Parser:CHARSET).symbol(Parser:CHARSET).terminal(Token:CHAR).terminal(Token:MINUS).terminal(Token:CHAR);
+    [int, int] __getRule(int rule) {
+        if (rule == 0) { return [Parser:EXPRESSION, 1]; }
+        else if (rule == 1) { return [Parser:EXPRESSION, 1]; }
+        else if (rule == 2) { return [Parser:ALTER, 1]; }
+        else if (rule == 3) { return [Parser:ALTER, 3]; }
+        else if (rule == 4) { return [Parser:CONCAT, 1]; }
+        else if (rule == 5) { return [Parser:CONCAT, 2]; }
+        else if (rule == 6) { return [Parser:ELEM, 1]; }
+        else if (rule == 7) { return [Parser:EXPR, 2]; }
+        else if (rule == 8) { return [Parser:EXPR, 2]; }
+        else if (rule == 9) { return [Parser:EXPR, 2]; }
+        else if (rule == 10) { return [Parser:EXPR, 1]; }
+        else if (rule == 11) { return [Parser:EXPR, 1]; }
+        else if (rule == 12) { return [Parser:EXPR, 3]; }
+        else if (rule == 13) { return [Parser:EXPR, 4]; }
+        else if (rule == 14) { return [Parser:EXPR, 3]; }
+        else if (rule == 15) { return [Parser:CHARSET, 1]; }
+        else if (rule == 16) { return [Parser:CHARSET, 3]; }
+        else if (rule == 17) { return [Parser:CHARSET, 2]; }
+        else if (rule == 18) { return [Parser:CHARSET, 4]; }
+        return [Parser:ERROR, 0];
     }
 
     [__any__] __executeRule(int rule, ParseStack s) {

@@ -11,8 +11,6 @@ use pool::generator::parser::dfa::Rule as DFARule;
 use pool::generator::parser::dfa::State;
 use pool::generator::parser::dfa::Symbol;
 
-use pool::generator::parser::grammar::Grammar;
-use pool::generator::parser::grammar::Rule;
 use pool::generator::tokenizer::Token;
 use pool::generator::tokenizer::Tokenizer;
 
@@ -21,7 +19,7 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
-class Parser extends Grammar {
+class Parser extends sys::core::Object {
 
     // actions    
     int UNKNOWN      := -2;
@@ -34,6 +32,7 @@ class Parser extends Grammar {
 
     abstract [OStream] newError();
     
+    abstract [int, int] __getRule(int rule);
     abstract [__any__] __executeRule(int rule, ParseStack s);
     abstract [int] __goto(int state, int symbol);
     abstract [int, int] __action(int state, int type);
@@ -46,7 +45,7 @@ class Parser extends Grammar {
         
         Token t = tokens.next();
         while (result == Parser:UNKNOWN) {
-            [int action, int param] = this.action(stack.getState(), t.getType());
+            [int action, int param] = this.__action(stack.getState(), t.getType());
             if (action == Parser:IGNORE) {
                 t.destroy();
                 t = tokens.next();
@@ -56,17 +55,20 @@ class Parser extends Grammar {
                 stack.push(param, t);
                 t = tokens.next();
             } else if (action == Parser:REDUCE) {
-                Rule rule = this.getRule(param);
-                __any__ v = this.__executeRule(rule.getId(), stack);
-                stack.pop(rule.getRhSize());
-                int goto = this.goto(stack.getState(), rule.getLHS());
-                if (goto < 0) { result = Parser:ERROR; } else { stack.push(goto, v); }
+                [int lhs, int rhsSize] = this.__getRule(param);
+                __any__ v = this.__executeRule(param, stack);
+                stack.pop(rhsSize);
+                int goto = this.__goto(stack.getState(), lhs);
+                if (goto < 0) {
+                    result = Parser:ERROR;
+                    t.debugToStream(this.newError().printCString("Parsing error near "));
+                } else { stack.push(goto, v); }
             } else if (action == Parser:SHIFT_REDUCE) {
                 stack.push(Parser:UNKNOWN, t);
-                Rule rule = this.getRule(param);
-                __any__ v = this.__executeRule(rule.getId(), stack);
-                stack.pop(rule.getRhSize());
-                int goto = this.goto(stack.getState(), rule.getLHS());
+                [int lhs, int rhsSize] = this.__getRule(param);
+                __any__ v = this.__executeRule(param, stack);
+                stack.pop(rhsSize);
+                int goto = this.__goto(stack.getState(), lhs);
                 if (goto < 0) {
                     result = Parser:ERROR;
                     t.debugToStream(this.newError().printCString("Parsing error near "));
@@ -108,26 +110,24 @@ version = 0.1.0
             sit.destroy();
         }
         out.printNewline();
-        out.printCString("    [] __initRules() {").printNewline();
+        out.printCString("    [int, int] __getRule(int rule) {").printNewline();
         {
+            int pos = 0;
             AnyIterator rit = d.rules();
             while (rit.hasNext()) {
                 DFARule r = rit.next();
-                out.printCString("        this.addRule(Parser:").upperString(r.getLHS().getName()).printChar(')');
-                AnyIterator it = r.getRHS();
-                while (it.hasNext()) {
-                    Symbol s = it.next();
-                    if (s.isTerminal()) {
-                        out.printCString(".terminal(Token:").upperString(s.getName()).printChar(')');
-                    } else {
-                        out.printCString(".symbol(Parser:").upperString(s.getName()).printChar(')');
-                    }
+                if (pos++ == 0) {
+                    out.printCString("        ");
+                } else {
+                    out.printCString("        else ");
                 }
-                it.destroy();
-                out.printChar(';').printNewline();
+                out.printCString("if (rule == ").printInt(r.getId()).printCString(") { return [Parser:")
+                    .upperString(r.getLHS().getName()).printCString(", ").printInt(r.getRHSSize()).printCString("]; }")
+                    .printNewline();
             }
             rit.destroy();
         }
+        out.printCString("        return [Parser:ERROR, 0];").printNewline();
         out.printCString("    }").printNewline();
         out.printNewline();
         out.printCString("    [__any__] __executeRule(int rule, ParseStack s) {").printNewline();

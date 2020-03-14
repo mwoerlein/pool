@@ -12,7 +12,7 @@ use sys::core::anycollection::AnyList;
 class Rule extends sys::core::Object {
 
     int id;
-    Symbol lhs; // LinkedList<Symbol>
+    Symbol lhs;
     AnyList rhs; // LinkedList<Symbol>
     String code;
 
