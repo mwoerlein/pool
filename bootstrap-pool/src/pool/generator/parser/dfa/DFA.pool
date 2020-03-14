@@ -1,0 +1,68 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::dfa;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::utils::Owner;
+
+class DFA extends Owner {
+
+    AnyList terminals; // ArrayList<Symbol>
+    AnyList nonTerminals; // ArrayList<Symbol>
+    AnyList states; // ArrayList<State>
+    AnyList rules; // ArrayList<Rule>
+    Symbol eoi;
+    State init;
+
+    [] __init() {
+        this._initOwner();
+        this.terminals = this.createOwn(AnyList:CLASSNAME);
+        this.nonTerminals = this.createOwn(AnyList:CLASSNAME);
+        this.states = this.createOwn(AnyList:CLASSNAME);
+        this.rules = this.createOwn(AnyList:CLASSNAME);
+        eoi = this.createOwn(Symbol:CLASSNAME);
+        eoi.cinit("EOI").setTerminal(true).setId(pool::generator::tokenizer::Token:EOI);
+    }
+    
+    [Symbol] addTerminal(cstring name) {
+        Symbol s = this.createOwn(Symbol:CLASSNAME);
+        s.cinit(name).setTerminal(true).setId(terminals.size());
+        terminals.add(s);
+        return s;
+    }
+    
+    [Symbol] addNonTerminal(cstring name) {
+        Symbol s = this.createOwn(Symbol:CLASSNAME);
+        s.cinit(name).setTerminal(false).setId(nonTerminals.size());
+        nonTerminals.add(s);
+        return s;
+    }
+    
+    [Symbol] getEOI() { return eoi; }
+    
+    [State] newState() {
+        State s = this.createOwn(State:CLASSNAME);
+        s.setId(states.size());
+        states.add(s);
+        return s;
+    }
+    [State] newInitState() { return init = this.newState(); }
+    
+    [Rule] newRule(Symbol lhs) {
+        Rule r = this.createOwn(Rule:CLASSNAME);
+        r.setLHS(lhs).setId(rules.size());
+        rules.add(r);
+        return r;
+    }
+    
+    [State] getInitState() { return init; }
+    [AnyIterator] terminals() { return terminals.iterator(); }
+    [AnyIterator] nonTerminals() { return nonTerminals.iterator(); }
+    [AnyIterator] states() { return states.iterator(); }
+    [AnyIterator] rules() { return rules.iterator(); }
+    
+}

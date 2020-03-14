@@ -1,0 +1,39 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::dfa;
+
+use sys::core::utils::Bitset;
+
+class Action extends sys::core::Object {
+
+    int action;
+    Rule rule;
+    State state;
+    
+    [int] isAccept()      { return Bitset:isset(action, 0); }
+    [int] isShift()       { return Bitset:isset(action, 1); }
+    [int] isReduce()      { return Bitset:isset(action, 2); }
+    [int] isShiftReduce() { return Bitset:isset(action, 1) && Bitset:isset(action, 2); }
+    
+    [Action] setAccept() {
+        action = Bitset:set(action, 0);
+        return this;
+    }
+    [Action] setShift(State s) {
+        action = Bitset:set(action, 1);
+        this.state = s;
+        return this;
+    }
+    [Action] setReduce(Rule r) {
+        action = Bitset:set(action, 2);
+        this.rule = r;
+        return this;
+    }
+    
+    [Rule] getRule() { return rule; }
+    [State] getState() { return state; }
+    
+}

@@ -1,0 +1,45 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::dfa;
+
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+
+class State extends sys::core::Object {
+
+    int id;
+    AnyMap actions; // HashMap<Symbol, Action>
+    AnyMap gotos; // HashMap<Symbol, State>
+    Action defaultAction;
+
+    [] __init() {
+        actions = this.rt().createInstance(AnyMap:CLASSNAME);
+        actions.init(13);
+        gotos = this.rt().createInstance(AnyMap:CLASSNAME);
+        gotos.init(13);
+    }
+
+    [] __destruct() {
+        gotos.destroy();
+        actions.destroy();
+    }
+    
+    [State] setId(int id) { this.id = id; return this; }
+    [int] getId() { return id; }
+    
+    [State] setDefaultAction(Action a) { defaultAction = a; return this; }
+    [Action] getDefaultAction() { return defaultAction; }
+    
+    [State] addAction(Symbol t, Action a) { if (!t.isTerminal()) { return null; } actions.set(t, a); return this; }
+    [AnyMapEntryIterator] actions() { return actions.entries(); }
+    
+    [State] addGoto(Symbol nt, State s) { if (nt.isTerminal()) { return null; } gotos.set(nt, s); return this; }
+    [AnyMapEntryIterator] gotos() { return gotos.entries(); }
+    
+    [int] hasActions() { return !actions.isEmpty() || defaultAction; }
+    [int] hasGotos() { return !gotos.isEmpty(); }
+    
+}

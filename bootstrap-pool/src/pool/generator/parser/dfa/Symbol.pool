@@ -1,0 +1,38 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::dfa;
+
+use sys::core::String;
+
+class Symbol extends sys::core::Object {
+
+    int id;
+    int terminal;
+    int ignore;
+    String name;
+
+    [Symbol] cinit(cstring name) {
+        this.name = this.rt().createInstance(String:CLASSNAME);
+        this.name.assignCString(name);
+        return this;
+    }
+
+    [] __destruct() {
+        if (name) { name.destroy(); }
+    }
+    
+    [Symbol] setId(int id) { this.id = id; return this; }
+    [int] getId() { return id; }
+    
+    [Symbol] setTerminal(int terminal) { this.terminal = terminal; return this; }
+    [int] isTerminal() { return terminal; }
+    
+    [Symbol] setIgnore(int ignore) { this.ignore = ignore; return this; }
+    [int] isIgnore() { return ignore; }
+    
+    [String] getName() { return name; }
+    
+}

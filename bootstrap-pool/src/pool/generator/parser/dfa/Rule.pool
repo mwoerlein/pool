@@ -1,0 +1,42 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::dfa;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+
+class Rule extends sys::core::Object {
+
+    int id;
+    Symbol lhs; // LinkedList<Symbol>
+    AnyList rhs; // LinkedList<Symbol>
+    String code;
+
+    [] __init() {
+        rhs = this.rt().createInstance(AnyList:CLASSNAME);
+        code = this.rt().createInstance(String:CLASSNAME);
+    }
+
+    [] __destruct() {
+        code.destroy();
+        rhs.destroy();
+    }
+    
+    [Rule] setId(int id) { this.id = id; return this; }
+    [int] getId() { return id; }
+    
+    [Rule] setLHS(Symbol lhs) { this.lhs = lhs; return this; }
+    [Symbol] getLHS() { return lhs; }
+    
+    [Rule] addRHS(Symbol s) { this.rhs.add(s); return this; }
+    [int] getRHSSize() { return this.rhs.size(); }
+    [AnyIterator] getRHS() { return this.rhs.iterator(); }
+    
+    [Rule] setCode(cstring code) { this.code.assignCString(code); return this; }
+    [String] getCode() { return this.code; }
+    
+}
