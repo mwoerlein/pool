@@ -70,11 +70,16 @@ class Command extends CommandLine {
     }
     
     [SeekableIOStream] openFile(String filename, int mode) {
-        File f = this.rt().createInstance(File:CLASSNAME);
         int buf = 0;
         __pasm__("subl %eax, %esp", {"%eax": filename.length() + 1}, {"%esp": buf});
-        int r = f._init(filename.toCString(buf), mode);
+        SeekableIOStream f = this.openCFile(filename.toCString(buf), mode);
         __pasm__("addl %eax, %esp", {"%eax": filename.length() + 1});
+        return f;
+    }
+    
+    [SeekableIOStream] openCFile(cstring filename, int mode) {
+        File f = this.rt().createInstance(File:CLASSNAME);
+        int r = f._init(filename, mode);
         if (r < 0) {
             f.destroy();
             return null;
