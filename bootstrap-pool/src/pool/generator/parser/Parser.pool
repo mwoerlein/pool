@@ -18,6 +18,7 @@ use pool::generator::tokenizer::Tokenizer;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::IStream;
 use sys::stream::OStream;
 
 class Parser extends Grammar {
@@ -141,7 +142,9 @@ version = 0.1.0
                 } else {
                     out.printCString("        else ");
                 }
-                out.printCString("if (rule == ").printInt(r.getId()).printCString(") ").print(r.getCode()).printNewline();
+                out.printCString("if (rule == ").printInt(r.getId()).printCString(") ");
+                Parser:_genCodeForRule(r, out);
+                out.printNewline();
             }
             rit.destroy();
         }
@@ -261,5 +264,28 @@ version = 0.1.0
         else if (a.isShiftReduce()) { out.printCString("return [Parser:SHIFT_REDUCE, ").printInt(a.getRule().getId()).printCString("];");}
         else if (a.isReduce()) { out.printCString("return [Parser:REDUCE, ").printInt(a.getRule().getId()).printCString("];");}
         else if (a.isShift()) { out.printCString("return [Parser:SHIFT, ").printInt(a.getState().getId()).printCString("];");}
+    }
+    
+    global [] _genCodeForRule(DFARule r, OStream out) {
+        IStream in = r.getCode().toIStream();
+        int size = r.getRHSSize();
+        while (!in.isEmpty()) {
+            int c = in.readChar();
+            if (c == '$') {
+                int pc = in.peekChar();
+                if (pc == '$') {
+                    in.readChar();
+                    out.printCString("result");
+                } else if (pc >= '1' && pc <= '9') {
+                    int idx = in.readInt();
+                    out.printCString("s.at(").printInt(size - idx).printChar(')');
+                } else {
+                    out.printChar(c);
+                }
+            } else {
+                out.printChar(c);
+            }
+        }
+        in.destroy();
     }
 }
