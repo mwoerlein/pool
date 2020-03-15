@@ -86,7 +86,7 @@ class Parser extends sys::core::Object {
     }
 
     // TODO: extract model based src-code generation
-    global [] genClassFromGrammar(Grammar gram, cstring ns, OStream out) {
+    global [] genClassFromGrammar(Grammar gram, OStream out) {
         out.printCString(<"
 /*[meta]
 mimetype = text/x-pool
@@ -94,12 +94,14 @@ author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
 ">).printNewline();
-        out.printCString("namespace ").printCString(ns).printCString(";").printNewline();
+        out.printCString("namespace ").print(gram.getNamespace()).printCString(";").printNewline();
         out.printNewline();
-        out.printCString("use ").printCString(ns).printCString("::token::Token;").printNewline();
+        out.printCString("use ").print(gram.getNamespace()).printCString("::token::Token;").printNewline();
         out.printCString("use pool::generator::parser::ParseStack;").printNewline();
         out.printNewline();
-        out.printCString("class Parser extends BaseParser {").printNewline();
+        out.printCString("class ").print(gram.getClassname())
+            .printCString(" extends ").print(gram.getExtends())
+            .printCString(" {").printNewline();
         out.printNewline();
         {
             AnyIterator sit = gram.nonTerminals();

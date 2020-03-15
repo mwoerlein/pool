@@ -1,0 +1,71 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::utils::PropertyContainer;
+
+class GrammarDefinition extends PropertyContainer {
+
+    AnyList tokens; // ArrayList<Token>
+    AnyList rules; // ArrayList<Rule>
+    AnyMap symbols; // HashMap<String, Symbol>
+    Symbol eoi;
+
+    [] __init() { this._initSymbolTable(); }
+    [] _initSymbolTable() {
+        this._initPropertyContainer();
+        this.tokens = this.createOwn(AnyList:CLASSNAME);
+        this.rules = this.createOwn(AnyList:CLASSNAME);
+        this.symbols = this.createOwn(AnyMap:CLASSNAME);
+        this.symbols.init(13);
+        eoi = this.getCSymbol("EOI").setId(pool::generator::tokenizer::Token:EOI);
+    }
+    
+    [] __destruct() { this._destructSymbolTable(); }
+    [] _destructSymbolTable() {
+        this._destructPropertyContainer();
+    }
+    
+    [Symbol] getSymbol(String name) {
+        if (!symbols.has(name)) { return symbols.get(name); }
+        Symbol s = this.createOwn(Symbol:CLASSNAME);
+        s.setName(name);
+        symbols.set(this.createOwnStringFromString(name), s);
+        return s;
+    }
+    
+    [Symbol] getCSymbol(cstring n) {
+        String name = this.createOwnStringFromCString(n);
+        if (symbols.has(name)) { return symbols.get(name); }
+        Symbol s = this.createOwn(Symbol:CLASSNAME);
+        s.setName(name);
+        symbols.set(name, s);
+        return s;
+    }
+    
+    [Symbol] getEOI() { return eoi; }
+    [AnyIterator] symbols() { return symbols.values(); }
+    
+    [Rule] newRule(Symbol lhs) {
+        Rule r = this.createOwn(Rule:CLASSNAME);
+        r.setLHS(lhs).setId(rules.size());
+        rules.add(r);
+        return r;
+    }
+    [AnyIterator] rules() { return rules.iterator(); }
+    
+    [Token] newToken(Symbol id) {
+        Token t = this.createOwn(Token:CLASSNAME);
+        t.setId(id);
+        tokens.add(t);
+        return t;
+    }
+    [AnyIterator] tokens() { return tokens.iterator(); }
+}

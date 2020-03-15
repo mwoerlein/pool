@@ -33,10 +33,10 @@ class State extends sys::core::Object {
     [State] setDefaultAction(Action a) { defaultAction = a; return this; }
     [Action] getDefaultAction() { return defaultAction; }
     
-    [State] addAction(Symbol t, Action a) { if (!t.isTerminal()) { return null; } actions.set(t, a); return this; }
+    [State] addAction(Symbol t, Action a) { actions.set(t, a); return this; }
     [AnyMapEntryIterator] actions() { return actions.entries(); }
     
-    [State] addGoto(Symbol nt, State s) { if (nt.isTerminal()) { return null; } gotos.set(nt, s); return this; }
+    [State] addGoto(Symbol nt, State s) { gotos.set(nt, s); return this; }
     [AnyMapEntryIterator] gotos() { return gotos.entries(); }
     
     [int] hasActions() { return !actions.isEmpty() || defaultAction; }

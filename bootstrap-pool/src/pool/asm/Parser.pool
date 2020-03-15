@@ -12,8 +12,8 @@ class Parser extends BaseParser {
 
     int COMPILATION_UNIT := 0;
     int LABEL := 1;
-    int DEFINITION := 2;
-    int INSTRUCTION := 3;
+    int INSTRUCTION := 2;
+    int DEFINITION := 3;
     int EOL := 4;
     int OPERAND := 5;
     int INDIRECT := 6;

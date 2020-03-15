@@ -8,31 +8,22 @@ namespace pool::generator::parser::grammar;
 use sys::core::String;
 
 class Symbol extends sys::core::Object {
-
+    
     int id;
-    int terminal;
-    int ignore;
     String name;
-
-    [Symbol] cinit(cstring name) {
-        this.name = this.rt().createInstance(String:CLASSNAME);
-        this.name.assignCString(name);
-        return this;
-    }
-
-    [] __destruct() {
-        if (name) { name.destroy(); }
-    }
+    int ignore;
+    
+    [] __init() { this.name = this.rt().createInstance(String:CLASSNAME); }
+    [] __destruct() { name.destroy(); }
     
     [Symbol] setId(int id) { this.id = id; return this; }
     [int] getId() { return id; }
     
-    [Symbol] setTerminal(int terminal) { this.terminal = terminal; return this; }
-    [int] isTerminal() { return terminal; }
+    [Symbol] setName(String name) { this.name.assignString(name); return this; }
+    [Symbol] setCName(cstring name) { this.name.assignCString(name); return this; }
+    [String] getName() { return name; }
     
     [Symbol] setIgnore(int ignore) { this.ignore = ignore; return this; }
     [int] isIgnore() { return ignore; }
-    
-    [String] getName() { return name; }
     
 }

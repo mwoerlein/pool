@@ -5,17 +5,18 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
+use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::utils::Owner;
 
 class Grammar extends Owner {
 
+    GrammarDefinition definition;
+    
     AnyList terminals; // ArrayList<Symbol>
     AnyList nonTerminals; // ArrayList<Symbol>
     AnyList states; // ArrayList<State>
-    AnyList rules; // ArrayList<Rule>
-    Symbol eoi;
     State init;
 
     [] __init() {
@@ -23,26 +24,12 @@ class Grammar extends Owner {
         this.terminals = this.createOwn(AnyList:CLASSNAME);
         this.nonTerminals = this.createOwn(AnyList:CLASSNAME);
         this.states = this.createOwn(AnyList:CLASSNAME);
-        this.rules = this.createOwn(AnyList:CLASSNAME);
-        eoi = this.createOwn(Symbol:CLASSNAME);
-        eoi.cinit("EOI").setTerminal(true).setId(pool::generator::tokenizer::Token:EOI);
     }
     
-    [Symbol] addTerminal(cstring name) {
-        Symbol s = this.createOwn(Symbol:CLASSNAME);
-        s.cinit(name).setTerminal(true).setId(terminals.size());
-        terminals.add(s);
-        return s;
-    }
+    [Grammar] setDefinition(GrammarDefinition def) { this.own(this.definition = def); return this; }
     
-    [Symbol] addNonTerminal(cstring name) {
-        Symbol s = this.createOwn(Symbol:CLASSNAME);
-        s.cinit(name).setTerminal(false).setId(nonTerminals.size());
-        nonTerminals.add(s);
-        return s;
-    }
-    
-    [Symbol] getEOI() { return eoi; }
+    [State] newInitState() { return init = this.newState(); }
+    [State] getInitState() { return init; }
     
     [State] newState() {
         State s = this.createOwn(State:CLASSNAME);
@@ -50,19 +37,28 @@ class Grammar extends Owner {
         states.add(s);
         return s;
     }
-    [State] newInitState() { return init = this.newState(); }
+    [AnyIterator] states() { return states.iterator(); }
     
-    [Rule] newRule(Symbol lhs) {
-        Rule r = this.createOwn(Rule:CLASSNAME);
-        r.setLHS(lhs).setId(rules.size());
-        rules.add(r);
-        return r;
+    [Symbol] markTerminal(Symbol s) {
+        s.setId(terminals.size());
+        terminals.add(s);
+        return s;
     }
+    [int] hasTerminal(Symbol s) { return terminals.contains(s); }
     
-    [State] getInitState() { return init; }
+    [Symbol] markNonTerminal(Symbol s) {
+        s.setId(nonTerminals.size());
+        nonTerminals.add(s);
+        return s;
+    }
+    [int] hasNonTerminal(Symbol s) { return nonTerminals.contains(s); }
+    
     [AnyIterator] terminals() { return terminals.iterator(); }
     [AnyIterator] nonTerminals() { return nonTerminals.iterator(); }
-    [AnyIterator] states() { return states.iterator(); }
-    [AnyIterator] rules() { return rules.iterator(); }
+    [AnyIterator] rules() { return definition.rules(); }
+    
+    [String] getNamespace() { return definition.getCStringProperty("namespace"); }
+    [String] getClassname() { return definition.getCStringProperty("classname"); }
+    [String] getExtends() { return definition.getCStringProperty("extends"); }
     
 }

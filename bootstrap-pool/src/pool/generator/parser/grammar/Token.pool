@@ -1,0 +1,27 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+
+class Token extends sys::core::Object {
+    
+    Symbol id;
+    String definition;
+    
+    [] __init() { definition = this.rt().createInstance(String:CLASSNAME); }
+    
+    [] __destruct() { definition.destroy(); }
+    
+    [Token] setId(Symbol id) { this.id = id; return this; }
+    [Symbol] getId() { return id; }
+    
+    [Token] setDefinition(cstring def) { this.definition.assignCString(def); return this; }
+    [String] getDefinition() { return this.definition; }
+    
+}
