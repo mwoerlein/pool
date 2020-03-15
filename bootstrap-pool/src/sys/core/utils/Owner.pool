@@ -26,6 +26,8 @@ class Owner extends Object {
         _owned.destroy();
     }
     
+    [] own(__any__ o) { _owned.add(o); }
+    
     [__all__] createOwn(cstring name) {
         __all__ o = this.rt().createInstance(name);
         _owned.add(o);
