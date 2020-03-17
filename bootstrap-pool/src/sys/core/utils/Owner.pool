@@ -13,25 +13,13 @@ use sys::core::anycollection::AnyIterator;
 // TODO: implement ownership correctly
 class Owner extends Object {
 
-    AnyList _owned;  // LinkedList<Object>
 
     [] __init() { this._initOwner(); }
     [] _initOwner() {
-        _owned = this.rt().createInstance(AnyList:CLASSNAME);
     }
     
     [] __destruct() { this._destructOwner(); }
     [] _destructOwner() {
-        _owned.destroyAll();
-        _owned.destroy();
-    }
-    
-    [] own(__any__ o) { _owned.add(o); }
-    
-    [__all__] createOwn(cstring name) {
-        __all__ o = this.rt().createInstance(name);
-        _owned.add(o);
-        return o;
     }
     
     [String] createOwnStringFromString(String value) {
