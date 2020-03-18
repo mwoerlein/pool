@@ -69,12 +69,13 @@ class Object {
         this.rt().destroyInstance(this);
     }
     
+    // TODO: implement ownership correctly
     [] __destructOwned() {
         if (_owned_entry) {
-            Object cur = _owned_entry._owned_next;
+            Object cur = _owned_entry._owned_prev;
             while (Address:compare(cur, _owned_entry) != 0) {
                 Object kill = cur;
-                cur = cur._owned_next;
+                cur = cur._owned_prev;
                 kill.destroy();
             }
             cur.destroy();

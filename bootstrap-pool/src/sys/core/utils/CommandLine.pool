@@ -19,22 +19,16 @@ class CommandLine extends CommandLineParserTarget, Owner {
     AnyMap _listOptions;    // HashMap<String, LinkedList<String>>
     
     [] _initCommandLine() {
-        _arguments = this.rt().createInstance(AnyList:CLASSNAME);
-        _options = this.rt().createInstance(AnyMap:CLASSNAME);
+        _arguments = this.createOwn(AnyList:CLASSNAME);
+        _options = this.createOwn(AnyMap:CLASSNAME);
         _options.init(13);
-        _optionAliases = this.rt().createInstance(AnyMap:CLASSNAME);
+        _optionAliases = this.createOwn(AnyMap:CLASSNAME);
         _optionAliases.init(13);
-        _listOptions = this.rt().createInstance(AnyMap:CLASSNAME);
+        _listOptions = this.createOwn(AnyMap:CLASSNAME);
         _listOptions.init(13);
-        this._initOwner();
     }
     
     [] _destructCommandLine() {
-        _arguments.destroy();
-        _options.destroy();
-        _optionAliases.destroy();
-        _listOptions.destroy();
-        this._destructOwner();
     }
 
     // TODO: implement usage parsing (see http://docopt.org/)

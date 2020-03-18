@@ -13,15 +13,6 @@ use sys::core::anycollection::AnyIterator;
 // TODO: implement ownership correctly
 class Owner extends Object {
 
-
-    [] __init() { this._initOwner(); }
-    [] _initOwner() {
-    }
-    
-    [] __destruct() { this._destructOwner(); }
-    [] _destructOwner() {
-    }
-    
     [String] createOwnStringFromString(String value) {
         String s = this.createOwn(String:CLASSNAME);
         s.assignString(value);

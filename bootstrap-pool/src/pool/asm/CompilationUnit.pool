@@ -35,20 +35,14 @@ class CompilationUnit extends Owner, Logger {
     AnyMap values; // HashMap<String, Value>
 
     [] __init() {
-        sys::runtime::Runtime rt = this.rt();
-        nodeList = rt.createInstance(NodeList:CLASSNAME);
-        blocks = rt.createInstance(AnyList:CLASSNAME);
-        values = rt.createInstance(AnyMap:CLASSNAME);
+        nodeList = this.createOwn(NodeList:CLASSNAME);
+        blocks = this.createOwn(AnyList:CLASSNAME);
+        values = this.createOwn(AnyMap:CLASSNAME);
         values.init(13);
-        this._initOwner();
         this._initLogger();
     }
 
     [] __destruct() {
-        values.destroy();
-        blocks.destroy();
-        nodeList.destroy();
-        this._destructOwner();
         this._destructLogger();
     }
     
