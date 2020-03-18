@@ -109,8 +109,8 @@ class Object {
         owned.owner = this;
         // insert into new _owned list
         if (_owned_entry) {
-            owned._owned_next = _owned_entry._owned_next;
-            owned._owned_prev = _owned_entry;
+            owned._owned_prev = _owned_entry._owned_prev;
+            owned._owned_next = _owned_entry;
             owned._owned_next._owned_prev = owned._owned_prev._owned_next = owned;
         } else {
             _owned_entry = owned._owned_prev = owned._owned_next = owned;
