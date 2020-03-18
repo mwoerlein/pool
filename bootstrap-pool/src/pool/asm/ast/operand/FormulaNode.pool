@@ -14,25 +14,12 @@ class FormulaNode extends OperandNode {
     String operation;
     OperandNode o1;
     OperandNode o2;
-
-    [] __init() { this._initFormulaNode(); }
-    [] _initFormulaNode() {
-        this._initOperandNode();
-    }
-
-    [] __destruct() { this._destructFormulaNode(); }
-    [] _destructFormulaNode() {
-        if (operation) { operation.destroy(); }
-        if (o1) { o1.destroy(); }
-        if (o2) { o2.destroy(); }
-        this._destructOperandNode(); 
-    }
     
     [FormulaNode] initFormula(OperandNode o1, String op, OperandNode o2) {
-        operation = this.rt().createInstance(String:CLASSNAME);
+        operation = this.createOwn(String:CLASSNAME);
         operation.assignString(op);
-        this.o1 = o1;
-        this.o2 = o2;
+        this.o1 = this.own(o1);
+        this.o2 = this.own(o2);
         return this;
     }
     [String] getOperation() { return operation; }

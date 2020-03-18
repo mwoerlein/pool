@@ -12,13 +12,12 @@ use sys::log::Logger;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
 
-class TestSuite extends sys::core::utils::Owner {
+class TestSuite extends sys::core::Object {
 
     AnyMap knownTests;
     TestOutput output;
     
     [] __init() {
-        this._initOwner();
         knownTests = this.createOwn(AnyMap:CLASSNAME);
         knownTests.init(13);
         output = this.createOwn(TestOutput:CLASSNAME);
@@ -28,7 +27,9 @@ class TestSuite extends sys::core::utils::Owner {
     }
     
     [] register(cstring classname, cstring testname) {
-        knownTests.set(this.createOwnStringFromCString(classname), this.rt().getClassByCName(testname));
+        String cn = this.createOwn(String:CLASSNAME);
+        cn.assignCString(classname);
+        knownTests.set(cn, this.rt().getClassByCName(testname));
     }
     
     [int] runAll() {

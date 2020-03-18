@@ -16,9 +16,6 @@ class Action extends sys::core::Object {
     int push;
     String error;
     
-    [] __init() { error = this.rt().createInstance(String:CLASSNAME); }
-    [] __destruct() { error.destroy(); }
-    
     [int] isShift()  { return Bitset:isset(action, 0); }
     [int] isSkip()   { return Bitset:isset(action, 1); }
     [int] isPush()   { return Bitset:isset(action, 2); }
@@ -51,6 +48,7 @@ class Action extends sys::core::Object {
     }
     [Action] setError(cstring msg) {
         action = Bitset:set(action, 5);
+        this.error = this.createOwn(String:CLASSNAME);
         this.error.assignCString(msg);
         return this;
     }

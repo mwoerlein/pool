@@ -18,12 +18,8 @@ class State extends sys::core::Object {
     Action terminal;
 
     [] __init() {
-        actions = this.rt().createInstance(AnyMap:CLASSNAME);
+        actions = this.createOwn(AnyMap:CLASSNAME);
         actions.init(13);
-    }
-
-    [] __destruct() {
-        actions.destroy();
     }
     
     [State] setId(int id) { this.id = id; return this; }

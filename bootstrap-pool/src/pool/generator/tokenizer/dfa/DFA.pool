@@ -7,16 +7,14 @@ namespace pool::generator::tokenizer::dfa;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
-use sys::core::utils::Owner;
 
-class DFA extends Owner {
+class DFA extends sys::core::Object {
 
     AnyList types; // ArrayList<Type>
     AnyList states; // ArrayList<State>
     State init;
 
     [] __init() {
-        this._initOwner();
         this.types = this.createOwn(AnyList:CLASSNAME);
         this.states = this.createOwn(AnyList:CLASSNAME);
     }

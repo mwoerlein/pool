@@ -12,19 +12,8 @@ class LabelNode extends LineNode {
 
     String label;
 
-    [] __init() { this._initLabelNode(); }
-    [] _initLabelNode() {
-        label = this.rt().createInstance(String:CLASSNAME);
-        this._initLineNode(); 
-    }
-
-    [] __destruct() { this._destructLabelNode(); }
-    [] _destructLabelNode() {
-        label.destroy();
-        this._destructLineNode(); 
-    }
-    
     [LabelNode] setLabel(String l) {
+        label = this.createOwn(String:CLASSNAME);
         label.assignString(l);
         return this;
     }

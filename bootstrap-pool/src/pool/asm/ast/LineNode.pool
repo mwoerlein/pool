@@ -13,19 +13,8 @@ class LineNode extends Node {
 
     String comment;
 
-    [] __init() { this._initLineNode(); }
-    [] _initLineNode() {
-        this._initNode(); 
-    }
-
-    [] __destruct() { this._destructLineNode(); }
-    [] _destructLineNode() {
-        if (comment) { comment.destroy(); }
-        this._destructNode(); 
-    }
-    
     [LineNode] setComment(String c) {
-        if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
+        comment = this.createOwn(String:CLASSNAME);
         comment.assignString(c);
         return this;
     }

@@ -13,8 +13,7 @@ class Symbol extends sys::core::Object {
     String name;
     int ignore;
     
-    [] __init() { this.name = this.rt().createInstance(String:CLASSNAME); }
-    [] __destruct() { name.destroy(); }
+    [] __init() { this.name = this.createOwn(String:CLASSNAME); }
     
     [Symbol] setId(int id) { this.id = id; return this; }
     [int] getId() { return id; }

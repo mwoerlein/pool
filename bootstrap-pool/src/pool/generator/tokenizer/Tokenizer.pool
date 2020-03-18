@@ -35,18 +35,13 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
     abstract [int] _detectToken();
     
     [Tokenizer] init(IStream in, String inName) {
-        input = this.rt().createInstance(LocationAwareIStream:CLASSNAME);
+        input = this.createOwn(LocationAwareIStream:CLASSNAME);
         input.init(in);
         inputName = inName;
-        tmp = this.rt().createInstance(String:CLASSNAME);
-        eoi = this.rt().createInstance(Token:CLASSNAME);
+        tmp = this.createOwn(String:CLASSNAME);
+        eoi = this.createOwn(Token:CLASSNAME);
         eoi.init(tmp, Token:EOI);
         return this;
-    }
-    [] __destruct() {
-        input.destroy();
-        tmp.destroy();
-        eoi.destroy();
     }
     
     [int] hasNext() {

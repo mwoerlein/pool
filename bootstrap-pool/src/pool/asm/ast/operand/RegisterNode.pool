@@ -13,19 +13,8 @@ class RegisterNode extends OperandNode {
 
     String reg;
 
-    [] __init() { this._initRegisterNode(); }
-    [] _initRegisterNode() {
-        reg = this.rt().createInstance(String:CLASSNAME);
-        this._initOperandNode();
-    }
-
-    [] __destruct() { this._destructRegisterNode(); }
-    [] _destructRegisterNode() {
-        reg.destroy();
-        this._destructOperandNode(); 
-    }
-    
     [RegisterNode] setRegister(String r) {
+        reg = this.createOwn(String:CLASSNAME);
         reg.assignString(r);
         return this;
     }

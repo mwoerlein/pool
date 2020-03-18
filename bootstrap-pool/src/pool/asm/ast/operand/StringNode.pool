@@ -13,19 +13,8 @@ class StringNode extends OperandNode {
 
     String operand;
 
-    [] __init() { this._initStringNode(); }
-    [] _initStringNode() {
-        operand = this.rt().createInstance(String:CLASSNAME);
-        this._initOperandNode();
-    }
-
-    [] __destruct() { this._destructStringNode(); }
-    [] _destructStringNode() {
-        operand.destroy();
-        this._destructOperandNode(); 
-    }
-    
     [StringNode] setOperand(String o) {
+        operand = this.createOwn(String:CLASSNAME);
         operand.assignString(o);
         return this;
     }

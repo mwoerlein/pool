@@ -17,13 +17,8 @@ class Rule extends sys::core::Object {
     String code;
 
     [] __init() {
-        rhs = this.rt().createInstance(AnyList:CLASSNAME);
-        code = this.rt().createInstance(String:CLASSNAME);
-    }
-
-    [] __destruct() {
-        code.destroy();
-        rhs.destroy();
+        rhs = this.createOwn(AnyList:CLASSNAME);
+        code = this.createOwn(String:CLASSNAME);
     }
     
     [Rule] setId(int id) { this.id = id; return this; }

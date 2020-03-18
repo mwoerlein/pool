@@ -83,10 +83,10 @@ class Object {
     
     [Object] getOwner() { return owner; }
     
-    [] own(__any__ o) {
+    [__all__] own(__any__ o) {
         Object owned = this.rt().cast(Object:CLASSNAME, o);
-        if (!owned) { return; }
-        if (Address:compare(this, owned.owner) == 0) { return; }
+        if (!owned) { return Address:convert(o); }
+        if (Address:compare(this, owned.owner) == 0) { return Address:convert(o); }
         
         if (owned.owner) {
             // remove from old _owned list
@@ -114,12 +114,11 @@ class Object {
         } else {
             _owned_entry = owned._owned_prev = owned._owned_next = owned;
         }
+        return Address:convert(o);
     }
     
     [__all__] createOwn(cstring name) {
-        __all__ o = this.rt().createInstance(name);
-        this.own(o);
-        return o;
+        return this.own(this.rt().createInstance(name));
     }
 
 }

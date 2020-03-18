@@ -14,9 +14,7 @@ class Token extends sys::core::Object {
     Symbol id;
     String definition;
     
-    [] __init() { definition = this.rt().createInstance(String:CLASSNAME); }
-    
-    [] __destruct() { definition.destroy(); }
+    [] __init() { definition = this.createOwn(String:CLASSNAME); }
     
     [Token] setId(Symbol id) { this.id = id; return this; }
     [Symbol] getId() { return id; }

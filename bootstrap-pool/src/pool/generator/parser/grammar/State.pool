@@ -16,15 +16,10 @@ class State extends sys::core::Object {
     Action defaultAction;
 
     [] __init() {
-        actions = this.rt().createInstance(AnyMap:CLASSNAME);
+        actions = this.createOwn(AnyMap:CLASSNAME);
         actions.init(13);
-        gotos = this.rt().createInstance(AnyMap:CLASSNAME);
+        gotos = this.createOwn(AnyMap:CLASSNAME);
         gotos.init(13);
-    }
-
-    [] __destruct() {
-        gotos.destroy();
-        actions.destroy();
     }
     
     [State] setId(int id) { this.id = id; return this; }

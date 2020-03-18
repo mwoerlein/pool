@@ -12,16 +12,6 @@ class NumberNode extends OperandNode {
 
     int operand;
 
-    [] __init() { this._initNumberNode(); }
-    [] _initNumberNode() {
-        this._initOperandNode();
-    }
-
-    [] __destruct() { this._destructNumberNode(); }
-    [] _destructNumberNode() {
-        this._destructOperandNode(); 
-    }
-    
     [NumberNode] setOperand(int o) {
         operand = o;
         return this;

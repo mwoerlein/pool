@@ -18,10 +18,9 @@ class Repeat extends Node {
     
     [Repeat] init(int kind, Node inner) {
         this.kind = kind;
-        this.inner = inner;
+        this.inner = this.own(inner);
         return this;
     }
-    [] __destruct() { if (inner) { inner.destroy(); } }
     
     [Node] getInner() { return inner; }
     

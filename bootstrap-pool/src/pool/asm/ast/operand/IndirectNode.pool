@@ -24,26 +24,23 @@ class IndirectNode extends OperandNode {
 
     [] __destruct() { this._destructIndirectNode(); }
     [] _destructIndirectNode() {
-        if (base) { base.destroy(); }
-        if (index) { index.destroy(); }
-        if (displacement) { displacement.destroy(); }
         this._destructOperandNode(); 
     }
     
     [IndirectNode] setBase(OperandNode r) {
-        this.base = r;
+        this.base = this.own(r);
         return this;
     }
     [OperandNode] getBase() { return base; }
     
     [IndirectNode] setIndex(OperandNode r) {
-        this.index = r;
+        this.index = this.own(r);
         return this;
     }
     [OperandNode] getIndex() { return index; }
     
     [IndirectNode] setDisplacement(OperandNode v) {
-        this.displacement = v;
+        this.displacement = this.own(v);
         return this;
     }
     [OperandNode] getDisplacement() { return displacement; }

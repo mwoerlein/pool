@@ -8,9 +8,8 @@ namespace pool::generator::parser::grammar;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
-use sys::core::utils::Owner;
 
-class Grammar extends Owner {
+class Grammar extends sys::core::Object {
 
     GrammarDefinition definition;
     
@@ -20,7 +19,6 @@ class Grammar extends Owner {
     State init;
 
     [] __init() {
-        this._initOwner();
         this.terminals = this.createOwn(AnyList:CLASSNAME);
         this.nonTerminals = this.createOwn(AnyList:CLASSNAME);
         this.states = this.createOwn(AnyList:CLASSNAME);

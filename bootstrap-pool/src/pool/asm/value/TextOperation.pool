@@ -30,10 +30,6 @@ class TextOperation extends TextValue {
         this.operation = operation;
         value = null;
     }
-    
-    [] __destruct() {
-        if (value) { value.destroy(); }
-    }
 
     [int] validate(CompilationUnit unit) {
         int valid = true;
@@ -65,7 +61,7 @@ class TextOperation extends TextValue {
     
     [String] getValue() {
         if (!value) {
-            value = this.rt().createInstance(String:CLASSNAME);
+            value = this.createOwn(String:CLASSNAME);
             TextValue t1 = o1.asText();
             TextValue t2 = o2.asText();
             if (t1 && t2) {

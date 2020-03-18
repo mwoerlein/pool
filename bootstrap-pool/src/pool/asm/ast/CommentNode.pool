@@ -13,19 +13,8 @@ class CommentNode extends Node {
     String comment;
     int multiline;
 
-    [] __init() { this._initCommentNode(); }
-    [] _initCommentNode() {
-        this._initNode(); 
-    }
-
-    [] __destruct() { this._destructCommentNode(); }
-    [] _destructCommentNode() {
-        if (comment) { comment.destroy(); }
-        this._destructNode(); 
-    }
-    
     [CommentNode] setComment(String c) {
-        if (!comment) { comment = this.rt().createInstance(String:CLASSNAME); }
+        comment = this.createOwn(String:CLASSNAME);
         comment.assignString(c);
         return this;
     }

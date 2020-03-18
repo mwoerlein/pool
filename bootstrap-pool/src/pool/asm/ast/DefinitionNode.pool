@@ -13,22 +13,10 @@ class DefinitionNode extends LineNode {
     String identifier;
     OperandNode value;
 
-    [] __init() { this._initDefinitionNode(); }
-    [] _initDefinitionNode() {
-        identifier = this.rt().createInstance(String:CLASSNAME);
-        this._initLineNode(); 
-    }
-
-    [] __destruct() { this._destructDefinitionNode(); }
-    [] _destructDefinitionNode() {
-        identifier.destroy();
-        if (value) { value.destroy(); }
-        this._destructLineNode(); 
-    }
-    
     [DefinitionNode] initDefinition(String id, OperandNode v) {
+        identifier = this.createOwn(String:CLASSNAME);
         identifier.assignString(id);
-        value = v;
+        value = this.own(v);
         return this;
     }
     [String] getId() { return identifier; }

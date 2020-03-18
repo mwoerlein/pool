@@ -28,19 +28,16 @@ class Token extends Object {
     int lastColumn;
     
     [Token] init(String v, int t) {
-        value = this.rt().createInstance(String:CLASSNAME);
+        value = this.createOwn(String:CLASSNAME);
         value.assignString(v);
         type = t;
         return this;
     }
     [Token] cinit(cstring v, int t) {
-        value = this.rt().createInstance(String:CLASSNAME);
+        value = this.createOwn(String:CLASSNAME);
         value.assignCString(v);
         type = t;
         return this;
-    }
-    [] __destruct() {
-        value.destroy();
     }
     
     [int] getType() { return type; }

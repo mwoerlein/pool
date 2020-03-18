@@ -12,13 +12,9 @@ class StringValue extends TextValue {
     String value;
     
     [StringValue] init(String v) {
-        value = this.rt().createInstance(String:CLASSNAME);
+        value = this.createOwn(String:CLASSNAME);
         value.assignString(v);
         return this;
-    }
-    
-    [] __destruct() {
-        value.destroy();
     }
     
     [String] getValue() { return value; }

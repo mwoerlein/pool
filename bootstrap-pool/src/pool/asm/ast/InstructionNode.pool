@@ -19,23 +19,8 @@ class InstructionNode extends LineNode {
     OperandNode o2;
     OperandNode o3;
 
-    [] __init() { this._initInstructionNode(); }
-    [] _initInstructionNode() {
-        operation = this.rt().createInstance(String:CLASSNAME);
-        this._initLineNode(); 
-    }
-
-    [] __destruct() { this._destructInstructionNode(); }
-    [] _destructInstructionNode() {
-        if (prefix) { prefix.destroy(); }
-        operation.destroy();
-        if (o1) { o1.destroy(); }
-        if (o2) { o2.destroy(); }
-        if (o3) { o3.destroy(); }
-        this._destructLineNode(); 
-    }
-    
     [InstructionNode] setOperation(String l) {
+        operation = this.createOwn(String:CLASSNAME);
         operation.assignString(l);
         return this;
     }
@@ -43,17 +28,17 @@ class InstructionNode extends LineNode {
     [String] getOperation() { return operation; }
     
     [InstructionNode] setOperand1(OperandNode o) {
-        o1 = o;
+        o1 = this.own(o);
         return this;
     }
     
     [InstructionNode] setOperand2(OperandNode o) {
-        o2 = o;
+        o2 = this.own(o);
         return this;
     }
     
     [InstructionNode] setOperand3(OperandNode o) {
-        o3 = o;
+        o3 = this.own(o);
         return this;
     }
     
@@ -74,7 +59,7 @@ class InstructionNode extends LineNode {
     [int] getAddr(int default) { if (addr) { return addr; } return default; }
     
     [InstructionNode] setPrefix(String p) {
-        if (!prefix) { prefix = this.rt().createInstance(String:CLASSNAME); }
+        if (!prefix) { prefix = this.createOwn(String:CLASSNAME); }
         prefix.assignString(p);
         return this;
     }
@@ -91,7 +76,9 @@ class InstructionNode extends LineNode {
         if (prefix) {
             stream.lowerString(prefix).printChar(' ');
         }
-        stream.lowerString(operation);
+        if (operation) {
+            stream.lowerString(operation);
+        }
         if (o1) {
             stream.printChar(' ').print(o1);
         }

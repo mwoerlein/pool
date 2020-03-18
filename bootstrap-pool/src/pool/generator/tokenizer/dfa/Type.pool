@@ -13,15 +13,11 @@ class Type extends sys::core::Object {
     String name;
 
     [Type] cinit(cstring name) {
-        this.name = this.rt().createInstance(String:CLASSNAME);
+        this.name = this.createOwn(String:CLASSNAME);
         this.name.assignCString(name);
         return this;
     }
 
-    [] __destruct() {
-        if (name) { name.destroy(); }
-    }
-    
     [Type] setId(int id) { this.id = id; return this; }
     [int] getId() { return id; }
     
