@@ -1,0 +1,67 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::fa;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+
+use sys::stream::OStream;
+
+class NFA extends sys::core::Object {
+
+    CharSet cs;
+    NFA next;
+    AnyList eps; // List<NFA>
+    NFA terminal;
+
+    [] __init() {
+        eps = this.createOwn(AnyList:CLASSNAME);
+        cs = null;
+        next = null;
+    }
+    
+    [NFA] setTerminal(NFA n) { this.terminal = n; return this; }
+    [NFA] getTerminal() { return this.terminal; }
+    [NFA] setNext(CharSet cs, NFA n) { this.cs = cs; this.next = n; return this; }
+    [NFA] addEps(NFA n) { if (!eps.contains(n)) { eps.add(n); } return this; }
+    
+    // debug
+    [OStream] dumpAsDot(OStream out) {
+        out.printCString("digraph G {").printNewline();
+        
+        AnyList visited = this.createOwn(AnyList:CLASSNAME);
+        this._dumpAsDot(out, visited);
+        visited.destroy();
+        
+        return out.printChar('}').printNewline();
+    }
+    
+    [] _dumpAsDot(OStream out, AnyList visited) {
+        if (!visited.contains(this)) {
+            visited.add(this);
+            out.printCString("    \"").printPtr(this.getAddress()).printChar('"').printNewline();
+            if (next) { 
+                next._dumpAsDot(out, visited);
+                out.printCString("    \"").printPtr(this.getAddress()).printChar('"')
+                  .printCString(" -> \"").printPtr(next.getAddress()).printChar('"')
+                  .printCString(" [label=\"").print(cs).printCString("\"]")
+                  .printNewline();
+            }
+            AnyIterator it = this.eps.iterator();
+            while (it.hasNext()) {
+                NFA next = it.next();
+                next._dumpAsDot(out, visited);
+                out.printCString("    \"").printPtr(this.getAddress()).printChar('"')
+                  .printCString(" -> \"").printPtr(next.getAddress()).printChar('"')
+                  .printNewline();
+            }
+            it.destroy();
+        }
+    }
+    
+}

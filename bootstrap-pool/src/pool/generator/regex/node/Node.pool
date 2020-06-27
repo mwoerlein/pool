@@ -5,8 +5,12 @@ version = 0.1.0
 */
 namespace pool::generator::regex::node;
 
+use pool::generator::regex::fa::NFA;
+
 class Node extends sys::core::Object {
 
+    abstract [NFA] toNFA();
+    
     // TODO: remove with implicit cast
     [Node] node() { return this; }
     

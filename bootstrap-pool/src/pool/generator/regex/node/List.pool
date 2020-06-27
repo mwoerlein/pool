@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::generator::regex::node;
 
+use pool::generator::regex::fa::NFA;
+
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::utils::Bitset;
@@ -65,4 +67,34 @@ class List extends Node, AnyList {
         return stream.printChar(')');
     }
     
+    [NFA] toNFA() {
+        NFA start = this.createOwn(NFA:CLASSNAME);
+        NFA terminal = start.createOwn(NFA:CLASSNAME);
+        start.setTerminal(terminal.setTerminal(terminal));
+
+        AnyIterator it = this.nodes();
+        if (!it.hasNext()) { start.addEps(terminal); }
+        else if (kind == List:KIND_ALTERNATIVE) {
+            while (it.hasNext()) {
+                Node node = it.next();
+                NFA n = node.toNFA();
+                start.own(n);
+                start.addEps(n);
+                n.getTerminal().addEps(terminal);
+            }
+        } else {
+            NFA cur = start;
+            while (it.hasNext()) {
+                Node node = it.next();
+                NFA n = node.toNFA();
+                cur.own(n);
+                cur.addEps(n);
+                cur = n.getTerminal();
+            }
+            cur.addEps(terminal);
+        }
+        it.destroy();
+        
+        return start;
+    }
 }

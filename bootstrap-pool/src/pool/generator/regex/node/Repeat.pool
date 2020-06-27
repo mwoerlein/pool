@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::generator::regex::node;
 
+use pool::generator::regex::fa::NFA;
+
 use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
@@ -42,4 +44,20 @@ class Repeat extends Node {
         return stream.printChar('?');
     }
     
+    [NFA] toNFA() {
+        NFA start = this.createOwn(NFA:CLASSNAME);
+        NFA terminal = start.createOwn(NFA:CLASSNAME);
+        start.setTerminal(terminal.setTerminal(terminal));
+
+        NFA n = inner.toNFA();
+        NFA t = n.getTerminal();
+        start.own(n);
+        start.addEps(n);
+        t.addEps(terminal);
+
+        if (kind != Repeat:KIND_AT_MOST_ONCE) { t.addEps(n); }
+        if (kind != Repeat:KIND_AT_LEAST_ONCE) { start.addEps(terminal); } 
+        
+        return start;
+    }
 }

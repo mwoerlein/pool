@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::generator::regex::node;
 
+use pool::generator::regex::fa::NFA;
+
 use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
@@ -140,4 +142,11 @@ class CharSet extends Node {
         return stream.printChar(c);
     }
 
+    [NFA] toNFA() {
+        NFA start = this.createOwn(NFA:CLASSNAME);
+        NFA terminal = start.createOwn(NFA:CLASSNAME);
+        start.setTerminal(terminal.setTerminal(terminal));
+        
+        return start.setNext(this, terminal);
+    }
 }
