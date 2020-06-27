@@ -11,9 +11,50 @@ use sys::stream::OStream;
 class ObjectTest extends test::TestCase {
 
     [] runAll() {
+        this.testHashAndEquals();
+        this.testIdentity();
         this.testOwnership();
     }
     
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        
+        Object a = this.rt().cast(Object:CLASSNAME, this);
+        Object b = this.rt().createInstance(Object:CLASSNAME);
+        
+        if (a.hash() != a.hash()) { return this.fail("Hash value is not constant"); }
+        if (a.hash() != this.hash()) { return this.fail("Hash value of different handles is not constant"); }
+        if (a.hash() == b.hash()) { return this.fail("Hash value of different Objects is identical"); }
+        
+        if (!a.equals(a)) { return this.fail("Identity check"); }
+        if (!a.equals(this)) { return this.fail("Different handles are not equal"); }
+        if (!this.equals(a)) { return this.fail("Different handles are not equal"); }
+        if (a.equals(b)) { return this.fail("Different Objects are equal"); }
+        if (b.equals(a)) { return this.fail("Different Objects are equal"); }
+        
+        b.destroy();
+        return this.success();
+    }
+    
+    [int] testIdentity() {
+        this.start("testIdentity");
+        
+        Object a = this.rt().cast(Object:CLASSNAME, this);
+        Object b = this.rt().createInstance(Object:CLASSNAME);
+        
+        if (a.getAddress() != this.getAddress()) { return this.fail("Address of different handles is not constant"); }
+        if (a.getAddress() == b.getAddress()) { return this.fail("Address of different Objects is identical"); }
+        
+        if (!a.isSameAs(a)) { return this.fail("Identity check"); }
+        if (!a.isSameAs(this)) { return this.fail("Different handles are not same"); }
+        if (!this.isSameAs(a)) { return this.fail("Different handles are not same"); }
+        if (a.isSameAs(b)) { return this.fail("Different Objects are same"); }
+        if (b.isSameAs(a)) { return this.fail("Different Objects are same"); }
+
+        b.destroy();
+        return this.success();
+    }
+
     [int] testOwnership() {
         this.start("testOwnership");
         
@@ -21,16 +62,16 @@ class ObjectTest extends test::TestCase {
         Object b = this.rt().createInstance(Object:CLASSNAME);
         
         Object e = a.createOwn(Object:CLASSNAME);
-        if (!a.equals(e.getOwner())) { return this.fail("Ownership after creation"); }
+        if (!a.isSameAs(e.getOwner())) { return this.fail("Ownership after creation"); }
         Object f = a.createOwn(Object:CLASSNAME);
-        if (!a.equals(f.getOwner())) { return this.fail("Ownership after creation"); }
+        if (!a.isSameAs(f.getOwner())) { return this.fail("Ownership after creation"); }
         Object g = f.createOwn(Object:CLASSNAME);
-        if (!f.equals(g.getOwner())) { return this.fail("Ownership after creation"); }
+        if (!f.isSameAs(g.getOwner())) { return this.fail("Ownership after creation"); }
         
         b.own(e);
-        if (!b.equals(e.getOwner())) { return this.fail("Ownership transfer"); }
+        if (!b.isSameAs(e.getOwner())) { return this.fail("Ownership transfer"); }
         b.own(f);
-        if (!b.equals(f.getOwner())) { return this.fail("Ownership transfer"); }
+        if (!b.isSameAs(f.getOwner())) { return this.fail("Ownership transfer"); }
         
         a.destroy();
         b.destroy();

@@ -27,17 +27,22 @@ class Object {
         return self.inst_desc.class_desc.class_instance;
     }
     
-    [int] getAddress() {
-        InstanceHandle self = Address:convert(this);
-        return Address:from(self.inst_desc);
-    }
-    
     [int] hash() {
         return this.getAddress();
     }
     
     // TODO: use generic method instead of __any__?
     [int] equals(__any__ obj) {
+        return this.isSameAs(obj);
+    }
+    
+    [int] getAddress() {
+        InstanceHandle self = Address:convert(this);
+        return Address:from(self.inst_desc);
+    }
+    
+    // TODO: use generic method instead of __any__?
+    [int] isSameAs(__any__ obj) {
         InstanceHandle self = Address:convert(this);
         InstanceHandle other = Address:convert(obj);
         return Address:equals(self.inst_desc, other.inst_desc);
