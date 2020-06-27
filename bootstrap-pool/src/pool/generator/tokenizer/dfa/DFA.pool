@@ -5,25 +5,27 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
+use pool::generator::Symbol;
+
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
 class DFA extends sys::core::Object {
 
-    AnyList types; // ArrayList<Type>
+    AnyList symbols; // ArrayList<Symbol>
     AnyList states; // ArrayList<State>
     State init;
 
     [] __init() {
-        this.types = this.createOwn(AnyList:CLASSNAME);
+        this.symbols = this.createOwn(AnyList:CLASSNAME);
         this.states = this.createOwn(AnyList:CLASSNAME);
     }
     
-    [Type] addType(cstring name) {
-        Type t = this.createOwn(Type:CLASSNAME);
-        t.cinit(name).setId(types.size());
-        types.add(t);
-        return t;
+    [Symbol] addSymbol(cstring name) {
+        Symbol s = this.createOwn(Symbol:CLASSNAME);
+        s.setCName(name).setId(symbols.size());
+        symbols.add(s);
+        return s;
     }
     
     [State] newState() {
@@ -35,7 +37,7 @@ class DFA extends sys::core::Object {
     [State] newInitState() { return init = this.newState(); }
     
     [State] getInitState() { return init; }
-    [AnyIterator] types() { return types.iterator(); }
+    [AnyIterator] symbols() { return symbols.iterator(); }
     [AnyIterator] states() { return states.iterator(); }
     
 }

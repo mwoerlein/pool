@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
+use pool::generator::Symbol;
+
 use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 

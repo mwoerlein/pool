@@ -18,7 +18,6 @@ use pool::asm::ast::operand::NumberNode;
 use pool::asm::ast::operand::RegisterNode;
 use pool::asm::ast::operand::StringNode;
 
-use pool::asm::token::Tokenizer;
 use pool::generator::tokenizer::Token;
 
 use sys::core::String;

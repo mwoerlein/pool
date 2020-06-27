@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
+use pool::generator::Symbol;
 use pool::generator::regex::node::CharSet; // TODO: extract and use generic CharSet outside of regex node model
 
 class Factory extends sys::core::Object {
@@ -16,8 +17,8 @@ class Factory extends sys::core::Object {
     [Action] shift() { return this.action().setShift(); }
     [Action] goto(State s) { return this.action().setGoto(s); }
     [Action] sgoto(State s) { return this.action().setShift().setGoto(s); }
-    [Action] ret(Type t) { return this.action().setReturn(t); }
-    [Action] sret(Type t) { return this.action().setShift().setReturn(t); }
+    [Action] ret(Symbol s) { return this.action().setReturn(s); }
+    [Action] sret(Symbol s) { return this.action().setShift().setReturn(s); }
     [Action] error(cstring msg) { return this.action().setError(msg); }
     
     /* 
@@ -25,19 +26,19 @@ class Factory extends sys::core::Object {
      */
     [DFA] buildRegexDFA() {
         DFA d = this.dfa();
-        Type tCHAR      := d.addType("CHAR");
-        Type tOBRACKET  := d.addType("OBRACKET");
-        Type tCBRACKET  := d.addType("CBRACKET");
-        Type tOSBRACKET := d.addType("OSBRACKET");
-        Type tCSBRACKET := d.addType("CSBRACKET");
-        Type tQMARK     := d.addType("QMARK");
-        Type tSTAR      := d.addType("STAR");
-        Type tPLUS      := d.addType("PLUS");
-        Type tMINUS     := d.addType("MINUS");
-        Type tCFLEX     := d.addType("CFLEX");
-        Type tPIPE      := d.addType("PIPE");
-        Type tDOT       := d.addType("DOT");
-        Type tOTHER     := d.addType("OTHER");
+        Symbol tCHAR      := d.addSymbol("CHAR");
+        Symbol tOBRACKET  := d.addSymbol("OBRACKET");
+        Symbol tCBRACKET  := d.addSymbol("CBRACKET");
+        Symbol tOSBRACKET := d.addSymbol("OSBRACKET");
+        Symbol tCSBRACKET := d.addSymbol("CSBRACKET");
+        Symbol tQMARK     := d.addSymbol("QMARK");
+        Symbol tSTAR      := d.addSymbol("STAR");
+        Symbol tPLUS      := d.addSymbol("PLUS");
+        Symbol tMINUS     := d.addSymbol("MINUS");
+        Symbol tCFLEX     := d.addSymbol("CFLEX");
+        Symbol tPIPE      := d.addSymbol("PIPE");
+        Symbol tDOT       := d.addSymbol("DOT");
+        Symbol tOTHER     := d.addSymbol("OTHER");
         
         State sSTART := d.newInitState();
         State sSlash := d.newState();
@@ -76,23 +77,23 @@ class Factory extends sys::core::Object {
     [DFA] buildPasmDFA() {
         DFA d = this.dfa();
         
-        Type tOTHER      := d.addType("OTHER");
-        Type tIDENTIFIER := d.addType("IDENTIFIER");
-        Type tREGISTER   := d.addType("REGISTER");
-        Type tCHAR       := d.addType("CHAR");
-        Type tSTRING     := d.addType("STRING");
-        Type tNUMBER     := d.addType("NUMBER");
-        Type tNEWLINE    := d.addType("NEWLINE");
-        Type tSPACER     := d.addType("SPACER");
-        Type tCOMMENT    := d.addType("COMMENT");
-        Type tMLCOMMENT  := d.addType("MLCOMMENT");
-        Type tOPERATOR   := d.addType("OPERATOR");
-        Type tASSIGN     := d.addType("ASSIGN");
-        Type tOBRACKET   := d.addType("OBRACKET");
-        Type tCBRACKET   := d.addType("CBRACKET");
-        Type tCOLON      := d.addType("COLON");
-        Type tSEMICOLON  := d.addType("SEMICOLON");
-        Type tCOMMA      := d.addType("COMMA");
+        Symbol tOTHER      := d.addSymbol("OTHER");
+        Symbol tIDENTIFIER := d.addSymbol("IDENTIFIER");
+        Symbol tREGISTER   := d.addSymbol("REGISTER");
+        Symbol tCHAR       := d.addSymbol("CHAR");
+        Symbol tSTRING     := d.addSymbol("STRING");
+        Symbol tNUMBER     := d.addSymbol("NUMBER");
+        Symbol tNEWLINE    := d.addSymbol("NEWLINE");
+        Symbol tSPACER     := d.addSymbol("SPACER");
+        Symbol tCOMMENT    := d.addSymbol("COMMENT");
+        Symbol tMLCOMMENT  := d.addSymbol("MLCOMMENT");
+        Symbol tOPERATOR   := d.addSymbol("OPERATOR");
+        Symbol tASSIGN     := d.addSymbol("ASSIGN");
+        Symbol tOBRACKET   := d.addSymbol("OBRACKET");
+        Symbol tCBRACKET   := d.addSymbol("CBRACKET");
+        Symbol tCOLON      := d.addSymbol("COLON");
+        Symbol tSEMICOLON  := d.addSymbol("SEMICOLON");
+        Symbol tCOMMA      := d.addSymbol("COMMA");
         
         State sSTART       := d.newInitState();
         State sIDENTIFIER  := d.newState();

@@ -5,11 +5,11 @@ version = 0.1.0
 */
 namespace pool::generator::parser;
 
+use pool::generator::Symbol;
 use pool::generator::parser::grammar::Action;
 use pool::generator::parser::grammar::Grammar;
 use pool::generator::parser::grammar::Rule;
 use pool::generator::parser::grammar::State;
-use pool::generator::parser::grammar::Symbol;
 
 use pool::generator::tokenizer::Token;
 use pool::generator::tokenizer::Tokenizer;
@@ -45,7 +45,7 @@ class Parser extends sys::core::Object {
         
         Token t = tokens.next();
         while (result == Parser:UNKNOWN) {
-            [int action, int param] = this.__action(stack.getState(), t.getType());
+            [int action, int param] = this.__action(stack.getState(), t.getSymbol());
             if (action == Parser:IGNORE) {
                 t.destroy();
                 t = tokens.next();
@@ -61,7 +61,7 @@ class Parser extends sys::core::Object {
                 int goto = this.__goto(stack.getState(), lhs);
                 if (goto < 0) {
                     result = Parser:ERROR;
-                    t.debugToStream(this.newError().printCString("Parsing error near "));
+                    t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error near "));
                 } else { stack.push(goto, v); }
             } else if (action == Parser:SHIFT_REDUCE) {
                 stack.push(Parser:UNKNOWN, t);
@@ -71,14 +71,14 @@ class Parser extends sys::core::Object {
                 int goto = this.__goto(stack.getState(), lhs);
                 if (goto < 0) {
                     result = Parser:ERROR;
-                    t.debugToStream(this.newError().printCString("Parsing error near "));
+                    t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error near "));
                 } else {
                     stack.push(goto, v);
                     t = tokens.next();
                 }
             } else if (action == Parser:ERROR) {
                 result = Parser:ERROR;
-                t.debugToStream(this.newError().printCString("Parsing error near "));
+                t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error near "));
             }
         }
         stack.destroy();
@@ -96,7 +96,6 @@ version = 0.1.0
 ">).printNewline();
         out.printCString("namespace ").print(gram.getNamespace()).printCString(";").printNewline();
         out.printNewline();
-        out.printCString("use ").print(gram.getNamespace()).printCString("::token::Token;").printNewline();
         out.printCString("use pool::generator::parser::ParseStack;").printNewline();
         out.printNewline();
         out.printCString("class ").print(gram.getClassname())
@@ -107,7 +106,7 @@ version = 0.1.0
             AnyIterator sit = gram.nonTerminals();
             while (sit.hasNext()) {
                 Symbol s = sit.next();
-                out.printCString("    int ").upperString(s.getName()).printCString(" := ").printInt(s.getId()).printChar(';').printNewline();
+                out.printCString("    int NT_").upperString(s.getName()).printCString(" := ").printInt(s.getId()).printChar(';').printNewline();
             }
             sit.destroy();
         }
@@ -123,7 +122,7 @@ version = 0.1.0
                 } else {
                     out.printCString("        else ");
                 }
-                out.printCString("if (rule == ").printInt(r.getId()).printCString(") { return [Parser:")
+                out.printCString("if (rule == ").printInt(r.getId()).printCString(") { return [Parser:NT_")
                     .upperString(r.getLHS().getName()).printCString(", ").printInt(r.getRHSSize()).printCString("]; }")
                     .printNewline();
             }
@@ -177,7 +176,7 @@ version = 0.1.0
                             } else {
                                 out.printCString("            else ");
                             }
-                            out.printCString("if (symbol == Parser:").upperString(nt.getName())
+                            out.printCString("if (symbol == Parser:NT_").upperString(nt.getName())
                                 .printCString(") { return ").printInt(g.getId()).printCString("; }").printNewline();
                         }
                         mit.destroy();
@@ -193,7 +192,7 @@ version = 0.1.0
         out.printCString("        return Parser:ERROR;").printNewline();
         out.printCString("    }").printNewline();
         out.printNewline();
-        out.printCString("    [int, int] __action(int state, int type) {").printNewline();
+        out.printCString("    [int, int] __action(int state, int symbol) {").printNewline();
         {
             int pos = 0;
             AnyIterator sit = gram.terminals();
@@ -201,9 +200,9 @@ version = 0.1.0
                 Symbol s = sit.next();
                 if (s.isIgnore()) {
                     if (pos++ == 0) {
-                        out.printCString("        if ((type == Token:");
+                        out.printCString("        if ((symbol == Tokenizer:T_");
                     } else {
-                        out.printCString(") || (type == Token:");
+                        out.printCString(") || (symbol == Tokenizer:T_");
                     }
                     out.upperString(s.getName());
                 }
@@ -235,7 +234,7 @@ version = 0.1.0
                             } else {
                                 out.printCString("            else ");
                             }
-                            out.printCString("if (type == Token:").upperString(t.getName()).printCString(") { ");
+                            out.printCString("if (symbol == Tokenizer:T_").upperString(t.getName()).printCString(") { ");
                             Parser:_genReturnForAction(a, out);
                             out.printCString(" }").printNewline();
                         }

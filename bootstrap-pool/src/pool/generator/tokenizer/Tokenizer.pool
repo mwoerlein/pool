@@ -5,12 +5,13 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer;
 
+use pool::generator::Symbol;
+use pool::generator::SymbolTable;
 use pool::generator::regex::node::CharSet;
 
 use pool::generator::tokenizer::dfa::Action;
 use pool::generator::tokenizer::dfa::DFA;
 use pool::generator::tokenizer::dfa::State;
-use pool::generator::tokenizer::dfa::Type;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
@@ -19,8 +20,10 @@ use sys::memory::Address;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
-class Tokenizer extends sys::core::anycollection::AnyIterator {
+class Tokenizer extends sys::core::anycollection::AnyIterator, SymbolTable {
 
+    int T_EOI       := -1;
+    
     LocationAwareIStream input;
     String tmp;
     String inputName;
@@ -40,7 +43,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         inputName = inName;
         tmp = this.createOwn(String:CLASSNAME);
         eoi = this.createOwn(Token:CLASSNAME);
-        eoi.init(tmp, Token:EOI);
+        eoi.init(tmp, Tokenizer:T_EOI);
         return this;
     }
     
@@ -62,6 +65,13 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         startColumn = input.getColumn();
         return this._detectToken();
     }
+
+    [int] _buildNextToken(int symbol) {
+        Token t = this.rt().createInstance(Token:CLASSNAME);
+        nextToken = t.init(tmp, symbol).setLocation(inputName, startLine, startColumn, curLine, curColumn);
+        tmp.clear();
+        return true;
+    }
     
     [] _consume() {
         curLine = input.getLine();
@@ -81,12 +91,6 @@ class Tokenizer extends sys::core::anycollection::AnyIterator {
         return false;
     }
     
-    [int] _setNextToken(Token t, int type) {
-        nextToken = t.init(tmp, type).setLocation(inputName, startLine, startColumn, curLine, curColumn);
-        tmp.clear();
-        return true;
-    }
-    
     // TODO: extract model based src-code generation
     global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
         State init = d.getInitState();
@@ -97,9 +101,34 @@ author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
 ">).printNewline();
-        out.printCString("namespace ").printCString(ns).printCString("::token;").printNewline();
+        out.printCString("namespace ").printCString(ns).printCString(";").printNewline();
         out.printNewline();
         out.printCString("class Tokenizer extends pool::generator::tokenizer::Tokenizer {").printNewline();
+        out.printNewline();
+        
+        {
+            AnyIterator sit = d.symbols();
+            while (sit.hasNext()) {
+                Symbol s = sit.next();
+                out.printCString("    int T_").print(s.getName()).printCString(" := ")
+                    .printInt(s.getId()).printChar(';').printNewline();
+            }
+            sit.destroy();
+        }
+        out.printNewline();
+        out.printCString("    [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {").printNewline();
+        out.printCString("        if (symbol == Tokenizer:T_EOI) { stream.printCString(\"EOI\"); }").printNewline();
+        {
+            AnyIterator sit = d.symbols();
+            while (sit.hasNext()) {
+                Symbol s = sit.next();
+                out.printCString("        else if (symbol == Tokenizer:T_").print(s.getName())
+                    .printCString(") { stream.printCString(").escapeString(s.getName()).printCString("); }").printNewline();
+            }
+            sit.destroy();
+        }
+        out.printCString("        return stream;").printNewline();
+        out.printCString("    }").printNewline();
         out.printNewline();
         out.printCString("    [int] _detectToken() {").printNewline();
         if (init) {
@@ -149,13 +178,6 @@ version = 0.1.0
         
         out.printCString("        return false;").printNewline();
         out.printCString("    }").printNewline();
-        out.printNewline();
-        out.printCString(<"
-    [int] _buildToken(int type) {
-        Token t = this.rt().createInstance(Token:CLASSNAME);
-        return this._setNextToken(t.token(), type);
-    }
-">).printNewline();
         out.printCString("}").printNewline();
     }
     
@@ -217,7 +239,7 @@ version = 0.1.0
             if (a.isSkip()) { out.printCString(" this._skip();"); }
             if (a.isShift()) { out.printCString(" this._consume();"); }
             if (a.isGoto()) { out.printCString(" state = ").printInt(a.getTarget().getId()).printChar(';'); }
-            if (a.isReturn()) { out.printCString(" return this._buildToken(Token:").print(a.getType().getName()).printCString(");"); }
+            if (a.isReturn()) { out.printCString(" return this._buildNextToken(Tokenizer:T_").print(a.getSymbol().getName()).printCString(");"); }
         }
         out.printCString(" }").printNewline();
     }

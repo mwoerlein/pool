@@ -9,7 +9,6 @@ use pool::generator::regex::node::Node;
 use pool::generator::regex::node::List;
 use pool::generator::regex::node::Repeat;
 use pool::generator::regex::node::CharSet;
-use pool::generator::regex::token::Tokenizer;
 
 use pool::generator::tokenizer::Token;
 

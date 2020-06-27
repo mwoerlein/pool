@@ -3,9 +3,49 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::asm::token;
+namespace pool::asm;
 
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
+
+    int T_OTHER := 0;
+    int T_IDENTIFIER := 1;
+    int T_REGISTER := 2;
+    int T_CHAR := 3;
+    int T_STRING := 4;
+    int T_NUMBER := 5;
+    int T_NEWLINE := 6;
+    int T_SPACER := 7;
+    int T_COMMENT := 8;
+    int T_MLCOMMENT := 9;
+    int T_OPERATOR := 10;
+    int T_ASSIGN := 11;
+    int T_OBRACKET := 12;
+    int T_CBRACKET := 13;
+    int T_COLON := 14;
+    int T_SEMICOLON := 15;
+    int T_COMMA := 16;
+
+    [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
+        if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
+        else if (symbol == Tokenizer:T_OTHER) { stream.printCString("OTHER"); }
+        else if (symbol == Tokenizer:T_IDENTIFIER) { stream.printCString("IDENTIFIER"); }
+        else if (symbol == Tokenizer:T_REGISTER) { stream.printCString("REGISTER"); }
+        else if (symbol == Tokenizer:T_CHAR) { stream.printCString("CHAR"); }
+        else if (symbol == Tokenizer:T_STRING) { stream.printCString("STRING"); }
+        else if (symbol == Tokenizer:T_NUMBER) { stream.printCString("NUMBER"); }
+        else if (symbol == Tokenizer:T_NEWLINE) { stream.printCString("NEWLINE"); }
+        else if (symbol == Tokenizer:T_SPACER) { stream.printCString("SPACER"); }
+        else if (symbol == Tokenizer:T_COMMENT) { stream.printCString("COMMENT"); }
+        else if (symbol == Tokenizer:T_MLCOMMENT) { stream.printCString("MLCOMMENT"); }
+        else if (symbol == Tokenizer:T_OPERATOR) { stream.printCString("OPERATOR"); }
+        else if (symbol == Tokenizer:T_ASSIGN) { stream.printCString("ASSIGN"); }
+        else if (symbol == Tokenizer:T_OBRACKET) { stream.printCString("OBRACKET"); }
+        else if (symbol == Tokenizer:T_CBRACKET) { stream.printCString("CBRACKET"); }
+        else if (symbol == Tokenizer:T_COLON) { stream.printCString("COLON"); }
+        else if (symbol == Tokenizer:T_SEMICOLON) { stream.printCString("SEMICOLON"); }
+        else if (symbol == Tokenizer:T_COMMA) { stream.printCString("COMMA"); }
+        return stream;
+    }
 
     [int] _detectToken() {
         int state = 0;
@@ -27,21 +67,21 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == '-') { this._consume(); state = 19; }
                 else if (((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); state = 1; }
                 else if (((c >= '1') && (c <= '9'))) { this._consume(); state = 13; }
-                else if (c == '(') { this._consume(); return this._buildToken(Token:OBRACKET); }
-                else if (c == ')') { this._consume(); return this._buildToken(Token:CBRACKET); }
-                else if (c == ';') { this._consume(); return this._buildToken(Token:SEMICOLON); }
-                else if (c == ',') { this._consume(); return this._buildToken(Token:COMMA); }
-                else if ((c == '*') || (c == '+')) { this._consume(); return this._buildToken(Token:OPERATOR); }
-                else { this._consume(); return this._buildToken(Token:OTHER); }
+                else if (c == '(') { this._consume(); return this._buildNextToken(Tokenizer:T_OBRACKET); }
+                else if (c == ')') { this._consume(); return this._buildNextToken(Tokenizer:T_CBRACKET); }
+                else if (c == ';') { this._consume(); return this._buildNextToken(Tokenizer:T_SEMICOLON); }
+                else if (c == ',') { this._consume(); return this._buildNextToken(Tokenizer:T_COMMA); }
+                else if ((c == '*') || (c == '+')) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
+                else { this._consume(); return this._buildNextToken(Tokenizer:T_OTHER); }
             } else if (state == 1) {
                 if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); }
-                else { return this._buildToken(Token:IDENTIFIER); }
+                else { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
             } else if (state == 2) {
                 if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); }
-                else { return this._buildToken(Token:REGISTER); }
+                else { return this._buildNextToken(Tokenizer:T_REGISTER); }
             } else if (state == 3) {
                 if ((c == '\n') || (c == '\r')) { return this._error("Unterminated string"); }
-                else if (c == '"') { this._consume(); return this._buildToken(Token:STRING); }
+                else if (c == '"') { this._consume(); return this._buildNextToken(Tokenizer:T_STRING); }
                 else if (c == '\\') { this._skip(); state = 4; }
                 else { this._consume(); }
             } else if (state == 4) {
@@ -52,7 +92,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if ((c == '"') || (c == '\\')) { this._consume(); state = 3; }
                 else { this._push('\\'); this._consume(); state = 3; }
             } else if (state == 5) {
-                if (c == '\'') { this._consume(); return this._buildToken(Token:CHAR); }
+                if (c == '\'') { this._consume(); return this._buildNextToken(Tokenizer:T_CHAR); }
                 else if (c == '\\') { this._skip(); state = 6; }
                 else if ((c == '\n') || (c == '\r')) { return this._error("Unterminated char sequence"); }
                 else { this._consume(); }
@@ -64,95 +104,90 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if ((c == '\'') || (c == '\\')) { this._consume(); state = 5; }
                 else { this._push('\\'); this._consume(); state = 5; }
             } else if (state == 7) {
-                if ((c == '\n') || (c == '\r')) { return this._buildToken(Token:COMMENT); }
+                if ((c == '\n') || (c == '\r')) { return this._buildNextToken(Tokenizer:T_COMMENT); }
                 else { this._consume(); }
             } else if (state == 8) {
                 if (c == '*') { this._consume(); state = 9; }
                 else { this._consume(); }
             } else if (state == 9) {
-                if (c == '/') { this._consume(); return this._buildToken(Token:MLCOMMENT); }
+                if (c == '/') { this._consume(); return this._buildNextToken(Tokenizer:T_MLCOMMENT); }
                 else if (c == '*') { this._consume(); }
                 else { this._consume(); state = 8; }
             } else if (state == 10) {
                 if ((c == 'B') || (c == 'b')) { this._consume(); state = 11; }
                 else if ((c == 'X') || (c == 'x')) { this._consume(); state = 14; }
                 else if (((c >= '0') && (c <= '7'))) { this._consume(); state = 12; }
-                else { return this._buildToken(Token:NUMBER); }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 11) {
                 if ((c == '0') || (c == '1')) { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 12) {
                 if (((c >= '0') && (c <= '7'))) { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 13) {
                 if (((c >= '0') && (c <= '9'))) { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 14) {
                 if (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'F')) || ((c >= 'a') && (c <= 'f'))) { this._consume(); }
-                else { return this._buildToken(Token:NUMBER); }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 15) {
-                if (c == '>') { this._consume(); return this._buildToken(Token:OPERATOR); }
-                else { return this._buildToken(Token:OTHER); }
+                if (c == '>') { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_OTHER); }
             } else if (state == 16) {
-                if (c == '<') { this._consume(); return this._buildToken(Token:OPERATOR); }
-                else { return this._buildToken(Token:OTHER); }
+                if (c == '<') { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_OTHER); }
             } else if (state == 17) {
-                if (c == '=') { this._consume(); return this._buildToken(Token:ASSIGN); }
-                else { return this._buildToken(Token:COLON); }
+                if (c == '=') { this._consume(); return this._buildNextToken(Tokenizer:T_ASSIGN); }
+                else { return this._buildNextToken(Tokenizer:T_COLON); }
             } else if (state == 18) {
                 if (((c >= 'A') && (c <= 'Z')) || (c == '_') || ((c >= 'a') && (c <= 'z'))) { this._consume(); state = 1; }
-                else { return this._buildToken(Token:OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
             } else if (state == 19) {
                 if (c == '0') { this._consume(); state = 10; }
                 else if (((c >= '1') && (c <= '9'))) { this._consume(); state = 13; }
-                else { return this._buildToken(Token:OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
             } else if (state == 20) {
                 if ((c == '\n') || (c == '\r')) { this._consume(); }
-                else { return this._buildToken(Token:NEWLINE); }
+                else { return this._buildNextToken(Tokenizer:T_NEWLINE); }
             } else if (state == 21) {
                 if (((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z'))) { this._consume(); state = 2; }
-                else { return this._buildToken(Token:OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
             } else if (state == 22) {
                 if (c == '/') { this._consume(); state = 7; }
                 else if (c == '*') { this._consume(); state = 8; }
-                else { return this._buildToken(Token:OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
             } else if (state == 23) {
                 if ((c == '\t') || (c == ' ')) { this._consume(); }
-                else { return this._buildToken(Token:SPACER); }
+                else { return this._buildNextToken(Tokenizer:T_SPACER); }
             } else {
                 this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
                 return false;
             }
         }
 
-        if (state == 1) { return this._buildToken(Token:IDENTIFIER); }
-        else if (state == 2) { return this._buildToken(Token:REGISTER); }
+        if (state == 1) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+        else if (state == 2) { return this._buildNextToken(Tokenizer:T_REGISTER); }
         else if (state == 3) { return this._error("Unterminated string"); }
         else if (state == 4) { return this._error("Unterminated string"); }
         else if (state == 5) { return this._error("Unterminated char sequence"); }
         else if (state == 6) { return this._error("Unterminated char sequence"); }
-        else if (state == 7) { return this._buildToken(Token:COMMENT); }
+        else if (state == 7) { return this._buildNextToken(Tokenizer:T_COMMENT); }
         else if (state == 8) { return this._error("Unterminated comment"); }
         else if (state == 9) { return this._error("Unterminated comment"); }
-        else if (state == 10) { return this._buildToken(Token:NUMBER); }
-        else if (state == 11) { return this._buildToken(Token:NUMBER); }
-        else if (state == 12) { return this._buildToken(Token:NUMBER); }
-        else if (state == 13) { return this._buildToken(Token:NUMBER); }
-        else if (state == 14) { return this._buildToken(Token:NUMBER); }
-        else if (state == 15) { return this._buildToken(Token:OTHER); }
-        else if (state == 16) { return this._buildToken(Token:OTHER); }
-        else if (state == 17) { return this._buildToken(Token:COLON); }
-        else if (state == 18) { return this._buildToken(Token:OPERATOR); }
-        else if (state == 19) { return this._buildToken(Token:OPERATOR); }
-        else if (state == 20) { return this._buildToken(Token:NEWLINE); }
-        else if (state == 21) { return this._buildToken(Token:OPERATOR); }
-        else if (state == 22) { return this._buildToken(Token:OPERATOR); }
-        else if (state == 23) { return this._buildToken(Token:SPACER); }
+        else if (state == 10) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 11) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 12) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 13) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 14) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 15) { return this._buildNextToken(Tokenizer:T_OTHER); }
+        else if (state == 16) { return this._buildNextToken(Tokenizer:T_OTHER); }
+        else if (state == 17) { return this._buildNextToken(Tokenizer:T_COLON); }
+        else if (state == 18) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
+        else if (state == 19) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
+        else if (state == 20) { return this._buildNextToken(Tokenizer:T_NEWLINE); }
+        else if (state == 21) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
+        else if (state == 22) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
+        else if (state == 23) { return this._buildNextToken(Tokenizer:T_SPACER); }
         return false;
-    }
-
-    [int] _buildToken(int type) {
-        Token t = this.rt().createInstance(Token:CLASSNAME);
-        return this._setNextToken(t.token(), type);
     }
 }

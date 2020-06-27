@@ -5,8 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer;
 
-use pool::generator::tokenizer::dfa::DFA;
-use pool::generator::tokenizer::dfa::Type;
+use pool::generator::SymbolTable;
 
 use sys::core::Object;
 use sys::core::String;
@@ -15,9 +14,7 @@ use sys::stream::OStream;
 
 class Token extends Object {
 
-    int EOI       := -1;
-    
-    int type;
+    int symbol;
     String value;
     
     // Location
@@ -27,20 +24,20 @@ class Token extends Object {
     int lastLine;
     int lastColumn;
     
-    [Token] init(String v, int t) {
+    [Token] init(String v, int s) {
         value = this.createOwn(String:CLASSNAME);
         value.assignString(v);
-        type = t;
+        symbol = s;
         return this;
     }
-    [Token] cinit(cstring v, int t) {
+    [Token] cinit(cstring v, int s) {
         value = this.createOwn(String:CLASSNAME);
         value.assignCString(v);
-        type = t;
+        symbol = s;
         return this;
     }
     
-    [int] getType() { return type; }
+    [int] getSymbol() { return symbol; }
     [String] getValue() { return value; }
     [int] toInt() { return value.toInt(); }
     
@@ -57,9 +54,8 @@ class Token extends Object {
         return stream.print(value);
     }
     
-    [OStream] debugToStream(OStream stream) {
-        this.debugType(stream);
-        stream.printChar('(')
+    [OStream] debugToStream(SymbolTable table, OStream stream) {
+        table.debugSymbol(symbol, stream).printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)
             .printChar('-')
             .printInt(lastLine).printChar('/').printInt(lastColumn)
@@ -67,48 +63,7 @@ class Token extends Object {
         return value.escapeToStream(stream.printChar(':'));
     }
     
-    [] debugType(OStream stream) {
-        if (type == Token:EOI) { stream.printCString("EOI"); }
-    }
-    
-    // TODO: remove with implicit cast
-    [Token] token() { return this; }
-    
-    // TODO: extract model based src-code generation
-    global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
-        out.printCString(<"
-/*[meta]
-mimetype = text/x-pool
-author = Marc Woerlein <marc.woerlein@gmx.de>
-version = 0.1.0
-*/
-">).printNewline();
-        out.printCString("namespace ").printCString(ns).printCString("::token;").printNewline();
-        out.printNewline();
-        out.printCString("class Token extends pool::generator::tokenizer::Token {").printNewline();
-        out.printNewline();
-        {
-            AnyIterator tit = d.types();
-            while (tit.hasNext()) {
-                Type t = tit.next();
-                out.printCString("    int ").print(t.getName()).printCString(" := ")
-                    .printInt(t.getId()).printChar(';').printNewline();
-            }
-            tit.destroy();
-        }
-        out.printNewline();
-        out.printCString("    [] debugType(sys::stream::OStream stream) {").printNewline();
-        out.printCString("        if (type == Token:EOI) { stream.printCString(\"EOI\"); }").printNewline();
-        {
-            AnyIterator tit = d.types();
-            while (tit.hasNext()) {
-                Type t = tit.next();
-                out.printCString("        else if (type == Token:").print(t.getName())
-                    .printCString(") { stream.printCString(").escapeString(t.getName()).printCString("); }").printNewline();
-            }
-            tit.destroy();
-        }
-        out.printCString("    }").printNewline();
-        out.printCString("}").printNewline();
+    [] debugSymbol(OStream stream) {
+        if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
     }
 }

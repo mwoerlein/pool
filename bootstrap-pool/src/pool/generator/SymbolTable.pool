@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator;
+
+use sys::core::String;
+
+class SymbolTable extends sys::core::Object {
+    
+    abstract [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream);
+    
+    // TODO: remove with implicit cast
+    [SymbolTable] symbolTable() { return this; }
+    
+}

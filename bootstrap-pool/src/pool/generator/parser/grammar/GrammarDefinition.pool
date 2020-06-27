@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
+use pool::generator::Symbol;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
@@ -18,18 +20,18 @@ class GrammarDefinition extends PropertyContainer {
     AnyMap symbols; // HashMap<String, Symbol>
     Symbol eoi;
 
-    [] __init() { this._initSymbolTable(); }
-    [] _initSymbolTable() {
+    [] __init() { this._initGrammarDefinition(); }
+    [] _initGrammarDefinition() {
         this._initPropertyContainer();
         this.tokens = this.createOwn(AnyList:CLASSNAME);
         this.rules = this.createOwn(AnyList:CLASSNAME);
         this.symbols = this.createOwn(AnyMap:CLASSNAME);
         this.symbols.init(13);
-        eoi = this.getCSymbol("EOI").setId(pool::generator::tokenizer::Token:EOI);
+        eoi = this.getCSymbol("EOI").setId(pool::generator::tokenizer::Tokenizer:T_EOI);
     }
     
-    [] __destruct() { this._destructSymbolTable(); }
-    [] _destructSymbolTable() {
+    [] __destruct() { this._destructGrammarDefinition(); }
+    [] _destructGrammarDefinition() {
         this._destructPropertyContainer();
     }
     

@@ -5,13 +5,15 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
+use pool::generator::Symbol;
+
 use sys::core::String;
 use sys::core::utils::Bitset;
 
 class Action extends sys::core::Object {
 
     int action;
-    Type type;
+    Symbol symbol;
     State target;
     int push;
     String error;
@@ -41,9 +43,9 @@ class Action extends sys::core::Object {
         this.target = target;
         return this;
     }
-    [Action] setReturn(Type type) {
+    [Action] setReturn(Symbol symbol) {
         action = Bitset:set(action, 4);
-        this.type = type;
+        this.symbol = symbol;
         return this;
     }
     [Action] setError(cstring msg) {
@@ -54,7 +56,7 @@ class Action extends sys::core::Object {
     }
     
     [int] getPush() { return push; }
-    [Type] getType() { return type; }
+    [Symbol] getSymbol() { return symbol; }
     [State] getTarget() { return target; }
     [String] getError() { return error; }
     
