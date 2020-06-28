@@ -92,7 +92,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator, SymbolTable {
     }
     
     // TODO: extract model based src-code generation
-    global [] genClassFromDFA(DFA d, cstring ns, OStream out) {
+    global [] genClassFromDFA(DFA d, String ns, String classname, OStream out) {
         State init = d.getInitState();
         out.printCString(<"
 /*[meta]
@@ -101,9 +101,9 @@ author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
 ">).printNewline();
-        out.printCString("namespace ").printCString(ns).printCString(";").printNewline();
+        out.printCString("namespace ").print(ns).printCString(";").printNewline();
         out.printNewline();
-        out.printCString("class Tokenizer extends pool::generator::tokenizer::Tokenizer {").printNewline();
+        out.printCString("class ").print(classname).printCString(" extends pool::generator::tokenizer::Tokenizer {").printNewline();
         out.printNewline();
         
         {
@@ -117,12 +117,12 @@ version = 0.1.0
         }
         out.printNewline();
         out.printCString("    [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {").printNewline();
-        out.printCString("        if (symbol == Tokenizer:T_EOI) { stream.printCString(\"EOI\"); }").printNewline();
+        out.printCString("        if (symbol == ").print(classname).printCString(":T_EOI) { stream.printCString(\"EOI\"); }").printNewline();
         {
             AnyIterator sit = d.symbols();
             while (sit.hasNext()) {
                 Symbol s = sit.next();
-                out.printCString("        else if (symbol == Tokenizer:T_").print(s.getName())
+                out.printCString("        else if (symbol == ").print(classname).printCString(":T_").print(s.getName())
                     .printCString(") { stream.printCString(").escapeString(s.getName()).printCString("); }").printNewline();
             }
             sit.destroy();
@@ -137,7 +137,7 @@ version = 0.1.0
             out.printCString("            int c = input.peekChar();").printNewline();
             
             out.printCString("            if (state == ").printInt(init.getId()).printCString(") {").printNewline();
-            Tokenizer:_genRulesForState(init, out);
+            Tokenizer:_genRulesForState(init, classname, out);
             
             {
                 AnyIterator sit = d.states();
@@ -145,7 +145,7 @@ version = 0.1.0
                     State s = sit.next();
                     if (s.getId() != init.getId()) {
                         out.printCString("            } else if (state == ").printInt(s.getId()).printCString(") {").printNewline();
-                        Tokenizer:_genRulesForState(s, out);
+                        Tokenizer:_genRulesForState(s, classname, out);
                     }
                 }
                 sit.destroy();
@@ -170,7 +170,7 @@ version = 0.1.0
                         out.printCString("        else");
                     }
                     out.printCString(" if (state == ").printInt(s.getId()).printChar(')');
-                    this._genBlockForAction(terminal, out);
+                    this._genBlockForAction(terminal, classname, out);
                 }
             }
             sit.destroy();
@@ -181,7 +181,7 @@ version = 0.1.0
         out.printCString("}").printNewline();
     }
     
-    global [] _genRulesForState(State s, OStream out) {
+    global [] _genRulesForState(State s, String classname, OStream out) {
         int pos = 0;
         AnyMapEntryIterator ait = s.actions();
         while ((pos >= 0) && ait.hasNext()) {
@@ -216,7 +216,7 @@ version = 0.1.0
                 }
                 out.printChar(')');
             }
-            this._genBlockForAction(a, out);
+            this._genBlockForAction(a, classname, out);
         }
         Action terminal = s.getTerminalAction();
         if (terminal && (pos != -1)) {
@@ -225,12 +225,12 @@ version = 0.1.0
             } else {
                 out.printCString("                else");
             }
-            this._genBlockForAction(terminal, out);
+            this._genBlockForAction(terminal, classname, out);
         }
         ait.destroy();
     }
     
-    global [] _genBlockForAction(Action a, OStream out) {
+    global [] _genBlockForAction(Action a, String classname, OStream out) {
         out.printCString(" {");
         if (a.isError()) {
             out.printCString(" return this._error(").escapeString(a.getError()).printCString(");");
@@ -239,7 +239,7 @@ version = 0.1.0
             if (a.isSkip()) { out.printCString(" this._skip();"); }
             if (a.isShift()) { out.printCString(" this._consume();"); }
             if (a.isGoto()) { out.printCString(" state = ").printInt(a.getTarget().getId()).printChar(';'); }
-            if (a.isReturn()) { out.printCString(" return this._buildNextToken(Tokenizer:T_").print(a.getSymbol().getName()).printCString(");"); }
+            if (a.isReturn()) { out.printCString(" return this._buildNextToken(").print(classname).printCString(":T_").print(a.getSymbol().getName()).printCString(");"); }
         }
         out.printCString(" }").printNewline();
     }

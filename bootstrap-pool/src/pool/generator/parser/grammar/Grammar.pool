@@ -27,6 +27,7 @@ class Grammar extends sys::core::Object {
     }
     
     [Grammar] setDefinition(GrammarDefinition def) { this.own(this.definition = def); return this; }
+    [GrammarDefinition] getDefinition() { return this.definition; }
     
     [State] newInitState() { return init = this.newState(); }
     [State] getInitState() { return init; }
@@ -59,6 +60,7 @@ class Grammar extends sys::core::Object {
     
     [String] getNamespace() { return definition.getCStringProperty("namespace"); }
     [String] getClassname() { return definition.getCStringProperty("classname"); }
+    [String] getTokenizerClassname() { return definition.getCStringProperty("tokenizer"); }
     [String] getExtends() { return definition.getCStringProperty("extends"); }
     
 }

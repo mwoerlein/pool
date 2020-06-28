@@ -1,6 +1,7 @@
 %namespace  pool::asm
 %classname  Parser
 %extends BaseParser
+%tokenizer  Tokenizer
 %ignores SPACER
 %ignores COMMENT
 %ignores MLCOMMENT
@@ -9,12 +10,12 @@ IDENTIFIER  := /[\._a-zA-Z][_a-zA-Z0-9]*/
 REGISTER    := /%[a-zA-Z][_a-zA-Z0-9]*/
 CHAR        := /'([^\\\n\r']|\\[^\n\r\t])*'/
 STRING      := /"([^\\\n\r"]|\\[^\n\r\t])*"/
-NUMBER      := /-?(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)/
+NUMBER      := /\-?(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)/
 NEWLINE     := /[\n\r]+/
 SPACER      := /[ \t]+/
 COMMENT     := /\/\/[^\n\r]*/
 MLCOMMENT   := /\/\*([^\*]*\*+)([^\/\*][^\*]*\*+)*\//
-OPERATOR    := /(\+|-|*|\/|%|<<|>>|\.)/
+OPERATOR    := /(\+|\-|\*|\/|%|<<|>>|\.)/
 ASSIGN      := /:=/
 SEMICOLON   := /:/
 OBRACKET    := /\(/

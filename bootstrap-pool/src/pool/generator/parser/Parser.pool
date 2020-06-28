@@ -200,9 +200,9 @@ version = 0.1.0
                 Symbol s = sit.next();
                 if (s.isIgnore()) {
                     if (pos++ == 0) {
-                        out.printCString("        if ((symbol == Tokenizer:T_");
+                        out.printCString("        if ((symbol == ").print(gram.getTokenizerClassname()).printCString(":T_");
                     } else {
-                        out.printCString(") || (symbol == Tokenizer:T_");
+                        out.printCString(") || (symbol == ").print(gram.getTokenizerClassname()).printCString(":T_");
                     }
                     out.upperString(s.getName());
                 }
@@ -234,7 +234,7 @@ version = 0.1.0
                             } else {
                                 out.printCString("            else ");
                             }
-                            out.printCString("if (symbol == Tokenizer:T_").upperString(t.getName()).printCString(") { ");
+                            out.printCString("if (symbol == ").print(gram.getTokenizerClassname()).printCString(":T_").upperString(t.getName()).printCString(") { ");
                             Parser:_genReturnForAction(a, out);
                             out.printCString(" }").printNewline();
                         }
