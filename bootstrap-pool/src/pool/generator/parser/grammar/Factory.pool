@@ -77,6 +77,7 @@ class Factory extends sys::core::Object {
         def.setCStringProperty("namespace", "pool::generator::regex");
         def.setCStringProperty("classname", "Parser");
         def.setCStringProperty("extends", "BaseParser");
+        def.setCStringProperty("tokenizer", "Tokenizer");
         
         Symbol tEOI         := def.getEOI();
         Symbol tCHAR        := def.getCSymbol("CHAR");
@@ -330,6 +331,7 @@ class Factory extends sys::core::Object {
         def.setCStringProperty("namespace", "pool::asm");
         def.setCStringProperty("classname", "Parser");
         def.setCStringProperty("extends", "BaseParser");
+        def.setCStringProperty("tokenizer", "Tokenizer");
         
         Symbol tEOI          := def.getEOI();
         Symbol tOTHER        := def.getCSymbol("OTHER");
