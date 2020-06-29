@@ -18,6 +18,12 @@ class StringNode extends OperandNode {
         operand.assignString(o);
         return this;
     }
+
+    [StringNode] setEscapedOperand(String o) {
+        operand = this.createOwn(String:CLASSNAME);
+        o.unescapeToStream(operand.ostream());
+        return this;
+    }
     [String] getOperand() { return operand; }
     
     [OStream] printToStream(OStream stream) {

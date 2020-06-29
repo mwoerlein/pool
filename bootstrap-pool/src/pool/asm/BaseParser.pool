@@ -54,7 +54,23 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [NumberNode] createChar(Token t) {
         NumberNode n = this.rt().createInstance(NumberNode:CLASSNAME);
+        //*/
+        String escaped = t.getValue();
+        // TODO: validate correct length of char (in parser or lexer?)
+        int c1 = escaped.at(1);
+        int c2 = escaped.at(2);
+        if (c1 == '\\') {
+            if (c2 == 'n') { n.setOperand('\n'); }
+            else if (c2 == 'r') { n.setOperand('\r'); }
+            else if (c2 == 't') { n.setOperand('\t'); }
+            else { n.setOperand(c2); }
+        } else {
+            n.setOperand(c1);
+        }
+        return n;
+        /*/
         return n.setOperand(t.getValue().at(1)); // TODO: validate correct length of char (in parser or lexer?)
+        //*/
     }
     
     [RegisterNode] createRegister(Token t) {
@@ -67,9 +83,13 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [StringNode] createString(Token t) {
         StringNode s = this.rt().createInstance(StringNode:CLASSNAME);
+        //*/
+        s.setEscapedOperand(t.getValue());
+        /*/
         String sub = t.getValue().subString(1, -1);
         s.setOperand(sub);
         sub.destroy();
+        //*/
         return s;
     }
     
