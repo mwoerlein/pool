@@ -10,6 +10,7 @@ class OrganizeInlineAsciiTest extends pool::asm::test::TestCase {
     [] runAll() {
         this.test_org_inline();
         this.test_ascii();
+        this.test_char();
     }
         
     [int] test_org_inline() {
@@ -52,4 +53,29 @@ class OrganizeInlineAsciiTest extends pool::asm::test::TestCase {
         return this.runTest(t);
     }
     
+    [int] test_char() {
+        pool::asm::test::TestData t = this.newTestData("test_char");
+    
+        t.in(".byte 'a'");
+        t.in(".byte 'b'");
+        t.in(".byte '3'");
+        t.in(".byte '\\''");
+        t.in(".word '\\n'");
+        t.in(".word '\\r'");
+        t.in(".long '\\t'");
+        
+        t.pretty("    .byte 0x61");
+        t.pretty("    .byte 0x62");
+        t.pretty("    .byte 0x33");
+        t.pretty("    .byte 0x27");
+        t.pretty("    .word 0xa");
+        t.pretty("    .word 0xd");
+        t.pretty("    .long 0x9");
+
+        t.bin(0x61).bin(0x62).bin(0x33).bin(0x27);
+        t.bin(0x0a).bin(0x00).bin(0x0d).bin(0x00);
+        t.bin(0x09).bin(0x00).bin(0x00).bin(0x00);
+        
+        return this.runTest(t);
+    }
 }
