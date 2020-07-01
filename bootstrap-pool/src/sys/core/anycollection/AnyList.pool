@@ -126,4 +126,30 @@ class AnyList extends AnyCollection {
         while (e && idx--) { e = e.getNext(); }
         if (e) { return e.getValue(); } else { return null; }
     }
+    
+    [__all__] shift() {
+        if (!_first) { return null; }
+        AnyListElement found = _first;
+        __all__ ret = found.getValue();
+        _first = found.getNext();
+        if (Address:equals(_last, found)) {
+            _last = null;
+        }
+        --_size;
+        found.destroy();
+        return ret;
+    }
+    
+    [int] unshift(__any__ o) {
+        AnyListElement newElem = this.rt().createInstance(AnyListElement:CLASSNAME);
+        newElem.setValue(o);
+        if (_size) {
+            newElem.setNext(_first);
+            _first = newElem;
+        } else {
+            _first = _last = newElem;
+        }
+        _size++;
+        return true;
+    }
 }

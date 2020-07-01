@@ -13,6 +13,7 @@ class AnyListTest extends test::TestCase {
     [] runAll() {
         this.testAddAndRemove();
         this.testIterableAndClear();
+        this.testShiftUnshift();
     }
     
     [int] testAddAndRemove() {
@@ -151,6 +152,48 @@ class AnyListTest extends test::TestCase {
             if (it.hasNext()) { return this.fail("cleared list iterator has elements"); }
             it.destroy();
         }
+        
+        testList.destroy();
+        c.destroy();
+        b.destroy();
+        a.destroy();
+        return this.success();
+    }
+    
+    [int] testShiftUnshift() {
+        this.start("testShiftUnshift");
+        Character a = this.rt().createInstance(Character:CLASSNAME); a.assignChar('a');
+        Character b = this.rt().createInstance(Character:CLASSNAME); b.assignChar('b');
+        Character c = this.rt().createInstance(Character:CLASSNAME); c.assignChar('c');
+        
+        AnyList testList = this.rt().createInstance(AnyList:CLASSNAME);
+        if (!this.isNull(testList.shift())) { return this.fail("shifting"); }
+        if (testList.size() != 0)  { return this.fail("filled list has not size 0"); }
+        
+        testList.unshift(a);
+        if (!this.isSame(a, testList.at(0))) { return this.fail("unshifting"); }
+        if (testList.size() != 1)  { return this.fail("filled list has not size 1"); }
+        
+        testList.unshift(b);
+        if (!this.isSame(b, testList.at(0))) { return this.fail("unshifting"); }
+        if (!this.isSame(a, testList.at(1))) { return this.fail("unshifting"); }
+        if (testList.size() != 2)  { return this.fail("filled list has not size 2"); }
+        
+        testList.unshift(c);
+        if (!this.isSame(c, testList.at(0))) { return this.fail("unshifting"); }
+        if (!this.isSame(b, testList.at(1))) { return this.fail("unshifting"); }
+        if (!this.isSame(a, testList.at(2))) { return this.fail("unshifting"); }
+        if (testList.size() != 3)  { return this.fail("filled list has not size 3"); }
+        
+        if (!this.isSame(c, testList.shift())) { return this.fail("shifting"); }
+        if (testList.size() != 2)  { return this.fail("filled list has not size 2"); }
+        if (!this.isSame(b, testList.shift())) { return this.fail("shifting"); }
+        if (testList.size() != 1)  { return this.fail("filled list has not size 1"); }
+        if (!this.isSame(a, testList.shift())) { return this.fail("shifting"); }
+        if (testList.size() != 0)  { return this.fail("filled list has not size 0"); }
+
+        if (!this.isNull(testList.shift())) { return this.fail("shifting"); }
+        if (!testList.isEmpty())   { return this.fail("list () is not empty"); }
         
         testList.destroy();
         c.destroy();
