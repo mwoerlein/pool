@@ -19,7 +19,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     int T_CFLEX := 9;
     int T_PIPE := 10;
     int T_DOT := 11;
-    int T_OTHER := 12;
+    int T_ERROR := 12;
 
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
@@ -35,7 +35,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (symbol == Tokenizer:T_CFLEX) { stream.printCString("CFLEX"); }
         else if (symbol == Tokenizer:T_PIPE) { stream.printCString("PIPE"); }
         else if (symbol == Tokenizer:T_DOT) { stream.printCString("DOT"); }
-        else if (symbol == Tokenizer:T_OTHER) { stream.printCString("OTHER"); }
+        else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
         return stream;
     }
 
@@ -44,29 +44,69 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         while (!input.isEmpty()) {
             int c = input.peekChar();
             if (state == 0) {
-                if (c == '(') { this._consume(); return this._buildNextToken(Tokenizer:T_OBRACKET); }
-                else if (c == ')') { this._consume(); return this._buildNextToken(Tokenizer:T_CBRACKET); }
-                else if (c == '[') { this._consume(); return this._buildNextToken(Tokenizer:T_OSBRACKET); }
-                else if (c == ']') { this._consume(); return this._buildNextToken(Tokenizer:T_CSBRACKET); }
-                else if (c == '?') { this._consume(); return this._buildNextToken(Tokenizer:T_QMARK); }
-                else if (c == '*') { this._consume(); return this._buildNextToken(Tokenizer:T_STAR); }
-                else if (c == '+') { this._consume(); return this._buildNextToken(Tokenizer:T_PLUS); }
-                else if (c == '-') { this._consume(); return this._buildNextToken(Tokenizer:T_MINUS); }
-                else if (c == '^') { this._consume(); return this._buildNextToken(Tokenizer:T_CFLEX); }
-                else if (c == '|') { this._consume(); return this._buildNextToken(Tokenizer:T_PIPE); }
-                else if (c == '.') { this._consume(); return this._buildNextToken(Tokenizer:T_DOT); }
-                else if (c == '\\') { this._consume(); state = 1; }
-                else { this._consume(); return this._buildNextToken(Tokenizer:T_CHAR); }
+                if (((c >= 0) && (c <= 39)) || (c == 44) || ((c >= 48) && (c <= 62)) || ((c >= 64) && (c <= 90)) || ((c >= 95) && (c <= 123)) || ((c >= 125) && (c <= 255))) { this._consume(); state = 1; }
+                else if (c == 40) { this._consume(); state = 2; }
+                else if (c == 41) { this._consume(); state = 3; }
+                else if (c == 42) { this._consume(); state = 4; }
+                else if (c == 43) { this._consume(); state = 5; }
+                else if (c == 45) { this._consume(); state = 6; }
+                else if (c == 46) { this._consume(); state = 7; }
+                else if (c == 63) { this._consume(); state = 8; }
+                else if (c == 91) { this._consume(); state = 9; }
+                else if (c == 92) { this._consume(); state = 10; }
+                else if (c == 93) { this._consume(); state = 11; }
+                else if (c == 94) { this._consume(); state = 12; }
+                else if (c == 124) { this._consume(); state = 13; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 1) {
-                if (((c >= '(') && (c <= '+')) || ((c >= '-') && (c <= '/')) || (c == '?') || ((c >= '[') && (c <= '^')) || (c == 'n') || (c == 'r') || (c == 't') || (c == '|')) { this._consume(); return this._buildNextToken(Tokenizer:T_CHAR); }
-                else { this._consume(); return this._buildNextToken(Tokenizer:T_OTHER); }
+                { return this._buildNextToken(Tokenizer:T_CHAR); }
+            } else if (state == 2) {
+                { return this._buildNextToken(Tokenizer:T_OBRACKET); }
+            } else if (state == 3) {
+                { return this._buildNextToken(Tokenizer:T_CBRACKET); }
+            } else if (state == 4) {
+                { return this._buildNextToken(Tokenizer:T_STAR); }
+            } else if (state == 5) {
+                { return this._buildNextToken(Tokenizer:T_PLUS); }
+            } else if (state == 6) {
+                { return this._buildNextToken(Tokenizer:T_MINUS); }
+            } else if (state == 7) {
+                { return this._buildNextToken(Tokenizer:T_DOT); }
+            } else if (state == 8) {
+                { return this._buildNextToken(Tokenizer:T_QMARK); }
+            } else if (state == 9) {
+                { return this._buildNextToken(Tokenizer:T_OSBRACKET); }
+            } else if (state == 10) {
+                if (((c >= 40) && (c <= 43)) || ((c >= 45) && (c <= 47)) || (c == 63) || ((c >= 91) && (c <= 94)) || (c == 110) || (c == 114) || (c == 116) || (c == 124)) { this._consume(); state = 14; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+            } else if (state == 11) {
+                { return this._buildNextToken(Tokenizer:T_CSBRACKET); }
+            } else if (state == 12) {
+                { return this._buildNextToken(Tokenizer:T_CFLEX); }
+            } else if (state == 13) {
+                { return this._buildNextToken(Tokenizer:T_PIPE); }
+            } else if (state == 14) {
+                { return this._buildNextToken(Tokenizer:T_CHAR); }
             } else {
                 this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
                 return false;
             }
         }
 
-        if (state == 1) { return this._error("Unterminated escape sequence"); }
+        if (state == 1) { return this._buildNextToken(Tokenizer:T_CHAR); }
+        else if (state == 2) { return this._buildNextToken(Tokenizer:T_OBRACKET); }
+        else if (state == 3) { return this._buildNextToken(Tokenizer:T_CBRACKET); }
+        else if (state == 4) { return this._buildNextToken(Tokenizer:T_STAR); }
+        else if (state == 5) { return this._buildNextToken(Tokenizer:T_PLUS); }
+        else if (state == 6) { return this._buildNextToken(Tokenizer:T_MINUS); }
+        else if (state == 7) { return this._buildNextToken(Tokenizer:T_DOT); }
+        else if (state == 8) { return this._buildNextToken(Tokenizer:T_QMARK); }
+        else if (state == 9) { return this._buildNextToken(Tokenizer:T_OSBRACKET); }
+        else if (state == 10) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 11) { return this._buildNextToken(Tokenizer:T_CSBRACKET); }
+        else if (state == 12) { return this._buildNextToken(Tokenizer:T_CFLEX); }
+        else if (state == 13) { return this._buildNextToken(Tokenizer:T_PIPE); }
+        else if (state == 14) { return this._buildNextToken(Tokenizer:T_CHAR); }
         return false;
     }
 }

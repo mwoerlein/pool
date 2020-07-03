@@ -163,7 +163,7 @@ version = 0.1.0
             while (sit.hasNext()) {
                 State s = sit.next();
                 Action terminal = s.getTerminalAction();
-                if (terminal) {
+                if (terminal && !s.equals(init)) {
                     if (pos++ == 0) {
                         out.printCString("       ");
                     } else {
@@ -192,7 +192,7 @@ version = 0.1.0
                 out.printCString("                else");
             }
             if (cs.isSingle()) {
-                out.printCString(" if (c == ").escapeChar(cs.getSingle()).printChar(')');
+                out.printCString(" if (c == ").printInt(cs.getSingle()).printChar(')');
             } else if (cs.isAll()) {
                 // abort after this action
                 pos = -1;
@@ -207,9 +207,9 @@ version = 0.1.0
                             int start = cur;
                             // skip consecutive characters
                             while (cs.hasChar(++cur)) {}
-                            out.printCString("((c >= ").escapeChar(start).printCString(") && (c <= ").escapeChar(--cur).printCString("))");
+                            out.printCString("((c >= ").printInt(start).printCString(") && (c <= ").printInt(--cur).printCString("))");
                         } else {
-                            out.printCString("(c == ").escapeChar(cur).printChar(')');
+                            out.printCString("(c == ").printInt(cur).printChar(')');
                         }
                     }
                     cur++;
