@@ -28,7 +28,7 @@ class Factory extends sys::core::Object {
             AnyIterator it = def.tokens();
             while (it.hasNext()) {
                 Token t = it.next();
-                Symbol s = t.getId();
+                Symbol s = t.getSymbol();
                 if (g.hasTerminal(s)) {
                     errors++;
                     err.printCString("duplicate definition for token: ").print(s.getName()).printNewline();

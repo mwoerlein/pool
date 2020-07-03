@@ -13,13 +13,13 @@ use sys::core::anycollection::AnyList;
 
 class Token extends sys::core::Object {
     
-    Symbol id;
+    Symbol symbol;
     String definition;
     
     [] __init() { definition = this.createOwn(String:CLASSNAME); }
     
-    [Token] setId(Symbol id) { this.id = id; return this; }
-    [Symbol] getId() { return id; }
+    [Token] setSymbol(Symbol s) { this.symbol = s; return this; }
+    [Symbol] getSymbol() { return symbol; }
     
     [Token] setDefinition(cstring def) { this.definition.assignCString(def); return this; }
     [String] getDefinition() { return this.definition; }

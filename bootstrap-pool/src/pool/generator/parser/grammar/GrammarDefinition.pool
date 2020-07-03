@@ -63,9 +63,9 @@ class GrammarDefinition extends PropertyContainer {
     }
     [AnyIterator] rules() { return rules.iterator(); }
     
-    [Token] newToken(Symbol id) {
+    [Token] newToken(Symbol s) {
         Token t = this.createOwn(Token:CLASSNAME);
-        t.setId(id);
+        t.setSymbol(s);
         tokens.add(t);
         return t;
     }
