@@ -8,7 +8,7 @@ namespace pool::generator::regex;
 use pool::generator::regex::node::Node;
 use pool::generator::regex::node::List;
 use pool::generator::regex::node::Repeat;
-use pool::generator::regex::node::CharSet;
+use pool::generator::regex::node::CharClass;
 
 use pool::generator::tokenizer::Token;
 
@@ -46,9 +46,9 @@ class BaseParser extends pool::generator::regex::node::Factory, pool::generator:
     
     [List] listAddNode(List l, Node n) { return l.addNode(n); }
     [Node] listToNode(List l) { return l.node(); }
-    [Node] csToNode(CharSet cs) { return cs.node(); }
-    [Node] csToExclusiveNode(CharSet cs) { return cs.setExclusive().node(); }
-    [CharSet] csAddChar(CharSet cs, int a) { return cs.setChar(a); }
-    [CharSet] csAddRange(CharSet cs, int a, int b) { return cs.setRange(a, b); }
+    [Node] ccToNode(CharClass cc) { return cc.node(); }
+    [Node] ccToExclusiveNode(CharClass cc) { return cc.setExclusive().node(); }
+    [CharClass] ccAddChar(CharClass cc, int a) { return cc.setChar(a); }
+    [CharClass] ccAddRange(CharClass cc, int a, int b) { return cc.setRange(a, b); }
     
 }

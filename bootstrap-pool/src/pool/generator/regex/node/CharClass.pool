@@ -10,9 +10,10 @@ use pool::generator::regex::fa::NFA;
 use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
-class CharSet extends Node {
+class CharClass extends Node {
 
     int exclusive;
+    // TODO extract/wrap pool::generator::CharSet
     int bits0;
     int bits1;
     int bits2;
@@ -25,21 +26,21 @@ class CharSet extends Node {
     int _count;
     int _first;
     
-    [CharSet] setExclusive() { this.exclusive = true; return this; }
+    [CharClass] setExclusive() { this.exclusive = true; return this; }
         
-    [CharSet] setAll() {
+    [CharClass] setAll() {
         bits0 = bits1 = bits2 = bits3 = bits4 = bits5 = bits6 = bits7 = -1;
         _count = 256;
         return this;
     }
     
-    [CharSet] setRange(int a, int b) {
+    [CharClass] setRange(int a, int b) {
         int i = a;
         while (i <= b) { this.setChar(i++); }    
         return this;
     }
     
-    [CharSet] setChar(int c) {
+    [CharClass] setChar(int c) {
         if (c < 0 || c > 255) { return this; }
         
         int _b := Bitset:and(0x1f, c);
@@ -77,6 +78,11 @@ class CharSet extends Node {
     [int] isSingle() { return _count == 1; }
     [int] getSingle() { return this._first; }
 
+    [int] contains(int c) {
+        if (c < 0 || c > 255) { return false; }
+        return this.hasChar(c) != exclusive;
+    }
+    
     [int] hash() {
         int h = Bitset:xor(bits0, bits1);
         h = Bitset:xor(h, bits2);
@@ -88,7 +94,7 @@ class CharSet extends Node {
         return Bitset:lrotate(h, exclusive);
     }
     [int] equals(__any__ obj) {
-        CharSet c = this.rt().cast(CharSet:CLASSNAME, obj);
+        CharClass c = this.rt().cast(CharClass:CLASSNAME, obj);
         if (c && (this.exclusive == c.exclusive)) {
             return (this.bits0 == c.bits0)
                 && (this.bits1 == c.bits1)

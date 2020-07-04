@@ -99,7 +99,7 @@ class Factory extends sys::core::Object {
         Symbol ntCONCAT     := def.getCSymbol("concat");
         Symbol ntELEM       := def.getCSymbol("elem");
         Symbol ntEXPR       := def.getCSymbol("expr");
-        Symbol ntCHARSET    := def.getCSymbol("charset");
+        Symbol ntCLASS      := def.getCSymbol("class");
         
         def.newToken(tCHAR).setDefinition("/[^\\\\\\(\\)\\[\\]\\?\\*\\+\\-\\^\\|\\.\\/]|\\\\[nrt\\\\\\(\\)\\[\\]\\?\\*\\+\\-\\^\\|\\.\\/]/");
         def.newToken(tOBRACKET).setDefinition("/\\(/");
@@ -139,20 +139,20 @@ class Factory extends sys::core::Object {
             .setCode("{ $$ = this.all(); }");
         Rule r11 := def.newRule(ntEXPR).addRHS(tCHAR)
             .setCode("{ $$ = this.single(this.toChar($1)); }");
-        Rule r12 := def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(ntCHARSET).addRHS(tCSBRACKET)
-            .setCode("{ $$ = this.csToNode($2); }");
-        Rule r13 := def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(tCFLEX).addRHS(ntCHARSET).addRHS(tCSBRACKET)
-            .setCode("{ $$ = this.csToExclusiveNode($3); }");
+        Rule r12 := def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(ntCLASS).addRHS(tCSBRACKET)
+            .setCode("{ $$ = this.ccToNode($2); }");
+        Rule r13 := def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(tCFLEX).addRHS(ntCLASS).addRHS(tCSBRACKET)
+            .setCode("{ $$ = this.ccToExclusiveNode($3); }");
         Rule r14 := def.newRule(ntEXPR).addRHS(tOBRACKET).addRHS(ntALTER).addRHS(tCBRACKET)
             .setCode("{ $$ = this.listToNode($2); }");
-        Rule r15 := def.newRule(ntCHARSET).addRHS(tCHAR)
-            .setCode("{ $$ = this.csAddChar(this.cs(), this.toChar($1)); }");
-        Rule r16 := def.newRule(ntCHARSET).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
-            .setCode("{ $$ = this.csAddRange(this.cs(), this.toChar($1), this.toChar($3)); }");
-        Rule r17 := def.newRule(ntCHARSET).addRHS(ntCHARSET).addRHS(tCHAR)
-            .setCode("{ $$ = this.csAddChar($1, this.toChar($2)); }");
-        Rule r18 := def.newRule(ntCHARSET).addRHS(ntCHARSET).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
-            .setCode("{ $$ = this.csAddRange($1, this.toChar($2), this.toChar($4)); }");
+        Rule r15 := def.newRule(ntCLASS).addRHS(tCHAR)
+            .setCode("{ $$ = this.ccAddChar(this.cc(), this.toChar($1)); }");
+        Rule r16 := def.newRule(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
+            .setCode("{ $$ = this.ccAddRange(this.cc(), this.toChar($1), this.toChar($3)); }");
+        Rule r17 := def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR)
+            .setCode("{ $$ = this.ccAddChar($1, this.toChar($2)); }");
+        Rule r18 := def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
+            .setCode("{ $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }");
 
         Grammar d = this.buildGrammar(def, err);
 
@@ -173,13 +173,13 @@ class Factory extends sys::core::Object {
         State sOBracketAlterPipe := d.newState();
         State sOBracketAlterPipeConcat := d.newState();
         State sOSBracket := d.newState();
-        State sOSBracketCharset := d.newState();
+        State sOSBracketClass := d.newState();
         State sOSBracketCFlex := d.newState();
-        State sOSBracketCFlexCharset := d.newState();
+        State sOSBracketCFlexClass := d.newState();
         State sChar := d.newState();
         State sCharMinus := d.newState();
-        State sCharsetChar := d.newState();
-        State sCharsetCharMinus := d.newState();
+        State sClassChar := d.newState();
+        State sClassCharMinus := d.newState();
         State sReduceRule05 := d.newState();
         
         sEMPTY.addAction(tDOT, this.shiftReduce(r10));
@@ -297,24 +297,24 @@ class Factory extends sys::core::Object {
         
         sOSBracket.addAction(tCHAR, this.shift(sChar));
         sOSBracket.addAction(tCFLEX, this.shift(sOSBracketCFlex));
-        sOSBracket.addGoto(ntCHARSET, sOSBracketCharset);
-        sOSBracketCharset.addAction(tCHAR, this.shift(sCharsetChar));
-        sOSBracketCharset.addAction(tCSBRACKET, this.shiftReduce(r12));
+        sOSBracket.addGoto(ntCLASS, sOSBracketClass);
+        sOSBracketClass.addAction(tCHAR, this.shift(sClassChar));
+        sOSBracketClass.addAction(tCSBRACKET, this.shiftReduce(r12));
         
         sOSBracketCFlex.addAction(tCHAR, this.shift(sChar));
-        sOSBracketCFlex.addGoto(ntCHARSET, sOSBracketCFlexCharset);
-        sOSBracketCFlexCharset.addAction(tCHAR, this.shift(sCharsetChar));
-        sOSBracketCFlexCharset.addAction(tCSBRACKET, this.shiftReduce(r13));
+        sOSBracketCFlex.addGoto(ntCLASS, sOSBracketCFlexClass);
+        sOSBracketCFlexClass.addAction(tCHAR, this.shift(sClassChar));
+        sOSBracketCFlexClass.addAction(tCSBRACKET, this.shiftReduce(r13));
         
         sChar.addAction(tCHAR, this.reduce(r15));
         sChar.addAction(tCSBRACKET, this.reduce(r15));
         sChar.addAction(tMINUS, this.shift(sCharMinus));
         sCharMinus.addAction(tCHAR, this.shiftReduce(r16));
         
-        sCharsetChar.addAction(tCHAR, this.reduce(r17));
-        sCharsetChar.addAction(tCSBRACKET, this.reduce(r17));
-        sCharsetChar.addAction(tMINUS, this.shift(sCharsetCharMinus));
-        sCharsetCharMinus.addAction(tCHAR, this.shiftReduce(r18));
+        sClassChar.addAction(tCHAR, this.reduce(r17));
+        sClassChar.addAction(tCSBRACKET, this.reduce(r17));
+        sClassChar.addAction(tMINUS, this.shift(sClassCharMinus));
+        sClassCharMinus.addAction(tCHAR, this.shiftReduce(r18));
 
         sReduceRule05.setDefaultAction(this.reduce(r05));
         

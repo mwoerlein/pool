@@ -7,7 +7,7 @@ namespace pool::generator::tokenizer;
 
 use pool::generator::Symbol;
 use pool::generator::SymbolTable;
-use pool::generator::regex::node::CharSet;
+use pool::generator::regex::node::CharClass;
 
 use pool::generator::tokenizer::dfa::Action;
 use pool::generator::tokenizer::dfa::DFA;
@@ -185,7 +185,7 @@ version = 0.1.0
         int pos = 0;
         AnyMapEntryIterator ait = s.actions();
         while ((pos >= 0) && ait.hasNext()) {
-            [CharSet cs, Action a] := ait.nextPair();
+            [CharClass cs, Action a] := ait.nextPair();
             if (pos++ == 0) {
                 out.printCString("               ");
             } else {

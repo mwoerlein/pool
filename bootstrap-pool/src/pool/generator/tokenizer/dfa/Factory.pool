@@ -6,13 +6,13 @@ version = 0.1.0
 namespace pool::generator::tokenizer::dfa;
 
 use pool::generator::Symbol;
-use pool::generator::regex::node::CharSet; // TODO: extract and use generic CharSet outside of regex node model
+use pool::generator::regex::node::CharClass; // TODO switch to pool::generator::CharSet
 
 class Factory extends sys::core::Object {
 
     [DFA] dfa() { return this.rt().createInstance(DFA:CLASSNAME); }
     [Action] action() { return this.rt().createInstance(Action:CLASSNAME); }
-    [CharSet] cs() { return this.rt().createInstance(CharSet:CLASSNAME); }
+    [CharClass] cs() { return this.rt().createInstance(CharClass:CLASSNAME); }
     
     [Action] shift() { return this.action().setShift(); }
     [Action] goto(State s) { return this.action().setGoto(s); }
