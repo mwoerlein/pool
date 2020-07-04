@@ -5,39 +5,122 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
+use pool::generator::CharSet;
 use pool::generator::Symbol;
+
+use pool::generator::regex::fa::NFA as RegexNFA;
+use pool::generator::regex::fa::NFASet as RegexNFASet;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
 
-class DFA extends sys::core::Object {
+class DFA extends Factory {
 
-    AnyList symbols; // ArrayList<Symbol>
-    AnyList states; // ArrayList<State>
-    State init;
+    AnyMap symbols; // AnyMap<RegexNFA, Symbol>
+    AnyMap states; // AnyMap<RegexNFASet, State>
+    State initState;
+    RegexNFA overall;
 
     [] __init() {
-        this.symbols = this.createOwn(AnyList:CLASSNAME);
-        this.states = this.createOwn(AnyList:CLASSNAME);
+        symbols = this.createOwn(AnyMap:CLASSNAME);
+        symbols.init(13);
+        states = this.createOwn(AnyMap:CLASSNAME);
+        states.init(13);
+        
+        overall = symbols.createOwn(RegexNFA:CLASSNAME);
+        Symbol errorSymbol = symbols.createOwn(Symbol:CLASSNAME);
+        symbols.set(overall, errorSymbol.setCName("ERROR").setId(-2));
     }
     
-    [Symbol] addSymbol(cstring name) {
-        Symbol s = this.createOwn(Symbol:CLASSNAME);
-        s.setCName(name).setId(symbols.size());
-        symbols.add(s);
-        return s;
+    [AnyIterator] symbols() { return symbols.values(); }
+    [AnyIterator] states() { return states.values(); }
+    [State] getInitState() { return initState; }
+        
+    [DFA] _addTerminal(Symbol symbol, RegexNFA nfa) {
+        overall.addEps(nfa);
+        symbols.own(nfa);
+        symbols.set(nfa.getTerminal(), symbol);
+        return this;
     }
     
-    [State] newState() {
-        State s = this.createOwn(State:CLASSNAME);
-        s.setId(states.size());
-        states.add(s);
-        return s;
+    [DFA] _buildActions() {    
+        Symbol errorSymbol = symbols.get(overall);
+        
+        // HashMap<State, HashMap<State, CharSet>>
+        AnyMap transitions = this.rt().createInstance(AnyMap:CLASSNAME);
+        transitions.init(13);
+        {
+            AnyList ws = this.rt().createInstance(AnyList:CLASSNAME);
+            RegexNFASet initSet = states.createOwn(RegexNFASet:CLASSNAME);
+            initState = states.createOwn(State:CLASSNAME);
+            initState.setId(states.size());
+            states.set(overall.epsClosure(initSet), initState);
+            ws.add(initSet);
+            
+            while (ws.size()) {
+                RegexNFASet set = ws.shift();
+                State state = states.get(set);
+                Symbol terminal = this._findSymbol(set);
+                if (terminal) {
+                    state.addTerminalAction(this.ret(terminal));
+                } else {
+                    state.addTerminalAction(this.ret(errorSymbol));
+                }
+
+                // initialize transition table for current state
+                AnyMap trns = transitions.createOwn(AnyMap:CLASSNAME);
+                trns.init(13);
+                transitions.set(state, trns);
+                
+                int c = 0;
+                while (c < 256) {
+                    RegexNFASet movedSet = set.move(c);
+                    if (movedSet) {
+                        State movedState = states.get(movedSet);
+                        if (movedState) {
+                            // already known state => use existing set
+                            movedSet.destroy();
+                        } else {
+                            // create new state
+                            states.own(movedSet);
+                            movedState = states.createOwn(State:CLASSNAME);
+                            movedState.setId(states.size());
+                            states.set(movedSet, movedState);
+                            ws.add(movedSet);
+                        }
+                        
+                        // insert transition: state --c-> movedState
+                        CharSet cs = trns.get(movedState);
+                        if (!cs) {
+                            cs = trns.createOwn(CharSet:CLASSNAME);
+                            trns.set(movedState, cs);
+                            state.addAction(cs, this.sgoto(movedState));
+                        }
+                        cs.setChar(c);
+                    }
+                    c++;
+                }
+            }
+            
+            ws.destroy();
+        }
+        transitions.destroy();
+        return this;
     }
-    [State] newInitState() { return init = this.newState(); }
     
-    [State] getInitState() { return init; }
-    [AnyIterator] symbols() { return symbols.iterator(); }
-    [AnyIterator] states() { return states.iterator(); }
+    [Symbol] _findSymbol(RegexNFASet set) {
+        AnyMapEntryIterator tit = symbols.entries();
+        while (tit.hasNext()) {
+            [RegexNFA nfa, Symbol s] = tit.nextPair();
+            if (set.has(nfa)) {
+                tit.destroy();
+                return s;
+            }
+        }
+        tit.destroy();
+        return null;
+    }
     
 }

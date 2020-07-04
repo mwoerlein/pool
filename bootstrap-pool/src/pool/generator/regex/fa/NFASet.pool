@@ -1,0 +1,68 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::fa;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+class NFASet extends sys::core::Object {
+
+    AnyMap _elements; // HashMap<NFA, null>
+    int _hash;
+
+    [] __init() {
+        _elements = this.createOwn(AnyMap:CLASSNAME);
+        _elements.init(13);
+        _hash = 0;
+    }
+    
+    [int] add(NFA nfa) {
+        if (_elements.has(nfa)) { return false; }
+        _elements.set(nfa, null);
+        _hash = Bitset:xor(_hash, nfa.hash());
+        return true;
+    }
+    [int] has(NFA nfa) {
+        return _elements.has(nfa);
+    }
+    
+    [AnyIterator] elements() { return _elements.keys(); }
+    
+    [int] size() { return _elements.size(); }
+    [int] hash() { return _hash; }
+    [int] equals(__any__ obj) {
+        NFASet set = this.rt().cast(NFASet:CLASSNAME, obj);
+        if (!set || (set.size() != this.size()) || (set.hash() != this.hash())) { return false; }
+        AnyIterator it = set.elements();
+        while (it.hasNext()) {
+            if (!_elements.has(it.next())) { it.destroy(); return false; }
+        }
+        it.destroy();
+        return true;
+    }
+
+    [NFASet] move(int c) {
+        NFASet ret = this.rt().createInstance(NFASet:CLASSNAME);
+        AnyIterator nit = this.elements();
+        while (nit.hasNext()) {
+            NFA n = nit.next();
+            NFA next = n.move(c);
+            if (next) { next.epsClosure(ret);}
+        }
+        nit.destroy();
+        if (ret._elements.isEmpty()) {
+            ret.destroy();
+            return null;
+        }
+        return ret;
+    }
+
+}

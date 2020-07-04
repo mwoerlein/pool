@@ -12,6 +12,7 @@ use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
 
+use sys::core::String;
 use sys::stream::OStream;
 
 class NFA extends sys::core::Object {
@@ -32,11 +33,28 @@ class NFA extends sys::core::Object {
     [NFA] setNext(CharSet cs, NFA n) { this.cs = cs; this.next = n; return this; }
     [NFA] addEps(NFA n) { if (!eps.contains(n)) { eps.add(n); } return this; }
     
+    [NFA] move(int c) {
+        if (cs && cs.hasChar(c)) { return next; }
+        return null;
+    }
+    
+    [NFASet] epsClosure(NFASet set) {
+        if (set.add(this)) {
+            AnyIterator it = this.eps.iterator();
+            while (it.hasNext()) {
+                NFA next = it.next();
+                next.epsClosure(set);
+            }
+            it.destroy();
+        }
+        return set;
+    }
+    
     // debug
     [OStream] dumpAsDot(OStream out) {
         out.printCString("digraph G {").printNewline();
         
-        AnyList visited = this.createOwn(AnyList:CLASSNAME);
+        AnyList visited = this.rt().createInstance(AnyList:CLASSNAME);
         this._dumpAsDot(out, visited);
         visited.destroy();
         
@@ -46,13 +64,22 @@ class NFA extends sys::core::Object {
     [] _dumpAsDot(OStream out, AnyList visited) {
         if (!visited.contains(this)) {
             visited.add(this);
-            out.printCString("    \"").printPtr(this.getAddress()).printChar('"').printNewline();
-            if (next) { 
+            out.printCString("    \"").printPtr(this.getAddress()).printChar('"');
+            if (!next) {
+                  out.printCString(" [color=gray, fontcolor=gray]");
+            }
+            out.printNewline();
+            if (cs) { 
+                String label = this.rt().createInstance(String:CLASSNAME);
+                if (cs.hasChar(0)) { label.printChar('?'); } else { label.print(cs); }
+                
                 next._dumpAsDot(out, visited);
                 out.printCString("    \"").printPtr(this.getAddress()).printChar('"')
                   .printCString(" -> \"").printPtr(next.getAddress()).printChar('"')
-                  .printCString(" [label=\"").print(cs).printCString("\"]")
+                  .printCString(" [label=");
+                label.escapeToStream(out).printCString("]")
                   .printNewline();
+                label.destroy();
             }
             AnyIterator it = this.eps.iterator();
             while (it.hasNext()) {
@@ -60,6 +87,7 @@ class NFA extends sys::core::Object {
                 next._dumpAsDot(out, visited);
                 out.printCString("    \"").printPtr(this.getAddress()).printChar('"')
                   .printCString(" -> \"").printPtr(next.getAddress()).printChar('"')
+                  .printCString(" [color=gray]")
                   .printNewline();
             }
             it.destroy();

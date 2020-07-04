@@ -7,13 +7,20 @@ namespace pool::generator::parser::grammar;
 
 use pool::generator::Symbol;
 
+use pool::generator::regex::Parser as RegexParser;
+use pool::generator::regex::fa::NFA as RegexNFA;
+use pool::generator::regex::node::List as RegexList;
+use pool::generator::tokenizer::dfa::DFA as TokenizerDFA;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::stream::IStream;
 
 class Grammar extends sys::core::Object {
 
     GrammarDefinition definition;
+    TokenizerDFA tokenizerDFA;
     
     AnyList terminals; // ArrayList<Symbol>
     AnyList nonTerminals; // ArrayList<Symbol>
@@ -24,6 +31,7 @@ class Grammar extends sys::core::Object {
         this.terminals = this.createOwn(AnyList:CLASSNAME);
         this.nonTerminals = this.createOwn(AnyList:CLASSNAME);
         this.states = this.createOwn(AnyList:CLASSNAME);
+        this.tokenizerDFA = null; // lazy initialization
     }
     
     [Grammar] setDefinition(GrammarDefinition def) { this.own(this.definition = def); return this; }
@@ -63,4 +71,32 @@ class Grammar extends sys::core::Object {
     [String] getTokenizerClassname() { return definition.getCStringProperty("tokenizer"); }
     [String] getExtends() { return definition.getCStringProperty("extends"); }
     
+    [TokenizerDFA] getTokenizerDFA() {
+        if (!this.tokenizerDFA) {
+            this.tokenizerDFA = this.createOwn(TokenizerDFA:CLASSNAME);
+            {
+                RegexParser parser = this.rt().createInstance(RegexParser:CLASSNAME);
+                AnyIterator it = definition.tokens();
+                while (it.hasNext()) {
+                    Token t = it.next();
+                    Symbol s = t.getSymbol();
+                    
+                    String def = t.getDefinition().subString(1, -1);
+                    IStream is = def.toIStream();
+                    RegexList l = parser.parse(is, s.getName());
+
+                    this.tokenizerDFA._addTerminal(s, l.toNFA());
+                    
+                    l.destroy();
+                    is.destroy();
+                    def.destroy();
+                    
+                }
+                it.destroy();
+                parser.destroy();
+            }
+            this.tokenizerDFA._buildActions();
+        }
+        return this.tokenizerDFA;
+    }    
 }
