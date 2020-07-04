@@ -17,5 +17,7 @@ class __Tests__ {
         suite.register(sys::core::anycollection::AnyArray:CLASSNAME, sys::core::anycollection::AnyArrayTest:CLASSNAME);
         suite.register(sys::core::anycollection::AnyList:CLASSNAME, sys::core::anycollection::AnyListTest:CLASSNAME);
         suite.register(sys::core::anycollection::AnyMap:CLASSNAME, sys::core::anycollection::AnyMapTest:CLASSNAME);
+        
+        suite.register(sys::core::utils::Bitset:CLASSNAME, sys::core::utils::BitsetTest:CLASSNAME);
     }
 }

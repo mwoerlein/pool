@@ -1,0 +1,37 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::String;
+
+class BitsetTest extends test::TestCase {
+
+    [] runAll() {
+        this.testNumberOfSetBits();
+    }
+    
+    [int] testNumberOfSetBits() {
+        this.startCases("testNumberOfSetBits");
+        
+        this.caseNumberOfSetBits(0x00000000,  0);
+        this.caseNumberOfSetBits(0x0000000F,  4);
+        this.caseNumberOfSetBits(0x12481248,  8);
+        this.caseNumberOfSetBits(0x12345678, 13);
+        this.caseNumberOfSetBits(0xFFFFFFFF, 32);
+        
+        return this.successCases();
+    }
+    
+    [int] caseNumberOfSetBits(int input, int expected) {
+        
+        int result = Bitset:numberOfSetBits(input);
+        if (result == expected) { return this.successCase(); }
+        
+        String message = this.createOwn(String:CLASSNAME);
+        message.printCString("Case ").printPtr(input).printCString(" => ").printInt(expected).printCString(" != ").printInt(result);
+        return this.failCase(message.ostream());
+    }
+}

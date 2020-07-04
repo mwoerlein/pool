@@ -7,6 +7,9 @@ namespace sys::core::utils;
 
 
 class Bitset {
+
+    int NONE     := 0;
+    int ALL      := 0xFFFFFFFF;
     
     global [int] or(int a, int b) {
         int ret = 0;
@@ -87,5 +90,38 @@ class Bitset {
     
     global [int] isPowerOfTwo(int n) {
         return n && !(Bitset:and(n, n-1));
+    }
+    
+    global [int] numberOfSetBits(int n) {
+        int ret = 0;
+        __pasm__(<"
+            // n -= (n >> 1) & 0x55555555;
+            movl %eax, %ebx
+            .byte 0xD1; .byte 0xEB  #// shrl %ebx, 1
+            andl 0x55555555, %ebx
+            subl %ebx, %eax
+            // n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+            movl %eax, %ebx
+            .byte 0xC1; .byte 0xEB; .byte 2  #// shrl %ebx, 2
+            andl 0x33333333, %eax
+            andl 0x33333333, %ebx
+            addl %ebx, %eax
+            // n = (n + (n >> 4)) & 0x0F0F0F0F 
+            movl %eax, %ebx
+            .byte 0xC1; .byte 0xEB; .byte 4  #// shrl %ebx, 4
+            addl %ebx, %eax
+            andl 0x0F0F0F0F, %eax
+            // n += n >> 8
+            movl %eax, %ebx
+            .byte 0xC1; .byte 0xEB; .byte 8  #// shrl %ebx, 8
+            addl %ebx, %eax
+            // n += n >> 16
+            movl %eax, %ebx
+            .byte 0xC1; .byte 0xEB; .byte 16  #// shrl %ebx, 16
+            addl %ebx, %eax
+            // n = n & 0x7f;
+            andl 0x7f, %eax
+        ">, {"%eax": n}, {"%eax": ret});
+        return ret;
     }
 }
