@@ -1,7 +1,7 @@
-%namespace  pool::asm
-%classname  Parser
-%extends BaseParser
-%tokenizer  Tokenizer
+%namespace  "pool::asm"
+%classname  "Parser"
+%extends    "BaseParser"
+%tokenizer  "Tokenizer"
 %ignores SPACER
 %ignores COMMENT
 %ignores MLCOMMENT
@@ -22,7 +22,6 @@ OBRACKET    := /\(/
 CBRACKET    := /\)/
 SEMICOLON   := /;/
 COMMA       := /,/
-OTHER       := /.*/
 
 compilation_unit:                                                              { $$ = unit.getNodeList(); }
 compilation_unit: compilation_unit label                                       { $$ = this.pushToList($1, $2); }

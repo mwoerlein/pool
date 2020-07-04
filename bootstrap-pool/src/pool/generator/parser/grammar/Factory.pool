@@ -92,7 +92,7 @@ class Factory extends sys::core::Object {
         Symbol tCFLEX       := def.getCSymbol("CFLEX");
         Symbol tPIPE        := def.getCSymbol("PIPE");
         Symbol tDOT         := def.getCSymbol("DOT");
-        Symbol tOTHER       := def.getCSymbol("OTHER");
+//        Symbol tOTHER       := def.getCSymbol("OTHER");
 
         Symbol ntEXPRESSION := def.getCSymbol("expression");    
         Symbol ntALTER      := def.getCSymbol("alter");    
@@ -113,7 +113,7 @@ class Factory extends sys::core::Object {
         def.newToken(tCFLEX).setDefinition("/\\^/");
         def.newToken(tPIPE).setDefinition("/\\|/");
         def.newToken(tDOT).setDefinition("/\\./");
-        def.newToken(tOTHER).setDefinition("/.*/");
+//        def.newToken(tOTHER).setDefinition("/.*/");
 
         Rule r00 := def.newRule(ntEXPRESSION).addRHS(ntALTER)
             .setCode("{ $$ = this.expression = $1; }");
@@ -334,7 +334,7 @@ class Factory extends sys::core::Object {
         def.setCStringProperty("tokenizer", "Tokenizer");
         
         Symbol tEOI          := def.getEOI();
-        Symbol tOTHER        := def.getCSymbol("OTHER");
+//        Symbol tOTHER        := def.getCSymbol("OTHER");
         Symbol tIDENTIFIER   := def.getCSymbol("IDENTIFIER");
         Symbol tREGISTER     := def.getCSymbol("REGISTER");
         Symbol tCHAR         := def.getCSymbol("CHAR");
@@ -377,7 +377,7 @@ class Factory extends sys::core::Object {
         def.newToken(tCBRACKET).setDefinition("/\\)/");
         def.newToken(tSEMICOLON).setDefinition("/;/");
         def.newToken(tCOMMA).setDefinition("/,/");
-        def.newToken(tOTHER).setDefinition("/.*/");
+//        def.newToken(tOTHER).setDefinition("/.*/");
 
         Rule r00 := def.newRule(ntUNIT)
             .setCode("{ $$ = unit.getNodeList(); }");

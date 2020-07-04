@@ -1,7 +1,7 @@
-%namespace  pool::generator::regex
-%classname  Parser
-%extends BaseParser
-%tokenizer  Tokenizer
+%namespace  "pool::generator::regex"
+%classname  "Parser"
+%extends    "BaseParser"
+%tokenizer  "Tokenizer"
 
 CHAR      := /[^\\\(\)\[\]\?\*\+\-\^\|\.\/]|\\[nrt\\\(\)\[\]\?\*\+\-\^\|\.\/]/
 OBRACKET  := /\(/
@@ -15,7 +15,6 @@ MINUS     := /\-/
 CFLEX     := /\^/
 PIPE      := /\|/
 DOT       := /\./
-OTHER     := /.*/
 
 expression: alter                     { $$ = this.expression = $1; }
 expression: concat                    { $$ = this.expression = $1; }

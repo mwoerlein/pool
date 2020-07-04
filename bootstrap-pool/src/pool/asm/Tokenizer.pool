@@ -7,6 +7,7 @@ namespace pool::asm;
 
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
+    int T_ERROR := -2;
     int T_IDENTIFIER := 0;
     int T_REGISTER := 1;
     int T_CHAR := 2;
@@ -23,10 +24,10 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     int T_CBRACKET := 13;
     int T_SEMICOLON := 14;
     int T_COMMA := 15;
-    int T_ERROR := 16;
 
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
+        else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
         else if (symbol == Tokenizer:T_IDENTIFIER) { stream.printCString("IDENTIFIER"); }
         else if (symbol == Tokenizer:T_REGISTER) { stream.printCString("REGISTER"); }
         else if (symbol == Tokenizer:T_CHAR) { stream.printCString("CHAR"); }
@@ -43,7 +44,6 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (symbol == Tokenizer:T_CBRACKET) { stream.printCString("CBRACKET"); }
         else if (symbol == Tokenizer:T_SEMICOLON) { stream.printCString("SEMICOLON"); }
         else if (symbol == Tokenizer:T_COMMA) { stream.printCString("COMMA"); }
-        else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
         return stream;
     }
 
