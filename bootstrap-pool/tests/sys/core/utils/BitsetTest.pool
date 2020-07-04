@@ -11,6 +11,7 @@ class BitsetTest extends test::TestCase {
 
     [] runAll() {
         this.testNumberOfSetBits();
+        this.testCountZeros();
     }
     
     [int] testNumberOfSetBits() {
@@ -33,5 +34,42 @@ class BitsetTest extends test::TestCase {
         String message = this.createOwn(String:CLASSNAME);
         message.printCString("Case ").printPtr(input).printCString(" => ").printInt(expected).printCString(" != ").printInt(result);
         return this.failCase(message.ostream());
+    }
+    
+    [int] testCountZeros() {
+        this.startCases("testCountZeros");
+        
+        this.caseCountZeros(0x00000000, 32, 32);
+        this.caseCountZeros(0x00000001, 31,  0);
+        this.caseCountZeros(0x00000002, 30,  1);
+        this.caseCountZeros(0x00000004, 29,  2);
+        this.caseCountZeros(0x00123400, 11, 10);
+        this.caseCountZeros(0x20000000,  2, 29);
+        this.caseCountZeros(0x40000000,  1, 30);
+        this.caseCountZeros(0x80000000,  0, 31);
+        this.caseCountZeros(0xFFFFFFFF,  0,  0);
+        
+        return this.successCases();
+    }
+    
+    [int] caseCountZeros(int input, int leading, int trailing) {
+        {
+            int result = Bitset:countLeadingZeros(input);
+            if (result != leading) {
+                String message = this.createOwn(String:CLASSNAME);
+                message.printCString("Case leading ").printPtr(input).printCString(" => ").printInt(leading).printCString(" != ").printInt(result);
+                return this.failCase(message.ostream());
+            }
+        }
+        {
+            int result = Bitset:countTrailingZeros(input);
+            if (result != trailing) {
+                String message = this.createOwn(String:CLASSNAME);
+                message.printCString("Case trailing ").printPtr(input).printCString(" => ").printInt(trailing).printCString(" != ").printInt(result);
+                return this.failCase(message.ostream());
+            }
+        }
+        
+        return this.successCase();
     }
 }

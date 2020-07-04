@@ -124,4 +124,26 @@ class Bitset {
         ">, {"%eax": n}, {"%eax": ret});
         return ret;
     }
+    
+    global [int] countTrailingZeros(int n) {
+        if (n == 0) { return 32; }
+        int c = 0;
+        if (!Bitset:and(n, 0x0000FFFF)) { c += 16; n = Bitset:rshift(n, 16); }    
+        if (!Bitset:and(n, 0x000000FF)) { c += 8; n = Bitset:rshift(n, 8); }    
+        if (!Bitset:and(n, 0x0000000F)) { c += 4; n = Bitset:rshift(n, 4); }    
+        if (!Bitset:and(n, 0x00000003)) { c += 2; n = Bitset:rshift(n, 2); }    
+        if (!Bitset:and(n, 0x00000001)) { c += 1; }
+        return c;    
+    }
+    
+    global [int] countLeadingZeros(int n) {
+        if (n == 0) { return 32; }
+        int c = 0;
+        if (!Bitset:and(n, 0xFFFF0000)) { c += 16; n = Bitset:lshift(n, 16); }    
+        if (!Bitset:and(n, 0xFF000000)) { c += 8; n = Bitset:lshift(n, 8); }    
+        if (!Bitset:and(n, 0xF0000000)) { c += 4; n = Bitset:lshift(n, 4); }    
+        if (!Bitset:and(n, 0xC0000000)) { c += 2; n = Bitset:lshift(n, 2); }    
+        if (!Bitset:and(n, 0x80000000)) { c += 1; }
+        return c;    
+    }
 }
