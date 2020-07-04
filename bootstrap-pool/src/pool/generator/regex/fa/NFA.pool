@@ -5,7 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::regex::fa;
 
-use pool::generator::regex::node::CharClass;
+use pool::generator::CharSet;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
@@ -16,7 +16,7 @@ use sys::stream::OStream;
 
 class NFA extends sys::core::Object {
 
-    CharClass cs; // TODO switch to pool::generator::CharSet
+    CharSet cs;
     NFA next;
     AnyList eps; // List<NFA>
     NFA terminal;
@@ -29,7 +29,7 @@ class NFA extends sys::core::Object {
     
     [NFA] setTerminal(NFA n) { this.terminal = n; return this; }
     [NFA] getTerminal() { return this.terminal; }
-    [NFA] setNext(CharClass cs, NFA n) { this.cs = cs; this.next = n; return this; }
+    [NFA] setNext(CharSet cs, NFA n) { this.cs = cs; this.next = n; return this; }
     [NFA] addEps(NFA n) { if (!eps.contains(n)) { eps.add(n); } return this; }
     
     // debug

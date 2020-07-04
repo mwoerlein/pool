@@ -48,7 +48,7 @@ class BaseParser extends pool::generator::regex::node::Factory, pool::generator:
     [Node] listToNode(List l) { return l.node(); }
     [Node] ccToNode(CharClass cc) { return cc.node(); }
     [Node] ccToExclusiveNode(CharClass cc) { return cc.setExclusive().node(); }
-    [CharClass] ccAddChar(CharClass cc, int a) { return cc.setChar(a); }
-    [CharClass] ccAddRange(CharClass cc, int a, int b) { return cc.setRange(a, b); }
+    [CharClass] ccAddChar(CharClass cc, int a) { cc.setChar(a); return cc;}
+    [CharClass] ccAddRange(CharClass cc, int a, int b) { cc.setRange(a, b); return cc;}
     
 }

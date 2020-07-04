@@ -1,0 +1,167 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator;
+
+use sys::core::utils::Bitset;
+
+class CharSet extends sys::core::Object {
+
+    int bits0;
+    int bits1;
+    int bits2;
+    int bits3;
+    int bits4;
+    int bits5;
+    int bits6;
+    int bits7;
+    
+    [CharSet] setAll() {
+        bits0 = bits1 = bits2 = bits3 = bits4 = bits5 = bits6 = bits7 = Bitset:ALL;
+        return this;
+    }
+    
+    [CharSet] setNone() {
+        bits0 = bits1 = bits2 = bits3 = bits4 = bits5 = bits6 = bits7 = Bitset:NONE;
+        return this;
+    }
+    
+    [CharSet] setRange(int a, int b) {
+        int i = a;
+        while (i <= b) { this.setChar(i++); }    
+        return this;
+    }
+    
+    [CharSet] setChar(int c) {
+        if (c < 0 || c > 255) { return this; }
+        
+        int _b := Bitset:and(0x1f, c);
+        if (c <  32) { bits0 = Bitset:set(bits0, _b); return this; }
+        if (c <  64) { bits1 = Bitset:set(bits1, _b); return this; }
+        if (c <  96) { bits2 = Bitset:set(bits2, _b); return this; }
+        if (c < 128) { bits3 = Bitset:set(bits3, _b); return this; }
+        if (c < 160) { bits4 = Bitset:set(bits4, _b); return this; }
+        if (c < 192) { bits5 = Bitset:set(bits5, _b); return this; }
+        if (c < 224) { bits6 = Bitset:set(bits6, _b); return this; }
+        if (c < 256) { bits7 = Bitset:set(bits7, _b); return this; }
+        return this;
+    }
+    
+    [CharSet] setCharSet(CharSet cs) {
+        bits0 = Bitset:or(bits0, cs.bits0);
+        bits1 = Bitset:or(bits1, cs.bits1);
+        bits2 = Bitset:or(bits2, cs.bits2);
+        bits3 = Bitset:or(bits3, cs.bits3);
+        bits4 = Bitset:or(bits4, cs.bits4);
+        bits5 = Bitset:or(bits5, cs.bits5);
+        bits6 = Bitset:or(bits6, cs.bits6);
+        bits7 = Bitset:or(bits7, cs.bits7);
+        return this;
+    }
+    
+    [CharSet] flip() {
+        bits0 = Bitset:xor(bits0, Bitset:ALL);
+        bits1 = Bitset:xor(bits1, Bitset:ALL);
+        bits2 = Bitset:xor(bits2, Bitset:ALL);
+        bits3 = Bitset:xor(bits3, Bitset:ALL);
+        bits4 = Bitset:xor(bits4, Bitset:ALL);
+        bits5 = Bitset:xor(bits5, Bitset:ALL);
+        bits6 = Bitset:xor(bits6, Bitset:ALL);
+        bits7 = Bitset:xor(bits7, Bitset:ALL);
+        return this;
+    }
+    
+    [int] isAll() {
+        return (bits0 == Bitset:ALL) && (bits1 == Bitset:ALL) && (bits2 == Bitset:ALL) && (bits3 == Bitset:ALL)
+            && (bits4 == Bitset:ALL) && (bits5 == Bitset:ALL) && (bits6 == Bitset:ALL) && (bits7 == Bitset:ALL);
+    }
+    
+    [int] isNone() {
+        return (bits0 == Bitset:NONE) && (bits1 == Bitset:NONE) && (bits2 == Bitset:NONE) && (bits3 == Bitset:NONE)
+            && (bits4 == Bitset:NONE) && (bits5 == Bitset:NONE) && (bits6 == Bitset:NONE) && (bits7 == Bitset:NONE);
+    }
+    
+    [int] hasChar(int c) {
+        if (c < 0 || c > 255) { return false; }
+        
+        int _b := Bitset:and(0x1f, c);
+        if (c <  32) { return Bitset:isset(bits0, _b); }
+        if (c <  64) { return Bitset:isset(bits1, _b); }
+        if (c <  96) { return Bitset:isset(bits2, _b); }
+        if (c < 128) { return Bitset:isset(bits3, _b); }
+        if (c < 160) { return Bitset:isset(bits4, _b); }
+        if (c < 192) { return Bitset:isset(bits5, _b); }
+        if (c < 224) { return Bitset:isset(bits6, _b); }
+        if (c < 256) { return Bitset:isset(bits7, _b); }
+        return false;
+    }
+    
+    [int] count() {
+        int c = Bitset:numberOfSetBits(bits0);
+        c += Bitset:numberOfSetBits(bits1);
+        c += Bitset:numberOfSetBits(bits2);
+        c += Bitset:numberOfSetBits(bits3);
+        c += Bitset:numberOfSetBits(bits4);
+        c += Bitset:numberOfSetBits(bits5);
+        c += Bitset:numberOfSetBits(bits6);
+        c += Bitset:numberOfSetBits(bits7);
+        return c;
+    }
+    
+    [int] getLowestChar() {
+        if (bits0 != Bitset:NONE) { return   0 + Bitset:countTrailingZeros(bits0); }
+        if (bits1 != Bitset:NONE) { return  32 + Bitset:countTrailingZeros(bits1); }
+        if (bits2 != Bitset:NONE) { return  64 + Bitset:countTrailingZeros(bits2); }
+        if (bits3 != Bitset:NONE) { return  96 + Bitset:countTrailingZeros(bits3); }
+        if (bits4 != Bitset:NONE) { return 128 + Bitset:countTrailingZeros(bits4); }
+        if (bits5 != Bitset:NONE) { return 160 + Bitset:countTrailingZeros(bits5); }
+        if (bits6 != Bitset:NONE) { return 192 + Bitset:countTrailingZeros(bits6); }
+        if (bits7 != Bitset:NONE) { return 224 + Bitset:countTrailingZeros(bits7); }
+        return 256;
+    }
+    
+    [int] getHighestChar() {
+        if (bits7 != Bitset:NONE) { return 255 - Bitset:countLeadingZeros(bits7); }
+        if (bits6 != Bitset:NONE) { return 223 - Bitset:countLeadingZeros(bits6); }
+        if (bits5 != Bitset:NONE) { return 191 - Bitset:countLeadingZeros(bits5); }
+        if (bits4 != Bitset:NONE) { return 159 - Bitset:countLeadingZeros(bits4); }
+        if (bits3 != Bitset:NONE) { return 127 - Bitset:countLeadingZeros(bits3); }
+        if (bits2 != Bitset:NONE) { return  95 - Bitset:countLeadingZeros(bits2); }
+        if (bits1 != Bitset:NONE) { return  63 - Bitset:countLeadingZeros(bits1); }
+        if (bits0 != Bitset:NONE) { return  31 - Bitset:countLeadingZeros(bits0); }
+        return -1;
+    }
+    
+    [int] hash() { return this._hashCharSet(); }
+    [int] equals(__any__ obj) {
+        CharSet c = this.rt().cast(CharSet:CLASSNAME, obj);
+        return c && this._equalsCharSet(c);
+    }
+    
+    [int] _hashCharSet() {
+        int h = Bitset:xor(bits0, bits1);
+        h = Bitset:xor(h, bits2);
+        h = Bitset:xor(h, bits3);
+        h = Bitset:xor(h, bits4);
+        h = Bitset:xor(h, bits5);
+        h = Bitset:xor(h, bits6);
+        h = Bitset:xor(h, bits7);
+        return h;
+    }
+    
+    [int] _equalsCharSet(CharSet c) {
+        return (this.bits0 == c.bits0)
+            && (this.bits1 == c.bits1)
+            && (this.bits2 == c.bits2)
+            && (this.bits3 == c.bits3)
+            && (this.bits4 == c.bits4)
+            && (this.bits5 == c.bits5)
+            && (this.bits6 == c.bits6)
+            && (this.bits7 == c.bits7);
+    }
+    
+    // TODO: remove with implicit cast
+    [CharSet] charset() { return this; }
+}

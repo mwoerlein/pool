@@ -5,125 +5,45 @@ version = 0.1.0
 */
 namespace pool::generator::regex::node;
 
+use pool::generator::CharSet;
 use pool::generator::regex::fa::NFA;
 
-use sys::core::utils::Bitset;
 use sys::stream::OStream;
 
-class CharClass extends Node {
+class CharClass extends Node, CharSet {
 
     int exclusive;
-    // TODO extract/wrap pool::generator::CharSet
-    int bits0;
-    int bits1;
-    int bits2;
-    int bits3;
-    int bits4;
-    int bits5;
-    int bits6;
-    int bits7;
-    
-    int _count;
-    int _first;
     
     [CharClass] setExclusive() { this.exclusive = true; return this; }
-        
-    [CharClass] setAll() {
-        bits0 = bits1 = bits2 = bits3 = bits4 = bits5 = bits6 = bits7 = -1;
-        _count = 256;
-        return this;
-    }
+    [int] isExclusive() { return this.exclusive; }
+ 
+    [int] hash() { return this._hashCharSet() + exclusive; }
     
-    [CharClass] setRange(int a, int b) {
-        int i = a;
-        while (i <= b) { this.setChar(i++); }    
-        return this;
-    }
-    
-    [CharClass] setChar(int c) {
-        if (c < 0 || c > 255) { return this; }
-        
-        int _b := Bitset:and(0x1f, c);
-        if (!_count++) { _first = c; }
-        if (c <  32) { bits0 = Bitset:set(bits0, _b); return this; }
-        if (c <  64) { bits1 = Bitset:set(bits1, _b); return this; }
-        if (c <  96) { bits2 = Bitset:set(bits2, _b); return this; }
-        if (c < 128) { bits3 = Bitset:set(bits3, _b); return this; }
-        if (c < 160) { bits4 = Bitset:set(bits4, _b); return this; }
-        if (c < 192) { bits5 = Bitset:set(bits5, _b); return this; }
-        if (c < 224) { bits6 = Bitset:set(bits6, _b); return this; }
-        if (c < 256) { bits7 = Bitset:set(bits7, _b); return this; }
-        return this;
-    }
-    
-    [int] hasChar(int c) {
-        if (c < 0 || c > 255) { return false; }
-        
-        int _b := Bitset:and(0x1f, c);
-        if (c <  32) { return Bitset:isset(bits0, _b); }
-        if (c <  64) { return Bitset:isset(bits1, _b); }
-        if (c <  96) { return Bitset:isset(bits2, _b); }
-        if (c < 128) { return Bitset:isset(bits3, _b); }
-        if (c < 160) { return Bitset:isset(bits4, _b); }
-        if (c < 192) { return Bitset:isset(bits5, _b); }
-        if (c < 224) { return Bitset:isset(bits6, _b); }
-        if (c < 256) { return Bitset:isset(bits7, _b); }
-        return false;
-    }
-    
-    [int] isAll() {
-        return (bits0 == -1) && (bits1 == -1) && (bits2 == -1) && (bits3 == -1)
-            && (bits4 == -1) && (bits5 == -1) && (bits6 == -1) && (bits7 == -1);
-    }
-    [int] isSingle() { return _count == 1; }
-    [int] getSingle() { return this._first; }
-
-    [int] contains(int c) {
-        if (c < 0 || c > 255) { return false; }
-        return this.hasChar(c) != exclusive;
-    }
-    
-    [int] hash() {
-        int h = Bitset:xor(bits0, bits1);
-        h = Bitset:xor(h, bits2);
-        h = Bitset:xor(h, bits3);
-        h = Bitset:xor(h, bits4);
-        h = Bitset:xor(h, bits5);
-        h = Bitset:xor(h, bits6);
-        h = Bitset:xor(h, bits7);
-        return Bitset:lrotate(h, exclusive);
-    }
     [int] equals(__any__ obj) {
         CharClass c = this.rt().cast(CharClass:CLASSNAME, obj);
-        if (c && (this.exclusive == c.exclusive)) {
-            return (this.bits0 == c.bits0)
-                && (this.bits1 == c.bits1)
-                && (this.bits2 == c.bits2)
-                && (this.bits3 == c.bits3)
-                && (this.bits4 == c.bits4)
-                && (this.bits5 == c.bits5)
-                && (this.bits6 == c.bits6)
-                && (this.bits7 == c.bits7);
+        if (c) {
+            return (this.exclusive == c.exclusive) && this._equalsCharSet(c.charset());
         }
         return false;
     }
     
     [OStream] printToStream(OStream stream) {
-        if (!exclusive) {
-            if (this.isSingle()) {
-                return this._formatChar(stream, this.getSingle());
+        if (!this.exclusive && this.isAll()) {
+            return stream.printChar('.');
+        }
+        int lc = this.getLowestChar();
+        int hc = this.getHighestChar();
+        if (!this.exclusive) {
+            if (lc == hc) {
+                return this._formatChar(stream, lc);
             }
-            if (this.isAll()) {
-                return stream.printChar('.');
-            }
-            
             stream.printChar('[');
         } else {
             stream.printChar('[').printChar('^');
         }
         
-        int cur = 0;
-        while (cur < 256) {
+        int cur = lc;
+        while (cur <= hc) {
             if (this.hasChar(cur)) {
                 this._formatChar(stream, cur);
                 if (this.hasChar(cur+1) && this.hasChar(cur+2)) {
@@ -150,9 +70,14 @@ class CharClass extends Node {
 
     [NFA] toNFA() {
         NFA start = this.createOwn(NFA:CLASSNAME);
+        
         NFA terminal = start.createOwn(NFA:CLASSNAME);
         start.setTerminal(terminal.setTerminal(terminal));
         
-        return start.setNext(this, terminal);
+        CharSet cs = start.createOwn(CharSet:CLASSNAME);
+        cs.setCharSet(this.charset());
+        if (exclusive) { cs.flip(); }
+        
+        return start.setNext(cs, terminal);
     }
 }

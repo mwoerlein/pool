@@ -5,7 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer::dfa;
 
-use pool::generator::regex::node::CharClass; // TODO switch to pool::generator::CharSet
+use pool::generator::CharSet;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
@@ -14,7 +14,7 @@ use sys::core::anycollection::AnyMapEntryIterator;
 class State extends sys::core::Object {
 
     int id;
-    AnyMap actions; // HashMap<CharClass, Action>
+    AnyMap actions; // HashMap<CharSet, Action>
     Action terminal;
 
     [] __init() {
@@ -25,7 +25,7 @@ class State extends sys::core::Object {
     [State] setId(int id) { this.id = id; return this; }
     [int] getId() { return id; }
     
-    [State] addAction(CharClass cs, Action a) { actions.set(cs, a); return this; }
+    [State] addAction(CharSet cs, Action a) { actions.set(cs, a); return this; }
     [AnyMapEntryIterator] actions() { return actions.entries(); }
     
     [State] addTerminalAction(Action a) { terminal = a; return this; }

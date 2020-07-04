@@ -5,9 +5,9 @@ version = 0.1.0
 */
 namespace pool::generator::tokenizer;
 
+use pool::generator::CharSet;
 use pool::generator::Symbol;
 use pool::generator::SymbolTable;
-use pool::generator::regex::node::CharClass;
 
 use pool::generator::tokenizer::dfa::Action;
 use pool::generator::tokenizer::dfa::DFA;
@@ -185,36 +185,40 @@ version = 0.1.0
         int pos = 0;
         AnyMapEntryIterator ait = s.actions();
         while ((pos >= 0) && ait.hasNext()) {
-            [CharClass cs, Action a] := ait.nextPair();
+            [CharSet cs, Action a] := ait.nextPair();
             if (pos++ == 0) {
                 out.printCString("               ");
             } else {
                 out.printCString("                else");
             }
-            if (cs.isSingle()) {
-                out.printCString(" if (c == ").printInt(cs.getSingle()).printChar(')');
-            } else if (cs.isAll()) {
+            if (cs.isAll()) {
                 // abort after this action
                 pos = -1;
             } else {
-                out.printCString(" if (");
-                int i = 0;
-                int cur = 0;
-                while (cur < 256) {
-                    if (cs.hasChar(cur)) {
-                        if (i++) { out.printCString(" || "); }
-                        if (cs.hasChar(cur+1) && cs.hasChar(cur+2)) {
-                            int start = cur;
-                            // skip consecutive characters
-                            while (cs.hasChar(++cur)) {}
-                            out.printCString("((c >= ").printInt(start).printCString(") && (c <= ").printInt(--cur).printCString("))");
-                        } else {
-                            out.printCString("(c == ").printInt(cur).printChar(')');
+                int lc = cs.getLowestChar();
+                int hc = cs.getHighestChar();
+                if (lc == hc) {
+                    out.printCString(" if (c == ").printInt(lc).printChar(')');
+                } else {
+                    out.printCString(" if (");
+                    int i = 0;
+                    int cur = lc;
+                    while (cur <= hc) {
+                        if (cs.hasChar(cur)) {
+                            if (i++) { out.printCString(" || "); }
+                            if (cs.hasChar(cur+1) && cs.hasChar(cur+2)) {
+                                int start = cur;
+                                // skip consecutive characters
+                                while (cs.hasChar(++cur)) {}
+                                out.printCString("((c >= ").printInt(start).printCString(") && (c <= ").printInt(--cur).printCString("))");
+                            } else {
+                                out.printCString("(c == ").printInt(cur).printChar(')');
+                            }
                         }
+                        cur++;
                     }
-                    cur++;
+                    out.printChar(')');
                 }
-                out.printChar(')');
             }
             this._genBlockForAction(a, classname, out);
         }

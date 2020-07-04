@@ -11,9 +11,9 @@ class Factory extends sys::core::Object {
     [List] list() { return this.rt().createInstance(List:CLASSNAME); }
     [Repeat] rep() { return this.rt().createInstance(Repeat:CLASSNAME); }
     
-    [Node] all()                { return this.cc().setAll().node(); }
-    [Node] single(int a)        { return this.cc().setChar(a).node(); }
-    [Node] range(int a, int b)  { return this.cc().setRange(a, b).node(); }
+    [Node] all()                { CharClass cc = this.cc(); cc.setAll(); return cc.node(); }
+    [Node] single(int a)        { CharClass cc = this.cc(); cc.setChar(a); return cc.node(); }
+    [Node] range(int a, int b)  { CharClass cc = this.cc(); cc.setRange(a, b); return cc.node(); }
     [Node] any(Node n)          { return this.rep().init(Repeat:KIND_ANY, n).node(); }
     [Node] atLeastOnce(Node n)  { return this.rep().init(Repeat:KIND_AT_LEAST_ONCE, n).node(); }
     [Node] atMostOnce(Node n)   { return this.rep().init(Repeat:KIND_AT_MOST_ONCE, n).node(); }
