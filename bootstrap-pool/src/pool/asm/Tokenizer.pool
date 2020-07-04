@@ -58,21 +58,21 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == 35) { this._consume(); state = 4; }
                 else if (c == 37) { this._consume(); state = 5; }
                 else if (c == 39) { this._consume(); state = 6; }
-                else if (c == 40) { this._consume(); state = 7; }
-                else if (c == 41) { this._consume(); state = 8; }
-                else if (c == 42) { this._consume(); state = 9; }
-                else if (c == 43) { this._consume(); state = 10; }
-                else if (c == 44) { this._consume(); state = 11; }
-                else if (c == 45) { this._consume(); state = 12; }
-                else if (c == 46) { this._consume(); state = 13; }
-                else if (c == 47) { this._consume(); state = 14; }
-                else if (c == 48) { this._consume(); state = 15; }
-                else if (((c >= 49) && (c <= 57))) { this._consume(); state = 16; }
-                else if (c == 58) { this._consume(); state = 17; }
-                else if (c == 59) { this._consume(); state = 18; }
-                else if (c == 60) { this._consume(); state = 19; }
-                else if (c == 62) { this._consume(); state = 20; }
-                else if (((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 21; }
+                else if (c == 40) { this._consume(); return this._buildNextToken(Tokenizer:T_OBRACKET); }
+                else if (c == 41) { this._consume(); return this._buildNextToken(Tokenizer:T_CBRACKET); }
+                else if (c == 42) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
+                else if (c == 43) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
+                else if (c == 44) { this._consume(); return this._buildNextToken(Tokenizer:T_COMMA); }
+                else if (c == 45) { this._consume(); state = 7; }
+                else if (c == 46) { this._consume(); state = 8; }
+                else if (c == 47) { this._consume(); state = 9; }
+                else if (c == 48) { this._consume(); state = 10; }
+                else if (((c >= 49) && (c <= 57))) { this._consume(); state = 11; }
+                else if (c == 58) { this._consume(); state = 12; }
+                else if (c == 59) { this._consume(); return this._buildNextToken(Tokenizer:T_SEMICOLON); }
+                else if (c == 60) { this._consume(); state = 13; }
+                else if (c == 62) { this._consume(); state = 14; }
+                else if (((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 15; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 1) {
                 if ((c == 9) || (c == 32)) { this._consume(); state = 1; }
@@ -81,160 +81,136 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 if ((c == 10) || (c == 13)) { this._consume(); state = 2; }
                 else { return this._buildNextToken(Tokenizer:T_NEWLINE); }
             } else if (state == 3) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 22; }
-                else if (c == 34) { this._consume(); state = 23; }
-                else if (c == 92) { this._consume(); state = 24; }
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 16; }
+                else if (c == 34) { this._consume(); return this._buildNextToken(Tokenizer:T_STRING); }
+                else if (c == 92) { this._consume(); state = 17; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 4) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 25; }
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 18; }
                 else { return this._buildNextToken(Tokenizer:T_COMMENT); }
             } else if (state == 5) {
-                if (((c >= 65) && (c <= 90)) || ((c >= 97) && (c <= 122))) { this._consume(); state = 26; }
+                if (((c >= 65) && (c <= 90)) || ((c >= 97) && (c <= 122))) { this._consume(); state = 19; }
                 else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
             } else if (state == 6) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 38)) || ((c >= 40) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 27; }
-                else if (c == 39) { this._consume(); state = 28; }
-                else if (c == 92) { this._consume(); state = 29; }
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 38)) || ((c >= 40) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 20; }
+                else if (c == 39) { this._consume(); return this._buildNextToken(Tokenizer:T_CHAR); }
+                else if (c == 92) { this._consume(); state = 21; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 7) {
-                { return this._buildNextToken(Tokenizer:T_OBRACKET); }
+                if (c == 48) { this._consume(); state = 10; }
+                else if (((c >= 49) && (c <= 57))) { this._consume(); state = 11; }
+                else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
             } else if (state == 8) {
-                { return this._buildNextToken(Tokenizer:T_CBRACKET); }
-            } else if (state == 9) {
-                { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-            } else if (state == 10) {
-                { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-            } else if (state == 11) {
-                { return this._buildNextToken(Tokenizer:T_COMMA); }
-            } else if (state == 12) {
-                if (c == 48) { this._consume(); state = 15; }
-                else if (((c >= 49) && (c <= 57))) { this._consume(); state = 16; }
-                else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-            } else if (state == 13) {
-                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 30; }
+                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 22; }
                 else { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
-            } else if (state == 14) {
-                if (c == 42) { this._consume(); state = 31; }
-                else if (c == 47) { this._consume(); state = 32; }
+            } else if (state == 9) {
+                if (c == 42) { this._consume(); state = 23; }
+                else if (c == 47) { this._consume(); state = 24; }
                 else { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-            } else if (state == 15) {
-                if (((c >= 48) && (c <= 55))) { this._consume(); state = 33; }
-                else if ((c == 66) || (c == 98)) { this._consume(); state = 34; }
-                else if ((c == 88) || (c == 120)) { this._consume(); state = 35; }
+            } else if (state == 10) {
+                if (((c >= 48) && (c <= 55))) { this._consume(); state = 25; }
+                else if ((c == 66) || (c == 98)) { this._consume(); state = 26; }
+                else if ((c == 88) || (c == 120)) { this._consume(); state = 27; }
                 else { return this._buildNextToken(Tokenizer:T_NUMBER); }
-            } else if (state == 16) {
-                if (((c >= 48) && (c <= 57))) { this._consume(); state = 36; }
+            } else if (state == 11) {
+                if (((c >= 48) && (c <= 57))) { this._consume(); state = 28; }
                 else { return this._buildNextToken(Tokenizer:T_NUMBER); }
-            } else if (state == 17) {
-                if (c == 61) { this._consume(); state = 37; }
+            } else if (state == 12) {
+                if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_ASSIGN); }
                 else { return this._buildNextToken(Tokenizer:T_COLON); }
-            } else if (state == 18) {
-                { return this._buildNextToken(Tokenizer:T_SEMICOLON); }
-            } else if (state == 19) {
-                if (c == 60) { this._consume(); state = 38; }
+            } else if (state == 13) {
+                if (c == 60) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
+            } else if (state == 14) {
+                if (c == 62) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+            } else if (state == 15) {
+                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 22; }
+                else { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+            } else if (state == 16) {
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 16; }
+                else if (c == 34) { this._consume(); return this._buildNextToken(Tokenizer:T_STRING); }
+                else if (c == 92) { this._consume(); state = 17; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+            } else if (state == 17) {
+                if (((c >= 0) && (c <= 8)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 29; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+            } else if (state == 18) {
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 18; }
+                else { return this._buildNextToken(Tokenizer:T_COMMENT); }
+            } else if (state == 19) {
+                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 30; }
+                else { return this._buildNextToken(Tokenizer:T_REGISTER); }
             } else if (state == 20) {
-                if (c == 62) { this._consume(); state = 39; }
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 38)) || ((c >= 40) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 20; }
+                else if (c == 39) { this._consume(); return this._buildNextToken(Tokenizer:T_CHAR); }
+                else if (c == 92) { this._consume(); state = 21; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 21) {
-                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 30; }
-                else { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+                if (((c >= 0) && (c <= 8)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 31; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 22) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 22; }
-                else if (c == 34) { this._consume(); state = 23; }
-                else if (c == 92) { this._consume(); state = 24; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 22; }
+                else { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
             } else if (state == 23) {
-                { return this._buildNextToken(Tokenizer:T_STRING); }
-            } else if (state == 24) {
-                if (((c >= 0) && (c <= 8)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 40; }
+                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 32; }
+                else if (c == 42) { this._consume(); state = 33; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 25) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 25; }
+            } else if (state == 24) {
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 18; }
                 else { return this._buildNextToken(Tokenizer:T_COMMENT); }
+            } else if (state == 25) {
+                if (((c >= 48) && (c <= 55))) { this._consume(); state = 25; }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 26) {
-                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 41; }
-                else { return this._buildNextToken(Tokenizer:T_REGISTER); }
+                if ((c == 48) || (c == 49)) { this._consume(); state = 34; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 27) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 38)) || ((c >= 40) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 27; }
-                else if (c == 39) { this._consume(); state = 28; }
-                else if (c == 92) { this._consume(); state = 29; }
+                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 70)) || ((c >= 97) && (c <= 102))) { this._consume(); state = 35; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 28) {
-                { return this._buildNextToken(Tokenizer:T_CHAR); }
+                if (((c >= 48) && (c <= 57))) { this._consume(); state = 28; }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 29) {
-                if (((c >= 0) && (c <= 8)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 42; }
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 16; }
+                else if (c == 34) { this._consume(); return this._buildNextToken(Tokenizer:T_STRING); }
+                else if (c == 92) { this._consume(); state = 17; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 30) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 30; }
-                else { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+                else { return this._buildNextToken(Tokenizer:T_REGISTER); }
             } else if (state == 31) {
-                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 43; }
-                else if (c == 42) { this._consume(); state = 44; }
+                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 38)) || ((c >= 40) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 20; }
+                else if (c == 39) { this._consume(); return this._buildNextToken(Tokenizer:T_CHAR); }
+                else if (c == 92) { this._consume(); state = 21; }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 32) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 25; }
-                else { return this._buildNextToken(Tokenizer:T_COMMENT); }
+                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 32; }
+                else if (c == 42) { this._consume(); state = 33; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 33) {
-                if (((c >= 48) && (c <= 55))) { this._consume(); state = 33; }
-                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
+                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 46)) || ((c >= 48) && (c <= 255))) { this._consume(); state = 36; }
+                else if (c == 42) { this._consume(); state = 33; }
+                else if (c == 47) { this._consume(); return this._buildNextToken(Tokenizer:T_MLCOMMENT); }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 34) {
-                if ((c == 48) || (c == 49)) { this._consume(); state = 45; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+                if ((c == 48) || (c == 49)) { this._consume(); state = 34; }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 35) {
-                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 70)) || ((c >= 97) && (c <= 102))) { this._consume(); state = 46; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
+                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 70)) || ((c >= 97) && (c <= 102))) { this._consume(); state = 35; }
+                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 36) {
-                if (((c >= 48) && (c <= 57))) { this._consume(); state = 36; }
-                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
+                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 37; }
+                else if (c == 42) { this._consume(); state = 38; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 37) {
-                { return this._buildNextToken(Tokenizer:T_ASSIGN); }
+                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 37; }
+                else if (c == 42) { this._consume(); state = 38; }
+                else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 38) {
-                { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-            } else if (state == 39) {
-                { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-            } else if (state == 40) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 22; }
-                else if (c == 34) { this._consume(); state = 23; }
-                else if (c == 92) { this._consume(); state = 24; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 41) {
-                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 41; }
-                else { return this._buildNextToken(Tokenizer:T_REGISTER); }
-            } else if (state == 42) {
-                if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 38)) || ((c >= 40) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 27; }
-                else if (c == 39) { this._consume(); state = 28; }
-                else if (c == 92) { this._consume(); state = 29; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 43) {
-                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 43; }
-                else if (c == 42) { this._consume(); state = 44; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 44) {
-                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 46)) || ((c >= 48) && (c <= 255))) { this._consume(); state = 47; }
-                else if (c == 42) { this._consume(); state = 44; }
-                else if (c == 47) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 45) {
-                if ((c == 48) || (c == 49)) { this._consume(); state = 45; }
-                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
-            } else if (state == 46) {
-                if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 70)) || ((c >= 97) && (c <= 102))) { this._consume(); state = 46; }
-                else { return this._buildNextToken(Tokenizer:T_NUMBER); }
-            } else if (state == 47) {
-                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 49; }
-                else if (c == 42) { this._consume(); state = 50; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 48) {
-                { return this._buildNextToken(Tokenizer:T_MLCOMMENT); }
-            } else if (state == 49) {
-                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 255))) { this._consume(); state = 49; }
-                else if (c == 42) { this._consume(); state = 50; }
-                else { return this._buildNextToken(Tokenizer:T_ERROR); }
-            } else if (state == 50) {
-                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 46)) || ((c >= 48) && (c <= 255))) { this._consume(); state = 47; }
-                else if (c == 42) { this._consume(); state = 50; }
-                else if (c == 47) { this._consume(); state = 48; }
+                if (((c >= 0) && (c <= 41)) || ((c >= 43) && (c <= 46)) || ((c >= 48) && (c <= 255))) { this._consume(); state = 36; }
+                else if (c == 42) { this._consume(); state = 38; }
+                else if (c == 47) { this._consume(); return this._buildNextToken(Tokenizer:T_MLCOMMENT); }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else {
                 this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
@@ -248,50 +224,38 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 4) { return this._buildNextToken(Tokenizer:T_COMMENT); }
         else if (state == 5) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
         else if (state == 6) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 7) { return this._buildNextToken(Tokenizer:T_OBRACKET); }
-        else if (state == 8) { return this._buildNextToken(Tokenizer:T_CBRACKET); }
+        else if (state == 7) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
+        else if (state == 8) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
         else if (state == 9) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-        else if (state == 10) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-        else if (state == 11) { return this._buildNextToken(Tokenizer:T_COMMA); }
-        else if (state == 12) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-        else if (state == 13) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
-        else if (state == 14) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-        else if (state == 15) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 16) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 17) { return this._buildNextToken(Tokenizer:T_COLON); }
-        else if (state == 18) { return this._buildNextToken(Tokenizer:T_SEMICOLON); }
-        else if (state == 19) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 10) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 11) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 12) { return this._buildNextToken(Tokenizer:T_COLON); }
+        else if (state == 13) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 14) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 15) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+        else if (state == 16) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 17) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 18) { return this._buildNextToken(Tokenizer:T_COMMENT); }
+        else if (state == 19) { return this._buildNextToken(Tokenizer:T_REGISTER); }
         else if (state == 20) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 21) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
-        else if (state == 22) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 23) { return this._buildNextToken(Tokenizer:T_STRING); }
-        else if (state == 24) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 25) { return this._buildNextToken(Tokenizer:T_COMMENT); }
-        else if (state == 26) { return this._buildNextToken(Tokenizer:T_REGISTER); }
+        else if (state == 21) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 22) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+        else if (state == 23) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 24) { return this._buildNextToken(Tokenizer:T_COMMENT); }
+        else if (state == 25) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 26) { return this._buildNextToken(Tokenizer:T_ERROR); }
         else if (state == 27) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 28) { return this._buildNextToken(Tokenizer:T_CHAR); }
+        else if (state == 28) { return this._buildNextToken(Tokenizer:T_NUMBER); }
         else if (state == 29) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 30) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }
+        else if (state == 30) { return this._buildNextToken(Tokenizer:T_REGISTER); }
         else if (state == 31) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 32) { return this._buildNextToken(Tokenizer:T_COMMENT); }
-        else if (state == 33) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 34) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 35) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 36) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 37) { return this._buildNextToken(Tokenizer:T_ASSIGN); }
-        else if (state == 38) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-        else if (state == 39) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
-        else if (state == 40) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 41) { return this._buildNextToken(Tokenizer:T_REGISTER); }
-        else if (state == 42) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 43) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 44) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 45) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 46) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 47) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 48) { return this._buildNextToken(Tokenizer:T_MLCOMMENT); }
-        else if (state == 49) { return this._buildNextToken(Tokenizer:T_ERROR); }
-        else if (state == 50) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 32) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 33) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 34) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 35) { return this._buildNextToken(Tokenizer:T_NUMBER); }
+        else if (state == 36) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 37) { return this._buildNextToken(Tokenizer:T_ERROR); }
+        else if (state == 38) { return this._buildNextToken(Tokenizer:T_ERROR); }
         return false;
     }
 }

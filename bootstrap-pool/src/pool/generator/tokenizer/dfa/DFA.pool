@@ -19,15 +19,14 @@ use sys::core::anycollection::AnyMapEntryIterator;
 class DFA extends Factory {
 
     AnyMap symbols; // AnyMap<RegexNFA, Symbol>
-    AnyMap states; // AnyMap<RegexNFASet, State>
+    AnyList states; // ArrayList<State>
     State initState;
     RegexNFA overall;
 
     [] __init() {
         symbols = this.createOwn(AnyMap:CLASSNAME);
         symbols.init(13);
-        states = this.createOwn(AnyMap:CLASSNAME);
-        states.init(13);
+        states = this.createOwn(AnyList:CLASSNAME);
         
         overall = symbols.createOwn(RegexNFA:CLASSNAME);
         Symbol errorSymbol = symbols.createOwn(Symbol:CLASSNAME);
@@ -35,7 +34,7 @@ class DFA extends Factory {
     }
     
     [AnyIterator] symbols() { return symbols.values(); }
-    [AnyIterator] states() { return states.values(); }
+    [AnyIterator] states() { return states.iterator(); }
     [State] getInitState() { return initState; }
         
     [DFA] _addTerminal(Symbol symbol, RegexNFA nfa) {
@@ -51,23 +50,19 @@ class DFA extends Factory {
         // HashMap<State, HashMap<State, CharSet>>
         AnyMap transitions = this.rt().createInstance(AnyMap:CLASSNAME);
         transitions.init(13);
+        AnyMap candidates = this.rt().createInstance(AnyMap:CLASSNAME);
+        candidates.init(13);
         {
             AnyList ws = this.rt().createInstance(AnyList:CLASSNAME);
-            RegexNFASet initSet = states.createOwn(RegexNFASet:CLASSNAME);
-            initState = states.createOwn(State:CLASSNAME);
-            initState.setId(states.size());
-            states.set(overall.epsClosure(initSet), initState);
+            RegexNFASet initSet = candidates.createOwn(RegexNFASet:CLASSNAME);
+            initState = candidates.createOwn(State:CLASSNAME);
+            candidates.set(overall.epsClosure(initSet), initState);
             ws.add(initSet);
             
             while (ws.size()) {
                 RegexNFASet set = ws.shift();
-                State state = states.get(set);
-                Symbol terminal = this._findSymbol(set);
-                if (terminal) {
-                    state.addTerminalAction(this.ret(terminal));
-                } else {
-                    state.addTerminalAction(this.ret(errorSymbol));
-                }
+                State state = candidates.get(set);
+                state.setTerminalSymbol(this._findSymbol(set));
 
                 // initialize transition table for current state
                 AnyMap trns = transitions.createOwn(AnyMap:CLASSNAME);
@@ -78,16 +73,15 @@ class DFA extends Factory {
                 while (c < 256) {
                     RegexNFASet movedSet = set.move(c);
                     if (movedSet) {
-                        State movedState = states.get(movedSet);
+                        State movedState = candidates.get(movedSet);
                         if (movedState) {
                             // already known state => use existing set
                             movedSet.destroy();
                         } else {
                             // create new state
-                            states.own(movedSet);
-                            movedState = states.createOwn(State:CLASSNAME);
-                            movedState.setId(states.size());
-                            states.set(movedSet, movedState);
+                            candidates.own(movedSet);
+                            movedState = candidates.createOwn(State:CLASSNAME);
+                            candidates.set(movedSet, movedState);
                             ws.add(movedSet);
                         }
                         
@@ -96,7 +90,6 @@ class DFA extends Factory {
                         if (!cs) {
                             cs = trns.createOwn(CharSet:CLASSNAME);
                             trns.set(movedState, cs);
-                            state.addAction(cs, this.sgoto(movedState));
                         }
                         cs.setChar(c);
                     }
@@ -106,6 +99,42 @@ class DFA extends Factory {
             
             ws.destroy();
         }
+        {
+            AnyMapEntryIterator sourceIt = transitions.entries();
+            while (sourceIt.hasNext()) {
+                [State source, AnyMap trn] = sourceIt.nextPair();
+                Symbol terminal = source.getTerminalSymbol();
+                
+                if (trn.isEmpty() && terminal) {
+                    // terminal states will be inlined
+                } else {
+                    source.setId(states.size());
+                    states.add(source);
+                    states.own(source);
+                    
+                    if (terminal) {
+                        source.addTerminalAction(this.ret(terminal));
+                    } else {
+                        source.addTerminalAction(this.ret(errorSymbol));
+                    }
+                    
+                    AnyMapEntryIterator destIt = trn.entries();
+                    while (destIt.hasNext()) {
+                        [State dest, CharSet cs] = destIt.nextPair();
+                        AnyMap destTrn = transitions.get(dest);
+                        Symbol destTerminal = dest.getTerminalSymbol();
+                        if (destTrn.isEmpty() && destTerminal) {
+                            source.addAction(cs, this.sret(destTerminal));
+                        } else {
+                            source.addAction(cs, this.sgoto(dest));
+                        }
+                    }
+                    destIt.destroy();
+                }
+            }
+            sourceIt.destroy();
+        }
+        candidates.destroy();
         transitions.destroy();
         return this;
     }

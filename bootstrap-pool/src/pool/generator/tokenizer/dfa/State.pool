@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::generator::tokenizer::dfa;
 
 use pool::generator::CharSet;
+use pool::generator::Symbol;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
@@ -15,7 +16,8 @@ class State extends sys::core::Object {
 
     int id;
     AnyMap actions; // HashMap<CharSet, Action>
-    Action terminal;
+    Action terminalAction;
+    Symbol terminalSymbol;
 
     [] __init() {
         actions = this.createOwn(AnyMap:CLASSNAME);
@@ -28,7 +30,10 @@ class State extends sys::core::Object {
     [State] addAction(CharSet cs, Action a) { actions.set(cs, a); return this; }
     [AnyMapEntryIterator] actions() { return actions.entries(); }
     
-    [State] addTerminalAction(Action a) { terminal = a; return this; }
-    [Action] getTerminalAction() { return terminal; } 
+    [State] addTerminalAction(Action a) { terminalAction = a; return this; }
+    [Action] getTerminalAction() { return terminalAction; } 
+    
+    [State] setTerminalSymbol(Symbol s) { terminalSymbol = s; return this; }
+    [Symbol] getTerminalSymbol() { return terminalSymbol; } 
     
 }
