@@ -9,6 +9,8 @@ use pool::generator::CharSet;
 use pool::generator::Symbol;
 use pool::generator::SymbolTable;
 
+use pool::generator::parser::grammar::Grammar;
+
 use pool::generator::tokenizer::dfa::Action;
 use pool::generator::tokenizer::dfa::DFA;
 use pool::generator::tokenizer::dfa::State;
@@ -92,7 +94,11 @@ class Tokenizer extends sys::core::anycollection::AnyIterator, SymbolTable {
     }
     
     // TODO: extract model based src-code generation
-    global [] genClassFromDFA(DFA d, String ns, String classname, OStream out) {
+    global [] genClassFromGrammar(Grammar gram, OStream out) {
+        DFA d = gram.getTokenizerDFA();
+        String ns = gram.getNamespace();
+        String classname = gram.getTokenizerClassname();
+        
         State init = d.getInitState();
         out.printCString(<"
 /*[meta]
