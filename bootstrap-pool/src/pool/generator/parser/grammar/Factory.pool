@@ -63,8 +63,8 @@ class Factory extends sys::core::Object {
             }
             it.destroy();
         }
-        if (errors > 0) { return null; }
-        return g;
+        if (errors > 0) { g.destroy(); return null; }
+        return g._buildActions();
     }
     
     /* 
