@@ -33,6 +33,7 @@ class Rule extends sys::core::Object {
     [Rule] addRHS(Symbol s) { this.rhs.add(s); return this; }
     [int] getRHSSize() { return this.rhs.size(); }
     [AnyIterator] getRHS() { return this.rhs.iterator(); }
+    [Symbol] getRHSat(int pos) { return this.rhs.at(pos); }
     
     [Rule] setCode(cstring code) { this.code.assignCString(code); return this; }
     [String] getCode() { return this.code; }

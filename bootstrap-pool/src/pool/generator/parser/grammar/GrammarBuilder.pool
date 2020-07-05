@@ -1,0 +1,388 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar;
+
+use pool::generator::Symbol;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::anycollection::AnySet;
+use sys::stream::OStream;
+
+class GrammarBuilder extends sys::core::Object {
+
+    Grammar g;
+    GrammarDefinition def;
+    int errors;
+    
+    Rule accept;
+    AnyMap rules; // HashMap<Symbol, List<Rule>>
+    AnySet nullable; // HashSet<Symbol>
+    AnyMap first; // HashMap<Symbol, HashSet<Symbol>>
+    AnyMap follow; // HashMap<Symbol, HashSet<Symbol>>
+    
+    AnyMap states; // HashMap<InfoSet, State>
+    AnyMap transitions; // HashMap<State, HashMap<Symbol, State>>
+    
+    
+    [] __init() {
+        rules = this.createOwn(AnyMap:CLASSNAME);
+        nullable = this.createOwn(AnySet:CLASSNAME);
+        first = this.createOwn(AnyMap:CLASSNAME);
+        follow = this.createOwn(AnyMap:CLASSNAME);
+        states = this.createOwn(AnyMap:CLASSNAME);
+        transitions = this.createOwn(AnyMap:CLASSNAME);
+        
+    }
+    
+    [Grammar] build(GrammarDefinition def, OStream err) {
+        g = this.rt().createInstance(Grammar:CLASSNAME);
+        g.setDefinition(this.def = def);
+        if (!errors) { this._initialize(err); }
+        if (!errors) { this._buildGraph(); }
+        if (!errors) { return g; }
+        g.destroy();
+        return null;
+    }
+    
+    [] _initialize(OStream err) {
+        // init terminals
+        {
+            AnyIterator it = def.tokens();
+            while (it.hasNext()) {
+                Token t = it.next();
+                Symbol s = t.getSymbol();
+                if (g.hasTerminal(s)) {
+                    errors++;
+                    err.printCString("duplicate definition for token: ").print(s.getName()).printNewline();
+                } else {
+                    g.markTerminal(s);
+                    this._initializeSets(s).add(s);
+                }
+            }
+            it.destroy();
+        }
+        // init non-terminals and rules-map
+        {
+            AnyIterator it = def.rules();
+            while (it.hasNext()) {
+                Rule r = it.next();
+                Symbol s = r.getLHS();
+                if (g.hasTerminal(s)) {
+                    errors++;
+                    err.printCString("invalid use as reduction of token: ").print(s.getName()).printNewline();
+                } else if (!g.hasNonTerminal(s)) {
+                    g.markNonTerminal(s);
+                    this._initializeSets(s);
+                }
+                {
+                    if (rules.isEmpty()) { this._initAccept(s); }
+                    AnyList list = rules.get(s);
+                    if (!list) {
+                        list = rules.createOwn(AnyList:CLASSNAME);
+                        rules.set(s, list);
+                    }
+                    list.add(r);
+                }
+            }
+            it.destroy();
+        }
+        // detect undefined symbols
+        {
+            AnyIterator it = def.symbols();
+            while (it.hasNext()) {
+                Symbol s = it.next();
+                if (s.getId() != def.getEOI().getId() && !g.hasTerminal(s) && !g.hasNonTerminal(s)) {
+                    errors++;
+                    err.printCString("undefined symbol: ").print(s.getName()).printNewline();
+                }
+            }
+            it.destroy();
+        }
+        // prepare nullable, first and follow sets
+        {
+            int iter = 0;
+            int changed = true;
+            while (changed) {
+                changed = this._prepareRule(accept);
+                {
+                    AnyIterator it = g.rules();
+                    while (it.hasNext()) {
+                        Rule r = it.next();
+                        if (this._prepareRule(r)) { changed = true; }
+                    }
+                    it.destroy();
+                }
+            }
+        }
+    }
+    
+    [] _initAccept(Symbol s) {
+        accept = this.createOwn(Rule:CLASSNAME);
+        
+        Symbol start = accept.createOwn(Symbol:CLASSNAME);
+        start.setCName("S'");
+        this._initializeSets(start);
+        
+        Symbol end = accept.createOwn(Symbol:CLASSNAME);
+        end.setCName("$");
+        this._initializeSets(end).add(end);
+        
+        accept.setLHS(start).addRHS(s).addRHS(end);
+    }
+    
+    [AnySet] _initializeSets(Symbol s) {
+        AnySet followSet = follow.createOwn(AnySet:CLASSNAME);
+        follow.set(s, followSet);
+        
+        AnySet firstSet = first.createOwn(AnySet:CLASSNAME);
+        first.set(s, firstSet);
+        return firstSet;
+    }
+    
+    [int] _prepareRule(Rule r) {
+        int changed = false;
+        Symbol lhs = r.getLHS();
+        AnySet firstLHS = first.get(lhs);
+        {
+            AnyIterator iit = r.getRHS();
+            int i = 0;
+            int ni = true;
+            while (iit.hasNext()) {
+                Symbol si = iit.next(); i++;
+                AnySet followSi = follow.get(si);
+                if (ni) {
+                    if (firstLHS.addAll(first.get(si))) { changed = true; }
+                    ni = nullable.contains(si);
+                }
+                {
+                    AnyIterator jit = r.getRHS();
+                    int j = 0;
+                    int nj = true;
+                    while (jit.hasNext()) {
+                        Symbol sj = jit.next(); j++;
+                        if (nj && j>i) {
+                            if (followSi.addAll(first.get(sj))) { changed = true; }
+                            nj = nullable.contains(sj);
+                        }
+                    }
+                    if (nj && followSi.addAll(follow.get(lhs))) { changed = true; }
+                    jit.destroy();
+                }
+            }
+            if (ni && !nullable.contains(lhs)) { nullable.add(lhs); changed = true; }
+            iit.destroy();
+        }
+        return changed;
+    }
+
+    [] _buildGraph() {
+        State initState = states.createOwn(State:CLASSNAME);
+        AnySet initSet = states.createOwn(AnySet:CLASSNAME);
+        this._addItems(initSet, accept, 0, null);
+        states.set(this.closure(initSet), initState);
+        
+        AnyList ws = this.rt().createInstance(AnyList:CLASSNAME);
+        ws.add(initSet);
+        
+        while (!ws.isEmpty()) {
+            AnySet set = ws.shift();
+            State state = states.get(set);
+            
+            // initialize transition table for current state
+            AnyMap trns = transitions.createOwn(AnyMap:CLASSNAME);
+            transitions.set(state, trns);
+            
+            {
+                AnyIterator it = def.symbols();
+                while (it.hasNext()) {
+                    Symbol s = it.next();
+                    AnySet nextSet = this.move(set, s);
+                    if (!nextSet.isEmpty()) {
+                        this.closure(nextSet);
+                        State nextState = states.get(nextSet);
+                        if (!nextState) {
+                            nextState = states.createOwn(State:CLASSNAME);
+                            states.set(nextSet, nextState);
+                            states.own(nextSet);
+                            ws.add(nextSet);
+                        } else { nextSet.destroy(); }
+                        trns.set(s, nextState);
+                    } else { nextSet.destroy(); }
+                }
+                it.destroy();
+            }
+            
+        }
+        ws.destroy();
+    }
+    
+    [AnySet] move(AnySet set, Symbol s) {
+        AnySet next = this.rt().createInstance(AnySet:CLASSNAME);
+        {
+            AnyIterator it = set.iterator();
+            while (it.hasNext()) {
+                Item i = it.next();
+                Symbol ns = i.getNextRHS();
+                if (ns && s.equals(ns)) {
+                    this._addItems(next, i.getRule(), i.getPos()+1, i.getLookahead());
+                }
+            }
+            it.destroy();
+        }
+        return next;        
+    }
+    
+    [AnySet] closure(AnySet set) {
+        int iter = 0;
+        int changed = true;
+        while (changed) {
+            changed = false;
+            {
+                AnyIterator it = set.iterator();
+                while (it.hasNext()) {
+                    Item i = it.next();
+                    Symbol next = i.getNextRHS();
+                    if (next) {
+                        AnyList ruleList = rules.get(next);
+                        if (ruleList) {
+                            AnySet la = this._getLookaheadSet(i);
+                            if (!la.isEmpty()) {
+                                AnyIterator rit = ruleList.iterator(); 
+                                while (rit.hasNext()) {
+                                    Rule nr = rit.next();
+                                    if (this._addItems(set, nr, 0, la)) { changed = true; } 
+                                }
+                                rit.destroy();
+                            }
+                            la.destroy();
+                        }
+                    }
+                }
+                it.destroy();
+            }
+        }
+        return set;
+    }
+    
+    [Item] _addItems(AnySet set, Rule r, int pos, AnySet lookahead) {
+        Item ni = this.rt().createInstance(Item:CLASSNAME);
+        ni.setRule(r).setPos(pos);
+        Item i = set.get(ni);
+        
+        int ret = !i;
+        if (ret) { set.add(i = ni); set.own(i); } else { ni.destroy(); }
+        if (lookahead) { ret = i.getLookahead().addAll(lookahead); }
+        if (ret) { return i; }
+        return null;
+    }
+    
+    [AnySet] _getLookaheadSet(Item item) {
+        AnySet la = this.rt().createInstance(AnySet:CLASSNAME); 
+        int pos = item.getPos();
+        int i = 0;
+        {
+            AnyIterator it = item.getRule().getRHS();
+            while (i >= 0 && it.hasNext()) {
+                Symbol rhs = it.next();
+                if (i++ > pos) {
+                    la.addAll(first.get(rhs));
+                    if (!nullable.contains(rhs)) { i = -1; }
+                }
+            }
+            it.destroy();
+        }
+        if (i != -1) {
+            AnyIterator it = item.getLookahead().iterator();
+            while (it.hasNext()) {
+                la.addAll(first.get(it.next()));
+            }
+            it.destroy();
+        }
+        return la;
+    }
+    
+    // DEBUG
+    [OStream] debugNullable(OStream out) {
+        out.printCString("NULLABLE:");
+        AnyIterator it = nullable.iterator();
+        while (it.hasNext()) {
+            out.printChar(' ').print(it.next());
+        }
+        it.destroy();
+        return out.printNewline();
+    }
+    
+    [OStream] debugFirst(OStream out) {
+        out.printCString("FIRST:").printNewline();
+        AnyMapEntryIterator eit = first.entries();
+        while (eit.hasNext()) {
+            [Symbol s, AnySet f] = eit.nextPair();
+            out.printCString("    ").print(s).printChar(':');
+            AnyIterator it = f.iterator();
+            while (it.hasNext()) {
+                out.printChar(' ').print(it.next());
+            }
+            it.destroy();
+            out.printNewline();
+        }
+        eit.destroy();
+        return out;
+    }
+    
+    [OStream] debugFollow(OStream out) {
+        out.printCString("FOLLOW:").printNewline();
+        AnyMapEntryIterator eit = follow.entries();
+        while (eit.hasNext()) {
+            [Symbol s, AnySet f] = eit.nextPair();
+            out.printCString("    ").print(s).printChar(':');
+            AnyIterator it = f.iterator();
+            while (it.hasNext()) {
+                out.printChar(' ').print(it.next());
+            }
+            it.destroy();
+            out.printNewline();
+        }
+        eit.destroy();
+        return out;
+    }
+    
+    [OStream] debugGraph(OStream out) {
+        out.printCString("digraph G {").printNewline();
+        {
+            AnyMapEntryIterator it = states.entries();
+            while (it.hasNext()) {
+                [AnySet set, State s] = it.nextPair();
+                out.printCString("    \"").printPtr(s.getAddress()).printCString("\" [label=\"");
+                AnyIterator iit = set.iterator();
+                if (iit.hasNext()) { out.print(iit.next()); }
+                while (iit.hasNext()) { out.printCString("\n").print(iit.next()); }
+                out.printCString("\"]").printNewline();
+            }
+            it.destroy();
+        }
+        {
+            AnyMapEntryIterator it = transitions.entries();
+            while (it.hasNext()) {
+                [State source, AnyMap destMap] = it.nextPair();
+                AnyMapEntryIterator dit = destMap.entries();
+                while (dit.hasNext()) {
+                    [Symbol s, State dest] = dit.nextPair();
+                    out.printCString("    \"").printPtr(source.getAddress())
+                        .printCString("\" -> \"").printPtr(dest.getAddress())
+                        .printCString("\" [label=\"").print(s).printCString("\"]")
+                        .printNewline();
+                }
+                dit.destroy();
+            }
+            it.destroy();
+        }
+        return out.printCString("}").printNewline();
+    }
+}

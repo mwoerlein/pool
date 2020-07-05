@@ -20,57 +20,23 @@ class Factory extends sys::core::Object {
     [Action] reduce(Rule r) { return this.action().setReduce(r); }
     [Action] shiftReduce(Rule r) { return this.action().setShift(null).setReduce(r); }
     
-    [Grammar] buildGrammar(GrammarDefinition def, OStream err) {
-        Grammar g = this.rt().createInstance(Grammar:CLASSNAME);
-        g.setDefinition(def);
-        int errors = 0;
-        {
-            AnyIterator it = def.tokens();
-            while (it.hasNext()) {
-                Token t = it.next();
-                Symbol s = t.getSymbol();
-                if (g.hasTerminal(s)) {
-                    errors++;
-                    err.printCString("duplicate definition for token: ").print(s.getName()).printNewline();
-                } else {
-                    g.markTerminal(s);
-                }
-            }
-            it.destroy();
-        }
-        {
-            AnyIterator it = def.rules();
-            while (it.hasNext()) {
-                Rule r = it.next();
-                Symbol s = r.getLHS();
-                if (g.hasTerminal(s)) {
-                    errors++;
-                    err.printCString("invalid use as reduction of token: ").print(s.getName()).printNewline();
-                } else if (!g.hasNonTerminal(s)) {
-                    g.markNonTerminal(s);
-                }
-            }
-            it.destroy();
-        }
-        {
-            AnyIterator it = def.symbols();
-            while (it.hasNext()) {
-                Symbol s = it.next();
-                if (s.getId() != def.getEOI().getId() && !g.hasTerminal(s) && !g.hasNonTerminal(s)) {
-                    errors++;
-                    err.printCString("undefined symbol: ").print(s.getName()).printNewline();
-                }
-            }
-            it.destroy();
-        }
-        if (errors > 0) { g.destroy(); return null; }
-        return g._buildActions();
+    [Grammar] buildGrammar(GrammarDefinition def, OStream err, OStream dot) {
+        GrammarBuilder gb = this.rt().createInstance(GrammarBuilder:CLASSNAME);
+        Grammar g = gb.build(def, err);
+        
+//        OStream out = this.rt().out();
+//        gb.debugNullable(out);
+//        gb.debugFirst(out);
+//        gb.debugFollow(out);
+//        gb.debugGraph(dot);
+        
+        return g;
     }
     
     /* 
      * use manually built parse grammar for regexes until pool::generator is finalized
      */
-    [Grammar] buildRegexGrammar(OStream err) {
+    [Grammar] buildRegexGrammar(OStream err, OStream dot) {
         // TODO: parse .gram file to definition
         GrammarDefinition def = this.definition();
 
@@ -154,7 +120,7 @@ class Factory extends sys::core::Object {
         Rule r18 := def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
             .setCode("{ $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }");
 
-        Grammar d = this.buildGrammar(def, err);
+        Grammar d = this.buildGrammar(def, err, dot);
 
         // TODO: generate states/actions/gotos from rules
         State sEMPTY := d.newInitState();
@@ -324,7 +290,7 @@ class Factory extends sys::core::Object {
     /* 
      * use manually built parser grammar for pasm until pool::generator is finalized
      */
-    [Grammar] buildPasmGrammar(OStream err) {
+    [Grammar] buildPasmGrammar(OStream err, OStream dot) {
         // TODO: parse .gram file to definition
         GrammarDefinition def = this.definition();
         
@@ -442,7 +408,7 @@ class Factory extends sys::core::Object {
         Rule r30 := def.newRule(ntFORMULA).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tOPERATOR).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createFormula($2, $3, $4).operand(); }");
 
-        Grammar d = this.buildGrammar(def, err);
+        Grammar d = this.buildGrammar(def, err, dot);
 
         // TODO: generate states/actions/gotos from rules
         State sEMPTY := d.newInitState();

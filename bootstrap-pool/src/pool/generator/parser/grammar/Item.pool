@@ -1,0 +1,63 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar;
+
+use pool::generator::Symbol;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnySet;
+use sys::stream::OStream;
+
+class Item extends sys::core::Object {
+
+    Rule rule;
+    int pos;
+    AnySet lookahead;
+    
+    [] __init() {
+        lookahead = this.createOwn(AnySet:CLASSNAME);
+    }
+
+    [Item] setPos(int p) { this.pos = p; return this; }
+    [int] getPos() { return pos; }
+    
+    [Item] setRule(Rule r) { this.rule = r; return this; }
+    [Rule] getRule() { return rule; }
+    [Symbol] getNextRHS() { return rule.getRHSat(pos); }
+    
+    [int] addLookahead(Symbol s) { return this.lookahead.add(s); }
+    [AnySet] getLookahead() { return lookahead; }
+    
+    [int] hash() { return rule.hash() + pos /*+ lookahead.hash()*/; }
+    [int] equals(__any__ obj) {
+        Item i = this.rt().cast(Item:CLASSNAME, obj);
+        return i && (this.pos == i.pos) && this.rule.equals(i.rule) /*&& this.lookahead.equals(i.lookahead)*/;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.print(rule.getLHS()).printChar(':');
+        {
+            AnyIterator it = rule.getRHS();
+            int i = 0;
+            while (it.hasNext()) {
+                stream.printChar(' ');
+                if (i++ == pos) { stream.printChar('.'); }
+                stream.print(it.next());
+            }
+            if (i == pos) { stream.printChar(' ').printChar('.'); }
+        }
+        stream.printChar(' ').printChar('|');
+        {
+            AnyIterator it = lookahead.iterator();
+            while (it.hasNext()) {
+                stream.printChar(' ').print(it.next());
+            }
+        }
+        return stream;
+    }
+}
