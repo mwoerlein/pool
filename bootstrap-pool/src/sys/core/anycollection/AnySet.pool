@@ -1,0 +1,80 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::anycollection;
+
+use sys::core::Object;
+use sys::core::utils::Bitset;
+
+class AnySet extends AnyCollection {
+
+    AnyMap _elements; // HashMap<TYPE, Object>
+    int _hash;
+
+    [] __init() {
+        _elements = this.createOwn(AnyMap:CLASSNAME);
+        _hash = 0;
+    }
+
+    [] clear() {
+        _elements.clear();
+        _hash = 0;
+    }
+    
+    [int] add(__any__ o) {
+        if (_elements.has(o)) { return false; }
+        Object obj = this.rt().cast(Object:CLASSNAME, o);
+        _elements.set(o, obj);
+        _hash = Bitset:xor(_hash, obj.hash());
+        return true;
+    }
+    
+    [int] addAll(AnySet set) {
+        int changed = false;
+        AnyIterator it = set.iterator();
+        while (it.hasNext()) {
+            if (this.add(it.next())) { changed = true; }
+        }
+        it.destroy();
+        return changed;
+    }
+    
+    [int] remove(__any__ o) {
+        Object obj = _elements.unset(o);
+        if (!obj) { return false; }
+        _hash = Bitset:xor(_hash, obj.hash());
+        return true;
+    }
+    
+    [int] removeAll(AnySet set) {
+        int changed = false;
+        AnyIterator it = set.iterator();
+        while (it.hasNext()) {
+            if (this.remove(it.next())) { changed = true; }
+        }
+        it.destroy();
+        return changed;
+    }
+    
+    [int] contains(__any__ o) { return _elements.has(o); }
+    
+    [int] containsAll(AnySet set) {
+        AnyIterator it = set.iterator();
+        while (it.hasNext()) {
+            if (!this.contains(it.next())) { it.destroy(); return false; }
+        }
+        it.destroy();
+        return true;
+    }
+    
+    [AnyIterator] iterator() { return _elements.keys(); }
+    [int] size() { return _elements.size(); }
+    [int] hash() { return _hash; }
+    [int] equals(__any__ obj) {
+        AnySet set = this.rt().cast(AnySet:CLASSNAME, obj);
+        if (!set || (set.size() != this.size()) || (set.hash() != this.hash())) { return false; }
+        return this.containsAll(set);
+    }
+}

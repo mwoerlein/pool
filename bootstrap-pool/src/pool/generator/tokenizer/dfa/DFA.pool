@@ -139,7 +139,7 @@ class DFA extends Factory {
         AnyMapEntryIterator tit = symbols.entries();
         while (tit.hasNext()) {
             [RegexNFA nfa, Symbol s] = tit.nextPair();
-            if (set.has(nfa)) {
+            if (set.contains(nfa)) {
                 tit.destroy();
                 return s;
             }
