@@ -58,6 +58,7 @@ class AnySet extends AnyCollection {
         return changed;
     }
     
+    [__all__] get(__any__ o) { return _elements.getKey(o); }
     [int] contains(__any__ o) { return _elements.has(o); }
     
     [int] containsAll(AnySet set) {

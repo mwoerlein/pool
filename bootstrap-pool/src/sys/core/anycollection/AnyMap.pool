@@ -148,6 +148,11 @@ class AnyMap extends AnyCollection {
         if (e) { return e.getValue(); } else { return null; }
     }
     
+    [__all__] getKey(__any__ key) {
+        AnyMapElement e = this._findInBucket(buckets.get(this._getBucketNumber(key)), key);
+        if (e) { return e.getKey(); } else { return null; }
+    }
+    
     [int] has(__any__ key) {
         AnyMapElement e = this._findInBucket(buckets.get(this._getBucketNumber(key)), key);
         return !!e;
