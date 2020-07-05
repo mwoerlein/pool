@@ -28,13 +28,13 @@ compilation_unit: compilation_unit label                                       {
 compilation_unit: compilation_unit definition                                  { $$ = this.pushToList($1, $2); }
 compilation_unit: compilation_unit instruction                                 { $$ = this.pushToList($1, $2); }
 compilation_unit: compilation_unit eol                                         { $$ = $1; }
-label           : IDENTIFIER SEMICOLON                                         { $$ = this.createLabel($1).node(); }
+label           : IDENTIFIER COLON                                             { $$ = this.createLabel($1).node(); }
 instruction     : IDENTIFIER eol                                               { $$ = this.createInstruction($1).node(); }
 instruction     : IDENTIFIER operand eol                                       { $$ = this.createInstruction($1).setOperand1($2).node(); }
 instruction     : IDENTIFIER operand COMMA operand eol                         { $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).node(); }
 instruction     : IDENTIFIER operand COMMA operand COMMA operand eol           { $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).setOperand3($6).node(); }
 definition      : IDENTIFIER ASSIGN operand eol                                { $$ = this.createDefinition($1, $3).node(); }
-eol             : COLON                                                        { $$ = $1; }
+eol             : SEMICOLON                                                    { $$ = $1; }
 eol             : NEWLINE                                                      { $$ = $1; }
 operand         : IDENTIFIER                                                   { $$ = this.createIdentifier($1).operand(); }
 operand         : REGISTER                                                     { $$ = this.createRegister($1).operand(); }
