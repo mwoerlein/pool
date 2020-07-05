@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::generator;
 
 use sys::core::utils::Bitset;
+use sys::stream::OStream;
 
 class CharSet extends sys::core::Object {
 
@@ -160,6 +161,19 @@ class CharSet extends sys::core::Object {
             && (this.bits5 == c.bits5)
             && (this.bits6 == c.bits6)
             && (this.bits7 == c.bits7);
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream
+            ._printUInt(bits7, 16, 8)
+            ._printUInt(bits6, 16, 8)
+            ._printUInt(bits5, 16, 8)
+            ._printUInt(bits4, 16, 8)
+            ._printUInt(bits3, 16, 8)
+            ._printUInt(bits2, 16, 8)
+            ._printUInt(bits1, 16, 8)
+            ._printUInt(bits0, 16, 8)
+        ;
     }
     
     // TODO: remove with implicit cast

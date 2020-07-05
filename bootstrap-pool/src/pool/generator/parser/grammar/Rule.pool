@@ -10,6 +10,7 @@ use pool::generator::Symbol;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
 
 class Rule extends sys::core::Object {
 
@@ -36,4 +37,12 @@ class Rule extends sys::core::Object {
     [Rule] setCode(cstring code) { this.code.assignCString(code); return this; }
     [String] getCode() { return this.code; }
     
+    [OStream] printToStream(OStream stream) {
+        stream.print(lhs).printChar(':');
+        AnyIterator it = this.getRHS();
+        while (it.hasNext()) {
+            stream.printChar(' ').print(it.next());
+        }
+        return stream;
+    }
 }

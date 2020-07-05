@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::generator;
 
 use sys::core::String;
+use sys::stream::OStream;
 
 class Symbol extends sys::core::Object {
     
@@ -24,5 +25,9 @@ class Symbol extends sys::core::Object {
     
     [Symbol] setIgnore(int ignore) { this.ignore = ignore; return this; }
     [int] isIgnore() { return ignore; }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.print(name);//.printChar('(').printInt(id).printChar(')');
+    }
     
 }
