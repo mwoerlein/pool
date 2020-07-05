@@ -21,7 +21,6 @@ class State extends sys::core::Object {
 
     [] __init() {
         actions = this.createOwn(AnyMap:CLASSNAME);
-        actions.init(13);
     }
     
     [State] setId(int id) { this.id = id; return this; }

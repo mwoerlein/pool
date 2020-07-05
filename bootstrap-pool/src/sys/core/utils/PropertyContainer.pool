@@ -18,7 +18,6 @@ class PropertyContainer extends Owner {
 
     [] _initPropertyContainer() {
         _properties = this.createOwn(AnyMap:CLASSNAME);
-        _properties.init(13);
     }
     [] _destructPropertyContainer() {
     }

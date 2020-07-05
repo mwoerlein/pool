@@ -38,7 +38,6 @@ class CompilationUnit extends Owner, Logger {
         nodeList = this.createOwn(NodeList:CLASSNAME);
         blocks = this.createOwn(AnyList:CLASSNAME);
         values = this.createOwn(AnyMap:CLASSNAME);
-        values.init(13);
         this._initLogger();
     }
 

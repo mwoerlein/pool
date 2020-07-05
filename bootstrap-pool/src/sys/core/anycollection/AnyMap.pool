@@ -16,6 +16,10 @@ class AnyMap extends AnyCollection {
     int initialBucketsCount;
     int _size;
     
+    [] __init() {
+        this._initAnyMap(13);
+    }
+    
     [] init(int bucketsCount) {
         this._initAnyMap(bucketsCount);
     }
@@ -24,6 +28,10 @@ class AnyMap extends AnyCollection {
         this.initialBucketsCount = bucketsCount;
         this._size = 0;
         this._first = this._last = null;
+        if (this.buckets) {
+            if (this.buckets.size() == bucketsCount) { return; }
+            this.buckets.destroy();
+        }
         this.buckets = this.rt().createInstance(AnyArray:CLASSNAME);
         this.buckets.init(bucketsCount);
     }

@@ -26,7 +26,6 @@ class GrammarDefinition extends PropertyContainer {
         this.tokens = this.createOwn(AnyList:CLASSNAME);
         this.rules = this.createOwn(AnyList:CLASSNAME);
         this.symbols = this.createOwn(AnyMap:CLASSNAME);
-        this.symbols.init(13);
         eoi = this.getCSymbol("EOI").setId(pool::generator::tokenizer::Tokenizer:T_EOI);
     }
     

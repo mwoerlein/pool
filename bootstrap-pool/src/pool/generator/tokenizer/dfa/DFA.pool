@@ -25,7 +25,6 @@ class DFA extends Factory {
 
     [] __init() {
         symbols = this.createOwn(AnyMap:CLASSNAME);
-        symbols.init(13);
         states = this.createOwn(AnyList:CLASSNAME);
         
         overall = symbols.createOwn(RegexNFA:CLASSNAME);
@@ -49,9 +48,7 @@ class DFA extends Factory {
         
         // HashMap<State, HashMap<State, CharSet>>
         AnyMap transitions = this.rt().createInstance(AnyMap:CLASSNAME);
-        transitions.init(13);
         AnyMap candidates = this.rt().createInstance(AnyMap:CLASSNAME);
-        candidates.init(13);
         {
             AnyList ws = this.rt().createInstance(AnyList:CLASSNAME);
             RegexNFASet initSet = candidates.createOwn(RegexNFASet:CLASSNAME);
@@ -66,7 +63,6 @@ class DFA extends Factory {
 
                 // initialize transition table for current state
                 AnyMap trns = transitions.createOwn(AnyMap:CLASSNAME);
-                trns.init(13);
                 transitions.set(state, trns);
                 
                 int c = 0;

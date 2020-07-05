@@ -21,11 +21,8 @@ class CommandLine extends CommandLineParserTarget, Owner {
     [] _initCommandLine() {
         _arguments = this.createOwn(AnyList:CLASSNAME);
         _options = this.createOwn(AnyMap:CLASSNAME);
-        _options.init(13);
         _optionAliases = this.createOwn(AnyMap:CLASSNAME);
-        _optionAliases.init(13);
         _listOptions = this.createOwn(AnyMap:CLASSNAME);
-        _listOptions.init(13);
     }
     
     [] _destructCommandLine() {
