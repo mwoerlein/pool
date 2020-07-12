@@ -13,7 +13,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     int T_CHAR := 2;
     int T_STRING := 3;
     int T_NUMBER := 4;
-    int T_NEWLINE := 5;
+    int T_EOL := 5;
     int T_SPACER := 6;
     int T_COMMENT := 7;
     int T_MLCOMMENT := 8;
@@ -22,8 +22,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     int T_COLON := 11;
     int T_OBRACKET := 12;
     int T_CBRACKET := 13;
-    int T_SEMICOLON := 14;
-    int T_COMMA := 15;
+    int T_COMMA := 14;
 
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
@@ -33,7 +32,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (symbol == Tokenizer:T_CHAR) { stream.printCString("CHAR"); }
         else if (symbol == Tokenizer:T_STRING) { stream.printCString("STRING"); }
         else if (symbol == Tokenizer:T_NUMBER) { stream.printCString("NUMBER"); }
-        else if (symbol == Tokenizer:T_NEWLINE) { stream.printCString("NEWLINE"); }
+        else if (symbol == Tokenizer:T_EOL) { stream.printCString("EOL"); }
         else if (symbol == Tokenizer:T_SPACER) { stream.printCString("SPACER"); }
         else if (symbol == Tokenizer:T_COMMENT) { stream.printCString("COMMENT"); }
         else if (symbol == Tokenizer:T_MLCOMMENT) { stream.printCString("MLCOMMENT"); }
@@ -42,7 +41,6 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (symbol == Tokenizer:T_COLON) { stream.printCString("COLON"); }
         else if (symbol == Tokenizer:T_OBRACKET) { stream.printCString("OBRACKET"); }
         else if (symbol == Tokenizer:T_CBRACKET) { stream.printCString("CBRACKET"); }
-        else if (symbol == Tokenizer:T_SEMICOLON) { stream.printCString("SEMICOLON"); }
         else if (symbol == Tokenizer:T_COMMA) { stream.printCString("COMMA"); }
         return stream;
     }
@@ -69,7 +67,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == 48) { this._consume(); state = 10; }
                 else if (((c >= 49) && (c <= 57))) { this._consume(); state = 11; }
                 else if (c == 58) { this._consume(); state = 12; }
-                else if (c == 59) { this._consume(); return this._buildNextToken(Tokenizer:T_SEMICOLON); }
+                else if (c == 59) { this._consume(); return this._buildNextToken(Tokenizer:T_EOL); }
                 else if (c == 60) { this._consume(); state = 13; }
                 else if (c == 62) { this._consume(); state = 14; }
                 else if (((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 15; }
@@ -79,7 +77,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else { return this._buildNextToken(Tokenizer:T_SPACER); }
             } else if (state == 2) {
                 if ((c == 10) || (c == 13)) { this._consume(); state = 2; }
-                else { return this._buildNextToken(Tokenizer:T_NEWLINE); }
+                else { return this._buildNextToken(Tokenizer:T_EOL); }
             } else if (state == 3) {
                 if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 33)) || ((c >= 35) && (c <= 91)) || ((c >= 93) && (c <= 255))) { this._consume(); state = 16; }
                 else if (c == 34) { this._consume(); return this._buildNextToken(Tokenizer:T_STRING); }
@@ -219,7 +217,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         }
 
         if (state == 1) { return this._buildNextToken(Tokenizer:T_SPACER); }
-        else if (state == 2) { return this._buildNextToken(Tokenizer:T_NEWLINE); }
+        else if (state == 2) { return this._buildNextToken(Tokenizer:T_EOL); }
         else if (state == 3) { return this._buildNextToken(Tokenizer:T_ERROR); }
         else if (state == 4) { return this._buildNextToken(Tokenizer:T_COMMENT); }
         else if (state == 5) { return this._buildNextToken(Tokenizer:T_OPERATOR); }

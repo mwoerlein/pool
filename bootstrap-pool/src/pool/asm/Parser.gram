@@ -11,7 +11,7 @@ REGISTER    := /%[a-zA-Z][_a-zA-Z0-9]*/
 CHAR        := /'([^\\\n\r']|\\[^\n\r\t])*'/
 STRING      := /"([^\\\n\r"]|\\[^\n\r\t])*"/
 NUMBER      := /\-?(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)/
-NEWLINE     := /[\n\r]+/
+EOL         := /(;|[\n\r]+)/
 SPACER      := /[ \t]+/
 COMMENT     := /(\/\/|#)[^\n\r]*/
 MLCOMMENT   := /\/\*([^\*]*\*+)([^\/\*][^\*]*\*+)*\//
@@ -20,22 +20,19 @@ ASSIGN      := /:=/
 COLON       := /:/
 OBRACKET    := /\(/
 CBRACKET    := /\)/
-SEMICOLON   := /;/
 COMMA       := /,/
 
 compilation_unit:                                                              { $$ = unit.getNodeList(); }
 compilation_unit: compilation_unit label                                       { $$ = this.pushToList($1, $2); }
 compilation_unit: compilation_unit definition                                  { $$ = this.pushToList($1, $2); }
 compilation_unit: compilation_unit instruction                                 { $$ = this.pushToList($1, $2); }
-compilation_unit: compilation_unit eol
+compilation_unit: compilation_unit EOL
 label           : IDENTIFIER COLON                                             { $$ = this.createLabel($1).node(); }
-instruction     : IDENTIFIER eol                                               { $$ = this.createInstruction($1).node(); }
-instruction     : IDENTIFIER operand eol                                       { $$ = this.createInstruction($1).setOperand1($2).node(); }
-instruction     : IDENTIFIER operand COMMA operand eol                         { $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).node(); }
-instruction     : IDENTIFIER operand COMMA operand COMMA operand eol           { $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).setOperand3($6).node(); }
-definition      : IDENTIFIER ASSIGN operand eol                                { $$ = this.createDefinition($1, $3).node(); }
-eol             : SEMICOLON                                                    { $$ = null; }
-eol             : NEWLINE                                                      { $$ = null; }
+instruction     : IDENTIFIER EOL                                               { $$ = this.createInstruction($1).node(); }
+instruction     : IDENTIFIER operand EOL                                       { $$ = this.createInstruction($1).setOperand1($2).node(); }
+instruction     : IDENTIFIER operand COMMA operand EOL                         { $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).node(); }
+instruction     : IDENTIFIER operand COMMA operand COMMA operand EOL           { $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).setOperand3($6).node(); }
+definition      : IDENTIFIER ASSIGN operand EOL                                { $$ = this.createDefinition($1, $3).node(); }
 operand         : IDENTIFIER                                                   { $$ = this.createIdentifier($1).operand(); }
 operand         : REGISTER                                                     { $$ = this.createRegister($1).operand(); }
 operand         : NUMBER                                                       { $$ = this.createNumber($1).operand(); }
