@@ -36,7 +36,8 @@ class Rule extends sys::core::Object {
     [AnyIterator] getRHS() { return this.rhs.iterator(); }
     [Symbol] getRHSat(int pos) { return this.rhs.at(pos); }
     
-    [Rule] setCode(cstring code) { this.code.assignCString(code); return this; }
+    [Rule] setCCode(cstring code) { this.code.assignCString(code); return this; }
+    [Rule] setCode(String code) { this.code.assignString(code); return this; }
     [String] getCode() { return this.code; }
     
     [OStream] printToStream(OStream stream) {

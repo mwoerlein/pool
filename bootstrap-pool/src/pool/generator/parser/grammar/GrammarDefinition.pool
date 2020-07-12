@@ -35,7 +35,7 @@ class GrammarDefinition extends PropertyContainer {
     }
     
     [Symbol] getSymbol(String name) {
-        if (!symbols.has(name)) { return symbols.get(name); }
+        if (symbols.has(name)) { return symbols.get(name); }
         Symbol s = this.createOwn(Symbol:CLASSNAME);
         s.setName(name);
         symbols.set(this.createOwnStringFromString(name), s);

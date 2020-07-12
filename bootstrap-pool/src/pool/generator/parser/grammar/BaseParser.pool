@@ -1,0 +1,77 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar;
+
+
+use pool::generator::tokenizer::Token;
+
+use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::IStream;
+
+class BaseParser extends pool::generator::parser::Parser {
+    
+    GrammarDefinition definition;
+    
+    [sys::stream::OStream] newError() { return this.rt().err(); }
+    
+    [Grammar] parse(IStream input, String name) {
+        this.definition = this.rt().createInstance(GrammarDefinition:CLASSNAME);
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        this._parse(in.init(input, name));
+        in.destroy();
+        GrammarBuilder gb = this.rt().createInstance(GrammarBuilder:CLASSNAME);
+        Grammar g = gb.build(this.definition, this.rt().err());
+        g.own(this.definition);
+        this.definition = null;
+        gb.destroy();
+        return g;
+    }
+
+    // Definition creation helper
+    [GrammarDefinition] addParameter(GrammarDefinition def, Token param, Token value) {
+        if (param.getValue().compareCString("%ignores") == 0) {
+            def.getSymbol(value.getValue()).setIgnore(true);
+            return def;
+        }
+        String val = def.createOwn(String:CLASSNAME);
+        if (value.getSymbol() == Tokenizer:T_STRING) {
+            value.getValue().unescapeToStream(val.ostream());
+        } else {
+            val.assignString(value.getValue());
+        }
+        String name = param.getValue().subString(1, 0);
+        def.setStringProperty(name, val);
+        name.destroy();
+        return def;
+    }
+
+    [GrammarDefinition] addToken(GrammarDefinition def, Token symbol, Token regex) {
+        def.newToken(def.getSymbol(symbol.getValue())).setDefinition(regex.getValue());
+        return def;
+    }
+
+    [GrammarDefinition] addRule(GrammarDefinition def, Token symbol, AnyList rhs, Token code) {
+        Rule r = def.newRule(def.getSymbol(symbol.getValue()));
+        {
+            AnyIterator it = rhs.iterator();
+            while (it.hasNext()) { r.addRHS(it.next()); }
+            it.destroy();
+        }
+        if (code) { r.setCode(code.getValue()); }
+        return def;
+    }
+
+    [AnyList] list() {
+        return this.createOwn(AnyList:CLASSNAME);
+    }
+    
+    [AnyList] addSymbolToList(AnyList l, Token symbol) {
+        l.add(definition.getSymbol(symbol.getValue()));
+        return l;
+    }
+}

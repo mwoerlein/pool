@@ -21,7 +21,8 @@ class Token extends sys::core::Object {
     [Token] setSymbol(Symbol s) { this.symbol = s; return this; }
     [Symbol] getSymbol() { return symbol; }
     
-    [Token] setDefinition(cstring def) { this.definition.assignCString(def); return this; }
+    [Token] setCDefinition(cstring def) { this.definition.assignCString(def); return this; }
+    [Token] setDefinition(String def) { this.definition.assignString(def); return this; }
     [String] getDefinition() { return this.definition; }
     
 }

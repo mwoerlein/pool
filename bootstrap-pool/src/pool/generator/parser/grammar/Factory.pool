@@ -66,54 +66,110 @@ class Factory extends sys::core::Object {
         Symbol ntEXPR       := def.getCSymbol("expr");
         Symbol ntCLASS      := def.getCSymbol("class");
         
-        def.newToken(tCHAR).setDefinition("/[^\\\\\\(\\)\\[\\]\\?\\*\\+\\-\\^\\|\\.\\/]|\\\\[nrt\\\\\\(\\)\\[\\]\\?\\*\\+\\-\\^\\|\\.\\/]/");
-        def.newToken(tOBRACKET).setDefinition("/\\(/");
-        def.newToken(tCBRACKET).setDefinition("/\\)/");
-        def.newToken(tOSBRACKET).setDefinition("/\\[/");
-        def.newToken(tCSBRACKET).setDefinition("/\\]/");
-        def.newToken(tQMARK).setDefinition("/\\?/");
-        def.newToken(tSTAR).setDefinition("/\\*/");
-        def.newToken(tPLUS).setDefinition("/\\+/");
-        def.newToken(tMINUS).setDefinition("/\\-/");
-        def.newToken(tCFLEX).setDefinition("/\\^/");
-        def.newToken(tPIPE).setDefinition("/\\|/");
-        def.newToken(tDOT).setDefinition("/\\./");
+        def.newToken(tCHAR).setCDefinition("/[^\\\\\\(\\)\\[\\]\\?\\*\\+\\-\\^\\|\\.\\/]|\\\\[nrt\\\\\\(\\)\\[\\]\\?\\*\\+\\-\\^\\|\\.\\/]/");
+        def.newToken(tOBRACKET).setCDefinition("/\\(/");
+        def.newToken(tCBRACKET).setCDefinition("/\\)/");
+        def.newToken(tOSBRACKET).setCDefinition("/\\[/");
+        def.newToken(tCSBRACKET).setCDefinition("/\\]/");
+        def.newToken(tQMARK).setCDefinition("/\\?/");
+        def.newToken(tSTAR).setCDefinition("/\\*/");
+        def.newToken(tPLUS).setCDefinition("/\\+/");
+        def.newToken(tMINUS).setCDefinition("/\\-/");
+        def.newToken(tCFLEX).setCDefinition("/\\^/");
+        def.newToken(tPIPE).setCDefinition("/\\|/");
+        def.newToken(tDOT).setCDefinition("/\\./");
 
         def.newRule(ntEXPRESSION).addRHS(ntALTER)
-            .setCode("{ $$ = this.expression = $1; }");
+            .setCCode("{ $$ = this.expression = $1; }");
         def.newRule(ntALTER).addRHS(ntCONCAT)
-            .setCode("{ $$ = this.listAddNode(this.alter(), this.listToNode($1)); }");
+            .setCCode("{ $$ = this.listAddNode(this.alter(), this.listToNode($1)); }");
         def.newRule(ntALTER).addRHS(ntALTER).addRHS(tPIPE).addRHS(ntCONCAT)
-            .setCode("{ $$ = this.listAddNode($1, this.listToNode($3)); }");
+            .setCCode("{ $$ = this.listAddNode($1, this.listToNode($3)); }");
         def.newRule(ntCONCAT).addRHS(ntELEM)
-            .setCode("{ $$ = this.listAddNode(this.concat(), $1); }");
+            .setCCode("{ $$ = this.listAddNode(this.concat(), $1); }");
         def.newRule(ntCONCAT).addRHS(ntCONCAT).addRHS(ntELEM)
-            .setCode("{ $$ = this.listAddNode($1, $2); }");
+            .setCCode("{ $$ = this.listAddNode($1, $2); }");
         def.newRule(ntELEM).addRHS(ntEXPR);
         def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tQMARK)
-            .setCode("{ $$ = this.atMostOnce($1); }");
+            .setCCode("{ $$ = this.atMostOnce($1); }");
         def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tSTAR)
-            .setCode("{ $$ = this.any($1); }");
+            .setCCode("{ $$ = this.any($1); }");
         def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tPLUS)
-            .setCode("{ $$ = this.atLeastOnce($1); }");
+            .setCCode("{ $$ = this.atLeastOnce($1); }");
         def.newRule(ntEXPR).addRHS(tDOT)
-            .setCode("{ $$ = this.all(); }");
+            .setCCode("{ $$ = this.all(); }");
         def.newRule(ntEXPR).addRHS(tCHAR)
-            .setCode("{ $$ = this.single(this.toChar($1)); }");
+            .setCCode("{ $$ = this.single(this.toChar($1)); }");
         def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(ntCLASS).addRHS(tCSBRACKET)
-            .setCode("{ $$ = this.ccToNode($2); }");
+            .setCCode("{ $$ = this.ccToNode($2); }");
         def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(tCFLEX).addRHS(ntCLASS).addRHS(tCSBRACKET)
-            .setCode("{ $$ = this.ccToExclusiveNode($3); }");
+            .setCCode("{ $$ = this.ccToExclusiveNode($3); }");
         def.newRule(ntEXPR).addRHS(tOBRACKET).addRHS(ntALTER).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.listToNode($2); }");
+            .setCCode("{ $$ = this.listToNode($2); }");
         def.newRule(ntCLASS).addRHS(tCHAR)
-            .setCode("{ $$ = this.ccAddChar(this.cc(), this.toChar($1)); }");
+            .setCCode("{ $$ = this.ccAddChar(this.cc(), this.toChar($1)); }");
         def.newRule(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
-            .setCode("{ $$ = this.ccAddRange(this.cc(), this.toChar($1), this.toChar($3)); }");
+            .setCCode("{ $$ = this.ccAddRange(this.cc(), this.toChar($1), this.toChar($3)); }");
         def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR)
-            .setCode("{ $$ = this.ccAddChar($1, this.toChar($2)); }");
+            .setCCode("{ $$ = this.ccAddChar($1, this.toChar($2)); }");
         def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
-            .setCode("{ $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }");
+            .setCCode("{ $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }");
+
+        return this.buildGrammar(def, err, dot);
+    }
+    
+    /* 
+     * use manually built parse grammar for grammar definitions until pool::generator is finalized
+     */
+    [Grammar] buildDefinitionGrammar(OStream err, OStream dot) {
+        // TODO: parse .gram file to definition
+        GrammarDefinition def = this.definition();
+
+        def.setCStringProperty("namespace", "pool::generator::parser::grammar");
+        def.setCStringProperty("classname", "Parser");
+        def.setCStringProperty("extends", "BaseParser");
+        def.setCStringProperty("tokenizer", "Tokenizer");
+        
+        Symbol tSYMBOL      := def.getCSymbol("SYMBOL");
+        Symbol tPARAMETER   := def.getCSymbol("PARAMETER");
+        Symbol tREGEX       := def.getCSymbol("REGEX");
+        Symbol tSTRING      := def.getCSymbol("STRING");
+        Symbol tCODE        := def.getCSymbol("CODE");
+        Symbol tNEWLINE     := def.getCSymbol("NEWLINE");
+        Symbol tSPACER      := def.getCSymbol("SPACER").setIgnore(true);
+        Symbol tASSIGN      := def.getCSymbol("ASSIGN");
+        Symbol tCOLON       := def.getCSymbol("COLON");
+
+        Symbol ntGRAMMARDEF := def.getCSymbol("grammar_def");    
+        Symbol ntSYMBOLLIST := def.getCSymbol("symbol_list");
+        
+        def.newToken(tSYMBOL).setCDefinition("/[a-zA-Z][_a-zA-Z0-9]*/");
+        def.newToken(tPARAMETER).setCDefinition("/%[a-zA-Z][_a-zA-Z0-9]*/");
+        def.newToken(tREGEX).setCDefinition("/\\/([^\\\\\\n\\r\\/]|\\\\[^\\n\\r\\t])*\\//");
+        def.newToken(tSTRING).setCDefinition("/\"([^\\\\\\n\\r\"]|\\\\[^\\n\\r\\t])*\"/");
+        def.newToken(tCODE).setCDefinition("/{([^\\\\\\n\\r{}]|\\\\[^\\n\\r\\t])*}/");
+        def.newToken(tNEWLINE).setCDefinition("/[\\n\\r]+/");
+        def.newToken(tSPACER).setCDefinition("/[ \\t]+/");
+        def.newToken(tASSIGN).setCDefinition("/:=/");
+        def.newToken(tCOLON).setCDefinition("/:/");
+
+        def.newRule(ntGRAMMARDEF)
+            .setCCode("{ $$ = this.definition; }");
+        def.newRule(ntGRAMMARDEF).addRHS(ntGRAMMARDEF).addRHS(tNEWLINE);
+        def.newRule(ntGRAMMARDEF).addRHS(ntGRAMMARDEF).addRHS(tPARAMETER).addRHS(tSTRING).addRHS(tNEWLINE)
+            .setCCode("{ $$ = this.addParameter($1, $2, $3); }");
+        def.newRule(ntGRAMMARDEF).addRHS(ntGRAMMARDEF).addRHS(tPARAMETER).addRHS(tSYMBOL).addRHS(tNEWLINE)
+            .setCCode("{ $$ = this.addParameter($1, $2, $3); }");
+        def.newRule(ntGRAMMARDEF).addRHS(ntGRAMMARDEF).addRHS(tSYMBOL).addRHS(tASSIGN).addRHS(tREGEX).addRHS(tNEWLINE)
+            .setCCode("{ $$ = this.addToken($1, $2, $4); }");
+        def.newRule(ntGRAMMARDEF).addRHS(ntGRAMMARDEF).addRHS(tSYMBOL).addRHS(tCOLON).addRHS(ntSYMBOLLIST).addRHS(tNEWLINE)
+            .setCCode("{ $$ = this.addRule($1, $2, $4, null); }");
+        def.newRule(ntGRAMMARDEF).addRHS(ntGRAMMARDEF).addRHS(tSYMBOL).addRHS(tCOLON).addRHS(ntSYMBOLLIST).addRHS(tCODE).addRHS(tNEWLINE)
+            .setCCode("{ $$ = this.addRule($1, $2, $4, $5); }");
+        def.newRule(ntSYMBOLLIST)
+            .setCCode("{ $$ = this.list(); }");
+        def.newRule(ntSYMBOLLIST).addRHS(ntSYMBOLLIST).addRHS(tSYMBOL)
+            .setCCode("{ $$ = this.addSymbolToList($1, $2); }");
 
         return this.buildGrammar(def, err, dot);
     }
@@ -156,82 +212,82 @@ class Factory extends sys::core::Object {
         Symbol ntINDIRECT    := def.getCSymbol("indirect");
         Symbol ntFORMULA     := def.getCSymbol("formula");
         
-        def.newToken(tIDENTIFIER).setDefinition("/[\\._a-zA-Z][_a-zA-Z0-9]*/");
-        def.newToken(tREGISTER).setDefinition("/%[a-zA-Z][_a-zA-Z0-9]*/");
-        def.newToken(tCHAR).setDefinition("/'([^\\\\\\n\\r']|\\\\[^\\n\\r\\t])*'/");
-        def.newToken(tSTRING).setDefinition("/\"([^\\\\\\n\\r\"]|\\\\[^\\n\\r\\t])*\"/");
-        def.newToken(tNUMBER).setDefinition("/\\-?(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)/");
-        def.newToken(tNEWLINE).setDefinition("/[\\n\\r]+/");
-        def.newToken(tSPACER).setDefinition("/[ \\t]+/");
-        def.newToken(tCOMMENT).setDefinition("/(\\/\\/|#)[^\\n\\r]*/");
-        def.newToken(tMLCOMMENT).setDefinition("/\\/\\*([^\\*]*\\*+)([^\\/\\*][^\\*]*\\*+)*\\//");
-        def.newToken(tOPERATOR).setDefinition("/(\\+|\\-|\\*|\\/|%|<<|>>|\\.)/");
-        def.newToken(tASSIGN).setDefinition("/:=/");
-        def.newToken(tCOLON).setDefinition("/:/");
-        def.newToken(tOBRACKET).setDefinition("/\\(/");
-        def.newToken(tCBRACKET).setDefinition("/\\)/");
-        def.newToken(tSEMICOLON).setDefinition("/;/");
-        def.newToken(tCOMMA).setDefinition("/,/");
+        def.newToken(tIDENTIFIER).setCDefinition("/[\\._a-zA-Z][_a-zA-Z0-9]*/");
+        def.newToken(tREGISTER).setCDefinition("/%[a-zA-Z][_a-zA-Z0-9]*/");
+        def.newToken(tCHAR).setCDefinition("/'([^\\\\\\n\\r']|\\\\[^\\n\\r\\t])*'/");
+        def.newToken(tSTRING).setCDefinition("/\"([^\\\\\\n\\r\"]|\\\\[^\\n\\r\\t])*\"/");
+        def.newToken(tNUMBER).setCDefinition("/\\-?(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)/");
+        def.newToken(tNEWLINE).setCDefinition("/[\\n\\r]+/");
+        def.newToken(tSPACER).setCDefinition("/[ \\t]+/");
+        def.newToken(tCOMMENT).setCDefinition("/(\\/\\/|#)[^\\n\\r]*/");
+        def.newToken(tMLCOMMENT).setCDefinition("/\\/\\*([^\\*]*\\*+)([^\\/\\*][^\\*]*\\*+)*\\//");
+        def.newToken(tOPERATOR).setCDefinition("/(\\+|\\-|\\*|\\/|%|<<|>>|\\.)/");
+        def.newToken(tASSIGN).setCDefinition("/:=/");
+        def.newToken(tCOLON).setCDefinition("/:/");
+        def.newToken(tOBRACKET).setCDefinition("/\\(/");
+        def.newToken(tCBRACKET).setCDefinition("/\\)/");
+        def.newToken(tSEMICOLON).setCDefinition("/;/");
+        def.newToken(tCOMMA).setCDefinition("/,/");
 
         def.newRule(ntUNIT)
-            .setCode("{ $$ = unit.getNodeList(); }");
+            .setCCode("{ $$ = unit.getNodeList(); }");
         def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntLABEL)
-            .setCode("{ $$ = this.pushToList($1, $2); }");
+            .setCCode("{ $$ = this.pushToList($1, $2); }");
         def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntDEFINITION)
-            .setCode("{ $$ = this.pushToList($1, $2); }");
+            .setCCode("{ $$ = this.pushToList($1, $2); }");
         def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntINSTRUCTION)
-            .setCode("{ $$ = this.pushToList($1, $2); }");
+            .setCCode("{ $$ = this.pushToList($1, $2); }");
         def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntEOL);
         def.newRule(ntLABEL).addRHS(tIDENTIFIER).addRHS(tCOLON)
-            .setCode("{ $$ = this.createLabel($1).node(); }");
+            .setCCode("{ $$ = this.createLabel($1).node(); }");
         def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntEOL)
-            .setCode("{ $$ = this.createInstruction($1).node(); }");
+            .setCCode("{ $$ = this.createInstruction($1).node(); }");
         def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(ntEOL)
-            .setCode("{ $$ = this.createInstruction($1).setOperand1($2).node(); }");
+            .setCCode("{ $$ = this.createInstruction($1).setOperand1($2).node(); }");
         def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(ntEOL)
-            .setCode("{ $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).node(); }");
+            .setCCode("{ $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).node(); }");
         def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(ntEOL)
-            .setCode("{ $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).setOperand3($6).node(); }");
+            .setCCode("{ $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).setOperand3($6).node(); }");
         def.newRule(ntDEFINITION).addRHS(tIDENTIFIER).addRHS(tASSIGN).addRHS(ntOPERAND).addRHS(ntEOL)
-            .setCode("{ $$ = this.createDefinition($1, $3).node(); }");
+            .setCCode("{ $$ = this.createDefinition($1, $3).node(); }");
         def.newRule(ntEOL).addRHS(tSEMICOLON)
-            .setCode("{ $$ = null; }");
+            .setCCode("{ $$ = null; }");
         def.newRule(ntEOL).addRHS(tNEWLINE)
-            .setCode("{ $$ = null; }");
+            .setCCode("{ $$ = null; }");
         def.newRule(ntOPERAND).addRHS(tIDENTIFIER)
-            .setCode("{ $$ = this.createIdentifier($1).operand(); }");
+            .setCCode("{ $$ = this.createIdentifier($1).operand(); }");
         def.newRule(ntOPERAND).addRHS(tREGISTER)
-            .setCode("{ $$ = this.createRegister($1).operand(); }");
+            .setCCode("{ $$ = this.createRegister($1).operand(); }");
         def.newRule(ntOPERAND).addRHS(tNUMBER)
-            .setCode("{ $$ = this.createNumber($1).operand(); }");
+            .setCCode("{ $$ = this.createNumber($1).operand(); }");
         def.newRule(ntOPERAND).addRHS(tCHAR)
-            .setCode("{ $$ = this.createChar($1).operand(); }");
+            .setCCode("{ $$ = this.createChar($1).operand(); }");
         def.newRule(ntOPERAND).addRHS(tSTRING)
-            .setCode("{ $$ = this.createString($1).operand(); }");
+            .setCCode("{ $$ = this.createString($1).operand(); }");
         def.newRule(ntOPERAND).addRHS(ntINDIRECT);
         def.newRule(ntOPERAND).addRHS(ntFORMULA);
         def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setBase($2).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setBase($2).operand(); }");
         def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setBase($2).setIndex($4).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setBase($2).setIndex($4).operand(); }");
         def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setBase($2).setIndex($4).setScale(this.toInt($6)).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setBase($2).setIndex($4).setScale(this.toInt($6)).operand(); }");
         def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setIndex($3).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setIndex($3).operand(); }");
         def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setIndex($3).setScale(this.toInt($5)).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setIndex($3).setScale(this.toInt($5)).operand(); }");
         def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).operand(); }");
         def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).setIndex($5).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).setIndex($5).operand(); }");
         def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).setIndex($5).setScale(this.toInt($7)).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).setIndex($5).setScale(this.toInt($7)).operand(); }");
         def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setDisplacement($1).setIndex($4).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setDisplacement($1).setIndex($4).operand(); }");
         def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createIndirect().setDisplacement($1).setIndex($4).setScale(this.toInt($6)).operand(); }");
+            .setCCode("{ $$ = this.createIndirect().setDisplacement($1).setIndex($4).setScale(this.toInt($6)).operand(); }");
         def.newRule(ntFORMULA).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tOPERATOR).addRHS(ntOPERAND).addRHS(tCBRACKET)
-            .setCode("{ $$ = this.createFormula($2, $3, $4).operand(); }");
+            .setCCode("{ $$ = this.createFormula($2, $3, $4).operand(); }");
 
         return this.buildGrammar(def, err, dot);
     }
