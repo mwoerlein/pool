@@ -46,7 +46,6 @@ class Factory extends sys::core::Object {
         def.setCStringProperty("extends", "BaseParser");
         def.setCStringProperty("tokenizer", "Tokenizer");
         
-        Symbol tEOI         := def.getEOI();
         Symbol tCHAR        := def.getCSymbol("CHAR");
         Symbol tOBRACKET    := def.getCSymbol("OBRACKET");
         Symbol tCBRACKET    := def.getCSymbol("CBRACKET");
@@ -131,8 +130,6 @@ class Factory extends sys::core::Object {
         def.setCStringProperty("extends", "BaseParser");
         def.setCStringProperty("tokenizer", "Tokenizer");
         
-        Symbol tEOI          := def.getEOI();
-//        Symbol tOTHER        := def.getCSymbol("OTHER");
         Symbol tIDENTIFIER   := def.getCSymbol("IDENTIFIER");
         Symbol tREGISTER     := def.getCSymbol("REGISTER");
         Symbol tCHAR         := def.getCSymbol("CHAR");
@@ -175,305 +172,68 @@ class Factory extends sys::core::Object {
         def.newToken(tCBRACKET).setDefinition("/\\)/");
         def.newToken(tSEMICOLON).setDefinition("/;/");
         def.newToken(tCOMMA).setDefinition("/,/");
-//        def.newToken(tOTHER).setDefinition("/.*/");
 
-        Rule r00 := def.newRule(ntUNIT)
+        def.newRule(ntUNIT)
             .setCode("{ $$ = unit.getNodeList(); }");
-        Rule r01 := def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntLABEL)
+        def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntLABEL)
             .setCode("{ $$ = this.pushToList($1, $2); }");
-        Rule r02 := def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntDEFINITION)
+        def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntDEFINITION)
             .setCode("{ $$ = this.pushToList($1, $2); }");
-        Rule r03 := def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntINSTRUCTION)
+        def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntINSTRUCTION)
             .setCode("{ $$ = this.pushToList($1, $2); }");
-        Rule r04 := def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntEOL);
-        Rule r05 := def.newRule(ntLABEL).addRHS(tIDENTIFIER).addRHS(tCOLON)
+        def.newRule(ntUNIT).addRHS(ntUNIT).addRHS(ntEOL);
+        def.newRule(ntLABEL).addRHS(tIDENTIFIER).addRHS(tCOLON)
             .setCode("{ $$ = this.createLabel($1).node(); }");
-        Rule r06 := def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntEOL)
+        def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntEOL)
             .setCode("{ $$ = this.createInstruction($1).node(); }");
-        Rule r07 := def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(ntEOL)
+        def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(ntEOL)
             .setCode("{ $$ = this.createInstruction($1).setOperand1($2).node(); }");
-        Rule r08 := def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(ntEOL)
+        def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(ntEOL)
             .setCode("{ $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).node(); }");
-        Rule r09 := def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(ntEOL)
+        def.newRule(ntINSTRUCTION).addRHS(tIDENTIFIER).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(ntEOL)
             .setCode("{ $$ = this.createInstruction($1).setOperand1($2).setOperand2($4).setOperand3($6).node(); }");
-        Rule r10 := def.newRule(ntDEFINITION).addRHS(tIDENTIFIER).addRHS(tASSIGN).addRHS(ntOPERAND).addRHS(ntEOL)
+        def.newRule(ntDEFINITION).addRHS(tIDENTIFIER).addRHS(tASSIGN).addRHS(ntOPERAND).addRHS(ntEOL)
             .setCode("{ $$ = this.createDefinition($1, $3).node(); }");
-        Rule r11 := def.newRule(ntEOL).addRHS(tSEMICOLON);
-        Rule r12 := def.newRule(ntEOL).addRHS(tNEWLINE);
-        Rule r13 := def.newRule(ntOPERAND).addRHS(tIDENTIFIER)
+        def.newRule(ntEOL).addRHS(tSEMICOLON)
+            .setCode("{ $$ = null; }");
+        def.newRule(ntEOL).addRHS(tNEWLINE)
+            .setCode("{ $$ = null; }");
+        def.newRule(ntOPERAND).addRHS(tIDENTIFIER)
             .setCode("{ $$ = this.createIdentifier($1).operand(); }");
-        Rule r14 := def.newRule(ntOPERAND).addRHS(tREGISTER)
+        def.newRule(ntOPERAND).addRHS(tREGISTER)
             .setCode("{ $$ = this.createRegister($1).operand(); }");
-        Rule r15 := def.newRule(ntOPERAND).addRHS(tNUMBER)
+        def.newRule(ntOPERAND).addRHS(tNUMBER)
             .setCode("{ $$ = this.createNumber($1).operand(); }");
-        Rule r16 := def.newRule(ntOPERAND).addRHS(tCHAR)
+        def.newRule(ntOPERAND).addRHS(tCHAR)
             .setCode("{ $$ = this.createChar($1).operand(); }");
-        Rule r17 := def.newRule(ntOPERAND).addRHS(tSTRING)
+        def.newRule(ntOPERAND).addRHS(tSTRING)
             .setCode("{ $$ = this.createString($1).operand(); }");
-        Rule r18 := def.newRule(ntOPERAND).addRHS(ntINDIRECT);
-        Rule r19 := def.newRule(ntOPERAND).addRHS(ntFORMULA);
-        Rule r20 := def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntOPERAND).addRHS(ntINDIRECT);
+        def.newRule(ntOPERAND).addRHS(ntFORMULA);
+        def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setBase($2).operand(); }");
-        Rule r21 := def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setBase($2).setIndex($4).operand(); }");
-        Rule r22 := def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setBase($2).setIndex($4).setScale(this.toInt($6)).operand(); }");
-        Rule r23 := def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setIndex($3).operand(); }");
-        Rule r24 := def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setIndex($3).setScale(this.toInt($5)).operand(); }");
-        Rule r25 := def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).operand(); }");
-        Rule r26 := def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).setIndex($5).operand(); }");
-        Rule r27 := def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setDisplacement($1).setBase($3).setIndex($5).setScale(this.toInt($7)).operand(); }");
-        Rule r28 := def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setDisplacement($1).setIndex($4).operand(); }");
-        Rule r29 := def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
+        def.newRule(ntINDIRECT).addRHS(ntOPERAND).addRHS(tOBRACKET).addRHS(tCOMMA).addRHS(ntOPERAND).addRHS(tCOMMA).addRHS(tNUMBER).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createIndirect().setDisplacement($1).setIndex($4).setScale(this.toInt($6)).operand(); }");
-        Rule r30 := def.newRule(ntFORMULA).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tOPERATOR).addRHS(ntOPERAND).addRHS(tCBRACKET)
+        def.newRule(ntFORMULA).addRHS(tOBRACKET).addRHS(ntOPERAND).addRHS(tOPERATOR).addRHS(ntOPERAND).addRHS(tCBRACKET)
             .setCode("{ $$ = this.createFormula($2, $3, $4).operand(); }");
 
-        Grammar d = this.buildGrammar(def, err, dot);
-
-        // TODO: generate states/actions/gotos from rules
-        State sEMPTY := d.newInitState();
-        State sUnit := d.newState();
-        State sUnitId := d.newState();
-        State sUnitIdAssign := d.newState();
-        State sUnitIdAssignOp := d.newState();
-        State sUnitIdOp := d.newState();
-        State sUnitIdOpComma := d.newState();
-        State sUnitIdOpCommaOp := d.newState();
-        State sUnitIdOpCommaOpComma:= d.newState();
-        State sUnitIdOpCommaOpCommaOp := d.newState();
-        State sOBracket := d.newState();
-        State sOBracketOp := d.newState();
-        State sOBracketOpComma := d.newState();
-        State sOBracketOpCommaOp := d.newState();
-        State sOBracketOpCommaOpComma := d.newState();
-        State sOBracketOpCommaOpCommaNumber := d.newState();
-        State sOBracketComma := d.newState();
-        State sOBracketCommaOp := d.newState();
-        State sOBracketCommaOpComma := d.newState();
-        State sOBracketCommaOpCommaNumber := d.newState();
-        State sOBracketOpOperator := d.newState();
-        State sOBracketOpOperatorOp := d.newState();
-        State sOpOBracket := d.newState();
-        State sOpOBracketOp := d.newState();
-        State sOpOBracketOpComma := d.newState();
-        State sOpOBracketOpCommaOp := d.newState();
-        State sOpOBracketOpCommaOpComma := d.newState();
-        State sOpOBracketOpCommaOpCommaNumber := d.newState();
-        State sOpOBracketComma := d.newState();
-        State sOpOBracketCommaOp := d.newState();
-        State sOpOBracketCommaOpComma := d.newState();
-        State sOpOBracketCommaOpCommaNumber := d.newState();
-
-        State sReduceUnitLabel := d.newState();
-        State sReduceUnitDefinition := d.newState();
-        State sReduceUnitInstruction := d.newState();
-        State sReduceUnitEOL := d.newState();
-        State sReduceIndirect := d.newState();
-        State sReduceFormula := d.newState();
-        
-        sEMPTY.addAction(tEOI, this.reduce(r00));
-        sEMPTY.addAction(tSEMICOLON, this.reduce(r00));
-        sEMPTY.addAction(tNEWLINE, this.reduce(r00));
-        sEMPTY.addAction(tIDENTIFIER, this.reduce(r00));
-        sEMPTY.addGoto(ntUNIT, sUnit);
-        
-        sUnit.addAction(tEOI, this.accept());
-        sUnit.addAction(tSEMICOLON, this.shiftReduce(r04));
-        sUnit.addAction(tNEWLINE, this.shiftReduce(r04));
-        sUnit.addAction(tIDENTIFIER, this.shift(sUnitId));
-        sUnit.addGoto(ntLABEL, sReduceUnitLabel);
-        sUnit.addGoto(ntDEFINITION, sReduceUnitDefinition);
-        sUnit.addGoto(ntINSTRUCTION, sReduceUnitInstruction);
-        sUnit.addGoto(ntEOL, sReduceUnitEOL);
-
-        sUnitId.addAction(tCOLON, this.shiftReduce(r05));
-        sUnitId.addAction(tEOI, this.shiftReduce(r06));
-        sUnitId.addAction(tSEMICOLON, this.shiftReduce(r06));
-        sUnitId.addAction(tNEWLINE, this.shiftReduce(r06));
-        sUnitId.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sUnitId.addAction(tREGISTER, this.shiftReduce(r14));
-        sUnitId.addAction(tNUMBER, this.shiftReduce(r15));
-        sUnitId.addAction(tCHAR, this.shiftReduce(r16));
-        sUnitId.addAction(tSTRING, this.shiftReduce(r17));
-        sUnitId.addAction(tASSIGN, this.shift(sUnitIdAssign));
-        sUnitId.addAction(tOBRACKET, this.shift(sOBracket));
-        sUnitId.addGoto(ntOPERAND, sUnitIdOp);
-        sUnitId.addGoto(ntINDIRECT, sReduceIndirect);
-        sUnitId.addGoto(ntFORMULA, sReduceFormula);
-
-        sUnitIdAssign.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sUnitIdAssign.addAction(tREGISTER, this.shiftReduce(r14));
-        sUnitIdAssign.addAction(tNUMBER, this.shiftReduce(r15));
-        sUnitIdAssign.addAction(tCHAR, this.shiftReduce(r16));
-        sUnitIdAssign.addAction(tSTRING, this.shiftReduce(r17));
-        sUnitIdAssign.addAction(tOBRACKET, this.shift(sOBracket));
-        sUnitIdAssign.addGoto(ntOPERAND, sUnitIdAssignOp);
-        sUnitIdAssign.addGoto(ntINDIRECT, sReduceIndirect);
-        sUnitIdAssign.addGoto(ntFORMULA, sReduceFormula);
-
-        sUnitIdAssignOp.addAction(tEOI, this.shiftReduce(r10));
-        sUnitIdAssignOp.addAction(tSEMICOLON, this.shiftReduce(r10));
-        sUnitIdAssignOp.addAction(tNEWLINE, this.shiftReduce(r10));
-        sUnitIdAssignOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-
-        sUnitIdOp.addAction(tEOI, this.shiftReduce(r07));
-        sUnitIdOp.addAction(tSEMICOLON, this.shiftReduce(r07));
-        sUnitIdOp.addAction(tNEWLINE, this.shiftReduce(r07));
-        sUnitIdOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sUnitIdOp.addAction(tCOMMA, this.shift(sUnitIdOpComma));
-
-        sUnitIdOpComma.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sUnitIdOpComma.addAction(tREGISTER, this.shiftReduce(r14));
-        sUnitIdOpComma.addAction(tNUMBER, this.shiftReduce(r15));
-        sUnitIdOpComma.addAction(tCHAR, this.shiftReduce(r16));
-        sUnitIdOpComma.addAction(tSTRING, this.shiftReduce(r17));
-        sUnitIdOpComma.addAction(tOBRACKET, this.shift(sOBracket));
-        sUnitIdOpComma.addGoto(ntOPERAND, sUnitIdOpCommaOp);
-        sUnitIdOpComma.addGoto(ntINDIRECT, sReduceIndirect);
-        sUnitIdOpComma.addGoto(ntFORMULA, sReduceFormula);
-
-        sUnitIdOpCommaOp.addAction(tEOI, this.shiftReduce(r08));
-        sUnitIdOpCommaOp.addAction(tSEMICOLON, this.shiftReduce(r08));
-        sUnitIdOpCommaOp.addAction(tNEWLINE, this.shiftReduce(r08));
-        sUnitIdOpCommaOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sUnitIdOpCommaOp.addAction(tCOMMA, this.shift(sUnitIdOpCommaOpComma));
-
-        sUnitIdOpCommaOpComma.addAction(tOBRACKET, this.shift(sOBracket));
-        sUnitIdOpCommaOpComma.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sUnitIdOpCommaOpComma.addAction(tREGISTER, this.shiftReduce(r14));
-        sUnitIdOpCommaOpComma.addAction(tNUMBER, this.shiftReduce(r15));
-        sUnitIdOpCommaOpComma.addAction(tCHAR, this.shiftReduce(r16));
-        sUnitIdOpCommaOpComma.addAction(tSTRING, this.shiftReduce(r17));
-        sUnitIdOpCommaOpComma.addGoto(ntOPERAND, sUnitIdOpCommaOpCommaOp);
-        sUnitIdOpCommaOpComma.addGoto(ntINDIRECT, sReduceIndirect);
-        sUnitIdOpCommaOpComma.addGoto(ntFORMULA, sReduceFormula);
-
-        sUnitIdOpCommaOpCommaOp.addAction(tEOI, this.shiftReduce(r09));
-        sUnitIdOpCommaOpCommaOp.addAction(tSEMICOLON, this.shiftReduce(r09));
-        sUnitIdOpCommaOpCommaOp.addAction(tNEWLINE, this.shiftReduce(r09));
-        sUnitIdOpCommaOpCommaOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-
-        sOBracketOpOperator.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOBracketOpOperator.addAction(tREGISTER, this.shiftReduce(r14));
-        sOBracketOpOperator.addAction(tNUMBER, this.shiftReduce(r15));
-        sOBracketOpOperator.addAction(tCHAR, this.shiftReduce(r16));
-        sOBracketOpOperator.addAction(tSTRING, this.shiftReduce(r17));
-        sOBracketOpOperator.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracketOpOperator.addGoto(ntOPERAND, sOBracketOpOperatorOp);
-        sOBracketOpOperator.addGoto(ntINDIRECT, sReduceIndirect);
-        sOBracketOpOperator.addGoto(ntFORMULA, sReduceFormula);
-        sOBracketOpOperatorOp.addAction(tCBRACKET, this.shiftReduce(r30));
-
-        sOBracket.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOBracket.addAction(tREGISTER, this.shiftReduce(r14));
-        sOBracket.addAction(tNUMBER, this.shiftReduce(r15));
-        sOBracket.addAction(tCHAR, this.shiftReduce(r16));
-        sOBracket.addAction(tSTRING, this.shiftReduce(r17));
-        sOBracket.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracket.addAction(tCOMMA, this.shift(sOBracketComma));
-        sOBracket.addGoto(ntOPERAND, sOBracketOp);
-        sOBracket.addGoto(ntINDIRECT, sReduceIndirect);
-        sOBracket.addGoto(ntFORMULA, sReduceFormula);
-        
-        sOBracketOp.addAction(tCBRACKET, this.shiftReduce(r20));
-        sOBracketOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sOBracketOp.addAction(tCOMMA, this.shift(sOBracketOpComma));
-        sOBracketOp.addAction(tOPERATOR, this.shift(sOBracketOpOperator));
-
-        sOBracketOpComma.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOBracketOpComma.addAction(tREGISTER, this.shiftReduce(r14));
-        sOBracketOpComma.addAction(tNUMBER, this.shiftReduce(r15));
-        sOBracketOpComma.addAction(tCHAR, this.shiftReduce(r16));
-        sOBracketOpComma.addAction(tSTRING, this.shiftReduce(r17));
-        sOBracketOpComma.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracketOpComma.addGoto(ntOPERAND, sOBracketOpCommaOp);
-        sOBracketOpComma.addGoto(ntINDIRECT, sReduceIndirect);
-        sOBracketOpComma.addGoto(ntFORMULA, sReduceFormula);
-
-        sOBracketOpCommaOp.addAction(tCBRACKET, this.shiftReduce(r21));
-        sOBracketOpCommaOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sOBracketOpCommaOp.addAction(tCOMMA, this.shift(sOBracketOpCommaOpComma));
-        sOBracketOpCommaOpComma.addAction(tNUMBER, this.shift(sOBracketOpCommaOpCommaNumber));
-        sOBracketOpCommaOpCommaNumber.addAction(tCBRACKET, this.shiftReduce(r22));
-
-        sOBracketComma.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOBracketComma.addAction(tREGISTER, this.shiftReduce(r14));
-        sOBracketComma.addAction(tNUMBER, this.shiftReduce(r15));
-        sOBracketComma.addAction(tCHAR, this.shiftReduce(r16));
-        sOBracketComma.addAction(tSTRING, this.shiftReduce(r17));
-        sOBracketComma.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracketComma.addGoto(ntOPERAND, sOBracketCommaOp);
-        sOBracketComma.addGoto(ntINDIRECT, sReduceIndirect);
-        sOBracketComma.addGoto(ntFORMULA, sReduceFormula);
-
-        sOBracketCommaOp.addAction(tCBRACKET, this.shiftReduce(r23));
-        sOBracketCommaOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sOBracketCommaOp.addAction(tCOMMA, this.shift(sOBracketCommaOpComma));
-        sOBracketCommaOpComma.addAction(tNUMBER, this.shift(sOBracketCommaOpCommaNumber));
-        sOBracketCommaOpCommaNumber.addAction(tCBRACKET, this.shiftReduce(r24));
-
-        sOpOBracket.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOpOBracket.addAction(tREGISTER, this.shiftReduce(r14));
-        sOpOBracket.addAction(tNUMBER, this.shiftReduce(r15));
-        sOpOBracket.addAction(tCHAR, this.shiftReduce(r16));
-        sOpOBracket.addAction(tSTRING, this.shiftReduce(r17));
-        sOpOBracket.addAction(tOBRACKET, this.shift(sOBracket));
-        sOpOBracket.addAction(tCOMMA, this.shift(sOpOBracketComma));
-        sOpOBracket.addGoto(ntOPERAND, sOpOBracketOp);
-        sOpOBracket.addGoto(ntINDIRECT, sReduceIndirect);
-        sOpOBracket.addGoto(ntFORMULA, sReduceFormula);
-        
-        sOpOBracketOp.addAction(tCBRACKET, this.shiftReduce(r25));
-        sOpOBracketOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sOpOBracketOp.addAction(tCOMMA, this.shift(sOpOBracketOpComma));
-
-        sOpOBracketOpComma.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOpOBracketOpComma.addAction(tREGISTER, this.shiftReduce(r14));
-        sOpOBracketOpComma.addAction(tNUMBER, this.shiftReduce(r15));
-        sOpOBracketOpComma.addAction(tCHAR, this.shiftReduce(r16));
-        sOpOBracketOpComma.addAction(tSTRING, this.shiftReduce(r17));
-        sOpOBracketOpComma.addAction(tOBRACKET, this.shift(sOBracket));
-        sOpOBracketOpComma.addGoto(ntOPERAND, sOpOBracketOpCommaOp);
-        sOpOBracketOpComma.addGoto(ntINDIRECT, sReduceIndirect);
-        sOpOBracketOpComma.addGoto(ntFORMULA, sReduceFormula);
-
-        sOpOBracketOpCommaOp.addAction(tCBRACKET, this.shiftReduce(r26));
-        sOpOBracketOpCommaOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sOpOBracketOpCommaOp.addAction(tCOMMA, this.shift(sOpOBracketOpCommaOpComma));
-        sOpOBracketOpCommaOpComma.addAction(tNUMBER, this.shift(sOpOBracketOpCommaOpCommaNumber));
-        sOpOBracketOpCommaOpCommaNumber.addAction(tCBRACKET, this.shiftReduce(r27));
-
-        sOpOBracketComma.addAction(tIDENTIFIER, this.shiftReduce(r13));
-        sOpOBracketComma.addAction(tREGISTER, this.shiftReduce(r14));
-        sOpOBracketComma.addAction(tNUMBER, this.shiftReduce(r15));
-        sOpOBracketComma.addAction(tCHAR, this.shiftReduce(r16));
-        sOpOBracketComma.addAction(tSTRING, this.shiftReduce(r17));
-        sOpOBracketComma.addAction(tOBRACKET, this.shift(sOBracket));
-        sOpOBracketComma.addGoto(ntOPERAND, sOpOBracketCommaOp);
-        sOpOBracketComma.addGoto(ntINDIRECT, sReduceIndirect);
-        sOpOBracketComma.addGoto(ntFORMULA, sReduceFormula);
-
-        sOpOBracketCommaOp.addAction(tCBRACKET, this.shiftReduce(r28));
-        sOpOBracketCommaOp.addAction(tOBRACKET, this.shift(sOpOBracket));
-        sOpOBracketCommaOp.addAction(tCOMMA, this.shift(sOpOBracketCommaOpComma));
-        sOpOBracketCommaOpComma.addAction(tNUMBER, this.shift(sOpOBracketCommaOpCommaNumber));
-        sOpOBracketCommaOpCommaNumber.addAction(tCBRACKET, this.shiftReduce(r29));
-
-        sReduceUnitLabel.setDefaultAction(this.reduce(r01));
-        sReduceUnitDefinition.setDefaultAction(this.reduce(r02));
-        sReduceUnitInstruction.setDefaultAction(this.reduce(r03));
-        sReduceUnitEOL.setDefaultAction(this.reduce(r04));
-        sReduceIndirect.setDefaultAction(this.reduce(r18));
-        sReduceFormula.setDefaultAction(this.reduce(r19));
-
-        return d;
+        return this.buildGrammar(def, err, dot);
     }
     
 }
