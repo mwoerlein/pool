@@ -59,7 +59,6 @@ class Factory extends sys::core::Object {
         Symbol tCFLEX       := def.getCSymbol("CFLEX");
         Symbol tPIPE        := def.getCSymbol("PIPE");
         Symbol tDOT         := def.getCSymbol("DOT");
-//        Symbol tOTHER       := def.getCSymbol("OTHER");
 
         Symbol ntEXPRESSION := def.getCSymbol("expression");    
         Symbol ntALTER      := def.getCSymbol("alter");    
@@ -80,211 +79,44 @@ class Factory extends sys::core::Object {
         def.newToken(tCFLEX).setDefinition("/\\^/");
         def.newToken(tPIPE).setDefinition("/\\|/");
         def.newToken(tDOT).setDefinition("/\\./");
-//        def.newToken(tOTHER).setDefinition("/.*/");
 
-        Rule r00 := def.newRule(ntEXPRESSION).addRHS(ntALTER)
+        def.newRule(ntEXPRESSION).addRHS(ntALTER)
             .setCode("{ $$ = this.expression = $1; }");
-        Rule r01 := def.newRule(ntEXPRESSION).addRHS(ntCONCAT)
-            .setCode("{ $$ = this.expression = $1; }");
-        Rule r02 := def.newRule(ntALTER).addRHS(ntCONCAT)
+        def.newRule(ntALTER).addRHS(ntCONCAT)
             .setCode("{ $$ = this.listAddNode(this.alter(), this.listToNode($1)); }");
-        Rule r03 := def.newRule(ntALTER).addRHS(ntALTER).addRHS(tPIPE).addRHS(ntCONCAT)
+        def.newRule(ntALTER).addRHS(ntALTER).addRHS(tPIPE).addRHS(ntCONCAT)
             .setCode("{ $$ = this.listAddNode($1, this.listToNode($3)); }");
-        Rule r04 := def.newRule(ntCONCAT).addRHS(ntELEM)
+        def.newRule(ntCONCAT).addRHS(ntELEM)
             .setCode("{ $$ = this.listAddNode(this.concat(), $1); }");
-        Rule r05 := def.newRule(ntCONCAT).addRHS(ntCONCAT).addRHS(ntELEM)
+        def.newRule(ntCONCAT).addRHS(ntCONCAT).addRHS(ntELEM)
             .setCode("{ $$ = this.listAddNode($1, $2); }");
-        Rule r06 := def.newRule(ntELEM).addRHS(ntEXPR);
-        Rule r07 := def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tQMARK)
+        def.newRule(ntELEM).addRHS(ntEXPR);
+        def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tQMARK)
             .setCode("{ $$ = this.atMostOnce($1); }");
-        Rule r08 := def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tSTAR)
+        def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tSTAR)
             .setCode("{ $$ = this.any($1); }");
-        Rule r09 := def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tPLUS)
+        def.newRule(ntEXPR).addRHS(ntEXPR).addRHS(tPLUS)
             .setCode("{ $$ = this.atLeastOnce($1); }");
-        Rule r10 := def.newRule(ntEXPR).addRHS(tDOT)
+        def.newRule(ntEXPR).addRHS(tDOT)
             .setCode("{ $$ = this.all(); }");
-        Rule r11 := def.newRule(ntEXPR).addRHS(tCHAR)
+        def.newRule(ntEXPR).addRHS(tCHAR)
             .setCode("{ $$ = this.single(this.toChar($1)); }");
-        Rule r12 := def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(ntCLASS).addRHS(tCSBRACKET)
+        def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(ntCLASS).addRHS(tCSBRACKET)
             .setCode("{ $$ = this.ccToNode($2); }");
-        Rule r13 := def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(tCFLEX).addRHS(ntCLASS).addRHS(tCSBRACKET)
+        def.newRule(ntEXPR).addRHS(tOSBRACKET).addRHS(tCFLEX).addRHS(ntCLASS).addRHS(tCSBRACKET)
             .setCode("{ $$ = this.ccToExclusiveNode($3); }");
-        Rule r14 := def.newRule(ntEXPR).addRHS(tOBRACKET).addRHS(ntALTER).addRHS(tCBRACKET)
+        def.newRule(ntEXPR).addRHS(tOBRACKET).addRHS(ntALTER).addRHS(tCBRACKET)
             .setCode("{ $$ = this.listToNode($2); }");
-        Rule r15 := def.newRule(ntCLASS).addRHS(tCHAR)
+        def.newRule(ntCLASS).addRHS(tCHAR)
             .setCode("{ $$ = this.ccAddChar(this.cc(), this.toChar($1)); }");
-        Rule r16 := def.newRule(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
+        def.newRule(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
             .setCode("{ $$ = this.ccAddRange(this.cc(), this.toChar($1), this.toChar($3)); }");
-        Rule r17 := def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR)
+        def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR)
             .setCode("{ $$ = this.ccAddChar($1, this.toChar($2)); }");
-        Rule r18 := def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
+        def.newRule(ntCLASS).addRHS(ntCLASS).addRHS(tCHAR).addRHS(tMINUS).addRHS(tCHAR)
             .setCode("{ $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }");
 
-        Grammar d = this.buildGrammar(def, err, dot);
-
-        // TODO: generate states/actions/gotos from rules
-        State sEMPTY := d.newInitState();
-        State sExpression := d.newState();
-        State sExpr := d.newState();
-        State sElem := d.newState();
-        State sConcat := d.newState();
-        State sAlter := d.newState();
-        State sAlterPipe := d.newState();
-        State sAlterPipeConcat := d.newState();
-        State sOBracket := d.newState();
-        State sOBracketExpr := d.newState();
-        State sOBracketElem := d.newState();
-        State sOBracketConcat := d.newState();
-        State sOBracketAlter := d.newState();
-        State sOBracketAlterPipe := d.newState();
-        State sOBracketAlterPipeConcat := d.newState();
-        State sOSBracket := d.newState();
-        State sOSBracketClass := d.newState();
-        State sOSBracketCFlex := d.newState();
-        State sOSBracketCFlexClass := d.newState();
-        State sChar := d.newState();
-        State sCharMinus := d.newState();
-        State sClassChar := d.newState();
-        State sClassCharMinus := d.newState();
-        State sReduceRule05 := d.newState();
-        
-        sEMPTY.addAction(tDOT, this.shiftReduce(r10));
-        sEMPTY.addAction(tCHAR, this.shiftReduce(r11));
-        sEMPTY.addAction(tOBRACKET, this.shift(sOBracket));
-        sEMPTY.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sEMPTY.addGoto(ntEXPRESSION, sExpression);
-        sEMPTY.addGoto(ntEXPR, sExpr);
-        sEMPTY.addGoto(ntELEM, sElem);
-        sEMPTY.addGoto(ntCONCAT, sConcat);
-        sEMPTY.addGoto(ntALTER, sAlter);
-        
-        sExpression.addAction(tEOI, this.accept());
-        
-        sExpr.addAction(tEOI, this.reduce(r06));
-        sExpr.addAction(tPIPE, this.reduce(r06));
-        sExpr.addAction(tDOT, this.reduce(r06));
-        sExpr.addAction(tCHAR, this.reduce(r06));
-        sExpr.addAction(tOBRACKET, this.reduce(r06));
-        sExpr.addAction(tOSBRACKET, this.reduce(r06));
-        sExpr.addAction(tQMARK, this.shiftReduce(r07));
-        sExpr.addAction(tSTAR, this.shiftReduce(r08));
-        sExpr.addAction(tPLUS, this.shiftReduce(r09));
-        
-        sElem.addAction(tEOI, this.reduce(r04));
-        sElem.addAction(tPIPE, this.reduce(r04));
-        sElem.addAction(tDOT, this.reduce(r04));
-        sElem.addAction(tCHAR, this.reduce(r04));
-        sElem.addAction(tOBRACKET, this.reduce(r04));
-        sElem.addAction(tOSBRACKET, this.reduce(r04));
-        
-        sConcat.addAction(tEOI, this.reduce(r01));
-        sConcat.addAction(tPIPE, this.reduce(r02));
-        sConcat.addAction(tDOT, this.shiftReduce(r10));
-        sConcat.addAction(tCHAR, this.shiftReduce(r11));
-        sConcat.addAction(tOBRACKET, this.shift(sOBracket));
-        sConcat.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sConcat.addGoto(ntEXPR, sExpr);
-        sConcat.addGoto(ntELEM, sReduceRule05);
-        
-        sAlter.addAction(tEOI, this.reduce(r00));
-        sAlter.addAction(tPIPE, this.shift(sAlterPipe));
-        
-        sAlterPipe.addAction(tDOT, this.shiftReduce(r10));
-        sAlterPipe.addAction(tCHAR, this.shiftReduce(r11));
-        sAlterPipe.addAction(tOBRACKET, this.shift(sOBracket));
-        sAlterPipe.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sAlterPipe.addGoto(ntEXPR, sExpr);
-        sAlterPipe.addGoto(ntELEM, sElem);
-        sAlterPipe.addGoto(ntCONCAT, sAlterPipeConcat);
-        
-        sAlterPipeConcat.addAction(tEOI, this.reduce(r03));
-        sAlterPipeConcat.addAction(tPIPE, this.reduce(r03));
-        sAlterPipeConcat.addAction(tDOT, this.shiftReduce(r10));
-        sAlterPipeConcat.addAction(tCHAR, this.shiftReduce(r11));
-        sAlterPipeConcat.addAction(tOBRACKET, this.shift(sOBracket));
-        sAlterPipeConcat.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sAlterPipeConcat.addGoto(ntEXPR, sExpr);
-        sAlterPipeConcat.addGoto(ntELEM, sReduceRule05);
-        
-        sOBracket.addAction(tDOT, this.shiftReduce(r10));
-        sOBracket.addAction(tCHAR, this.shiftReduce(r11));
-        sOBracket.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracket.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sOBracket.addGoto(ntEXPR, sOBracketExpr);
-        sOBracket.addGoto(ntELEM, sOBracketElem);
-        sOBracket.addGoto(ntCONCAT, sOBracketConcat);
-        sOBracket.addGoto(ntALTER, sOBracketAlter);
-
-        sOBracketAlter.addAction(tCBRACKET, this.shiftReduce(r14));
-        sOBracketAlter.addAction(tPIPE, this.shift(sOBracketAlterPipe));
-        
-        sOBracketConcat.addAction(tCBRACKET, this.reduce(r02));
-        sOBracketConcat.addAction(tPIPE, this.reduce(r02));
-        sOBracketConcat.addAction(tDOT, this.shiftReduce(r10));
-        sOBracketConcat.addAction(tCHAR, this.shiftReduce(r11));
-        sOBracketConcat.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracketConcat.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sOBracketConcat.addGoto(ntEXPR, sOBracketExpr);
-        sOBracketConcat.addGoto(ntELEM, sReduceRule05);
-        
-        sOBracketElem.addAction(tCBRACKET, this.reduce(r04));
-        sOBracketElem.addAction(tPIPE, this.reduce(r04));
-        sOBracketElem.addAction(tDOT, this.reduce(r04));
-        sOBracketElem.addAction(tCHAR, this.reduce(r04));
-        sOBracketElem.addAction(tOBRACKET, this.reduce(r04));
-        sOBracketElem.addAction(tOSBRACKET, this.reduce(r04));
-        
-        sOBracketExpr.addAction(tCBRACKET, this.reduce(r06));
-        sOBracketExpr.addAction(tPIPE, this.reduce(r06));
-        sOBracketExpr.addAction(tDOT, this.reduce(r06));
-        sOBracketExpr.addAction(tCHAR, this.reduce(r06));
-        sOBracketExpr.addAction(tOBRACKET, this.reduce(r06));
-        sOBracketExpr.addAction(tOSBRACKET, this.reduce(r06));
-        sOBracketExpr.addAction(tQMARK, this.shiftReduce(r07));
-        sOBracketExpr.addAction(tSTAR, this.shiftReduce(r08));
-        sOBracketExpr.addAction(tPLUS, this.shiftReduce(r09));
-        
-        sOBracketAlterPipe.addAction(tDOT, this.shiftReduce(r10));
-        sOBracketAlterPipe.addAction(tCHAR, this.shiftReduce(r11));
-        sOBracketAlterPipe.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracketAlterPipe.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sOBracketAlterPipe.addGoto(ntEXPR, sOBracketExpr);
-        sOBracketAlterPipe.addGoto(ntELEM, sOBracketElem);
-        sOBracketAlterPipe.addGoto(ntCONCAT, sOBracketAlterPipeConcat);
-        
-        sOBracketAlterPipeConcat.addAction(tCBRACKET, this.reduce(r03));
-        sOBracketAlterPipeConcat.addAction(tPIPE, this.reduce(r03));
-        sOBracketAlterPipeConcat.addAction(tDOT, this.shiftReduce(r10));
-        sOBracketAlterPipeConcat.addAction(tCHAR, this.shiftReduce(r11));
-        sOBracketAlterPipeConcat.addAction(tOBRACKET, this.shift(sOBracket));
-        sOBracketAlterPipeConcat.addAction(tOSBRACKET, this.shift(sOSBracket));
-        sOBracketAlterPipeConcat.addGoto(ntEXPR, sOBracketExpr);
-        sOBracketAlterPipeConcat.addGoto(ntELEM, sReduceRule05);
-        
-        sOSBracket.addAction(tCHAR, this.shift(sChar));
-        sOSBracket.addAction(tCFLEX, this.shift(sOSBracketCFlex));
-        sOSBracket.addGoto(ntCLASS, sOSBracketClass);
-        sOSBracketClass.addAction(tCHAR, this.shift(sClassChar));
-        sOSBracketClass.addAction(tCSBRACKET, this.shiftReduce(r12));
-        
-        sOSBracketCFlex.addAction(tCHAR, this.shift(sChar));
-        sOSBracketCFlex.addGoto(ntCLASS, sOSBracketCFlexClass);
-        sOSBracketCFlexClass.addAction(tCHAR, this.shift(sClassChar));
-        sOSBracketCFlexClass.addAction(tCSBRACKET, this.shiftReduce(r13));
-        
-        sChar.addAction(tCHAR, this.reduce(r15));
-        sChar.addAction(tCSBRACKET, this.reduce(r15));
-        sChar.addAction(tMINUS, this.shift(sCharMinus));
-        sCharMinus.addAction(tCHAR, this.shiftReduce(r16));
-        
-        sClassChar.addAction(tCHAR, this.reduce(r17));
-        sClassChar.addAction(tCSBRACKET, this.reduce(r17));
-        sClassChar.addAction(tMINUS, this.shift(sClassCharMinus));
-        sClassCharMinus.addAction(tCHAR, this.shiftReduce(r18));
-
-        sReduceRule05.setDefaultAction(this.reduce(r05));
-        
-        return d;
+        return this.buildGrammar(def, err, dot);
     }
     
     /* 

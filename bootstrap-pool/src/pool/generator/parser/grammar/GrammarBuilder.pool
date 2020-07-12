@@ -15,7 +15,7 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::anycollection::AnySet;
 use sys::stream::OStream;
 
-class GrammarBuilder extends sys::core::Object {
+class GrammarBuilder extends Factory {
 
     Grammar g;
     GrammarDefinition def;
@@ -45,6 +45,7 @@ class GrammarBuilder extends sys::core::Object {
         g.setDefinition(this.def = def);
         if (!errors) { this._initialize(err); }
         if (!errors) { this._buildGraph(); }
+        if (!errors) { this._buildGrammar(); }
         if (!errors) { return g; }
         g.destroy();
         return null;
@@ -317,6 +318,83 @@ class GrammarBuilder extends sys::core::Object {
             it.destroy();
         }
         return la;
+    }
+    
+    [] _buildGrammar() {
+        Item initItem = this.rt().createInstance(Item:CLASSNAME);
+        initItem.setRule(accept).setPos(0);
+        Item acceptItem = this.rt().createInstance(Item:CLASSNAME);
+        acceptItem.setRule(accept).setPos(1);
+        {
+            AnyMapEntryIterator it = states.entries();
+            while (it.hasNext()) {
+                [AnySet set, State s] = it.nextPair();
+                {
+                    AnyIterator items = set.iterator();
+                    while (items.hasNext()) {
+                        Item i = items.next();
+                        if (i.isReduce()) {
+                            AnyIterator las = i.getLookahead().iterator();
+                            while (las.hasNext()) {
+                                this.addReduceAction(s, las.next(), i.getRule());
+                            }
+                            las.destroy();
+                        }
+                    }
+                    items.destroy();
+                }
+                if (set.contains(acceptItem)) {
+                    s.addAction(def.getEOI(), this.accept());
+                }
+            }
+            it.destroy();
+        }
+        {
+            AnyMapEntryIterator it = transitions.entries();
+            while (it.hasNext()) {
+                [State source, AnyMap destMap] = it.nextPair();
+                AnyMapEntryIterator dit = destMap.entries();
+                while (dit.hasNext()) {
+                    [Symbol s, State dest] = dit.nextPair();
+                    if (g.hasTerminal(s)) { this.addShiftAction(source, s, dest); }
+                    if (g.hasNonTerminal(s)) { source.addGoto(s, dest); }
+                }
+                dit.destroy();
+            }
+            it.destroy();
+        }
+        acceptItem.destroy();
+        initItem.destroy();
+    }
+    
+    [] addReduceAction(State state, Symbol symbol, Rule rule) {
+/*
+        this.rt().out().printCString("reduce ").printInt(state.getId())
+            .printCString(" at ").print(symbol)
+            .printCString(" via ").print(rule).printNewline();
+*/            
+        Action a = state.getAction(symbol);
+        if (a) {
+            this.rt().err().printCString("Reduce conflict on ").print(rule).printNewline();
+            errors++;
+            return;
+        }
+        state.addAction(symbol, this.reduce(rule));
+    }
+    
+    [] addShiftAction(State state, Symbol symbol, State dest) {
+/*
+        this.rt().out().printCString("shift ").printInt(state.getId())
+            .printCString(" at ").print(symbol)
+            .printCString(" to ").printInt(dest.getId()).printNewline();
+*/
+        Action a = state.getAction(symbol);
+        if (a) {
+            this.rt().err().printCString("Shift conflict on ").print(symbol).printNewline();
+            errors++;
+            return;
+        }
+        state.addAction(symbol, this.shift(dest));
     }
     
     // DEBUG

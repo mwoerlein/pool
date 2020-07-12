@@ -28,6 +28,7 @@ class State extends sys::core::Object {
     [State] setDefaultAction(Action a) { defaultAction = a; return this; }
     [Action] getDefaultAction() { return defaultAction; }
     
+    [Action] getAction(Symbol t) { return actions.get(t); }
     [State] addAction(Symbol t, Action a) { actions.set(t, a); return this; }
     [AnyMapEntryIterator] actions() { return actions.entries(); }
     

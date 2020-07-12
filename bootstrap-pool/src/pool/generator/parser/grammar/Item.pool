@@ -39,6 +39,8 @@ class Item extends sys::core::Object {
         return i && (this.pos == i.pos) && this.rule.equals(i.rule) /*&& this.lookahead.equals(i.lookahead)*/;
     }
     
+    [int] isReduce() { return this.pos == rule.getRHSSize(); }
+    
     [OStream] printToStream(OStream stream) {
         stream.print(rule.getLHS()).printChar(':');
         {

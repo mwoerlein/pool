@@ -17,7 +17,6 @@ PIPE      := /\|/
 DOT       := /\./
 
 expression: alter                     { $$ = this.expression = $1; }
-expression: concat                    { $$ = this.expression = $1; }
 alter: concat                         { $$ = this.listAddNode(this.alter(), this.listToNode($1)); }
 alter: alter PIPE concat              { $$ = this.listAddNode($1, this.listToNode($3)); }
 concat: elem                          { $$ = this.listAddNode(this.concat(), $1); }
