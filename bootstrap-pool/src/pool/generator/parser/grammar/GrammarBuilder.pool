@@ -15,7 +15,7 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::anycollection::AnySet;
 use sys::stream::OStream;
 
-class GrammarBuilder extends Factory {
+class GrammarBuilder extends sys::core::Object {
 
     Grammar g;
     GrammarDefinition def;
@@ -396,6 +396,12 @@ class GrammarBuilder extends Factory {
         }
         state.addAction(symbol, this.shift(dest));
     }
+    
+    [Action] action() { return this.rt().createInstance(Action:CLASSNAME); }
+    [Action] accept() { return this.action().setAccept(); }
+    [Action] shift(State s) { return this.action().setShift(s); }
+    [Action] reduce(Rule r) { return this.action().setReduce(r); }
+    [Action] shiftReduce(Rule r) { return this.action().setShift(null).setReduce(r); }
     
     // DEBUG
     [OStream] debugNullable(OStream out) {
