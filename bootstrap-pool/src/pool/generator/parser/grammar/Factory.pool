@@ -30,6 +30,7 @@ class Factory extends sys::core::Object {
 //        gb.debugFollow(out);
 //        gb.debugGraph(dot);
         
+        gb.destroy();
         return g;
     }
     

@@ -38,7 +38,6 @@ class GrammarBuilder extends sys::core::Object {
         follow = this.createOwn(AnyMap:CLASSNAME);
         states = this.createOwn(AnyMap:CLASSNAME);
         transitions = this.createOwn(AnyMap:CLASSNAME);
-        
     }
     
     [Grammar] build(GrammarDefinition def, OStream err) {
@@ -130,8 +129,7 @@ class GrammarBuilder extends sys::core::Object {
         start.setCName("S'");
         this._initializeSets(start);
         
-        Symbol end = accept.createOwn(Symbol:CLASSNAME);
-        end.setCName("$");
+        Symbol end = def.getEOI();
         this._initializeSets(end).add(end);
         
         accept.setLHS(start).addRHS(s).addRHS(end);
@@ -183,7 +181,7 @@ class GrammarBuilder extends sys::core::Object {
     }
 
     [] _buildGraph() {
-        State initState = states.createOwn(State:CLASSNAME);
+        State initState = g.newState();
         AnySet initSet = states.createOwn(AnySet:CLASSNAME);
         this._addItems(initSet, accept, 0, null);
         states.set(this.closure(initSet), initState);
@@ -206,13 +204,26 @@ class GrammarBuilder extends sys::core::Object {
                     AnySet nextSet = this.move(set, s);
                     if (!nextSet.isEmpty()) {
                         this.closure(nextSet);
-                        State nextState = states.get(nextSet);
-                        if (!nextState) {
-                            nextState = states.createOwn(State:CLASSNAME);
-                            states.set(nextSet, nextState);
+                        AnySet keySet = states.getKey(nextSet);
+                        if (keySet) {
+                            // state already exists => merge lookaheads from next set into key set
+                            AnyIterator items = nextSet.iterator();
+                            while (items.hasNext()) {
+                                Item item = items.next();
+                                Item keyItem = keySet.get(item);
+                                keyItem.getLookahead().addAll(item.getLookahead());
+                            }
+                            items.destroy();
+                            nextSet.destroy();
+                            nextSet = keySet;
+                        } else {
+                            // new set => new state
+                            State newState = g.newState();
+                            states.set(nextSet, newState);
                             states.own(nextSet);
                             ws.add(nextSet);
-                        } else { nextSet.destroy(); }
+                        }
+                        State nextState = states.get(nextSet);
                         trns.set(s, nextState);
                     } else { nextSet.destroy(); }
                 }
@@ -225,7 +236,7 @@ class GrammarBuilder extends sys::core::Object {
     
     [AnySet] move(AnySet set, Symbol s) {
         AnySet next = this.rt().createInstance(AnySet:CLASSNAME);
-        {
+        if (!s.equals(def.getEOI())) {
             AnyIterator it = set.iterator();
             while (it.hasNext()) {
                 Item i = it.next();
@@ -360,9 +371,10 @@ class GrammarBuilder extends sys::core::Object {
             while (it.hasNext()) {
                 [AnySet set, State s] = it.nextPair();
                 out.printCString("    \"").printPtr(s.getAddress()).printCString("\" [label=\"");
+                out.printInt(s.getId());
                 AnyIterator iit = set.iterator();
-                if (iit.hasNext()) { out.print(iit.next()); }
                 while (iit.hasNext()) { out.printCString("\n").print(iit.next()); }
+                iit.destroy();
                 out.printCString("\"]").printNewline();
             }
             it.destroy();
