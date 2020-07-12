@@ -1,0 +1,115 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::command;
+
+use pool::generator::parser::Parser;
+use pool::generator::parser::grammar::Parser as GrammarParser;
+use pool::generator::parser::grammar::Grammar;
+use pool::generator::regex::Tokenizer;
+
+use sys::core::String;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class ParserGen extends linux::Command {
+
+    [] __init() {
+        this._initCommand();
+    }
+    
+    [] __destruct() {
+        this._destructCommand();
+    }
+    
+    [] configure() {
+        this.setName("parsergen")
+            .setVersion("0.1.0")
+            .setUsage(<"
+Parser Generator.
+
+    Usage:
+      parsergen -c <dir>
+
+    Options:
+      -h --help                     Show this screen.
+      --version                     Show version.
+      -c <dir> --classpath <dir>    TBD
+      TODO
+">);
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('c', "classpath")
+        ;
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (!this.hasValueOption("classpath")) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+        
+        this.refreshTokenizerAndParser(out, "pool/generator/regex", "Parser.gram");
+        this.refreshTokenizerAndParser(out, "pool/generator/parser/grammar", "Parser.gram");
+        this.refreshTokenizerAndParser(out, "pool/asm", "Parser.gram");
+        out.printCString("finished").printNewline();
+        return 0;
+    }
+    
+    [] refreshTokenizerAndParser(OStream out, cstring dir, cstring filename) {
+        String grammarFilename = this.rt().createInstance(String:CLASSNAME);
+        grammarFilename.print(this.getValueOption("classpath")).printChar('/')
+            .printCString(dir).printChar('/')
+            .printCString(filename);
+        IStream inputFile = this.openFile(grammarFilename, linux::File:MODE_READ).istream();
+        GrammarParser parser = this.rt().createInstance(GrammarParser:CLASSNAME);
+        out.printCString("refresh from ").print(grammarFilename).printNewline();
+        Grammar gram = parser.parse(inputFile, grammarFilename);
+        
+        parser.destroy();
+        inputFile.destroy();
+        grammarFilename.destroy();
+
+        if (gram) {
+            out.printCString("generating").printNewline();
+            {
+                String tokenizerFilename = this.rt().createInstance(String:CLASSNAME);
+                tokenizerFilename.print(this.getValueOption("classpath")).printChar('/')
+                    .printCString(dir).printChar('/')
+                    .print(gram.getTokenizerClassname()).printCString(".pool");
+                OStream tokenizerFile = this.openFile(tokenizerFilename, linux::File:MODE_WRITE).ostream();
+                Tokenizer:genClassFromGrammar(gram, tokenizerFile);
+                tokenizerFile.destroy();
+                tokenizerFilename.destroy();
+            }
+            {
+                String parserFilename = this.rt().createInstance(String:CLASSNAME);
+                parserFilename.print(this.getValueOption("classpath")).printChar('/')
+                    .printCString(dir).printChar('/')
+                    .print(gram.getClassname()).printCString(".pool");
+                OStream parserFile = this.openFile(parserFilename, linux::File:MODE_WRITE).ostream();
+                Parser:genClassFromGrammar(gram, parserFile);
+                parserFile.destroy();
+                parserFilename.destroy();
+            }
+            gram.destroy();
+        }
+
+    }
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        ParserGen pg = linux::Runtime:buildRuntime().createInstance(ParserGen:CLASSNAME);
+        return pg.execute(argc, argv);
+    }
+}

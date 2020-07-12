@@ -2,7 +2,7 @@ include ./Makefile.inc
 
 .PHONY: all clean tests clear-tests
 
-all: clean $(BINDIR)/storeb $(BINDIR)/pbasm
+all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/parsergen
 tests: clear-tests $(BINDIR)/pooltest
 	@$(BINDIR)/pooltest
 
@@ -17,6 +17,11 @@ $(BINDIR)/storeb: $(SRCDIR)/pool/command/Store.pool $(BINDIR) $(POOLSC)
 $(BINDIR)/pbasm: $(SRCDIR)/pool/command/Pbasm.pool $(BINDIR) $(POOLSC)
 	@echo "build pbasm (pool)"
 	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::Pbasm
+	@chmod a+x $@
+	
+$(BINDIR)/parsergen: $(SRCDIR)/pool/command/ParserGen.pool $(BINDIR) $(POOLSC)
+	@echo "build parsergen (pool)"
+	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::ParserGen
 	@chmod a+x $@
 	
 $(BINDIR)/pooltest: $(TESTDIR)/test/Command.pool $(BINDIR) $(POOLSC)
