@@ -22,6 +22,7 @@ class Rule extends sys::core::Object {
     [] __init() {
         rhs = this.createOwn(AnyList:CLASSNAME);
         code = this.createOwn(String:CLASSNAME);
+        code.assignCString("{ $$ = $1; }");
     }
     
     [Rule] setId(int id) { this.id = id; return this; }

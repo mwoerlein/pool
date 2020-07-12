@@ -22,7 +22,7 @@ alter: concat                         { $$ = this.listAddNode(this.alter(), this
 alter: alter PIPE concat              { $$ = this.listAddNode($1, this.listToNode($3)); }
 concat: elem                          { $$ = this.listAddNode(this.concat(), $1); }
 concat: concat elem                   { $$ = this.listAddNode($1, $2); }
-elem: expr                            { $$ = $1; }
+elem: expr                            
 expr: expr QMARK                      { $$ = this.atMostOnce($1); }
 expr: expr STAR                       { $$ = this.any($1); }
 expr: expr PLUS                       { $$ = this.atLeastOnce($1); }
