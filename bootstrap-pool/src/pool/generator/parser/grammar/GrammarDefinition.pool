@@ -34,6 +34,10 @@ class GrammarDefinition extends PropertyContainer {
         this._destructPropertyContainer();
     }
     
+    [String] setSourceName(String sourceName) {
+        return _properties.set(this.createOwnStringFromCString("source.name"), this.createOwnStringFromString(sourceName));
+    }
+    
     [Symbol] getSymbol(String name) {
         if (symbols.has(name)) { return symbols.get(name); }
         Symbol s = this.createOwn(Symbol:CLASSNAME);

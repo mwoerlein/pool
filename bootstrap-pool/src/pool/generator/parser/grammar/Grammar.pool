@@ -74,6 +74,7 @@ class Grammar extends sys::core::Object {
     [String] getClassname() { return definition.getCStringProperty("classname"); }
     [String] getTokenizerClassname() { return definition.getCStringProperty("tokenizer"); }
     [String] getExtends() { return definition.getCStringProperty("extends"); }
+    [String] getSourceName() { return definition.getCStringProperty("source.name"); }
     
     [TokenizerDFA] getTokenizerDFA() {
         if (!this.tokenizerDFA) {

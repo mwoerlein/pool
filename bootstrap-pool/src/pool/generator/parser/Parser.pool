@@ -87,13 +87,17 @@ class Parser extends sys::core::Object {
 
     // TODO: extract model based src-code generation
     global [] genClassFromGrammar(Grammar gram, OStream out) {
-        out.printCString(<"
-/*[meta]
+        out.printChar('/').printChar('*').printCString(<"
+[meta]
 mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
-*/
+generator = parsergen
+[source]
+mimetype = text/x-pool-grammar
 ">).printNewline();
+        out.printCString("name = ").print(gram.getSourceName()).printNewline()
+           .printChar('*').printChar('/').printNewline();
         out.printCString("namespace ").print(gram.getNamespace()).printCString(";").printNewline();
         out.printNewline();
         out.printCString("use pool::generator::parser::ParseStack;").printNewline();

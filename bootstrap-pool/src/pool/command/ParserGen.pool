@@ -67,18 +67,20 @@ Parser Generator.
     }
     
     [] refreshTokenizerAndParser(OStream out, cstring dir, cstring filename) {
+        String source = this.rt().createInstance(String:CLASSNAME);
+        source.printCString(dir).printChar('/').printCString(filename);
         String grammarFilename = this.rt().createInstance(String:CLASSNAME);
-        grammarFilename.print(this.getValueOption("classpath")).printChar('/')
-            .printCString(dir).printChar('/')
-            .printCString(filename);
+        grammarFilename.print(this.getValueOption("classpath")).printChar('/').print(source);
         IStream inputFile = this.openFile(grammarFilename, linux::File:MODE_READ).istream();
         GrammarParser parser = this.rt().createInstance(GrammarParser:CLASSNAME);
+        
         out.printCString("refresh from ").print(grammarFilename).printNewline();
-        Grammar gram = parser.parse(inputFile, grammarFilename);
+        Grammar gram = parser.parse(inputFile, grammarFilename, source);
         
         parser.destroy();
         inputFile.destroy();
         grammarFilename.destroy();
+        source.destroy();
 
         if (gram) {
             out.printCString("generating").printNewline();

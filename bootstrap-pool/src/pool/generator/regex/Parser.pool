@@ -2,6 +2,10 @@
 mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
+generator = parsergen
+[source]
+mimetype = text/x-pool-grammar
+name = pool/generator/regex/Parser.gram
 */
 namespace pool::generator::regex;
 

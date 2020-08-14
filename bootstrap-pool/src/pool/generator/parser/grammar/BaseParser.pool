@@ -19,10 +19,11 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [sys::stream::OStream] newError() { return this.rt().err(); }
     
-    [Grammar] parse(IStream input, String name) {
+    [Grammar] parse(IStream input, String inputName, String sourceName) {
         this.definition = this.rt().createInstance(GrammarDefinition:CLASSNAME);
+        this.definition.setSourceName(sourceName);
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
-        this._parse(in.init(input, name));
+        this._parse(in.init(input, inputName));
         in.destroy();
         GrammarBuilder gb = this.rt().createInstance(GrammarBuilder:CLASSNAME);
         Grammar g = gb.build(this.definition, this.rt().err());
