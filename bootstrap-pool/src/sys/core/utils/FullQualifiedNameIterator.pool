@@ -1,0 +1,46 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::IStream;
+
+class FullQualifiedNameIterator extends AnyIterator {
+
+    IStream in;
+    String tmp;
+    
+    [] init(IStream in) {
+        this.in = in;
+        this.own(in);
+        tmp = this.createOwn(String:CLASSNAME);
+        while (!in.isEmpty() && (in.peekChar() == ':')) { in.readChar(); }
+        this.initNext();
+    }
+    
+    [] initNext() {
+        tmp.clear();
+        while (!in.isEmpty() && (in.peekChar() != ':')) { tmp.printChar(in.readChar()); }
+        while (!in.isEmpty() && (in.peekChar() == ':')) { in.readChar(); }
+    }
+    
+    
+    [int] hasNext() {
+        return tmp.length() > 0;
+    }
+    
+    [__all__] next() {
+        if (tmp.length() == 0) {
+            return null;
+        }
+        __all__ ret = this.createOwn(String:CLASSNAME);
+        String s = ret;
+        s.assignString(tmp);
+        this.initNext();
+        return ret;
+    }
+}

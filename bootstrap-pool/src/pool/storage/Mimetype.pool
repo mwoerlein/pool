@@ -1,0 +1,40 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::storage;
+
+use sys::core::String;
+
+class Mimetype {
+    
+    int UNKNOWN := -1;
+    int POOL_SRC := 0;
+    int POOL_ASM := 1;
+    int POOL_GRAMMAR := 2;
+    
+    cstring TYPE_UNKNOWN        := "application/octet-stream";
+    
+    cstring TYPE_POOL_SRC       := "text/x-pool-src";
+    cstring TYPE_POOL_ASM       := "text/x-pool-asm";
+    cstring TYPE_POOL_GRAMMAR   := "text/x-pool-grammar";
+    
+    cstring TYPE_BIN_X86        := "application/x-bin-x86";
+    cstring TYPE_GRID_STORE     := "application/x-grid-store";
+    
+    global [int] fromTypeString(String mimetype) {
+        if (mimetype.cequals(Mimetype:TYPE_POOL_SRC)) { return Mimetype:POOL_SRC; }
+        if (mimetype.cequals(Mimetype:TYPE_POOL_ASM)) { return Mimetype:POOL_ASM; }
+        if (mimetype.cequals(Mimetype:TYPE_POOL_GRAMMAR)) { return Mimetype:POOL_GRAMMAR; }
+        return Mimetype:UNKNOWN;
+    }
+    
+    global [cstring] toTypeCString(int id) {
+        if (id == Mimetype:POOL_SRC) { return Mimetype:TYPE_POOL_SRC; }
+        if (id == Mimetype:POOL_ASM) { return Mimetype:TYPE_POOL_ASM; }
+        if (id == Mimetype:POOL_GRAMMAR) { return Mimetype:TYPE_POOL_GRAMMAR; }
+        return Mimetype:TYPE_UNKNOWN;
+    }
+
+}

@@ -16,6 +16,9 @@ class PropertyContainer extends Owner {
     
     AnyMap _properties;  // HashMap<(own)String, (own?)String>
 
+    [] __init() {
+        this._initPropertyContainer();
+    }
     [] _initPropertyContainer() {
         _properties = this.createOwn(AnyMap:CLASSNAME);
     }
@@ -77,4 +80,7 @@ class PropertyContainer extends Owner {
         }
         return stream;
     }
+    
+    // TODO: remove with implicit cast
+    [PropertyContainer] propertyContainer() { return this; }
 }

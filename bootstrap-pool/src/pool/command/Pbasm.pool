@@ -122,7 +122,7 @@ Pool Bootstrap Assembler.
                 parser.parse(in, name, unit);
                 in.destroy();
             } else {
-                SeekableIOStream f = this.openFile(name, linux::File:MODE_READ);
+                SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
                 if (!f) { status = ERRNO_IO; }
                 if (status == ERRNO_OK) {
                     parser.parse(f.istream(), name, unit);

@@ -1,0 +1,68 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::fs;
+
+use pool::storage::PropertiesMarshaller;
+use sys::core::String;
+use sys::stream::SeekableIOStream;
+use sys::stream::IStream;
+use sys::stream::OStream;
+use sys::store::StorageElement;
+use sys::memory::MemoryInfo;
+
+class FileElement extends StorageElement {
+    
+    MemoryInfo buffer;
+    cstring filename;
+    int offset;
+    int contentSize;
+    
+    [] __init() {
+        this._initStorageElement();
+    }
+    
+    [] __destruct() {
+        this.rt().getAllocator().free(buffer);
+        this._destructStorageElement();
+    }
+    
+    [FileElement] init(String path, PropertiesMarshaller pm) {
+        buffer = this.rt().getAllocator().allocate(path.length() + 1);
+        this.filename = path.toCString(buffer.buf);
+        path.destroy();
+        offset = 0;
+        contentSize = 0;
+        
+        File file = this.rt().createInstance(File:CLASSNAME);
+        
+        if (file._init(filename, File:MODE_READ, offset) >= 0) {
+            if (pm && pm.unmarshall(file.istream(), this.propertyContainer())) {
+                offset = file.pos();
+            } else {
+                _properties.clear();
+            }
+            contentSize = file.length() - offset;
+        }
+        
+        file.destroy();
+        
+        return this;
+    }
+    
+    [IStream] getContent() {
+        File file = this.rt().createInstance(File:CLASSNAME);
+        
+        if (file._init(filename, File:MODE_READ, offset) < 0) {
+            file.destroy();
+            return null;
+        }
+        
+        return file.istream();
+    }
+    
+    [int] getContentSize() { return contentSize; }
+    
+}

@@ -3,8 +3,9 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace linux;
+namespace linux::fs;
 
+use linux::SysCall;
 use sys::core::String;
 use sys::stream::SeekableIOStream;
 use sys::stream::OStream;
@@ -27,8 +28,10 @@ class File extends SeekableIOStream {
 */    
     
     int fd;
+    int offset;
     
-    [int] _init(cstring filename, int mode) {
+    [int] _init(cstring filename, int mode, int offset) {
+        this.offset = offset;
         fd = SysCall:open(filename, mode);
         if (fd < 0) {
             this.rt().err().printCString("failed to open file: ").printCString(filename).printNewline();
@@ -53,11 +56,11 @@ class File extends SeekableIOStream {
         int p = SysCall:seek(fd, 0, SysCall:SEEK_CUR);
         int len = SysCall:seek(fd, 0, SysCall:SEEK_END);
         SysCall:seek(fd, p, SysCall:SEEK_SET);
-        return len;
+        return len - offset;
     }
     
     [int] pos() {
-        return SysCall:seek(fd, 0, SysCall:SEEK_CUR);
+        return SysCall:seek(fd, 0, SysCall:SEEK_CUR) - offset;
     }
     
     [int] peekChar() {
@@ -77,6 +80,6 @@ class File extends SeekableIOStream {
     }
     
     [] seek(int pos) {
-        SysCall:seek(fd, pos, SysCall:SEEK_SET);
+        SysCall:seek(fd, pos + offset, SysCall:SEEK_SET);
     }
 }

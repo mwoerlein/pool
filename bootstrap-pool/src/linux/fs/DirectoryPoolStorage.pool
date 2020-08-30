@@ -1,0 +1,81 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::fs;
+
+use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
+use pool::storage::PropertiesMarshaller;
+use sys::core::String;
+use sys::core::utils::FullQualifiedNameIterator;
+use sys::store::StorageElement;
+use sys::stream::OStream;
+
+class DirectoryPoolStorage extends PoolStorage {
+
+    String baseDir;
+    PropertiesMarshaller pm;
+    
+    [] __init() {
+        pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+    }
+    
+    [DirectoryPoolStorage] setBaseDir(String dir) {
+        baseDir = this.createOwn(String:CLASSNAME);
+        baseDir.assignString(dir);
+        return this;
+    }
+
+    [StorageElement] getElement(String fullQualifiedName, int mimeType) {
+        FileElement fe = this.rt().createInstance(FileElement:CLASSNAME);
+        return fe.init(this.buildFilePath(fullQualifiedName, mimeType, false), pm).storageElement();
+    }
+    
+    [OStream] writeElement(String fullQualifiedName, int mimeType) {
+        String filepath = this.buildFilePath(fullQualifiedName, mimeType, false);
+        int buf = 0;
+        __pasm__("subl %eax, %esp", {"%eax": filepath.length() + 1}, {"%esp": buf});
+        File f = this.rt().createInstance(File:CLASSNAME);
+        int r = f._init(filepath.toCString(buf), File:MODE_WRITE, 0);
+        __pasm__("addl %eax, %esp", {"%eax": filepath.length() + 1});
+        filepath.destroy();
+        if (r < 0) {
+            f.destroy();
+            return null;
+        }
+        return f.ostream();
+    }
+    
+    [int] removeElement(String fullQualifiedName, int mimeType) {
+        String filepath = this.buildFilePath(fullQualifiedName, mimeType, false);
+        int buf = 0;
+        __pasm__("subl %eax, %esp", {"%eax": filepath.length() + 1}, {"%esp": buf});
+        int ret = linux::SysCall:unlink(filepath.toCString(buf));
+        __pasm__("addl %eax, %esp", {"%eax": filepath.length() + 1});
+        filepath.destroy();
+        return ret;
+    }
+    
+    
+    [String] buildFilePath(String fullQualifiedName, int mimetype, int createPath) {
+        String path = this.rt().createInstance(String:CLASSNAME);
+        path.assignString(baseDir);
+
+        {
+            FullQualifiedNameIterator parts = this.rt().createInstance(FullQualifiedNameIterator:CLASSNAME);
+            parts.init(fullQualifiedName.toIStream());
+            while (parts.hasNext()) {
+                path.printChar('/').print(parts.next());
+            }
+            parts.destroy();
+        }
+        
+        if (mimetype == Mimetype:POOL_SRC) { path.printCString(".pool"); }
+        else if (mimetype == Mimetype:POOL_ASM) { path.printCString(".pasm"); }
+        else if (mimetype == Mimetype:POOL_GRAMMAR) { path.printCString(".gram"); }
+        
+        return path;
+    }
+}

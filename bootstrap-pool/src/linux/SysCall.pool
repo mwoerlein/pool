@@ -46,6 +46,12 @@ class SysCall {
         __pasm__("int 0x80", {"%eax": 6, "%ebx": fd});
     }
     
+    global [int] unlink(cstring path) {
+        int ret = 0;
+        __pasm__("int 0x80", {"%eax": 10, "%ebx": path}, {"%eax": ret});
+        return ret == 0;
+    }
+    
     global [int] seek(int fd, int offset, int whence) {
         int _offset = 0;
         __pasm__(
@@ -54,6 +60,24 @@ class SysCall {
             {"%eax": _offset}
         );
         return _offset;
+    }
+    
+    global [int] getPid() {
+        int _pid = 0;
+        __pasm__("int 0x80", {"%eax": 20}, {"%eax": _pid});
+        return _pid;
+    }
+    
+    global [int] mkdir(cstring path, int mode) {
+        int ret = 0;
+        __pasm__("int 0x80", {"%eax": 39, "%ebx": path, "%ecx": mode}, {"%eax": ret});
+        return ret == 0;
+    }
+    
+    global [int] rmdir(cstring path) {
+        int ret = 0;
+        __pasm__("int 0x80", {"%eax": 40, "%ebx": path}, {"%eax": ret});
+        return ret == 0;
     }
     
     global [int, int] pageAlloc(int pages) {

@@ -1,0 +1,101 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::storage;
+
+use sys::core::String;
+use sys::core::utils::PropertyContainer;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class PropertiesMarshaller extends sys::core::Object {
+
+    String block;
+    String name;
+    String value;
+    
+    [] __init() {
+        block = this.createOwn(String:CLASSNAME);
+        name = this.createOwn(String:CLASSNAME);
+        value = this.createOwn(String:CLASSNAME);
+    }
+    
+    [int] marshall(OStream out, PropertyContainer container) {
+        // TODO: write correct format
+        container.dumpPropertiesToStream(out);
+        return true;
+    }
+    
+    [int] unmarshall(IStream in, PropertyContainer container) {
+        int state = 0;
+        int c = 0;
+        block.clear(); name.clear(); value.clear();
+        
+        while (c = in.peekChar()) {
+            if (state == 0) {
+                if (c != '/') { return false; }
+                in.readChar(); c = in.peekChar();
+                if (c != '*') { return false; }
+                in.readChar(); c = in.peekChar();
+                if (c != '[') { return false; }
+                in.readChar();
+                state = 1;
+            } else if (state == 1) {
+                if (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_')) { block.printChar(c); in.readChar(); state = 2; }
+                else { return false; }
+            } else if (state == 2) {
+                if (c == ']') {
+                    name.assignString(block);
+                    name.printChar('.');
+                    value.clear();
+                    in.readChar();
+                    while ((c = in.peekChar()) && ((c == '\r') || (c == '\n') || (c == '\t') || (c == ' '))) {
+                        in.readChar();
+                    }
+                    state = 3;
+                } else if (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || ((c >= '0') && (c <= '9')) || (c == '_') || (c == '.')) { block.printChar(c); in.readChar(); }
+                else { return false; }
+            } else if (state == 3) {
+                if (c == '*') {
+                    in.readChar(); c = in.peekChar();
+                    if (c != '/') { return false; }
+                    in.readChar();
+                    while ((c = in.peekChar()) && ((c == '\r') || (c == '\n') || (c == '\t') || (c == ' '))) {
+                        in.readChar();
+                    }
+                    return true;
+                } else if (c == '[') { in.readChar(); block.clear(); state = 1; }
+                else if ((c == ' ') || (c == '\t')) { in.readChar(); }
+                else if (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || (c == '_')) { name.printChar(c); in.readChar(); state = 4; }
+                else { return false; }
+            } else if (state == 4) {
+                if (((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || ((c >= '0') && (c <= '9')) || (c == '_') || (c == '.')){ name.printChar(c); in.readChar(); }
+                else { state = 5; }
+            } else if (state == 5) {
+                if ((c == ' ') || (c == '\t')) { in.readChar(); }
+                else if (c == '=') { in.readChar(); state = 6; }
+                else { return false; }
+            } else if (state == 6) {
+                if ((c == ' ') || (c == '\t')) { in.readChar(); }
+                else if ((c == '\n') || (c == '\r')) { return false; }
+                else { value.printChar(c); in.readChar(); state = 7; }
+            } else if (state == 7) {
+                if ((c == '\n') || (c == '\r')) {
+                    container.setStringProperty(name, container.createOwnStringFromString(value));
+                    name.assignString(block);
+                    name.printChar('.');
+                    value.clear();
+                    while ((c = in.peekChar()) && ((c == '\r') || (c == '\n') || (c == '\t') || (c == ' '))) {
+                        in.readChar();
+                    }
+                    state = 3;
+                } else { value.printChar(c); in.readChar(); }
+            }
+        }
+        // unterminated properties
+        return false;
+    }
+   
+}

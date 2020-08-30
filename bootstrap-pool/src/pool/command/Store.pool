@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::command;
 
+use pool::storage::Mimetype;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
@@ -56,9 +58,9 @@ Storage Bootstrap Builder.
             return -1;
         }
         
-        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::File:MODE_WRITE);
+        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
         outfile.printCString("/*[meta]").printNewline();
-        outfile.printCString("mimetype = application/grid-store").printNewline();
+        outfile.printCString("mimetype = ").printCString(Mimetype:TYPE_GRID_STORE).printNewline();
         outfile.printCString("*/").printNewline();
 
         int index = outfile.pos();
@@ -71,7 +73,7 @@ Storage Bootstrap Builder.
             AnyIterator argIt = this.getArguments();
             while (argIt.hasNext()) {
                 String name = argIt.next();
-                SeekableIOStream infile = this.openFile(name, linux::File:MODE_READ);
+                SeekableIOStream infile = this.openFile(name, linux::fs::File:MODE_READ);
                 int start = outfile.pos();
                 int size = infile.length();
 //                out.printCString("store ").print(name).printCString(" at ").printInt(start).printChar(':').printInt(size).printChar(' ').printInt(index).printNewline();
