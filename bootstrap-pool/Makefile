@@ -1,6 +1,6 @@
 include ./Makefile.inc
 
-.PHONY: all clean tests clear-tests
+.PHONY: all clean regenerate-parsers tests clear-tests
 
 all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/parsergen
 tests: clear-tests $(BINDIR)/pooltest
@@ -31,3 +31,9 @@ $(BINDIR)/pooltest: $(TESTDIR)/test/Command.pool $(BINDIR) $(POOLSC)
 
 clear-tests:
 	@rm -rf $(BINDIR)/pooltest
+
+regenerate-parsers: $(PARSERGEN)
+	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/generator/regex/Parser.gram
+	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/generator/parser/grammar/Parser.gram
+	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/asm/Parser.gram
+

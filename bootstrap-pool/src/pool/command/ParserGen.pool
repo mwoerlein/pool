@@ -5,24 +5,28 @@ version = 0.1.0
 */
 namespace pool::command;
 
-use pool::generator::parser::Parser;
 use pool::generator::parser::grammar::Parser as GrammarParser;
 use pool::generator::parser::grammar::Grammar;
-use pool::generator::regex::Tokenizer;
-use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
 
 use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::stream::IStream;
 use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
 
 class ParserGen extends linux::Command {
 
+    GrammarParser parser;
+    
     [] __init() {
         this._initCommand();
+        this.parser = this.rt().createInstance(GrammarParser:CLASSNAME);
     }
     
     [] __destruct() {
         this._destructCommand();
+        this.parser.destroy();
     }
     
     [] configure() {
@@ -32,7 +36,7 @@ class ParserGen extends linux::Command {
 Parser Generator.
 
     Usage:
-      parsergen -c <dir>
+      parsergen -c <dir> <file>...
 
     Options:
       -h --help                     Show this screen.
@@ -55,58 +59,44 @@ Parser Generator.
             out.printCString(name).printChar(' ').printCString(version).printNewline();
             return 0;
         }
-        if (!this.hasValueOption("classpath")) {
+        if (!this.hasValueOption("classpath") || this.getArgumentsSize() < 1) {
             out.printCString(usage).printNewline();
             return -1;
         }
         
-        this.refreshTokenizerAndParser(out, "pool/generator/regex", "Parser.gram");
-        this.refreshTokenizerAndParser(out, "pool/generator/parser/grammar", "Parser.gram");
-        this.refreshTokenizerAndParser(out, "pool/asm", "Parser.gram");
-        out.printCString("finished").printNewline();
+        PoolStorage storage = this.openPoolStorage(this.getValueOption("classpath"));
+        {
+            AnyIterator argIt = this.getArguments();
+            while (argIt.hasNext()) {
+                String name = argIt.next();
+                if (name.compareCString("-") == 0) {
+                    IStream in = this.openStdIn();
+                    out.printCString("refresh from stdin").printNewline();
+                    this.parseAndGenerate(in, name, storage.poolStorage());
+                    in.destroy();
+                } else {
+                    SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
+                    if (f) {
+                        out.printCString("generate classes from ").print(name).printNewline();
+                        this.parseAndGenerate(f.istream(), name, storage.poolStorage());
+                        f.destroy();
+                    }
+                }
+            }
+            argIt.destroy();
+        }
+        storage.destroy();
         return 0;
     }
     
-    [] refreshTokenizerAndParser(OStream out, cstring dir, cstring filename) {
-        String source = this.rt().createInstance(String:CLASSNAME);
-        source.printCString(dir).printChar('/').printCString(filename);
-        String grammarFilename = this.rt().createInstance(String:CLASSNAME);
-        grammarFilename.print(this.getValueOption("classpath")).printChar('/').print(source);
-        IStream inputFile = this.openFile(grammarFilename, linux::fs::File:MODE_READ).istream();
-        GrammarParser parser = this.rt().createInstance(GrammarParser:CLASSNAME);
-        
-        linux::fs::DirectoryPoolStorage storage = this.rt().createInstance(linux::fs::DirectoryPoolStorage:CLASSNAME);
-        storage.setBaseDir(this.getValueOption("classpath"));
-        
-        out.printCString("refresh from ").print(grammarFilename).printNewline();
-        Grammar gram = parser.parse(inputFile, grammarFilename, source);
-        
-        parser.destroy();
-        inputFile.destroy();
-        grammarFilename.destroy();
-        source.destroy();
-
+    [] parseAndGenerate(IStream input, String name, PoolStorage storage) {
+        Grammar gram = parser.parse(input, name, name);
+    
         if (gram) {
-            out.printCString("generating").printNewline();
-            {
-                String fqn = this.rt().createInstance(String:CLASSNAME);
-                fqn.print(gram.getNamespace()).printCString("::").print(gram.getTokenizerClassname());
-                OStream out = storage.writeElement(fqn, Mimetype:POOL_SRC);
-                Tokenizer:genClassFromGrammar(gram, out);
-                out.destroy();
-                fqn.destroy();
-            }
-            {
-                String fqn = this.rt().createInstance(String:CLASSNAME);
-                fqn.print(gram.getNamespace()).printCString("::").print(gram.getClassname());
-                OStream out = storage.writeElement(fqn, Mimetype:POOL_SRC);
-                Parser:genClassFromGrammar(gram, out);
-                out.destroy();
-                fqn.destroy();
-            }
+            pool::generator::regex::Tokenizer:generateFromGrammar(gram, storage);
+            pool::generator::parser::Parser:generateFromGrammar(gram, storage);
             gram.destroy();
         }
-
     }
     
     // methods

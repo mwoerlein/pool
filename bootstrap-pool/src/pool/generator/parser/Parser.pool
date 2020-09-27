@@ -14,6 +14,7 @@ use pool::generator::parser::grammar::State;
 use pool::generator::tokenizer::Token;
 use pool::generator::tokenizer::Tokenizer;
 
+use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::IStream;
@@ -86,7 +87,13 @@ class Parser extends sys::core::Object {
     }
 
     // TODO: extract model based src-code generation
-    global [] genClassFromGrammar(Grammar gram, OStream out) {
+    global [] generateFromGrammar(Grammar gram, pool::storage::PoolStorage storage) {
+        String ns = gram.getNamespace();
+        String classname = gram.getClassname();
+        String fqn = gram.rt().createInstance(String:CLASSNAME);
+        fqn.print(ns).printCString("::").print(classname);
+        OStream out = storage.writeElement(fqn, pool::storage::Mimetype:POOL_SRC);
+        
         out.printChar('/').printChar('*').printCString(<"
 [meta]
 mimetype = text/x-pool
@@ -98,11 +105,11 @@ mimetype = text/x-pool-grammar
 ">).printNewline();
         out.printCString("name = ").print(gram.getSourceName()).printNewline()
            .printChar('*').printChar('/').printNewline();
-        out.printCString("namespace ").print(gram.getNamespace()).printCString(";").printNewline();
+        out.printCString("namespace ").print(ns).printCString(";").printNewline();
         out.printNewline();
         out.printCString("use pool::generator::parser::ParseStack;").printNewline();
         out.printNewline();
-        out.printCString("class ").print(gram.getClassname())
+        out.printCString("class ").print(classname)
             .printCString(" extends ").print(gram.getExtends())
             .printCString(" {").printNewline();
         out.printNewline();
@@ -262,6 +269,9 @@ mimetype = text/x-pool-grammar
         out.printCString("    }").printNewline();
         out.printNewline();
         out.printCString("}").printNewline();
+    
+        out.destroy();
+        fqn.destroy();
     }
     
     global [] _genReturnForAction(Action a, OStream out) {

@@ -94,10 +94,13 @@ class Tokenizer extends sys::core::anycollection::AnyIterator, SymbolTable {
     }
     
     // TODO: extract model based src-code generation
-    global [] genClassFromGrammar(Grammar gram, OStream out) {
+    global [] generateFromGrammar(Grammar gram, pool::storage::PoolStorage storage) {
         DFA d = gram.getTokenizerDFA();
         String ns = gram.getNamespace();
         String classname = gram.getTokenizerClassname();
+        String fqn = storage.rt().createInstance(String:CLASSNAME);
+        fqn.print(ns).printCString("::").print(classname).printChar('2');
+        OStream out = storage.writeElement(fqn, pool::storage::Mimetype:POOL_SRC);
         
         State init = d.getInitState();
         out.printChar('/').printChar('*').printCString(<"
@@ -113,9 +116,9 @@ mimetype = text/x-pool-grammar
            .printChar('*').printChar('/').printNewline();
         out.printCString("namespace ").print(ns).printCString(";").printNewline();
         out.printNewline();
-        out.printCString("class ").print(classname).printCString(" extends pool::generator::tokenizer::Tokenizer {").printNewline();
+        out.printCString("class ").print(classname)
+            .printCString(" extends pool::generator::tokenizer::Tokenizer {").printNewline();
         out.printNewline();
-        
         {
             AnyIterator sit = d.symbols();
             while (sit.hasNext()) {
@@ -189,6 +192,9 @@ mimetype = text/x-pool-grammar
         out.printCString("        return false;").printNewline();
         out.printCString("    }").printNewline();
         out.printCString("}").printNewline();
+    
+        out.destroy();
+        fqn.destroy();
     }
     
     global [] _genRulesForState(State s, String classname, OStream out) {
