@@ -121,8 +121,10 @@ class DFA extends Factory {
                         Symbol destTerminal = dest.getTerminalSymbol();
                         if (destTrn.isEmpty() && destTerminal) {
                             source.addAction(cs, this.sret(destTerminal));
+                            source.own(cs);
                         } else {
                             source.addAction(cs, this.sgoto(dest));
+                            source.own(cs);
                         }
                     }
                     destIt.destroy();
