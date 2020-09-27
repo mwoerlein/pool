@@ -5,7 +5,7 @@ version = 0.1.0
 generator = parsergen
 [source]
 mimetype = text/x-pool-grammar
-name = pool/generator/parser/grammar/Parser.gram
+name = ./src/pool/generator/parser/grammar/Parser.gram
 */
 namespace pool::generator::parser::grammar;
 
