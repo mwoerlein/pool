@@ -21,6 +21,9 @@ class DynamicListClassStorage extends ClassStorage {
             this.transferClass(classDesc, store, allocator);
             classDesc = next;
         }
+        if (!allocator) {
+            classes = null;
+        }
     }
     
     [] addClassDesc(ClassDescriptor desc) {
