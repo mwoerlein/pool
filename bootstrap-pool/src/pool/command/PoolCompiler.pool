@@ -1,0 +1,88 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::command;
+
+use pool::compiler::parser::Parser;
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::IStream;
+use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
+
+class PoolCompiler extends linux::Command {
+
+    Parser parser;
+
+    [] __init() {
+        this._initCommand();
+        parser = this.rt().createInstance(Parser:CLASSNAME);
+    }
+    
+    [] __destruct() {
+        parser.destroy();
+        this._destructCommand();
+    }
+    
+    [] configure() {
+        this.setName("poolc")
+            .setVersion("0.3.0")
+            .setUsage(<"
+Pool Bootstrap Assembler.
+
+    Usage:
+      pasm [options] <file>...
+
+    Options:
+      -h --help                 Show this screen.
+      --version                 Show version.
+">);
+        this.registerOptionAlias('h', "help")
+        ;
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (this.getArgumentsSize() < 1) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+        
+        
+        OStream err = this.rt().err();
+        {
+            AnyIterator argIt = this.getArguments();
+            while (argIt.hasNext()) {
+                String name = argIt.next();
+                if (name.compareCString("-") == 0) {
+                    IStream in = this.openStdIn();
+                    parser.parse(in, name);
+                    in.destroy();
+                } else {
+                    SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
+                    if (f) {
+                        parser.parse(f.istream(), name);
+                        f.destroy();
+                    }
+                }
+            }
+            argIt.destroy();
+        }
+    }
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        PoolCompiler poolc = linux::Runtime:buildRuntime().createInstance(PoolCompiler:CLASSNAME);
+        return poolc.execute(argc, argv);
+    }
+}

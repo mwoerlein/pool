@@ -1,0 +1,22 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::parser;
+
+use sys::core::String;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class BaseParser extends pool::generator::parser::Parser {
+    
+    [OStream] newError() { return this.rt().err(); }
+    
+    [] parse(IStream input, String inputName) {
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        this._parse(in.init(input, inputName));
+        in.destroy();
+    }
+
+}

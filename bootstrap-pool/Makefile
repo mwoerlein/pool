@@ -2,7 +2,7 @@ include ./Makefile.inc
 
 .PHONY: all clean regenerate-parsers tests clear-tests
 
-all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/parsergen
+all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/poolc $(BINDIR)/parsergen
 tests: clear-tests $(BINDIR)/pooltest
 	@$(BINDIR)/pooltest
 
@@ -24,6 +24,11 @@ $(BINDIR)/parsergen: $(SRCDIR)/pool/command/ParserGen.pool $(BINDIR) $(POOLSC)
 	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::ParserGen
 	@chmod a+x $@
 	
+$(BINDIR)/poolc: $(SRCDIR)/pool/command/PoolCompiler.pool $(BINDIR) $(POOLSC)
+	@echo "build poolc (pool)"
+	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::PoolCompiler
+	@chmod a+x $@
+	
 $(BINDIR)/pooltest: $(TESTDIR)/test/Command.pool $(BINDIR) $(POOLSC)
 	@echo "build pooltest (pool)"
 	@$(POOLSC) --classpath $(TESTDIR) $(PSC_FLAGS) --output $@ test::Command
@@ -36,4 +41,5 @@ regenerate-parsers: $(PARSERGEN)
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/generator/regex/Parser.gram
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/generator/parser/grammar/Parser.gram
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/asm/Parser.gram
+	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/compiler/parser/Parser.gram
 

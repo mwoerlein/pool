@@ -1,0 +1,2277 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+generator = parsergen
+[source]
+mimetype = text/x-pool-grammar
+name = ./src/pool/compiler/parser/Parser.gram
+*/
+namespace pool::compiler::parser;
+
+use pool::generator::parser::ParseStack;
+
+class Parser extends BaseParser {
+
+    int NT_TRANSLATION_UNIT := 0;
+    int NT_NAMESPACE_DECL := 1;
+    int NT_USE_STMT := 2;
+    int NT_STRUCT_DECL := 3;
+    int NT_STRUCT_BODY_EMPTY := 4;
+    int NT_CLASS_DECL := 5;
+    int NT_CLASS_BODY_EMPTY := 6;
+    int NT_TYPE := 7;
+    int NT_TYPE_LIST := 8;
+    int NT_TYPE_LIST_EMPTY := 9;
+    int NT_VARIABLE_DECL := 10;
+    int NT_VARIABLE_DECL_LIST := 11;
+    int NT_VARIABLE_DECL_LIST_EMPTY := 12;
+    int NT_METHOD_DECL := 13;
+    int NT_EXPRESSION := 14;
+    int NT_EXPRESSION_LIST := 15;
+    int NT_EXPRESSION_LIST_EMPTY := 16;
+    int NT_EXPRESSION_MAP := 17;
+    int NT_EXPRESSION_MAP_EMPTY := 18;
+    int NT_VALUE_EXPR := 19;
+    int NT_VARIABLE_EXPR := 20;
+    int NT_METHOD_CALL_EXPR := 21;
+    int NT_INSTRUCTION := 22;
+    int NT_INSTRUCTION_BLOCK := 23;
+    int NT_RETURN_INST := 24;
+    int NT_VARIABLE_INITIALIZER_INST := 25;
+    int NT_INLINE_PASM_INST := 26;
+    int NT_LOOP_INST := 27;
+    int NT_CONDITION_INST := 28;
+
+    [int, int] __getRule(int rule) {
+        if (rule == 0) { return [Parser:NT_TRANSLATION_UNIT, 1]; }
+        else if (rule == 1) { return [Parser:NT_TRANSLATION_UNIT, 2]; }
+        else if (rule == 2) { return [Parser:NT_TRANSLATION_UNIT, 2]; }
+        else if (rule == 3) { return [Parser:NT_TRANSLATION_UNIT, 2]; }
+        else if (rule == 4) { return [Parser:NT_NAMESPACE_DECL, 3]; }
+        else if (rule == 5) { return [Parser:NT_NAMESPACE_DECL, 3]; }
+        else if (rule == 6) { return [Parser:NT_USE_STMT, 3]; }
+        else if (rule == 7) { return [Parser:NT_USE_STMT, 5]; }
+        else if (rule == 8) { return [Parser:NT_STRUCT_DECL, 5]; }
+        else if (rule == 9) { return [Parser:NT_STRUCT_BODY_EMPTY, 0]; }
+        else if (rule == 10) { return [Parser:NT_STRUCT_BODY_EMPTY, 3]; }
+        else if (rule == 11) { return [Parser:NT_STRUCT_BODY_EMPTY, 4]; }
+        else if (rule == 12) { return [Parser:NT_CLASS_DECL, 5]; }
+        else if (rule == 13) { return [Parser:NT_CLASS_DECL, 7]; }
+        else if (rule == 14) { return [Parser:NT_CLASS_BODY_EMPTY, 0]; }
+        else if (rule == 15) { return [Parser:NT_CLASS_BODY_EMPTY, 2]; }
+        else if (rule == 16) { return [Parser:NT_CLASS_BODY_EMPTY, 3]; }
+        else if (rule == 17) { return [Parser:NT_CLASS_BODY_EMPTY, 3]; }
+        else if (rule == 18) { return [Parser:NT_CLASS_BODY_EMPTY, 4]; }
+        else if (rule == 19) { return [Parser:NT_TYPE, 1]; }
+        else if (rule == 20) { return [Parser:NT_TYPE, 1]; }
+        else if (rule == 21) { return [Parser:NT_TYPE, 1]; }
+        else if (rule == 22) { return [Parser:NT_TYPE, 1]; }
+        else if (rule == 23) { return [Parser:NT_TYPE, 1]; }
+        else if (rule == 24) { return [Parser:NT_TYPE, 1]; }
+        else if (rule == 25) { return [Parser:NT_TYPE_LIST, 1]; }
+        else if (rule == 26) { return [Parser:NT_TYPE_LIST, 3]; }
+        else if (rule == 27) { return [Parser:NT_TYPE_LIST_EMPTY, 0]; }
+        else if (rule == 28) { return [Parser:NT_TYPE_LIST_EMPTY, 1]; }
+        else if (rule == 29) { return [Parser:NT_VARIABLE_DECL, 2]; }
+        else if (rule == 30) { return [Parser:NT_VARIABLE_DECL_LIST, 1]; }
+        else if (rule == 31) { return [Parser:NT_VARIABLE_DECL_LIST, 3]; }
+        else if (rule == 32) { return [Parser:NT_VARIABLE_DECL_LIST_EMPTY, 0]; }
+        else if (rule == 33) { return [Parser:NT_VARIABLE_DECL_LIST_EMPTY, 1]; }
+        else if (rule == 34) { return [Parser:NT_METHOD_DECL, 10]; }
+        else if (rule == 35) { return [Parser:NT_METHOD_DECL, 11]; }
+        else if (rule == 36) { return [Parser:NT_METHOD_DECL, 11]; }
+        else if (rule == 37) { return [Parser:NT_METHOD_DECL, 11]; }
+        else if (rule == 38) { return [Parser:NT_METHOD_DECL, 9]; }
+        else if (rule == 39) { return [Parser:NT_EXPRESSION, 1]; }
+        else if (rule == 40) { return [Parser:NT_EXPRESSION, 1]; }
+        else if (rule == 41) { return [Parser:NT_EXPRESSION, 1]; }
+        else if (rule == 42) { return [Parser:NT_EXPRESSION, 3]; }
+        else if (rule == 43) { return [Parser:NT_EXPRESSION_LIST, 1]; }
+        else if (rule == 44) { return [Parser:NT_EXPRESSION_LIST, 3]; }
+        else if (rule == 45) { return [Parser:NT_EXPRESSION_LIST_EMPTY, 0]; }
+        else if (rule == 46) { return [Parser:NT_EXPRESSION_LIST_EMPTY, 1]; }
+        else if (rule == 47) { return [Parser:NT_EXPRESSION_MAP, 3]; }
+        else if (rule == 48) { return [Parser:NT_EXPRESSION_MAP, 5]; }
+        else if (rule == 49) { return [Parser:NT_EXPRESSION_MAP_EMPTY, 0]; }
+        else if (rule == 50) { return [Parser:NT_EXPRESSION_MAP_EMPTY, 1]; }
+        else if (rule == 51) { return [Parser:NT_VALUE_EXPR, 1]; }
+        else if (rule == 52) { return [Parser:NT_VALUE_EXPR, 2]; }
+        else if (rule == 53) { return [Parser:NT_VALUE_EXPR, 2]; }
+        else if (rule == 54) { return [Parser:NT_VALUE_EXPR, 1]; }
+        else if (rule == 55) { return [Parser:NT_VALUE_EXPR, 1]; }
+        else if (rule == 56) { return [Parser:NT_VALUE_EXPR, 1]; }
+        else if (rule == 57) { return [Parser:NT_VARIABLE_EXPR, 1]; }
+        else if (rule == 58) { return [Parser:NT_VARIABLE_EXPR, 3]; }
+        else if (rule == 59) { return [Parser:NT_VARIABLE_EXPR, 3]; }
+        else if (rule == 60) { return [Parser:NT_VARIABLE_EXPR, 3]; }
+        else if (rule == 61) { return [Parser:NT_METHOD_CALL_EXPR, 6]; }
+        else if (rule == 62) { return [Parser:NT_METHOD_CALL_EXPR, 6]; }
+        else if (rule == 63) { return [Parser:NT_METHOD_CALL_EXPR, 6]; }
+        else if (rule == 64) { return [Parser:NT_INSTRUCTION, 2]; }
+        else if (rule == 65) { return [Parser:NT_INSTRUCTION, 2]; }
+        else if (rule == 66) { return [Parser:NT_INSTRUCTION, 2]; }
+        else if (rule == 67) { return [Parser:NT_INSTRUCTION, 2]; }
+        else if (rule == 68) { return [Parser:NT_INSTRUCTION, 1]; }
+        else if (rule == 69) { return [Parser:NT_INSTRUCTION, 1]; }
+        else if (rule == 70) { return [Parser:NT_INSTRUCTION, 3]; }
+        else if (rule == 71) { return [Parser:NT_INSTRUCTION_BLOCK, 0]; }
+        else if (rule == 72) { return [Parser:NT_INSTRUCTION_BLOCK, 2]; }
+        else if (rule == 73) { return [Parser:NT_RETURN_INST, 4]; }
+        else if (rule == 74) { return [Parser:NT_RETURN_INST, 2]; }
+        else if (rule == 75) { return [Parser:NT_RETURN_INST, 1]; }
+        else if (rule == 76) { return [Parser:NT_VARIABLE_INITIALIZER_INST, 3]; }
+        else if (rule == 77) { return [Parser:NT_VARIABLE_INITIALIZER_INST, 3]; }
+        else if (rule == 78) { return [Parser:NT_VARIABLE_INITIALIZER_INST, 3]; }
+        else if (rule == 79) { return [Parser:NT_VARIABLE_INITIALIZER_INST, 5]; }
+        else if (rule == 80) { return [Parser:NT_VARIABLE_INITIALIZER_INST, 5]; }
+        else if (rule == 81) { return [Parser:NT_INLINE_PASM_INST, 4]; }
+        else if (rule == 82) { return [Parser:NT_INLINE_PASM_INST, 8]; }
+        else if (rule == 83) { return [Parser:NT_INLINE_PASM_INST, 12]; }
+        else if (rule == 84) { return [Parser:NT_LOOP_INST, 7]; }
+        else if (rule == 85) { return [Parser:NT_LOOP_INST, 9]; }
+        else if (rule == 86) { return [Parser:NT_CONDITION_INST, 7]; }
+        else if (rule == 87) { return [Parser:NT_CONDITION_INST, 11]; }
+        else if (rule == 88) { return [Parser:NT_CONDITION_INST, 9]; }
+        return [Parser:ERROR, 0];
+    }
+
+    [__any__] __executeRule(int rule, ParseStack s) {
+        __any__ result = null;
+        if (rule == 0) { result = null; }
+        else if (rule == 1) { result = null; }
+        else if (rule == 2) { result = null; }
+        else if (rule == 3) { result = null; }
+        else if (rule == 4) { result = null; }
+        else if (rule == 5) { result = null; }
+        else if (rule == 6) { result = null; }
+        else if (rule == 7) { result = null; }
+        else if (rule == 8) { result = null; }
+        else if (rule == 9) { result = null; }
+        else if (rule == 10) { result = null; }
+        else if (rule == 11) { result = null; }
+        else if (rule == 12) { result = null; }
+        else if (rule == 13) { result = null; }
+        else if (rule == 14) { result = null; }
+        else if (rule == 15) { result = null; }
+        else if (rule == 16) { result = null; }
+        else if (rule == 17) { result = null; }
+        else if (rule == 18) { result = null; }
+        else if (rule == 19) { result = null; }
+        else if (rule == 20) { result = null; }
+        else if (rule == 21) { result = null; }
+        else if (rule == 22) { result = null; }
+        else if (rule == 23) { result = null; }
+        else if (rule == 24) { result = null; }
+        else if (rule == 25) { result = null; }
+        else if (rule == 26) { result = null; }
+        else if (rule == 27) { result = null; }
+        else if (rule == 28) { result = null; }
+        else if (rule == 29) { result = null; }
+        else if (rule == 30) { result = null; }
+        else if (rule == 31) { result = null; }
+        else if (rule == 32) { result = null; }
+        else if (rule == 33) { result = null; }
+        else if (rule == 34) { result = null; }
+        else if (rule == 35) { result = null; }
+        else if (rule == 36) { result = null; }
+        else if (rule == 37) { result = null; }
+        else if (rule == 38) { result = null; }
+        else if (rule == 39) { result = null; }
+        else if (rule == 40) { result = null; }
+        else if (rule == 41) { result = null; }
+        else if (rule == 42) { result = null; }
+        else if (rule == 43) { result = null; }
+        else if (rule == 44) { result = null; }
+        else if (rule == 45) { result = null; }
+        else if (rule == 46) { result = null; }
+        else if (rule == 47) { result = null; }
+        else if (rule == 48) { result = null; }
+        else if (rule == 49) { result = null; }
+        else if (rule == 50) { result = null; }
+        else if (rule == 51) { result = null; }
+        else if (rule == 52) { result = null; }
+        else if (rule == 53) { result = null; }
+        else if (rule == 54) { result = null; }
+        else if (rule == 55) { result = null; }
+        else if (rule == 56) { result = null; }
+        else if (rule == 57) { result = null; }
+        else if (rule == 58) { result = null; }
+        else if (rule == 59) { result = null; }
+        else if (rule == 60) { result = null; }
+        else if (rule == 61) { result = null; }
+        else if (rule == 62) { result = null; }
+        else if (rule == 63) { result = null; }
+        else if (rule == 64) { result = null; }
+        else if (rule == 65) { result = null; }
+        else if (rule == 66) { result = null; }
+        else if (rule == 67) { result = null; }
+        else if (rule == 68) { result = null; }
+        else if (rule == 69) { result = null; }
+        else if (rule == 70) { result = null; }
+        else if (rule == 71) { result = null; }
+        else if (rule == 72) { result = null; }
+        else if (rule == 73) { result = null; }
+        else if (rule == 74) { result = null; }
+        else if (rule == 75) { result = null; }
+        else if (rule == 76) { result = null; }
+        else if (rule == 77) { result = null; }
+        else if (rule == 78) { result = null; }
+        else if (rule == 79) { result = null; }
+        else if (rule == 80) { result = null; }
+        else if (rule == 81) { result = null; }
+        else if (rule == 82) { result = null; }
+        else if (rule == 83) { result = null; }
+        else if (rule == 84) { result = null; }
+        else if (rule == 85) { result = null; }
+        else if (rule == 86) { result = null; }
+        else if (rule == 87) { result = null; }
+        else if (rule == 88) { result = null; }
+
+        return result;
+    }
+
+    [int] __goto(int state, int symbol) {
+        if (state == 0) {
+            if (symbol == Parser:NT_NAMESPACE_DECL) { return 2; }
+            else if (symbol == Parser:NT_TRANSLATION_UNIT) { return 3; }
+        } else if (state == 3) {
+            if (symbol == Parser:NT_USE_STMT) { return 9; }
+            else if (symbol == Parser:NT_CLASS_DECL) { return 10; }
+            else if (symbol == Parser:NT_STRUCT_DECL) { return 11; }
+        } else if (state == 17) {
+            if (symbol == Parser:NT_TYPE_LIST) { return 28; }
+            else if (symbol == Parser:NT_TYPE) { return 29; }
+        } else if (state == 18) {
+            if (symbol == Parser:NT_CLASS_BODY_EMPTY) { return 30; }
+        } else if (state == 19) {
+            if (symbol == Parser:NT_STRUCT_BODY_EMPTY) { return 31; }
+        } else if (state == 30) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 41; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 42; }
+            else if (symbol == Parser:NT_METHOD_DECL) { return 43; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+        } else if (state == 31) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 47; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+        } else if (state == 33) {
+            if (symbol == Parser:NT_TYPE) { return 49; }
+        } else if (state == 34) {
+            if (symbol == Parser:NT_CLASS_BODY_EMPTY) { return 50; }
+        } else if (state == 36) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 54; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+        } else if (state == 39) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE_LIST) { return 58; }
+            else if (symbol == Parser:NT_TYPE) { return 59; }
+            else if (symbol == Parser:NT_TYPE_LIST_EMPTY) { return 60; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 61; }
+        } else if (state == 45) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 69; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+        } else if (state == 50) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 41; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 42; }
+            else if (symbol == Parser:NT_METHOD_DECL) { return 43; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+        } else if (state == 51) {
+            if (symbol == Parser:NT_TYPE_LIST) { return 58; }
+            else if (symbol == Parser:NT_TYPE) { return 29; }
+            else if (symbol == Parser:NT_TYPE_LIST_EMPTY) { return 72; }
+        } else if (state == 52) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE_LIST) { return 58; }
+            else if (symbol == Parser:NT_TYPE) { return 59; }
+            else if (symbol == Parser:NT_TYPE_LIST_EMPTY) { return 73; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 61; }
+        } else if (state == 55) {
+            if (symbol == Parser:NT_TYPE_LIST) { return 58; }
+            else if (symbol == Parser:NT_TYPE) { return 29; }
+            else if (symbol == Parser:NT_TYPE_LIST_EMPTY) { return 75; }
+        } else if (state == 56) {
+            if (symbol == Parser:NT_TYPE_LIST) { return 58; }
+            else if (symbol == Parser:NT_TYPE) { return 29; }
+            else if (symbol == Parser:NT_TYPE_LIST_EMPTY) { return 76; }
+        } else if (state == 62) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 90; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 63) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 93; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 64) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 94; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 68) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 61; }
+        } else if (state == 78) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 101; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+        } else if (state == 84) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 106; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 102) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 115; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 116; }
+        } else if (state == 103) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 115; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 117; }
+        } else if (state == 114) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 126; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST_EMPTY) { return 127; }
+        } else if (state == 122) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 126; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST_EMPTY) { return 131; }
+        } else if (state == 123) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 126; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST_EMPTY) { return 132; }
+        } else if (state == 124) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 126; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST_EMPTY) { return 133; }
+        } else if (state == 125) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 57; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST) { return 126; }
+            else if (symbol == Parser:NT_VARIABLE_DECL_LIST_EMPTY) { return 134; }
+        } else if (state == 128) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 136; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST) { return 137; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST_EMPTY) { return 138; }
+        } else if (state == 129) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 136; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST) { return 137; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST_EMPTY) { return 139; }
+        } else if (state == 130) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 136; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST) { return 137; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST_EMPTY) { return 140; }
+        } else if (state == 145) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 154; }
+        } else if (state == 146) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 155; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 151) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 156; }
+        } else if (state == 152) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 157; }
+        } else if (state == 153) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 158; }
+        } else if (state == 154) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 156) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 157) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 158) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 161) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 181; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 164) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 184; }
+        } else if (state == 178) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 189; }
+        } else if (state == 179) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 190; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 180) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 136; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST) { return 137; }
+            else if (symbol == Parser:NT_EXPRESSION_LIST_EMPTY) { return 191; }
+        } else if (state == 182) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 192; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 184) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 189) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 202) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 206; }
+        } else if (state == 203) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 207; }
+        } else if (state == 204) {
+            if (symbol == Parser:NT_EXPRESSION_MAP) { return 209; }
+            else if (symbol == Parser:NT_EXPRESSION_MAP_EMPTY) { return 210; }
+        } else if (state == 205) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 211; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 206) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 207) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        } else if (state == 214) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 219; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 218) {
+            if (symbol == Parser:NT_CONDITION_INST) { return 225; }
+        } else if (state == 224) {
+            if (symbol == Parser:NT_INSTRUCTION_BLOCK) { return 228; }
+        } else if (state == 226) {
+            if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 229; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+        } else if (state == 227) {
+            if (symbol == Parser:NT_EXPRESSION_MAP) { return 209; }
+            else if (symbol == Parser:NT_EXPRESSION_MAP_EMPTY) { return 230; }
+        } else if (state == 228) {
+            if (symbol == Parser:NT_VARIABLE_DECL) { return 53; }
+            else if (symbol == Parser:NT_VARIABLE_INITIALIZER_INST) { return 168; }
+            else if (symbol == Parser:NT_TYPE) { return 44; }
+            else if (symbol == Parser:NT_VALUE_EXPR) { return 89; }
+            else if (symbol == Parser:NT_EXPRESSION) { return 169; }
+            else if (symbol == Parser:NT_VARIABLE_EXPR) { return 91; }
+            else if (symbol == Parser:NT_METHOD_CALL_EXPR) { return 92; }
+            else if (symbol == Parser:NT_INSTRUCTION) { return 170; }
+            else if (symbol == Parser:NT_RETURN_INST) { return 171; }
+            else if (symbol == Parser:NT_INLINE_PASM_INST) { return 172; }
+            else if (symbol == Parser:NT_LOOP_INST) { return 173; }
+            else if (symbol == Parser:NT_CONDITION_INST) { return 174; }
+        }
+
+        return Parser:ERROR;
+    }
+
+    [int, int] __action(int state, int symbol) {
+        if ((symbol == Tokenizer:T_EOL) || (symbol == Tokenizer:T_WSP) || (symbol == Tokenizer:T_COMMENT) || (symbol == Tokenizer:T_MLCOMMENT)) { return [Parser:IGNORE, 0]; }
+        if (state == 0) {
+            if (symbol == Tokenizer:T_NAMESPACE) { return [Parser:SHIFT, 1]; }
+        } else if (state == 1) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 4]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 5]; }
+        } else if (state == 2) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 0]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 0]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 0]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 0]; }
+        } else if (state == 3) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:ACCEPT, 0]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:SHIFT, 6]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:SHIFT, 7]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:SHIFT, 8]; }
+        } else if (state == 4) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 12]; }
+        } else if (state == 5) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 13]; }
+        } else if (state == 6) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 14]; }
+        } else if (state == 7) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 15]; }
+        } else if (state == 8) {
+            if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 16]; }
+        } else if (state == 9) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 1]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 1]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 1]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 1]; }
+        } else if (state == 10) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 2]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 2]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 2]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 2]; }
+        } else if (state == 11) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 3]; }
+        } else if (state == 12) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 4]; }
+        } else if (state == 13) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 5]; }
+        } else if (state == 14) {
+            if (symbol == Tokenizer:T_EXTENDS) { return [Parser:SHIFT, 17]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 18]; }
+        } else if (state == 15) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 19]; }
+        } else if (state == 16) {
+            if (symbol == Tokenizer:T_AS) { return [Parser:SHIFT, 20]; }
+            else if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 21]; }
+        } else if (state == 17) {
+            if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 18) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 14]; }
+        } else if (state == 19) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 9]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 9]; }
+        } else if (state == 20) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 32]; }
+        } else if (state == 21) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 6]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 6]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 6]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 6]; }
+        } else if (state == 22) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 21]; }
+        } else if (state == 23) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 22]; }
+        } else if (state == 24) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 23]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 23]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 23]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 23]; }
+        } else if (state == 25) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 24]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 24]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 24]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 24]; }
+        } else if (state == 26) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 19]; }
+        } else if (state == 27) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 20]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 20]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 20]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 20]; }
+        } else if (state == 28) {
+            if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 33]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 34]; }
+        } else if (state == 29) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 25]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 25]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 25]; }
+        } else if (state == 30) {
+            if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:SHIFT, 35]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:SHIFT, 36]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:SHIFT, 37]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:SHIFT, 38]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 39]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 40]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 31) {
+            if (symbol == Tokenizer:T_GLOBAL) { return [Parser:SHIFT, 45]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 46]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 32) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 48]; }
+        } else if (state == 33) {
+            if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 34) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 14]; }
+        } else if (state == 35) {
+            if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 51]; }
+        } else if (state == 36) {
+            if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 52]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 37) {
+            if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 55]; }
+        } else if (state == 38) {
+            if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 56]; }
+        } else if (state == 39) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 27]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 40) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 12]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 12]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 12]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 12]; }
+        } else if (state == 41) {
+            if (symbol == Tokenizer:T_COLON_EQUAL) { return [Parser:SHIFT, 62]; }
+            else if (symbol == Tokenizer:T_COLON_COLON_EQUAL) { return [Parser:SHIFT, 63]; }
+            else if (symbol == Tokenizer:T_EQUAL) { return [Parser:SHIFT, 64]; }
+            else if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 65]; }
+        } else if (state == 42) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 66]; }
+        } else if (state == 43) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 15]; }
+        } else if (state == 44) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 67]; }
+        } else if (state == 45) {
+            if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 46) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 8]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 8]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 8]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 8]; }
+        } else if (state == 47) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 70]; }
+        } else if (state == 48) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 7]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 7]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 7]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 7]; }
+        } else if (state == 49) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 26]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 26]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 26]; }
+        } else if (state == 50) {
+            if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:SHIFT, 35]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:SHIFT, 36]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:SHIFT, 37]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:SHIFT, 38]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 39]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 51) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 27]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 52) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 27]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 53) {
+            if (symbol == Tokenizer:T_COLON_EQUAL) { return [Parser:SHIFT, 62]; }
+            else if (symbol == Tokenizer:T_COLON_COLON_EQUAL) { return [Parser:SHIFT, 63]; }
+            else if (symbol == Tokenizer:T_EQUAL) { return [Parser:SHIFT, 64]; }
+        } else if (state == 54) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 74]; }
+        } else if (state == 55) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 27]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 56) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 27]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 57) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 30]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 30]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 30]; }
+        } else if (state == 58) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 28]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 33]; }
+        } else if (state == 59) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 25]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 67]; }
+        } else if (state == 60) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 77]; }
+        } else if (state == 61) {
+            if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 78]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 79]; }
+        } else if (state == 62) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 63) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 64) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 65) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 16]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 16]; }
+        } else if (state == 66) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 17]; }
+        } else if (state == 67) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 29]; }
+            else if (symbol == Tokenizer:T_EQUAL) { return [Parser:REDUCE, 29]; }
+            else if (symbol == Tokenizer:T_COLON_EQUAL) { return [Parser:REDUCE, 29]; }
+            else if (symbol == Tokenizer:T_COLON_COLON_EQUAL) { return [Parser:REDUCE, 29]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 29]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 29]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 29]; }
+        } else if (state == 68) {
+            if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 69) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 95]; }
+        } else if (state == 70) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 10]; }
+        } else if (state == 71) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 13]; }
+            else if (symbol == Tokenizer:T_USE) { return [Parser:REDUCE, 13]; }
+            else if (symbol == Tokenizer:T_CLASS) { return [Parser:REDUCE, 13]; }
+            else if (symbol == Tokenizer:T_STRUCT) { return [Parser:REDUCE, 13]; }
+        } else if (state == 72) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 96]; }
+        } else if (state == 73) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 97]; }
+        } else if (state == 74) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 18]; }
+        } else if (state == 75) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 98]; }
+        } else if (state == 76) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 99]; }
+        } else if (state == 77) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 100]; }
+        } else if (state == 78) {
+            if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 79) {
+            if (symbol == Tokenizer:T_COLON_EQUAL) { return [Parser:SHIFT, 102]; }
+            else if (symbol == Tokenizer:T_EQUAL) { return [Parser:SHIFT, 103]; }
+        } else if (state == 80) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 56]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 56]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 56]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 56]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 56]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 56]; }
+        } else if (state == 81) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 55]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 55]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 55]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 55]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 55]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 55]; }
+        } else if (state == 82) {
+            if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 104]; }
+        } else if (state == 83) {
+            if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 105]; }
+        } else if (state == 84) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 85) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 107]; }
+        } else if (state == 86) {
+            if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 108]; }
+        } else if (state == 87) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 51]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 51]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 51]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 51]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 51]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 51]; }
+        } else if (state == 88) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 54]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 54]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 54]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 54]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 54]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 54]; }
+        } else if (state == 89) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 39]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 39]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 39]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 39]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 39]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 39]; }
+        } else if (state == 90) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 77]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 91) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 40]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 40]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 40]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 40]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 40]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 40]; }
+        } else if (state == 92) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 41]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 41]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 41]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 41]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 41]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 41]; }
+        } else if (state == 93) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 78]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 94) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 76]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 95) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 11]; }
+        } else if (state == 96) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 110]; }
+        } else if (state == 97) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 111]; }
+        } else if (state == 98) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 112]; }
+        } else if (state == 99) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 113]; }
+        } else if (state == 100) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 114]; }
+        } else if (state == 101) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 31]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 31]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 31]; }
+        } else if (state == 102) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 103) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 104) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 52]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 52]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 52]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 52]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 52]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 52]; }
+        } else if (state == 105) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 53]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 53]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 53]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 53]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 53]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 53]; }
+        } else if (state == 106) {
+            if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 118]; }
+        } else if (state == 107) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 119]; }
+        } else if (state == 108) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 120]; }
+        } else if (state == 109) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 121]; }
+        } else if (state == 110) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 122]; }
+        } else if (state == 111) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 123]; }
+        } else if (state == 112) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 124]; }
+        } else if (state == 113) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 125]; }
+        } else if (state == 114) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 32]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 115) {
+            if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 116) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 80]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 41]; }
+        } else if (state == 117) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 79]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 41]; }
+        } else if (state == 118) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 42]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 42]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 42]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 42]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 42]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 42]; }
+        } else if (state == 119) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 59]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 59]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 59]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 59]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 59]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 59]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 128]; }
+        } else if (state == 120) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 60]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 60]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 60]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 60]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 60]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 60]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 129]; }
+        } else if (state == 121) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 58]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 58]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 58]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 58]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 58]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 58]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 130]; }
+        } else if (state == 122) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 32]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 123) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 32]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 124) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 32]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 125) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 32]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 26]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 27]; }
+        } else if (state == 126) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 33]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 78]; }
+        } else if (state == 127) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 135]; }
+        } else if (state == 128) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 45]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 129) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 45]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 130) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 45]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 131) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 141]; }
+        } else if (state == 132) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 142]; }
+        } else if (state == 133) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 143]; }
+        } else if (state == 134) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 144]; }
+        } else if (state == 135) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 145]; }
+        } else if (state == 136) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 43]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 43]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 43]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 137) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 46]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 46]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 146]; }
+        } else if (state == 138) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 147]; }
+        } else if (state == 139) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 148]; }
+        } else if (state == 140) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 149]; }
+        } else if (state == 141) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 150]; }
+        } else if (state == 142) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 151]; }
+        } else if (state == 143) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 152]; }
+        } else if (state == 144) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 153]; }
+        } else if (state == 145) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 146) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 147) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 62]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 62]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 62]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 62]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 62]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 62]; }
+        } else if (state == 148) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 63]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 63]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 63]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 63]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 63]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 63]; }
+        } else if (state == 149) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 61]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 61]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 61]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 61]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 61]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 61]; }
+        } else if (state == 150) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 38]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 38]; }
+        } else if (state == 151) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 152) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 153) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 154) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 165]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 155) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:REDUCE, 44]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 44]; }
+            else if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 44]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 156) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 175]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 157) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 176]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 158) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 177]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 159) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 178]; }
+        } else if (state == 160) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 179]; }
+        } else if (state == 161) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 75]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 180]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 162) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 182]; }
+        } else if (state == 163) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 183]; }
+        } else if (state == 164) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 165) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 34]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 34]; }
+        } else if (state == 166) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:REDUCE, 57]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 107]; }
+        } else if (state == 167) {
+            if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 20]; }
+            else if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 108]; }
+        } else if (state == 168) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 185]; }
+        } else if (state == 169) {
+            if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+            else if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 186]; }
+        } else if (state == 170) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 72]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 72]; }
+        } else if (state == 171) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 187]; }
+        } else if (state == 172) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 188]; }
+        } else if (state == 173) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 68]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 68]; }
+        } else if (state == 174) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 69]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 69]; }
+        } else if (state == 175) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 35]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 35]; }
+        } else if (state == 176) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 36]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 36]; }
+        } else if (state == 177) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_GLOBAL) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_ENTRY) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_NAKED) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_ABSTRACT) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 37]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 37]; }
+        } else if (state == 178) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 179) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 180) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:REDUCE, 45]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 181) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 74]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 182) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 183) {
+            if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 193]; }
+        } else if (state == 184) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 194]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 185) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 65]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 65]; }
+        } else if (state == 186) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 64]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 64]; }
+        } else if (state == 187) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 66]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 66]; }
+        } else if (state == 188) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 67]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 67]; }
+        } else if (state == 189) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 195]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 190) {
+            if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 196]; }
+        } else if (state == 191) {
+            if (symbol == Tokenizer:T_SBRACKETCLOSE) { return [Parser:SHIFT, 197]; }
+        } else if (state == 192) {
+            if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 198]; }
+        } else if (state == 193) {
+            if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 199]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 200]; }
+        } else if (state == 194) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 70]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 70]; }
+        } else if (state == 195) {
+            if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 201]; }
+        } else if (state == 196) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 202]; }
+        } else if (state == 197) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 73]; }
+        } else if (state == 198) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 203]; }
+        } else if (state == 199) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 204]; }
+        } else if (state == 200) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 81]; }
+        } else if (state == 201) {
+            if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 205]; }
+        } else if (state == 202) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 203) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 204) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 49]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 208]; }
+        } else if (state == 205) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 206) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 212]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 207) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 213]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 208) {
+            if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 214]; }
+        } else if (state == 209) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 50]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 215]; }
+        } else if (state == 210) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 216]; }
+        } else if (state == 211) {
+            if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 217]; }
+        } else if (state == 212) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 86]; }
+            else if (symbol == Tokenizer:T_ELSE) { return [Parser:SHIFT, 218]; }
+        } else if (state == 213) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 84]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 84]; }
+        } else if (state == 214) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 215) {
+            if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 220]; }
+        } else if (state == 216) {
+            if (symbol == Tokenizer:T_COMMA) { return [Parser:SHIFT, 221]; }
+            else if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 222]; }
+        } else if (state == 217) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:SHIFT, 223]; }
+        } else if (state == 218) {
+            if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 224]; }
+        } else if (state == 219) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 47]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 47]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 220) {
+            if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 226]; }
+        } else if (state == 221) {
+            if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 227]; }
+        } else if (state == 222) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 82]; }
+        } else if (state == 223) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 85]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 85]; }
+        } else if (state == 224) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 71]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 71]; }
+        } else if (state == 225) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 88]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 88]; }
+        } else if (state == 226) {
+            if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 85]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 86]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 227) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 49]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 208]; }
+        } else if (state == 228) {
+            if (symbol == Tokenizer:T_DO) { return [Parser:SHIFT, 159]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:SHIFT, 160]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:SHIFT, 80]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:SHIFT, 161]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:SHIFT, 81]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:SHIFT, 162]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:SHIFT, 22]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:SHIFT, 25]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:SHIFT, 163]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:SHIFT, 82]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:SHIFT, 83]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:SHIFT, 84]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:SHIFT, 68]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:SHIFT, 164]; }
+            else if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 231]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:SHIFT, 166]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:SHIFT, 167]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:SHIFT, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 88]; }
+        } else if (state == 229) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 48]; }
+            else if (symbol == Tokenizer:T_COMMA) { return [Parser:REDUCE, 48]; }
+            else if (symbol == Tokenizer:T_DOT) { return [Parser:SHIFT, 109]; }
+        } else if (state == 230) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:SHIFT, 232]; }
+        } else if (state == 231) {
+            if (symbol == Tokenizer:T_CBRACKETCLOSE) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_BRACKETOPEN) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_CBRACKETOPEN) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_NUMBER) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_PLUS) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_MINUS) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_STRING) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_THIS) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_NULL) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_ID) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_FQN) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_ALL) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_ANY) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_CSTRING) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_INT) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_SBRACKETOPEN) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_RETURN) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_PASM) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_WHILE) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_DO) { return [Parser:REDUCE, 87]; }
+            else if (symbol == Tokenizer:T_IF) { return [Parser:REDUCE, 87]; }
+        } else if (state == 232) {
+            if (symbol == Tokenizer:T_BRACKETCLOSE) { return [Parser:SHIFT, 233]; }
+        } else if (state == 233) {
+            if (symbol == Tokenizer:T_SEMICOLON) { return [Parser:REDUCE, 83]; }
+        }
+
+        return [Parser:ERROR, 0];
+    }
+
+}
