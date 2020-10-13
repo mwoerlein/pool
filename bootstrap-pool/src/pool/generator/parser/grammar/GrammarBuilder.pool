@@ -213,8 +213,11 @@ class GrammarBuilder extends sys::core::Object {
                                 Item item = items.next();
                                 Item keyItem = keySet.get(item);
                                 if (keyItem.getLookahead().addAll(item.getLookahead())) {
-                                    // existing set/state changed => recompute 
-                                    ws.add(keySet);
+                                    // existing set/state changed => recompute
+                                    if (!ws.contains(keySet)) {
+                                        ws.add(keySet);
+                                        State curState = states.get(keySet);
+                                    }
                                 }
                             }
                             items.destroy();
