@@ -6,6 +6,7 @@
 %ignores COMMENT
 %ignores MLCOMMENT
 
+--- TOKENS ---
 IDENTIFIER  := /[\._a-zA-Z][_a-zA-Z0-9]*/
 REGISTER    := /%[a-zA-Z][_a-zA-Z0-9]*/
 CHAR        := /'([^\\\n\r']|\\[^\n\r\t])*'/
@@ -22,6 +23,7 @@ OBRACKET    := /\(/
 CBRACKET    := /\)/
 COMMA       := /,/
 
+--- RULES ---
 compilation_unit:                                                              { $$ = unit.getNodeList(); }
 compilation_unit: compilation_unit label                                       { $$ = this.pushToList($1, $2); }
 compilation_unit: compilation_unit definition                                  { $$ = this.pushToList($1, $2); }

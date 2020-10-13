@@ -3,6 +3,7 @@
 %extends    "BaseParser"
 %tokenizer  "Tokenizer"
 
+--- TOKENS ---
 CHAR      := /[^\\\(\)\[\]\?\*\+\-\^\|\.\/]|\\[nrt\\\(\)\[\]\?\*\+\-\^\|\.\/]/
 OBRACKET  := /\(/
 CBRACKET  := /\)/
@@ -16,6 +17,7 @@ CFLEX     := /\^/
 PIPE      := /\|/
 DOT       := /\./
 
+--- RULES ---
 expression: alter                     { $$ = this.expression = $1; }
 alter: concat                         { $$ = this.listAddNode(this.alter(), this.listToNode($1)); }
 alter: alter PIPE concat              { $$ = this.listAddNode($1, this.listToNode($3)); }

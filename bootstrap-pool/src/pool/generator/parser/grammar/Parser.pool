@@ -55,7 +55,7 @@ class Parser extends BaseParser {
     }
 
     [int, int] __action(int state, int symbol) {
-        if ((symbol == Tokenizer:T_SPACER)) { return [Parser:IGNORE, 0]; }
+        if ((symbol == Tokenizer:T_COMMENT) || (symbol == Tokenizer:T_SPACER)) { return [Parser:IGNORE, 0]; }
         if (state == 0) {
             if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 0]; }
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 0]; }

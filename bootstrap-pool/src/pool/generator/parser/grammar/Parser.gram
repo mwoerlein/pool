@@ -3,17 +3,21 @@
 %extends    "BaseParser"
 %tokenizer  "Tokenizer"
 %ignores SPACER
+%ignores COMMENT
 
+--- TOKENS ---
 SYMBOL      := /[a-zA-Z][_a-zA-Z0-9]*/
 PARAMETER   := /%[a-zA-Z][_a-zA-Z0-9]*/
 REGEX       := /\/([^\\\n\r\/]|\\[^\n\r\t])*\//
 STRING      := /"([^\\\n\r"]|\\[^\n\r\t])*"/
 CODE        := /{([^\\\n\r{}]|\\[^\n\r\t])*}/
+COMMENT     := /\-\-\-[^\n\r]*/
 NEWLINE     := /[\n\r]+/
 SPACER      := /[ \t]+/
 ASSIGN      := /:=/
 COLON       := /:/
 
+--- RULES ---
 grammar_def:                                                    { $$ = this.definition; }
 grammar_def: grammar_def NEWLINE
 grammar_def: grammar_def PARAMETER STRING NEWLINE               { $$ = this.addParameter($1, $2, $3); }
