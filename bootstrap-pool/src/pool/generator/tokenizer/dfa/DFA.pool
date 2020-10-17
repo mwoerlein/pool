@@ -43,7 +43,7 @@ class DFA extends Factory {
         return this;
     }
     
-    [DFA] _buildActions() {    
+    [DFA] _buildActions() {
         Symbol errorSymbol = symbols.get(overall);
         
         // HashMap<State, HashMap<State, CharSet>>

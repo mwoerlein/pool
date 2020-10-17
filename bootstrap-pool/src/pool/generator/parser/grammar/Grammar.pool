@@ -9,6 +9,7 @@ use pool::generator::Symbol;
 
 use pool::generator::regex::Parser as RegexParser;
 use pool::generator::regex::fa::NFA as RegexNFA;
+use pool::generator::regex::fa::NFAOStream as RegexNFAOStream;
 use pool::generator::regex::node::List as RegexList;
 use pool::generator::tokenizer::dfa::DFA as TokenizerDFA;
 
@@ -80,22 +81,40 @@ class Grammar extends sys::core::Object {
         if (!this.tokenizerDFA) {
             this.tokenizerDFA = this.createOwn(TokenizerDFA:CLASSNAME);
             {
+                AnyIterator it = definition.tokens();
+                while (it.hasNext()) {
+                    Token t = it.next();
+                    if (t.isInlineDefinition()) {
+                        Symbol s = t.getSymbol();
+                        
+                        RegexNFAOStream inline = this.rt().createInstance(RegexNFAOStream:CLASSNAME);
+                        t.getDefinition()._unescapeToStream(inline.ostream(), '\'', '\\');
+                        
+                        this.tokenizerDFA._addTerminal(s, inline.toNFA());
+                        
+                        inline.destroy();
+                    }
+                }
+                it.destroy();
+            }
+            {
                 RegexParser parser = this.rt().createInstance(RegexParser:CLASSNAME);
                 AnyIterator it = definition.tokens();
                 while (it.hasNext()) {
                     Token t = it.next();
-                    Symbol s = t.getSymbol();
-                    
-                    String def = t.getDefinition().subString(1, -1);
-                    IStream is = def.toIStream();
-                    RegexList l = parser.parse(is, s.getName());
-
-                    this.tokenizerDFA._addTerminal(s, l.toNFA());
-                    
-                    l.destroy();
-                    is.destroy();
-                    def.destroy();
-                    
+                    if (!t.isInlineDefinition()) {
+                        Symbol s = t.getSymbol();
+                        
+                        String def = t.getDefinition().subString(1, -1);
+                        IStream is = def.toIStream();
+                        RegexList l = parser.parse(is, s.getName());
+    
+                        this.tokenizerDFA._addTerminal(s, l.toNFA());
+                        
+                        l.destroy();
+                        is.destroy();
+                        def.destroy();
+                    }
                 }
                 it.destroy();
                 parser.destroy();

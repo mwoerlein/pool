@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::regex::fa;
+
+use pool::generator::CharSet;
+use sys::stream::OStream;
+
+class NFAOStream extends OStream {
+
+    NFA start;
+    NFA terminal;
+    
+    [] __init() {
+        start = terminal = this.createOwn(NFA:CLASSNAME);
+    }
+    
+    [OStream] printChar(int c) {
+        NFA nt = terminal.createOwn(NFA:CLASSNAME);
+        CharSet cs = terminal.createOwn(CharSet:CLASSNAME);
+        cs.setChar(c);
+        terminal.setNext(cs, nt);
+        terminal = nt;
+    }
+    
+    [NFA] toNFA() {
+        start.setTerminal(terminal);
+        return start;
+    }
+}

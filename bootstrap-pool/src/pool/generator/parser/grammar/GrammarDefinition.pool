@@ -38,6 +38,15 @@ class GrammarDefinition extends PropertyContainer {
         return _properties.set(this.createOwnStringFromCString("source.name"), this.createOwnStringFromString(sourceName));
     }
     
+    [Symbol] getInlineSymbol(String value) {
+        if (symbols.has(value)) { return symbols.get(value); }
+        Symbol s = this.createOwn(Symbol:CLASSNAME);
+        s.getName().printCString("INLINE_").printInt(symbols.size());
+        symbols.set(this.createOwnStringFromString(value), s);
+        this.newToken(s).setDefinition(value, true);
+        return s;
+    }
+    
     [Symbol] getSymbol(String name) {
         if (symbols.has(name)) { return symbols.get(name); }
         Symbol s = this.createOwn(Symbol:CLASSNAME);

@@ -52,7 +52,7 @@ class BaseParser extends pool::generator::parser::Parser {
     }
 
     [GrammarDefinition] addToken(GrammarDefinition def, Token symbol, Token regex) {
-        def.newToken(def.getSymbol(symbol.getValue())).setDefinition(regex.getValue());
+        def.newToken(def.getSymbol(symbol.getValue())).setDefinition(regex.getValue(), false);
         return def;
     }
 
@@ -73,6 +73,11 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [AnyList] addSymbolToList(AnyList l, Token symbol) {
         l.add(definition.getSymbol(symbol.getValue()));
+        return l;
+    }
+    
+    [AnyList] addInlineToList(AnyList l, Token inline) {
+        l.add(definition.getInlineSymbol(inline.getValue()));
         return l;
     }
 }

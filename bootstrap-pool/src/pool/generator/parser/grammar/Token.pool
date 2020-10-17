@@ -15,14 +15,20 @@ class Token extends sys::core::Object {
     
     Symbol symbol;
     String definition;
+    int inline;
     
-    [] __init() { definition = this.createOwn(String:CLASSNAME); }
+    [] __init() { definition = this.createOwn(String:CLASSNAME); inline = 0; }
     
     [Token] setSymbol(Symbol s) { this.symbol = s; return this; }
     [Symbol] getSymbol() { return symbol; }
     
     [Token] setCDefinition(cstring def) { this.definition.assignCString(def); return this; }
-    [Token] setDefinition(String def) { this.definition.assignString(def); return this; }
+    [Token] setDefinition(String def, int inline) {
+        this.definition.assignString(def);
+        this.inline = inline;
+        return this;
+    }
+    [int] isInlineDefinition() { return this.inline; }
     [String] getDefinition() { return this.definition; }
     
 }
