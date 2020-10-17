@@ -5,34 +5,23 @@
 
 --- TOKENS ---
 CHAR      := /[^\\\(\)\[\]\?\*\+\-\^\|\.\/]|\\[nrt\\\(\)\[\]\?\*\+\-\^\|\.\/]/
-OBRACKET  := /\(/
-CBRACKET  := /\)/
-OSBRACKET := /\[/
-CSBRACKET := /\]/
-QMARK     := /\?/
-STAR      := /\*/
-PLUS      := /\+/
-MINUS     := /\-/
-CFLEX     := /\^/
-PIPE      := /\|/
-DOT       := /\./
 
 --- RULES ---
-expression: alter                     { $$ = this.expression = $1; }
-alter: concat                         { $$ = this.listAddNode(this.alter(), this.listToNode($1)); }
-alter: alter PIPE concat              { $$ = this.listAddNode($1, this.listToNode($3)); }
-concat: elem                          { $$ = this.listAddNode(this.concat(), $1); }
-concat: concat elem                   { $$ = this.listAddNode($1, $2); }
+expression: alter           { $$ = this.expression = $1; }
+alter: concat               { $$ = this.listAddNode(this.alter(), this.listToNode($1)); }
+alter: alter '|' concat     { $$ = this.listAddNode($1, this.listToNode($3)); }
+concat: elem                { $$ = this.listAddNode(this.concat(), $1); }
+concat: concat elem         { $$ = this.listAddNode($1, $2); }
 elem: expr                            
-expr: expr QMARK                      { $$ = this.atMostOnce($1); }
-expr: expr STAR                       { $$ = this.any($1); }
-expr: expr PLUS                       { $$ = this.atLeastOnce($1); }
-expr: DOT                             { $$ = this.all(); }
-expr: CHAR                            { $$ = this.single(this.toChar($1)); }
-expr: OSBRACKET class CSBRACKET       { $$ = this.ccToNode($2); }
-expr: OSBRACKET CFLEX class CSBRACKET { $$ = this.ccToExclusiveNode($3); }
-expr: OBRACKET alter CBRACKET         { $$ = this.listToNode($2); }
-class: CHAR                           { $$ = this.ccAddChar(this.cc(), this.toChar($1)); }
-class: CHAR MINUS CHAR                { $$ = this.ccAddRange(this.cc(), this.toChar($1), this.toChar($3)); }
-class: class CHAR                     { $$ = this.ccAddChar($1, this.toChar($2)); }
-class: class CHAR MINUS CHAR          { $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }
+expr: expr '?'              { $$ = this.atMostOnce($1); }
+expr: expr '*'              { $$ = this.any($1); }
+expr: expr '+'              { $$ = this.atLeastOnce($1); }
+expr: '.'                   { $$ = this.all(); }
+expr: CHAR                  { $$ = this.single(this.toChar($1)); }
+expr: '[' class ']'         { $$ = this.ccToNode($2); }
+expr: '[^' class ']'        { $$ = this.ccToExclusiveNode($2); }
+expr: '(' alter ')'         { $$ = this.listToNode($2); }
+class: CHAR                 { $$ = this.ccAddChar(this.cc(), this.toChar($1)); }
+class: CHAR '-' CHAR        { $$ = this.ccAddRange(this.cc(), this.toChar($1), this.toChar($3)); }
+class: class CHAR           { $$ = this.ccAddChar($1, this.toChar($2)); }
+class: class CHAR '-' CHAR  { $$ = this.ccAddRange($1, this.toChar($2), this.toChar($4)); }

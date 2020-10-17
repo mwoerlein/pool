@@ -12,6 +12,11 @@ namespace pool::asm;
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
     int T_ERROR := -2;
+    int T_INLINE_15 := 10;
+    int T_INLINE_17 := 11;
+    int T_INLINE_18 := 12;
+    int T_INLINE_21 := 13;
+    int T_INLINE_22 := 14;
     int T_IDENTIFIER := 0;
     int T_REGISTER := 1;
     int T_CHAR := 2;
@@ -22,15 +27,15 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     int T_COMMENT := 7;
     int T_MLCOMMENT := 8;
     int T_OPERATOR := 9;
-    int T_ASSIGN := 10;
-    int T_COLON := 11;
-    int T_OBRACKET := 12;
-    int T_CBRACKET := 13;
-    int T_COMMA := 14;
 
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
         else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
+        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("INLINE_15"); }
+        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("INLINE_17"); }
+        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("INLINE_18"); }
+        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("INLINE_21"); }
+        else if (symbol == Tokenizer:T_INLINE_22) { stream.printCString("INLINE_22"); }
         else if (symbol == Tokenizer:T_IDENTIFIER) { stream.printCString("IDENTIFIER"); }
         else if (symbol == Tokenizer:T_REGISTER) { stream.printCString("REGISTER"); }
         else if (symbol == Tokenizer:T_CHAR) { stream.printCString("CHAR"); }
@@ -41,11 +46,6 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (symbol == Tokenizer:T_COMMENT) { stream.printCString("COMMENT"); }
         else if (symbol == Tokenizer:T_MLCOMMENT) { stream.printCString("MLCOMMENT"); }
         else if (symbol == Tokenizer:T_OPERATOR) { stream.printCString("OPERATOR"); }
-        else if (symbol == Tokenizer:T_ASSIGN) { stream.printCString("ASSIGN"); }
-        else if (symbol == Tokenizer:T_COLON) { stream.printCString("COLON"); }
-        else if (symbol == Tokenizer:T_OBRACKET) { stream.printCString("OBRACKET"); }
-        else if (symbol == Tokenizer:T_CBRACKET) { stream.printCString("CBRACKET"); }
-        else if (symbol == Tokenizer:T_COMMA) { stream.printCString("COMMA"); }
         return stream;
     }
 
@@ -60,11 +60,11 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == 35) { this._consume(); state = 4; }
                 else if (c == 37) { this._consume(); state = 5; }
                 else if (c == 39) { this._consume(); state = 6; }
-                else if (c == 40) { this._consume(); return this._buildNextToken(Tokenizer:T_OBRACKET); }
-                else if (c == 41) { this._consume(); return this._buildNextToken(Tokenizer:T_CBRACKET); }
+                else if (c == 40) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_21); }
+                else if (c == 41) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_22); }
                 else if (c == 42) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
                 else if (c == 43) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
-                else if (c == 44) { this._consume(); return this._buildNextToken(Tokenizer:T_COMMA); }
+                else if (c == 44) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_17); }
                 else if (c == 45) { this._consume(); state = 7; }
                 else if (c == 46) { this._consume(); state = 8; }
                 else if (c == 47) { this._consume(); state = 9; }
@@ -118,8 +118,8 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 if (((c >= 48) && (c <= 57))) { this._consume(); state = 28; }
                 else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 12) {
-                if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_ASSIGN); }
-                else { return this._buildNextToken(Tokenizer:T_COLON); }
+                if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_18); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_15); }
             } else if (state == 13) {
                 if (c == 60) { this._consume(); return this._buildNextToken(Tokenizer:T_OPERATOR); }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
@@ -231,7 +231,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 9) { return this._buildNextToken(Tokenizer:T_OPERATOR); }
         else if (state == 10) { return this._buildNextToken(Tokenizer:T_NUMBER); }
         else if (state == 11) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 12) { return this._buildNextToken(Tokenizer:T_COLON); }
+        else if (state == 12) { return this._buildNextToken(Tokenizer:T_INLINE_15); }
         else if (state == 13) { return this._buildNextToken(Tokenizer:T_ERROR); }
         else if (state == 14) { return this._buildNextToken(Tokenizer:T_ERROR); }
         else if (state == 15) { return this._buildNextToken(Tokenizer:T_IDENTIFIER); }

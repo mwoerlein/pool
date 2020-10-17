@@ -15,17 +15,15 @@ CODE        := /{([^\\\n\r{}]|\\[^\n\r\t])*}/
 COMMENT     := /\-\-\-[^\n\r]*/
 NEWLINE     := /[\n\r]+/
 SPACER      := /[ \t]+/
-ASSIGN      := /:=/
-COLON       := /:/
 
 --- RULES ---
 grammar_def:                                                    { $$ = this.definition; }
 grammar_def: grammar_def NEWLINE
 grammar_def: grammar_def PARAMETER STRING NEWLINE               { $$ = this.addParameter($1, $2, $3); }
 grammar_def: grammar_def PARAMETER SYMBOL NEWLINE               { $$ = this.addParameter($1, $2, $3); }
-grammar_def: grammar_def SYMBOL ASSIGN REGEX NEWLINE            { $$ = this.addToken($1, $2, $4); }
-grammar_def: grammar_def SYMBOL COLON symbol_list NEWLINE       { $$ = this.addRule($1, $2, $4, null); }
-grammar_def: grammar_def SYMBOL COLON symbol_list CODE NEWLINE  { $$ = this.addRule($1, $2, $4, $5); }
+grammar_def: grammar_def SYMBOL ':=' REGEX NEWLINE              { $$ = this.addToken($1, $2, $4); }
+grammar_def: grammar_def SYMBOL ':' symbol_list NEWLINE         { $$ = this.addRule($1, $2, $4, null); }
+grammar_def: grammar_def SYMBOL ':' symbol_list CODE NEWLINE    { $$ = this.addRule($1, $2, $4, $5); }
 symbol_list:                                                    { $$ = this.list(); }
 symbol_list: symbol_list SYMBOL                                 { $$ = this.addSymbolToList($1, $2); }
 symbol_list: symbol_list INLINE                                 { $$ = this.addInlineToList($1, $2); }

@@ -12,101 +12,108 @@ namespace pool::compiler::parser;
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
     int T_ERROR := -2;
-    int T_ABSTRACT := 0;
-    int T_AS := 1;
-    int T_CLASS := 2;
-    int T_DO := 3;
-    int T_ELSE := 4;
-    int T_EXTENDS := 5;
-    int T_GLOBAL := 6;
-    int T_IF := 7;
-    int T_NAMESPACE := 8;
-    int T_NULL := 9;
-    int T_RETURN := 10;
-    int T_STRUCT := 11;
-    int T_THIS := 12;
-    int T_USE := 13;
-    int T_WHILE := 14;
-    int T_ALL := 15;
-    int T_ANY := 16;
-    int T_CSTRING := 17;
-    int T_INT := 18;
-    int T_ENTRY := 19;
-    int T_NAKED := 20;
-    int T_PASM := 21;
-    int T_COLON := 22;
-    int T_COLON_EQUAL := 23;
-    int T_COLON_COLON_EQUAL := 24;
-    int T_EQUAL := 25;
-    int T_PLUS_EQUAL := 26;
-    int T_MINUS_EQUAL := 27;
-    int T_STAR_EQUAL := 28;
-    int T_SLASH_EQUAL := 29;
-    int T_PERCENTAGE_EQUAL := 30;
-    int T_PIPE_PIPE := 31;
-    int T_AMPERSAND_AMPERSAND := 32;
-    int T_EQUAL_EQUAL := 33;
-    int T_EXCLAMATIONMARK_EQUAL := 34;
-    int T_ANGLEBRACKETOPEN := 35;
-    int T_ANGLEBRACKETOPEN_EQUAL := 36;
-    int T_ANGLEBRACKETCLOSE := 37;
-    int T_ANGLEBRACKETCLOSE_EQUAL := 38;
-    int T_PLUS := 39;
-    int T_MINUS := 40;
-    int T_STAR := 41;
-    int T_SLASH := 42;
-    int T_PERCENTAGE := 43;
-    int T_PLUS_PLUS := 44;
-    int T_MINUS_MINUS := 45;
-    int T_EXCLAMATIONMARK := 46;
-    int T_DOT := 47;
-    int T_COMMA := 48;
-    int T_SEMICOLON := 49;
-    int T_BRACKETOPEN := 50;
-    int T_BRACKETCLOSE := 51;
-    int T_SBRACKETOPEN := 52;
-    int T_SBRACKETCLOSE := 53;
-    int T_CBRACKETOPEN := 54;
-    int T_CBRACKETCLOSE := 55;
-    int T_EOL := 56;
-    int T_WSP := 57;
-    int T_ID := 58;
-    int T_FQN := 59;
-    int T_NUMBER := 60;
-    int T_STRING := 61;
-    int T_MLSTRING := 62;
-    int T_COMMENT := 63;
-    int T_MLCOMMENT := 64;
+    int T_INLINE_36 := 30;
+    int T_INLINE_37 := 31;
+    int T_INLINE_38 := 32;
+    int T_INLINE_39 := 33;
+    int T_INLINE_40 := 34;
+    int T_INLINE_41 := 35;
+    int T_INLINE_43 := 36;
+    int T_INLINE_45 := 37;
+    int T_INLINE_47 := 38;
+    int T_INLINE_49 := 39;
+    int T_INLINE_53 := 40;
+    int T_INLINE_54 := 41;
+    int T_INLINE_55 := 42;
+    int T_INLINE_56 := 43;
+    int T_INLINE_57 := 44;
+    int T_INLINE_61 := 45;
+    int T_INLINE_62 := 46;
+    int T_INLINE_63 := 47;
+    int T_INLINE_64 := 48;
+    int T_INLINE_66 := 49;
+    int T_INLINE_67 := 50;
+    int T_INLINE_68 := 51;
+    int T_INLINE_75 := 52;
+    int T_INLINE_78 := 53;
+    int T_INLINE_79 := 54;
+    int T_INLINE_80 := 55;
+    int T_INLINE_86 := 56;
+    int T_INLINE_87 := 57;
+    int T_INLINE_88 := 58;
+    int T_INLINE_89 := 59;
+    int T_INLINE_90 := 60;
+    int T_INLINE_91 := 61;
+    int T_INLINE_92 := 62;
+    int T_INLINE_93 := 63;
+    int T_PLUS_EQUAL := 0;
+    int T_MINUS_EQUAL := 1;
+    int T_STAR_EQUAL := 2;
+    int T_SLASH_EQUAL := 3;
+    int T_PERCENTAGE_EQUAL := 4;
+    int T_PIPE_PIPE := 5;
+    int T_AMPERSAND_AMPERSAND := 6;
+    int T_EQUAL_EQUAL := 7;
+    int T_EXCLAMATIONMARK_EQUAL := 8;
+    int T_ANGLEBRACKETOPEN := 9;
+    int T_ANGLEBRACKETOPEN_EQUAL := 10;
+    int T_ANGLEBRACKETCLOSE := 11;
+    int T_ANGLEBRACKETCLOSE_EQUAL := 12;
+    int T_PLUS := 13;
+    int T_MINUS := 14;
+    int T_STAR := 15;
+    int T_SLASH := 16;
+    int T_PERCENTAGE := 17;
+    int T_PLUS_PLUS := 18;
+    int T_MINUS_MINUS := 19;
+    int T_EXCLAMATIONMARK := 20;
+    int T_EOL := 21;
+    int T_WSP := 22;
+    int T_ID := 23;
+    int T_FQN := 24;
+    int T_NUMBER := 25;
+    int T_STRING := 26;
+    int T_MLSTRING := 27;
+    int T_COMMENT := 28;
+    int T_MLCOMMENT := 29;
 
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
         else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
-        else if (symbol == Tokenizer:T_ABSTRACT) { stream.printCString("ABSTRACT"); }
-        else if (symbol == Tokenizer:T_AS) { stream.printCString("AS"); }
-        else if (symbol == Tokenizer:T_CLASS) { stream.printCString("CLASS"); }
-        else if (symbol == Tokenizer:T_DO) { stream.printCString("DO"); }
-        else if (symbol == Tokenizer:T_ELSE) { stream.printCString("ELSE"); }
-        else if (symbol == Tokenizer:T_EXTENDS) { stream.printCString("EXTENDS"); }
-        else if (symbol == Tokenizer:T_GLOBAL) { stream.printCString("GLOBAL"); }
-        else if (symbol == Tokenizer:T_IF) { stream.printCString("IF"); }
-        else if (symbol == Tokenizer:T_NAMESPACE) { stream.printCString("NAMESPACE"); }
-        else if (symbol == Tokenizer:T_NULL) { stream.printCString("NULL"); }
-        else if (symbol == Tokenizer:T_RETURN) { stream.printCString("RETURN"); }
-        else if (symbol == Tokenizer:T_STRUCT) { stream.printCString("STRUCT"); }
-        else if (symbol == Tokenizer:T_THIS) { stream.printCString("THIS"); }
-        else if (symbol == Tokenizer:T_USE) { stream.printCString("USE"); }
-        else if (symbol == Tokenizer:T_WHILE) { stream.printCString("WHILE"); }
-        else if (symbol == Tokenizer:T_ALL) { stream.printCString("ALL"); }
-        else if (symbol == Tokenizer:T_ANY) { stream.printCString("ANY"); }
-        else if (symbol == Tokenizer:T_CSTRING) { stream.printCString("CSTRING"); }
-        else if (symbol == Tokenizer:T_INT) { stream.printCString("INT"); }
-        else if (symbol == Tokenizer:T_ENTRY) { stream.printCString("ENTRY"); }
-        else if (symbol == Tokenizer:T_NAKED) { stream.printCString("NAKED"); }
-        else if (symbol == Tokenizer:T_PASM) { stream.printCString("PASM"); }
-        else if (symbol == Tokenizer:T_COLON) { stream.printCString("COLON"); }
-        else if (symbol == Tokenizer:T_COLON_EQUAL) { stream.printCString("COLON_EQUAL"); }
-        else if (symbol == Tokenizer:T_COLON_COLON_EQUAL) { stream.printCString("COLON_COLON_EQUAL"); }
-        else if (symbol == Tokenizer:T_EQUAL) { stream.printCString("EQUAL"); }
+        else if (symbol == Tokenizer:T_INLINE_36) { stream.printCString("INLINE_36"); }
+        else if (symbol == Tokenizer:T_INLINE_37) { stream.printCString("INLINE_37"); }
+        else if (symbol == Tokenizer:T_INLINE_38) { stream.printCString("INLINE_38"); }
+        else if (symbol == Tokenizer:T_INLINE_39) { stream.printCString("INLINE_39"); }
+        else if (symbol == Tokenizer:T_INLINE_40) { stream.printCString("INLINE_40"); }
+        else if (symbol == Tokenizer:T_INLINE_41) { stream.printCString("INLINE_41"); }
+        else if (symbol == Tokenizer:T_INLINE_43) { stream.printCString("INLINE_43"); }
+        else if (symbol == Tokenizer:T_INLINE_45) { stream.printCString("INLINE_45"); }
+        else if (symbol == Tokenizer:T_INLINE_47) { stream.printCString("INLINE_47"); }
+        else if (symbol == Tokenizer:T_INLINE_49) { stream.printCString("INLINE_49"); }
+        else if (symbol == Tokenizer:T_INLINE_53) { stream.printCString("INLINE_53"); }
+        else if (symbol == Tokenizer:T_INLINE_54) { stream.printCString("INLINE_54"); }
+        else if (symbol == Tokenizer:T_INLINE_55) { stream.printCString("INLINE_55"); }
+        else if (symbol == Tokenizer:T_INLINE_56) { stream.printCString("INLINE_56"); }
+        else if (symbol == Tokenizer:T_INLINE_57) { stream.printCString("INLINE_57"); }
+        else if (symbol == Tokenizer:T_INLINE_61) { stream.printCString("INLINE_61"); }
+        else if (symbol == Tokenizer:T_INLINE_62) { stream.printCString("INLINE_62"); }
+        else if (symbol == Tokenizer:T_INLINE_63) { stream.printCString("INLINE_63"); }
+        else if (symbol == Tokenizer:T_INLINE_64) { stream.printCString("INLINE_64"); }
+        else if (symbol == Tokenizer:T_INLINE_66) { stream.printCString("INLINE_66"); }
+        else if (symbol == Tokenizer:T_INLINE_67) { stream.printCString("INLINE_67"); }
+        else if (symbol == Tokenizer:T_INLINE_68) { stream.printCString("INLINE_68"); }
+        else if (symbol == Tokenizer:T_INLINE_75) { stream.printCString("INLINE_75"); }
+        else if (symbol == Tokenizer:T_INLINE_78) { stream.printCString("INLINE_78"); }
+        else if (symbol == Tokenizer:T_INLINE_79) { stream.printCString("INLINE_79"); }
+        else if (symbol == Tokenizer:T_INLINE_80) { stream.printCString("INLINE_80"); }
+        else if (symbol == Tokenizer:T_INLINE_86) { stream.printCString("INLINE_86"); }
+        else if (symbol == Tokenizer:T_INLINE_87) { stream.printCString("INLINE_87"); }
+        else if (symbol == Tokenizer:T_INLINE_88) { stream.printCString("INLINE_88"); }
+        else if (symbol == Tokenizer:T_INLINE_89) { stream.printCString("INLINE_89"); }
+        else if (symbol == Tokenizer:T_INLINE_90) { stream.printCString("INLINE_90"); }
+        else if (symbol == Tokenizer:T_INLINE_91) { stream.printCString("INLINE_91"); }
+        else if (symbol == Tokenizer:T_INLINE_92) { stream.printCString("INLINE_92"); }
+        else if (symbol == Tokenizer:T_INLINE_93) { stream.printCString("INLINE_93"); }
         else if (symbol == Tokenizer:T_PLUS_EQUAL) { stream.printCString("PLUS_EQUAL"); }
         else if (symbol == Tokenizer:T_MINUS_EQUAL) { stream.printCString("MINUS_EQUAL"); }
         else if (symbol == Tokenizer:T_STAR_EQUAL) { stream.printCString("STAR_EQUAL"); }
@@ -128,15 +135,6 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (symbol == Tokenizer:T_PLUS_PLUS) { stream.printCString("PLUS_PLUS"); }
         else if (symbol == Tokenizer:T_MINUS_MINUS) { stream.printCString("MINUS_MINUS"); }
         else if (symbol == Tokenizer:T_EXCLAMATIONMARK) { stream.printCString("EXCLAMATIONMARK"); }
-        else if (symbol == Tokenizer:T_DOT) { stream.printCString("DOT"); }
-        else if (symbol == Tokenizer:T_COMMA) { stream.printCString("COMMA"); }
-        else if (symbol == Tokenizer:T_SEMICOLON) { stream.printCString("SEMICOLON"); }
-        else if (symbol == Tokenizer:T_BRACKETOPEN) { stream.printCString("BRACKETOPEN"); }
-        else if (symbol == Tokenizer:T_BRACKETCLOSE) { stream.printCString("BRACKETCLOSE"); }
-        else if (symbol == Tokenizer:T_SBRACKETOPEN) { stream.printCString("SBRACKETOPEN"); }
-        else if (symbol == Tokenizer:T_SBRACKETCLOSE) { stream.printCString("SBRACKETCLOSE"); }
-        else if (symbol == Tokenizer:T_CBRACKETOPEN) { stream.printCString("CBRACKETOPEN"); }
-        else if (symbol == Tokenizer:T_CBRACKETCLOSE) { stream.printCString("CBRACKETCLOSE"); }
         else if (symbol == Tokenizer:T_EOL) { stream.printCString("EOL"); }
         else if (symbol == Tokenizer:T_WSP) { stream.printCString("WSP"); }
         else if (symbol == Tokenizer:T_ID) { stream.printCString("ID"); }
@@ -163,24 +161,24 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == 37) { this._consume(); state = 6; }
                 else if (c == 38) { this._consume(); state = 7; }
                 else if (c == 39) { this._consume(); state = 8; }
-                else if (c == 40) { this._consume(); return this._buildNextToken(Tokenizer:T_BRACKETOPEN); }
-                else if (c == 41) { this._consume(); return this._buildNextToken(Tokenizer:T_BRACKETCLOSE); }
+                else if (c == 40) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_63); }
+                else if (c == 41) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_64); }
                 else if (c == 42) { this._consume(); state = 9; }
                 else if (c == 43) { this._consume(); state = 10; }
-                else if (c == 44) { this._consume(); return this._buildNextToken(Tokenizer:T_COMMA); }
+                else if (c == 44) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_57); }
                 else if (c == 45) { this._consume(); state = 11; }
-                else if (c == 46) { this._consume(); return this._buildNextToken(Tokenizer:T_DOT); }
+                else if (c == 46) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_80); }
                 else if (c == 47) { this._consume(); state = 12; }
                 else if (c == 48) { this._consume(); state = 13; }
                 else if (((c >= 49) && (c <= 57))) { this._consume(); state = 14; }
                 else if (c == 58) { this._consume(); state = 15; }
-                else if (c == 59) { this._consume(); return this._buildNextToken(Tokenizer:T_SEMICOLON); }
+                else if (c == 59) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_37); }
                 else if (c == 60) { this._consume(); state = 16; }
                 else if (c == 61) { this._consume(); state = 17; }
                 else if (c == 62) { this._consume(); state = 18; }
                 else if (((c >= 65) && (c <= 90)) || (c == 98) || (c == 104) || ((c >= 106) && (c <= 109)) || ((c >= 111) && (c <= 113)) || (c == 118) || ((c >= 120) && (c <= 122))) { this._consume(); state = 19; }
-                else if (c == 91) { this._consume(); return this._buildNextToken(Tokenizer:T_SBRACKETOPEN); }
-                else if (c == 93) { this._consume(); return this._buildNextToken(Tokenizer:T_SBRACKETCLOSE); }
+                else if (c == 91) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_61); }
+                else if (c == 93) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_62); }
                 else if (c == 95) { this._consume(); state = 20; }
                 else if (c == 97) { this._consume(); state = 21; }
                 else if (c == 99) { this._consume(); state = 22; }
@@ -195,9 +193,9 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 else if (c == 116) { this._consume(); state = 31; }
                 else if (c == 117) { this._consume(); state = 32; }
                 else if (c == 119) { this._consume(); state = 33; }
-                else if (c == 123) { this._consume(); return this._buildNextToken(Tokenizer:T_CBRACKETOPEN); }
+                else if (c == 123) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_41); }
                 else if (c == 124) { this._consume(); state = 34; }
-                else if (c == 125) { this._consume(); return this._buildNextToken(Tokenizer:T_CBRACKETCLOSE); }
+                else if (c == 125) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_43); }
                 else { return this._buildNextToken(Tokenizer:T_ERROR); }
             } else if (state == 1) {
                 if ((c == 9) || (c == 32)) { this._consume(); state = 1; }
@@ -251,15 +249,15 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
                 if (((c >= 48) && (c <= 57))) { this._consume(); state = 45; }
                 else { return this._buildNextToken(Tokenizer:T_NUMBER); }
             } else if (state == 15) {
-                if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_COLON_EQUAL); }
-                else { return this._buildNextToken(Tokenizer:T_COLON); }
+                if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_INLINE_88); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_75); }
             } else if (state == 16) {
                 if (c == 34) { this._consume(); state = 46; }
                 else if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_ANGLEBRACKETOPEN_EQUAL); }
                 else { return this._buildNextToken(Tokenizer:T_ANGLEBRACKETOPEN); }
             } else if (state == 17) {
                 if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_EQUAL_EQUAL); }
-                else { return this._buildNextToken(Tokenizer:T_EQUAL); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_87); }
             } else if (state == 18) {
                 if (c == 61) { this._consume(); return this._buildNextToken(Tokenizer:T_ANGLEBRACKETCLOSE_EQUAL); }
                 else { return this._buildNextToken(Tokenizer:T_ANGLEBRACKETCLOSE); }
@@ -410,7 +408,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 51) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_AS); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_39); }
             } else if (state == 52) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 98) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -424,7 +422,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 54) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_DO); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_91); }
             } else if (state == 55) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 114)) || ((c >= 116) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -448,7 +446,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 59) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_IF); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_92); }
             } else if (state == 60) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 115)) || ((c >= 117) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -594,7 +592,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 90) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_INT); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_56); }
             } else if (state == 91) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 100)) || ((c >= 102) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -628,7 +626,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 97) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_USE); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_38); }
             } else if (state == 98) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 107)) || ((c >= 109) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -711,7 +709,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 113) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_ELSE); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_93); }
             } else if (state == 114) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 109)) || ((c >= 111) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -735,7 +733,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 118) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_NULL); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_79); }
             } else if (state == 119) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 113)) || ((c >= 115) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -749,7 +747,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 121) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_THIS); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_78); }
             } else if (state == 122) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -818,7 +816,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 135) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_CLASS); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_47); }
             } else if (state == 136) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 109)) || ((c >= 111) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -856,7 +854,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 143) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_WHILE); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_90); }
             } else if (state == 144) {
                 if (((c >= 0) && (c <= 9)) || (c == 11) || (c == 12) || ((c >= 14) && (c <= 255))) { this._consume(); state = 100; }
                 else if (c == 10) { this._consume(); state = 101; }
@@ -905,7 +903,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 153) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_GLOBAL); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_45); }
             } else if (state == 154) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 98) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -914,19 +912,19 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 155) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_RETURN); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_86); }
             } else if (state == 156) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_STRUCT); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_40); }
             } else if (state == 157) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_ALL); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_53); }
             } else if (state == 158) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_ANY); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_54); }
             } else if (state == 159) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -950,11 +948,11 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 163) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_CSTRING); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_55); }
             } else if (state == 164) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_EXTENDS); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_49); }
             } else if (state == 165) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || (c == 97) || (c == 98) || ((c >= 100) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -973,11 +971,11 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 168) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_PASM); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_89); }
             } else if (state == 169) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_ABSTRACT); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_68); }
             } else if (state == 170) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 100)) || ((c >= 102) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
@@ -986,15 +984,15 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
             } else if (state == 171) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_ENTRY); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_66); }
             } else if (state == 172) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_NAKED); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_67); }
             } else if (state == 173) {
                 if (((c >= 48) && (c <= 57)) || ((c >= 65) && (c <= 90)) || (c == 95) || ((c >= 97) && (c <= 122))) { this._consume(); state = 47; }
                 else if (c == 58) { this._consume(); state = 48; }
-                else { return this._buildNextToken(Tokenizer:T_NAMESPACE); }
+                else { return this._buildNextToken(Tokenizer:T_INLINE_36); }
             } else {
                 this.rt().err().printCString("Unexpected state: ").printInt(state).printNewline();
                 return false;
@@ -1015,9 +1013,9 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 12) { return this._buildNextToken(Tokenizer:T_SLASH); }
         else if (state == 13) { return this._buildNextToken(Tokenizer:T_NUMBER); }
         else if (state == 14) { return this._buildNextToken(Tokenizer:T_NUMBER); }
-        else if (state == 15) { return this._buildNextToken(Tokenizer:T_COLON); }
+        else if (state == 15) { return this._buildNextToken(Tokenizer:T_INLINE_75); }
         else if (state == 16) { return this._buildNextToken(Tokenizer:T_ANGLEBRACKETOPEN); }
-        else if (state == 17) { return this._buildNextToken(Tokenizer:T_EQUAL); }
+        else if (state == 17) { return this._buildNextToken(Tokenizer:T_INLINE_87); }
         else if (state == 18) { return this._buildNextToken(Tokenizer:T_ANGLEBRACKETCLOSE); }
         else if (state == 19) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 20) { return this._buildNextToken(Tokenizer:T_ID); }
@@ -1051,15 +1049,15 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 48) { return this._buildNextToken(Tokenizer:T_ERROR); }
         else if (state == 49) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 50) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 51) { return this._buildNextToken(Tokenizer:T_AS); }
+        else if (state == 51) { return this._buildNextToken(Tokenizer:T_INLINE_39); }
         else if (state == 52) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 53) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 54) { return this._buildNextToken(Tokenizer:T_DO); }
+        else if (state == 54) { return this._buildNextToken(Tokenizer:T_INLINE_91); }
         else if (state == 55) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 56) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 57) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 58) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 59) { return this._buildNextToken(Tokenizer:T_IF); }
+        else if (state == 59) { return this._buildNextToken(Tokenizer:T_INLINE_92); }
         else if (state == 60) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 61) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 62) { return this._buildNextToken(Tokenizer:T_ID); }
@@ -1090,14 +1088,14 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 87) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 88) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 89) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 90) { return this._buildNextToken(Tokenizer:T_INT); }
+        else if (state == 90) { return this._buildNextToken(Tokenizer:T_INLINE_56); }
         else if (state == 91) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 92) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 93) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 94) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 95) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 96) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 97) { return this._buildNextToken(Tokenizer:T_USE); }
+        else if (state == 97) { return this._buildNextToken(Tokenizer:T_INLINE_38); }
         else if (state == 98) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 99) { return this._buildNextToken(Tokenizer:T_ERROR); }
         else if (state == 100) { return this._buildNextToken(Tokenizer:T_ERROR); }
@@ -1113,15 +1111,15 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 110) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 111) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 112) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 113) { return this._buildNextToken(Tokenizer:T_ELSE); }
+        else if (state == 113) { return this._buildNextToken(Tokenizer:T_INLINE_93); }
         else if (state == 114) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 115) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 116) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 117) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 118) { return this._buildNextToken(Tokenizer:T_NULL); }
+        else if (state == 118) { return this._buildNextToken(Tokenizer:T_INLINE_79); }
         else if (state == 119) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 120) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 121) { return this._buildNextToken(Tokenizer:T_THIS); }
+        else if (state == 121) { return this._buildNextToken(Tokenizer:T_INLINE_78); }
         else if (state == 122) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 123) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 124) { return this._buildNextToken(Tokenizer:T_ERROR); }
@@ -1135,7 +1133,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 132) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 133) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 134) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 135) { return this._buildNextToken(Tokenizer:T_CLASS); }
+        else if (state == 135) { return this._buildNextToken(Tokenizer:T_INLINE_47); }
         else if (state == 136) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 137) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 138) { return this._buildNextToken(Tokenizer:T_ID); }
@@ -1143,7 +1141,7 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 140) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 141) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 142) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 143) { return this._buildNextToken(Tokenizer:T_WHILE); }
+        else if (state == 143) { return this._buildNextToken(Tokenizer:T_INLINE_90); }
         else if (state == 144) { return this._buildNextToken(Tokenizer:T_MLSTRING); }
         else if (state == 145) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 146) { return this._buildNextToken(Tokenizer:T_ID); }
@@ -1153,27 +1151,27 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
         else if (state == 150) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 151) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 152) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 153) { return this._buildNextToken(Tokenizer:T_GLOBAL); }
+        else if (state == 153) { return this._buildNextToken(Tokenizer:T_INLINE_45); }
         else if (state == 154) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 155) { return this._buildNextToken(Tokenizer:T_RETURN); }
-        else if (state == 156) { return this._buildNextToken(Tokenizer:T_STRUCT); }
-        else if (state == 157) { return this._buildNextToken(Tokenizer:T_ALL); }
-        else if (state == 158) { return this._buildNextToken(Tokenizer:T_ANY); }
+        else if (state == 155) { return this._buildNextToken(Tokenizer:T_INLINE_86); }
+        else if (state == 156) { return this._buildNextToken(Tokenizer:T_INLINE_40); }
+        else if (state == 157) { return this._buildNextToken(Tokenizer:T_INLINE_53); }
+        else if (state == 158) { return this._buildNextToken(Tokenizer:T_INLINE_54); }
         else if (state == 159) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 160) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 161) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 162) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 163) { return this._buildNextToken(Tokenizer:T_CSTRING); }
-        else if (state == 164) { return this._buildNextToken(Tokenizer:T_EXTENDS); }
+        else if (state == 163) { return this._buildNextToken(Tokenizer:T_INLINE_55); }
+        else if (state == 164) { return this._buildNextToken(Tokenizer:T_INLINE_49); }
         else if (state == 165) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 166) { return this._buildNextToken(Tokenizer:T_ID); }
         else if (state == 167) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 168) { return this._buildNextToken(Tokenizer:T_PASM); }
-        else if (state == 169) { return this._buildNextToken(Tokenizer:T_ABSTRACT); }
+        else if (state == 168) { return this._buildNextToken(Tokenizer:T_INLINE_89); }
+        else if (state == 169) { return this._buildNextToken(Tokenizer:T_INLINE_68); }
         else if (state == 170) { return this._buildNextToken(Tokenizer:T_ID); }
-        else if (state == 171) { return this._buildNextToken(Tokenizer:T_ENTRY); }
-        else if (state == 172) { return this._buildNextToken(Tokenizer:T_NAKED); }
-        else if (state == 173) { return this._buildNextToken(Tokenizer:T_NAMESPACE); }
+        else if (state == 171) { return this._buildNextToken(Tokenizer:T_INLINE_66); }
+        else if (state == 172) { return this._buildNextToken(Tokenizer:T_INLINE_67); }
+        else if (state == 173) { return this._buildNextToken(Tokenizer:T_INLINE_36); }
         return false;
     }
 }

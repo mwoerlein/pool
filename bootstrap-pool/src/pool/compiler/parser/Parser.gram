@@ -7,37 +7,7 @@
 %ignores COMMENT
 %ignores MLCOMMENT
 
---- keywords
-ABSTRACT    := /abstract/
-AS          := /as/
-CLASS       := /class/
-DO          := /do/
-ELSE        := /else/
-EXTENDS     := /extends/
-GLOBAL      := /global/
-IF          := /if/
-NAMESPACE   := /namespace/
-NULL        := /null/
-RETURN      := /return/
-STRUCT      := /struct/
-THIS        := /this/
-USE         := /use/
-WHILE       := /while/
-            
-ALL         := /__all__/
-ANY         := /__any__/
-CSTRING     := /cstring/
-INT         := /int/
-            
-ENTRY       := /__entry__/
-NAKED       := /__naked__/
-PASM        := /__pasm__/
-
 --- operators
-COLON                   := /:/
-COLON_EQUAL             := /:=/
-COLON_COLON_EQUAL       := /:=/
-EQUAL                   := /=/
 PLUS_EQUAL              := /\+=/
 MINUS_EQUAL             := /\-=/
 STAR_EQUAL              := /\*=/
@@ -59,17 +29,6 @@ PERCENTAGE              := /%/
 PLUS_PLUS               := /\+\+/
 MINUS_MINUS             := /\-\-/
 EXCLAMATIONMARK         := /!/
-DOT                     := /\./
-
---- structure elements
-COMMA           := /,/
-SEMICOLON       := /;/
-BRACKETOPEN     := /\(/
-BRACKETCLOSE    := /\)/
-SBRACKETOPEN    := /\[/
-SBRACKETCLOSE   := /\]/
-CBRACKETOPEN    := /{/
-CBRACKETCLOSE   := /}/
 
 --- tokens
 EOL         := /(\r?\n|\r)/
@@ -88,150 +47,149 @@ MLCOMMENT   := /\/\*([^\*]*\*+)([^\/\*][^\*]*\*+)*\//
 --- STRUCTURE ---
 -----------------
 
-translation_unit: namespace_decl                                                                                                                                    { $$ = null; }
-translation_unit: translation_unit use_stmt                                                                                                                         { $$ = null; }
-translation_unit: translation_unit class_decl                                                                                                                       { $$ = null; }
-translation_unit: translation_unit struct_decl                                                                                                                      { $$ = null; }
+translation_unit: namespace_decl                                                                                { $$ = null; }
+translation_unit: translation_unit use_stmt                                                                     { $$ = null; }
+translation_unit: translation_unit class_decl                                                                   { $$ = null; }
+translation_unit: translation_unit struct_decl                                                                  { $$ = null; }
 
-namespace_decl: NAMESPACE ID SEMICOLON                                                                                                                              { $$ = null; }
-namespace_decl: NAMESPACE FQN SEMICOLON                                                                                                                             { $$ = null; }
+namespace_decl: 'namespace' ID ';'                                                                              { $$ = null; }
+namespace_decl: 'namespace' FQN ';'                                                                             { $$ = null; }
 
-use_stmt: USE FQN SEMICOLON                                                                                                                                         { $$ = null; }
-use_stmt: USE FQN AS ID SEMICOLON                                                                                                                                   { $$ = null; }
+use_stmt: 'use' FQN ';'                                                                                         { $$ = null; }
+use_stmt: 'use' FQN 'as' ID ';'                                                                                 { $$ = null; }
 
-struct_decl: STRUCT ID CBRACKETOPEN struct_body_empty CBRACKETCLOSE                                                                                                 { $$ = null; }
-struct_body_empty:                                                                                                                                                  { $$ = null; }
-struct_body_empty: struct_body_empty variable_decl SEMICOLON                                                                                                        { $$ = null; }
-struct_body_empty: struct_body_empty GLOBAL variable_initializer_inst SEMICOLON                                                                                     { $$ = null; }
+struct_decl: 'struct' ID '{' struct_body_empty '}'                                                              { $$ = null; }
+struct_body_empty:                                                                                              { $$ = null; }
+struct_body_empty: struct_body_empty variable_decl ';'                                                          { $$ = null; }
+struct_body_empty: struct_body_empty 'global' variable_initializer_inst ';'                                     { $$ = null; }
 
-class_decl: CLASS ID CBRACKETOPEN class_body_empty CBRACKETCLOSE                                                                                                    { $$ = null; }
-class_decl: CLASS ID EXTENDS type_list CBRACKETOPEN class_body_empty CBRACKETCLOSE                                                                                  { $$ = null; }
-class_body_empty:                                                                                                                                                   { $$ = null; }
-class_body_empty: class_body_empty method_decl                                                                                                                      { $$ = null; }
-class_body_empty: class_body_empty variable_decl SEMICOLON                                                                                                          { $$ = null; }
-class_body_empty: class_body_empty variable_initializer_inst SEMICOLON                                                                                              { $$ = null; }
-class_body_empty: class_body_empty GLOBAL variable_initializer_inst SEMICOLON                                                                                       { $$ = null; }
+class_decl: 'class' ID '{' class_body_empty '}'                                                                 { $$ = null; }
+class_decl: 'class' ID 'extends' type_list '{' class_body_empty '}'                                             { $$ = null; }
+class_body_empty:                                                                                               { $$ = null; }
+class_body_empty: class_body_empty method_decl                                                                  { $$ = null; }
+class_body_empty: class_body_empty variable_decl ';'                                                            { $$ = null; }
+class_body_empty: class_body_empty variable_initializer_inst ';'                                                { $$ = null; }
+class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = null; }
 
-type: ID                                                                                                                                                            { $$ = null; }
-type: FQN                                                                                                                                                           { $$ = null; }
-type: ALL                                                                                                                                                           { $$ = null; }
-type: ANY                                                                                                                                                           { $$ = null; }
-type: CSTRING                                                                                                                                                       { $$ = null; }
-type: INT                                                                                                                                                           { $$ = null; }
-type_list: type                                                                                                                                                     { $$ = null; }
-type_list: type_list COMMA type                                                                                                                                     { $$ = null; }
-type_list_empty:                                                                                                                                                    { $$ = null; }
-type_list_empty: type_list                                                                                                                                          { $$ = null; }
+type: ID                                                                                                        { $$ = null; }
+type: FQN                                                                                                       { $$ = null; }
+type: '__all__'                                                                                                 { $$ = null; }
+type: '__any__'                                                                                                 { $$ = null; }
+type: 'cstring'                                                                                                 { $$ = null; }
+type: 'int'                                                                                                     { $$ = null; }
+type_list: type                                                                                                 { $$ = null; }
+type_list: type_list ',' type                                                                                   { $$ = null; }
+type_list_empty:                                                                                                { $$ = null; }
+type_list_empty: type_list                                                                                      { $$ = null; }
 
-variable_decl: type ID                                                                                                                                              { $$ = null; }
-variable_decl_list: variable_decl                                                                                                                                   { $$ = null; }
-variable_decl_list: variable_decl_list COMMA variable_decl                                                                                                          { $$ = null; }
-variable_decl_list_empty:                                                                                                                                           { $$ = null; }
-variable_decl_list_empty: variable_decl_list                                                                                                                        { $$ = null; }
+variable_decl: type ID                                                                                          { $$ = null; }
+variable_decl_list: variable_decl                                                                               { $$ = null; }
+variable_decl_list: variable_decl_list ',' variable_decl                                                        { $$ = null; }
+variable_decl_list_empty:                                                                                       { $$ = null; }
+variable_decl_list_empty: variable_decl_list                                                                    { $$ = null; }
 
-method_decl: SBRACKETOPEN type_list_empty SBRACKETCLOSE ID BRACKETOPEN variable_decl_list_empty BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE           { $$ = null; }
-method_decl: GLOBAL SBRACKETOPEN type_list_empty SBRACKETCLOSE ID BRACKETOPEN variable_decl_list_empty BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE    { $$ = null; }
-method_decl: ENTRY SBRACKETOPEN type_list_empty SBRACKETCLOSE ID BRACKETOPEN variable_decl_list_empty BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE     { $$ = null; }
-method_decl: NAKED SBRACKETOPEN type_list_empty SBRACKETCLOSE ID BRACKETOPEN variable_decl_list_empty BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE     { $$ = null; }
-method_decl: ABSTRACT SBRACKETOPEN type_list_empty SBRACKETCLOSE ID BRACKETOPEN variable_decl_list_empty BRACKETCLOSE SEMICOLON                                     { $$ = null; }
+method_decl: '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'              { $$ = null; }
+method_decl: 'global' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'     { $$ = null; }
+method_decl: '__entry__' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'  { $$ = null; }
+method_decl: '__naked__' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'  { $$ = null; }
+method_decl: 'abstract' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' ';'                         { $$ = null; }
 
 -------------------
 --- EXPRESSIONS ---
 -------------------
 
-expression: value_expr                                                                                                                                              { $$ = null; }
-expression: variable_expr                                                                                                                                           { $$ = null; }
-expression: method_call_expr                                                                                                                                        { $$ = null; }
----expression: arithmetic_expr                                                                                                                                         { $$ = null; }
----expression: logical_expr                                                                                                                                            { $$ = null; }
-expression: BRACKETOPEN expression BRACKETCLOSE                                                                                                                     { $$ = null; }
+expression: value_expr                                                                                          { $$ = null; }
+expression: variable_expr                                                                                       { $$ = null; }
+expression: method_call_expr                                                                                    { $$ = null; }
+---expression: arithmetic_expr                                                                                  { $$ = null; }
+---expression: logical_expr                                                                                     { $$ = null; }
+expression: '(' expression ')'                                                                                  { $$ = null; }
 
-expression_list: expression                                                                                                                                         { $$ = null; }
-expression_list: expression_list COMMA expression                                                                                                                   { $$ = null; }
-expression_list_empty:                                                                                                                                              { $$ = null; }
-expression_list_empty: expression_list                                                                                                                              { $$ = null; }
+expression_list: expression                                                                                     { $$ = null; }
+expression_list: expression_list ',' expression                                                                 { $$ = null; }
+expression_list_empty:                                                                                          { $$ = null; }
+expression_list_empty: expression_list                                                                          { $$ = null; }
 
-expression_map: STRING COLON expression                                                                                                                             { $$ = null; }
-expression_map: expression_map COMMA STRING COLON expression                                                                                                        { $$ = null; }
-expression_map_empty:                                                                                                                                               { $$ = null; }
-expression_map_empty: expression_map                                                                                                                                { $$ = null; }
+expression_map: STRING ':' expression                                                                           { $$ = null; }
+expression_map: expression_map ',' STRING ':' expression                                                        { $$ = null; }
+expression_map_empty:                                                                                           { $$ = null; }
+expression_map_empty: expression_map                                                                            { $$ = null; }
 
-value_expr: NUMBER                                                                                                                                                  { $$ = null; }
-value_expr: PLUS NUMBER                                                                                                                                             { $$ = null; }
-value_expr: MINUS NUMBER                                                                                                                                            { $$ = null; }
-value_expr: STRING                                                                                                                                                  { $$ = null; }
-value_expr: THIS                                                                                                                                                    { $$ = null; }
-value_expr: NULL                                                                                                                                                    { $$ = null; }
+value_expr: NUMBER                                                                                              { $$ = null; }
+value_expr: PLUS NUMBER                                                                                         { $$ = null; }
+value_expr: MINUS NUMBER                                                                                        { $$ = null; }
+value_expr: STRING                                                                                              { $$ = null; }
+value_expr: 'this'                                                                                              { $$ = null; }
+value_expr: 'null'                                                                                              { $$ = null; }
 
-variable_expr: ID                                                                                                                                                   { $$ = null; }
-variable_expr: expression DOT ID                                                                                                                                    { $$ = null; }
-variable_expr: ID COLON ID                                                                                                                                          { $$ = null; }
-variable_expr: FQN COLON ID                                                                                                                                         { $$ = null; }
+variable_expr: ID                                                                                               { $$ = null; }
+variable_expr: expression '.' ID                                                                                { $$ = null; }
+variable_expr: ID ':' ID                                                                                        { $$ = null; }
+variable_expr: FQN ':' ID                                                                                       { $$ = null; }
 
-method_call_expr: expression DOT ID BRACKETOPEN expression_list_empty BRACKETCLOSE                                                                                  { $$ = null; }
-method_call_expr: ID COLON ID BRACKETOPEN expression_list_empty BRACKETCLOSE                                                                                        { $$ = null; }
-method_call_expr: FQN COLON ID BRACKETOPEN expression_list_empty BRACKETCLOSE                                                                                       { $$ = null; }
+method_call_expr: expression '.' ID '(' expression_list_empty ')'                                               { $$ = null; }
+method_call_expr: ID ':' ID '(' expression_list_empty ')'                                                       { $$ = null; }
+method_call_expr: FQN ':' ID '(' expression_list_empty ')'                                                      { $$ = null; }
 
----arithmetic_expr: expression PLUS expression                                                                                                                         { $$ = null; }
----arithmetic_expr: expression MINUS expression                                                                                                                        { $$ = null; }
----arithmetic_expr: expression STAR expression                                                                                                                         { $$ = null; }
----arithmetic_expr: expression SLASH expression                                                                                                                        { $$ = null; }
----arithmetic_expr: expression PERCENTAGE expression                                                                                                                   { $$ = null; }
----arithmetic_expr: PLUS expression                                                                                                                                    { $$ = null; }
----arithmetic_expr: MINUS expression                                                                                                                                   { $$ = null; }
----arithmetic_expr: PLUS_PLUS variable_expr                                                                                                                            { $$ = null; }
----arithmetic_expr: MINUS_MINUS variable_expr                                                                                                                          { $$ = null; }
----arithmetic_expr: variable_expr PLUS_PLUS                                                                                                                            { $$ = null; }
----arithmetic_expr: variable_expr MINUS_MINUS                                                                                                                          { $$ = null; }
----arithmetic_expr: variable_expr EQUAL expression                                                                                                                     { $$ = null; }
----arithmetic_expr: variable_expr PLUS_EQUAL expression                                                                                                                { $$ = null; }
----arithmetic_expr: variable_expr MINUS_EQUAL expression                                                                                                               { $$ = null; }
----arithmetic_expr: variable_expr STAR_EQUAL expression                                                                                                                { $$ = null; }
----arithmetic_expr: variable_expr SLASH_EQUAL expression                                                                                                               { $$ = null; }
----arithmetic_expr: variable_expr PERCENTAGE_EQUAL expression                                                                                                          { $$ = null; }
+---arithmetic_expr: expression PLUS expression                                                                  { $$ = null; }
+---arithmetic_expr: expression MINUS expression                                                                 { $$ = null; }
+---arithmetic_expr: expression STAR expression                                                                  { $$ = null; }
+---arithmetic_expr: expression SLASH expression                                                                 { $$ = null; }
+---arithmetic_expr: expression PERCENTAGE expression                                                            { $$ = null; }
+---arithmetic_expr: PLUS expression                                                                             { $$ = null; }
+---arithmetic_expr: MINUS expression                                                                            { $$ = null; }
+---arithmetic_expr: PLUS_PLUS variable_expr                                                                     { $$ = null; }
+---arithmetic_expr: MINUS_MINUS variable_expr                                                                   { $$ = null; }
+---arithmetic_expr: variable_expr PLUS_PLUS                                                                     { $$ = null; }
+---arithmetic_expr: variable_expr MINUS_MINUS                                                                   { $$ = null; }
+---arithmetic_expr: variable_expr '=' expression                                                                { $$ = null; }
+---arithmetic_expr: variable_expr PLUS_EQUAL expression                                                         { $$ = null; }
+---arithmetic_expr: variable_expr MINUS_EQUAL expression                                                        { $$ = null; }
+---arithmetic_expr: variable_expr STAR_EQUAL expression                                                         { $$ = null; }
+---arithmetic_expr: variable_expr SLASH_EQUAL expression                                                        { $$ = null; }
+---arithmetic_expr: variable_expr PERCENTAGE_EQUAL expression                                                   { $$ = null; }
 
----logical_expr: expression AMPERSAND_AMPERSAND expression                                                                                                             { $$ = null; }
----logical_expr: expression PIPE_PIPE expression                                                                                                                       { $$ = null; }
----logical_expr: EXCLAMATIONMARK expression                                                                                                                            { $$ = null; }
----logical_expr: expression EQUAL_EQUAL expression                                                                                                                     { $$ = null; }
----logical_expr: expression EXCLAMATIONMARK_EQUAL expression                                                                                                           { $$ = null; }
----logical_expr: expression ANGLEBRACKETOPEN expression                                                                                                                { $$ = null; }
----logical_expr: expression ANGLEBRACKETOPEN_EQUAL expression                                                                                                          { $$ = null; }
----logical_expr: expression ANGLEBRACKETCLOSE expression                                                                                                               { $$ = null; }
----logical_expr: expression ANGLEBRACKETCLOSE_EQUAL expression                                                                                                         { $$ = null; }
+---logical_expr: expression AMPERSAND_AMPERSAND expression                                                      { $$ = null; }
+---logical_expr: expression PIPE_PIPE expression                                                                { $$ = null; }
+---logical_expr: EXCLAMATIONMARK expression                                                                     { $$ = null; }
+---logical_expr: expression EQUAL_EQUAL expression                                                              { $$ = null; }
+---logical_expr: expression EXCLAMATIONMARK_EQUAL expression                                                    { $$ = null; }
+---logical_expr: expression ANGLEBRACKETOPEN expression                                                         { $$ = null; }
+---logical_expr: expression ANGLEBRACKETOPEN_EQUAL expression                                                   { $$ = null; }
+---logical_expr: expression ANGLEBRACKETCLOSE expression                                                        { $$ = null; }
+---logical_expr: expression ANGLEBRACKETCLOSE_EQUAL expression                                                  { $$ = null; }
 
 --------------------
 --- INSTRUCTIONS ---
 --------------------
 
-instruction: expression SEMICOLON                                                                                                                                   { $$ = null; }
-instruction: variable_initializer_inst SEMICOLON                                                                                                                    { $$ = null; }
-instruction: return_inst SEMICOLON                                                                                                                                  { $$ = null; }
-instruction: inline_pasm_inst SEMICOLON                                                                                                                             { $$ = null; }
-instruction: loop_inst                                                                                                                                              { $$ = null; }
-instruction: condition_inst                                                                                                                                         { $$ = null; }
-instruction: CBRACKETOPEN instruction_block CBRACKETCLOSE                                                                                                           { $$ = null; }
+instruction: expression ';'                                                                                     { $$ = null; }
+instruction: variable_initializer_inst ';'                                                                      { $$ = null; }
+instruction: return_inst ';'                                                                                    { $$ = null; }
+instruction: inline_pasm_inst ';'                                                                               { $$ = null; }
+instruction: loop_inst                                                                                          { $$ = null; }
+instruction: condition_inst                                                                                     { $$ = null; }
+instruction: '{' instruction_block '}'                                                                          { $$ = null; }
 
-instruction_block:                                                                                                                                                  { $$ = null; }
-instruction_block: instruction_block instruction                                                                                                                    { $$ = null; }
+instruction_block:                                                                                              { $$ = null; }
+instruction_block: instruction_block instruction                                                                { $$ = null; }
 
-return_inst: RETURN SBRACKETOPEN expression_list_empty SBRACKETCLOSE                                                                                                { $$ = null; }
-return_inst: RETURN expression                                                                                                                                      { $$ = null; }
-return_inst: RETURN                                                                                                                                                 { $$ = null; }
+return_inst: 'return' '[' expression_list_empty ']'                                                             { $$ = null; }
+return_inst: 'return' expression                                                                                { $$ = null; }
+return_inst: 'return'                                                                                           { $$ = null; }
 
-variable_initializer_inst: variable_decl EQUAL expression                                                                                                           { $$ = null; }
-variable_initializer_inst: variable_decl COLON_EQUAL expression                                                                                                     { $$ = null; }
-variable_initializer_inst: variable_decl COLON_COLON_EQUAL expression                                                                                               { $$ = null; }
-variable_initializer_inst: SBRACKETOPEN variable_decl_list SBRACKETCLOSE EQUAL method_call_expr                                                                     { $$ = null; }
-variable_initializer_inst: SBRACKETOPEN variable_decl_list SBRACKETCLOSE COLON_EQUAL method_call_expr                                                               { $$ = null; }
+variable_initializer_inst: variable_decl '=' expression                                                         { $$ = null; }
+variable_initializer_inst: variable_decl ':=' expression                                                        { $$ = null; }
+variable_initializer_inst: '[' variable_decl_list ']' '=' method_call_expr                                      { $$ = null; }
+variable_initializer_inst: '[' variable_decl_list ']' ':=' method_call_expr                                     { $$ = null; }
 
-inline_pasm_inst: PASM BRACKETOPEN STRING BRACKETCLOSE                                                                                                              { $$ = null; }
-inline_pasm_inst: PASM BRACKETOPEN STRING COMMA CBRACKETOPEN expression_map_empty CBRACKETCLOSE BRACKETCLOSE                                                        { $$ = null; }
-inline_pasm_inst: PASM BRACKETOPEN STRING COMMA CBRACKETOPEN expression_map_empty CBRACKETCLOSE COMMA CBRACKETOPEN expression_map_empty CBRACKETCLOSE BRACKETCLOSE  { $$ = null; }
+inline_pasm_inst: '__pasm__' '(' STRING ')'                                                                     { $$ = null; }
+inline_pasm_inst: '__pasm__' '(' STRING ',' '{' expression_map_empty '}' ')'                                    { $$ = null; }
+inline_pasm_inst: '__pasm__' '(' STRING ',' '{' expression_map_empty '}' ',' '{' expression_map_empty '}' ')'   { $$ = null; }
 
-loop_inst: WHILE BRACKETOPEN expression BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE                                                                   { $$ = null; }
-loop_inst: DO CBRACKETOPEN instruction_block CBRACKETCLOSE WHILE BRACKETOPEN expression BRACKETCLOSE SEMICOLON                                                      { $$ = null; }
+loop_inst: 'while' '(' expression ')' '{' instruction_block '}'                                                 { $$ = null; }
+loop_inst: 'do' '{' instruction_block '}' 'while' '(' expression ')' ';'                                        { $$ = null; }
 
-condition_inst: IF BRACKETOPEN expression BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE                                                                 { $$ = null; }
-condition_inst: IF BRACKETOPEN expression BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE ELSE CBRACKETOPEN instruction_block CBRACKETCLOSE               { $$ = null; }
-condition_inst: IF BRACKETOPEN expression BRACKETCLOSE CBRACKETOPEN instruction_block CBRACKETCLOSE ELSE condition_inst                                             { $$ = null; }
+condition_inst: 'if' '(' expression ')' '{' instruction_block '}'                                               { $$ = null; }
+condition_inst: 'if' '(' expression ')' '{' instruction_block '}' 'else' '{' instruction_block '}'              { $$ = null; }
+condition_inst: 'if' '(' expression ')' '{' instruction_block '}' 'else' condition_inst                         { $$ = null; }

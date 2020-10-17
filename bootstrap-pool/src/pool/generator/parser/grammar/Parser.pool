@@ -69,8 +69,8 @@ class Parser extends BaseParser {
             else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:SHIFT, 3]; }
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 4]; }
         } else if (state == 2) {
-            if (symbol == Tokenizer:T_ASSIGN) { return [Parser:SHIFT, 5]; }
-            else if (symbol == Tokenizer:T_COLON) { return [Parser:SHIFT, 6]; }
+            if (symbol == Tokenizer:T_INLINE_11) { return [Parser:SHIFT, 5]; }
+            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:SHIFT, 6]; }
         } else if (state == 3) {
             if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 7]; }
             else if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 8]; }
