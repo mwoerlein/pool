@@ -8,6 +8,8 @@ namespace pool;
 class __Tests__ {
     
     global [] setup(test::TestSuite suite) {
+        suite.register(pool::generator::sample::Parser:CLASSNAME, pool::generator::sample::ParserTest:CLASSNAME);
+        
         suite.register(pool::asm::i386::Compiler:CLASSNAME, pool::asm::i386::CompilerTest:CLASSNAME);
         suite.register(pool::asm::i386::instruction::ConditionalJump:CLASSNAME, pool::asm::i386::instruction::ConditionalJumpTest:CLASSNAME);
         suite.register(pool::asm::i386::instruction::GroupOneInstruction:CLASSNAME, pool::asm::i386::instruction::GroupOneInstructionTest:CLASSNAME);

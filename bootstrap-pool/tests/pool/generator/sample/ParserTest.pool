@@ -1,0 +1,59 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::sample;
+
+use sys::core::String;
+use sys::stream::IStream;
+
+class ParserTest extends test::TestCase {
+
+    [] runAll() {
+        this.testExpressions();
+    }
+    
+    [int] testExpressions() {
+        this.startCases("testExpressions");
+        Parser p = this.rt().createInstance(Parser:CLASSNAME);
+        
+        this.caseExpr(p, "123", "123", 123);
+        this.caseExpr(p, "(0123)", "83", 83);
+        this.caseExpr(p, "((0x123))", "291", 291);
+        
+        p.destroy();
+        return this.successCases();
+    }
+    
+    [int] caseExpr(Parser p, cstring input, cstring pretty, int expected) {
+        String inString = this.rt().createInstance(String:CLASSNAME);
+        inString.assignCString(input);
+        IStream inStream = inString.toIStream();
+
+        Expr resultExpr = p.parse(inStream, inString);
+        int result = resultExpr.getResult();
+
+        String resultPretty = this.rt().createInstance(String:CLASSNAME);
+        resultPretty.print(resultExpr);
+        
+        inStream.own(resultExpr);
+        inStream.destroy();
+        inString.destroy();
+        
+        if (!resultPretty.cequals(pretty)) {
+            String message = this.createOwn(String:CLASSNAME);
+            message.printCString("Case ").printCString(input).printCString(" => '").printCString(pretty).printCString("' != '").print(resultPretty).printChar('\'');
+            resultPretty.destroy();
+            return this.failCase(message.ostream());
+        }
+        resultPretty.destroy();
+        if (result != expected) {
+            String message = this.createOwn(String:CLASSNAME);
+            message.printCString("Case ").printCString(input).printCString(" => ").printInt(expected).printCString(" != ").printInt(result);
+            return this.failCase(message.ostream());
+        }
+        return this.successCase();
+    }
+    
+}

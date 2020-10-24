@@ -1,0 +1,44 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::sample;
+
+use sys::core::String;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class Expr extends sys::core::Object {
+    
+    Expr left;
+    Expr right;
+    String op;
+    int value;
+    
+    [Expr] initValue(int v) { this.value = v; return this;}
+    [Expr] initOperation(Expr l, String o, Expr r) {
+        left = this.own(l);
+        right = this.own(r);
+        op = this.own(o);
+        return this;
+    }
+    
+    [int] getResult() {
+        if (!op) { return value; }
+        if (op.cequals("+")) { return left.getResult() + right.getResult(); }
+        if (op.cequals("-")) { return left.getResult() - right.getResult(); }
+        if (op.cequals("*")) { return left.getResult() * right.getResult(); }
+        if (op.cequals("/")) { return left.getResult() / right.getResult(); }
+        if (op.cequals("%")) { return left.getResult() % right.getResult(); }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        if (op) {
+            return stream.printChar('(').print(left).print(op).print(right).printChar(')');
+        }
+        return stream.printInt(value);
+    }
+
+}

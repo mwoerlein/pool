@@ -1,0 +1,26 @@
+%namespace  "pool::generator::sample"
+%classname  "Parser"
+%extends    "BaseParser"
+%tokenizer  "Tokenizer"
+%ignores WSP
+
+--- tokens
+WSP         := /[ \t]*/
+NUMBER      := /(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)*/
+
+--- precedences
+---%left '+' '-'
+---%left '*' '/' '%'
+---%right @SIGN
+
+--- rules
+expression: expr            { $$ = this.expression = $1; }
+expr: NUMBER                { $$ = this.valueExpr($1); }
+---expr: expr '+' expr         { $$ = this.opExpr($1, $2, $3); }
+---expr: expr '-' expr         { $$ = this.opExpr($1, $2, $3); }
+---expr: expr '*' expr         { $$ = this.opExpr($1, $2, $3); }
+---expr: expr '/' expr         { $$ = this.opExpr($1, $2, $3); }
+---expr: expr '%' expr         { $$ = this.opExpr($1, $2, $3); }
+---expr: '+' expr @SIGN        { $$ = this.signExpr($1, $2); }
+---expr: '-' expr @SIGN        { $$ = this.signExpr($1, $2); }
+expr: '(' expr ')'          { $$ = $2; }

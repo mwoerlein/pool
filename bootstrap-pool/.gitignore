@@ -1,1 +1,3 @@
 bin
+/tests/pool/generator/sample/Parser.pool
+/tests/pool/generator/sample/Tokenizer.pool

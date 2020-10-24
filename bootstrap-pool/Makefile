@@ -3,7 +3,7 @@ include ./Makefile.inc
 .PHONY: all clean regenerate-parsers tests clear-tests
 
 all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/poolc $(BINDIR)/parsergen
-tests: clear-tests $(BINDIR)/pooltest
+tests: clear-tests regenerate-test-parsers $(BINDIR)/pooltest
 	@$(BINDIR)/pooltest
 
 clean:
@@ -35,7 +35,11 @@ $(BINDIR)/pooltest: $(TESTDIR)/test/Command.pool $(BINDIR) $(POOLSC)
 	@chmod a+x $@
 
 clear-tests:
+	@rm -rf $(TESTDIR)/pool/generator/sample/Parser.pool $(TESTDIR)/pool/generator/sample/Tokenizer.pool
 	@rm -rf $(BINDIR)/pooltest
+
+regenerate-test-parsers: $(PARSERGEN)
+	@$(PARSERGEN) --classpath $(TESTDIR) $(TESTDIR)/pool/generator/sample/Parser.gram
 
 regenerate-parsers: $(PARSERGEN)
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/generator/regex/Parser.gram

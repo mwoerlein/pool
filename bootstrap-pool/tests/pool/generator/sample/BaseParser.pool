@@ -1,0 +1,43 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::sample;
+
+use sys::core::String;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+use pool::generator::tokenizer::Token;
+
+class BaseParser extends pool::generator::parser::Parser {
+    
+    Expr expression;
+    
+    [OStream] newError() { return this.rt().err(); }
+    
+    [Expr] parse(IStream input, String inputName) {
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        this._parse(in.init(input, inputName));
+        in.destroy();
+        return expression;
+    }
+    
+    [Expr] valueExpr(Token t) {
+        Expr e = this.createOwn(Expr:CLASSNAME);
+        return e.initValue(t.toInt());
+    }
+    
+    [Expr] opExpr(Expr l, Token op, Expr r) {
+        Expr e = this.createOwn(Expr:CLASSNAME);
+        return e.initOperation(l, op.getValue(), r);
+    }
+
+    [Expr] signExpr(Token sign, Expr r) {
+        Expr zero = this.createOwn(Expr:CLASSNAME);
+        Expr e = this.createOwn(Expr:CLASSNAME);
+        return e.initOperation(zero, sign.getValue(), r);
+    }
+
+}
