@@ -2,10 +2,7 @@
 %classname  "Parser"
 %extends    "BaseParser"
 %tokenizer  "Tokenizer"
-%ignores WSP
-%ignores EOL
-%ignores COMMENT
-%ignores MLCOMMENT
+%ignores WSP EOL COMMENT MLCOMMENT
 
 --- operators
 PLUS_EQUAL              := /\+=/

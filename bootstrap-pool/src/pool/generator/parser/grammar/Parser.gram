@@ -2,12 +2,12 @@
 %classname  "Parser"
 %extends    "BaseParser"
 %tokenizer  "Tokenizer"
-%ignores SPACER
-%ignores COMMENT
+%ignores SPACER COMMENT
 
 --- TOKENS ---
 SYMBOL      := /[a-zA-Z][_a-zA-Z0-9]*/
 PARAMETER   := /%[a-zA-Z][_a-zA-Z0-9]*/
+PREC_REF    := /@[a-zA-Z][_a-zA-Z0-9]*/
 REGEX       := /\/([^\\\n\r\/]|\\[^\n\r\t])*\//
 STRING      := /"([^\\\n\r"]|\\[^\n\r\t])*"/
 INLINE      := /'([^\\\n\r']|\\[^\n\r\t])*'/
@@ -17,13 +17,32 @@ NEWLINE     := /[\n\r]+/
 SPACER      := /[ \t]+/
 
 --- RULES ---
-grammar_def:                                                    { $$ = this.definition; }
-grammar_def: grammar_def NEWLINE
-grammar_def: grammar_def PARAMETER STRING NEWLINE               { $$ = this.addParameter($1, $2, $3); }
-grammar_def: grammar_def PARAMETER SYMBOL NEWLINE               { $$ = this.addParameter($1, $2, $3); }
-grammar_def: grammar_def SYMBOL ':=' REGEX NEWLINE              { $$ = this.addToken($1, $2, $4); }
-grammar_def: grammar_def SYMBOL ':' symbol_list NEWLINE         { $$ = this.addRule($1, $2, $4, null); }
-grammar_def: grammar_def SYMBOL ':' symbol_list CODE NEWLINE    { $$ = this.addRule($1, $2, $4, $5); }
-symbol_list:                                                    { $$ = this.list(); }
-symbol_list: symbol_list SYMBOL                                 { $$ = this.addSymbolToList($1, $2); }
-symbol_list: symbol_list INLINE                                 { $$ = this.addInlineToList($1, $2); }
+gram_def:                                           { $$ = this.definition; }
+gram_def: gram_def NEWLINE
+gram_def: gram_def PARAMETER STRING NEWLINE         { $$ = this.addParameter($1, $2, $3); }
+gram_def: gram_def '%ignores' symbol_list NEWLINE   { $$ = this.addIgnoreList($1, $3); }
+gram_def: gram_def '%right' prec_list NEWLINE       { $$ = $1; }
+gram_def: gram_def '%left' prec_list NEWLINE        { $$ = $1; }
+gram_def: gram_def token_def NEWLINE
+gram_def: gram_def rule_def NEWLINE
+
+token_def: SYMBOL ':=' REGEX                        { $$ = this.addToken(this.definition, $1, $3); }
+
+rule_def: SYMBOL ':' symbol_list                    { $$ = this.addRule(this.definition, $1, $3, null); }
+rule_def: SYMBOL ':' symbol_list PREC_REF           { $$ = this.addRule(this.definition, $1, $3, null); }
+rule_def: SYMBOL ':' symbol_list CODE               { $$ = this.addRule(this.definition, $1, $3, $4); }
+rule_def: SYMBOL ':' symbol_list PREC_REF CODE      { $$ = this.addRule(this.definition, $1, $3, $5); }
+
+prec_list:                                          { $$ = null; }
+prec_list: prec_list prec                           { $$ = null; }
+prec: SYMBOL                                        { $$ = null; }
+prec: INLINE                                        { $$ = null; }
+prec: PREC_REF                                      { $$ = null; }
+
+symbol_list:                                        { $$ = this.list(); }
+symbol_list: symbol_list SYMBOL                     { $$ = this.addSymbolToList($1, $2); }
+symbol_list: symbol_list INLINE                     { $$ = this.addInlineToList($1, $2); }
+--- symbol_list:                                        { $$ = null; }
+--- symbol_list: symbol_list symbol                     { $$ = null; }
+--- symbol: SYMBOL                                      { $$ = null; }
+--- symbol: INLINE                                      { $$ = null; }

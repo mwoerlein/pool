@@ -2,9 +2,7 @@
 %classname  "Parser"
 %extends    "BaseParser"
 %tokenizer  "Tokenizer"
-%ignores SPACER
-%ignores COMMENT
-%ignores MLCOMMENT
+%ignores SPACER COMMENT MLCOMMENT
 
 --- TOKENS ---
 IDENTIFIER  := /[\._a-zA-Z][_a-zA-Z0-9]*/

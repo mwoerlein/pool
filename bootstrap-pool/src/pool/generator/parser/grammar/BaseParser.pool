@@ -5,7 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
-
+use pool::generator::Symbol;
 use pool::generator::tokenizer::Token;
 
 use sys::core::String;
@@ -35,19 +35,21 @@ class BaseParser extends pool::generator::parser::Parser {
 
     // Definition creation helper
     [GrammarDefinition] addParameter(GrammarDefinition def, Token param, Token value) {
-        if (param.getValue().compareCString("%ignores") == 0) {
-            def.getSymbol(value.getValue()).setIgnore(true);
-            return def;
-        }
         String val = def.createOwn(String:CLASSNAME);
-        if (value.getSymbol() == Tokenizer:T_STRING) {
-            value.getValue().unescapeToStream(val.ostream());
-        } else {
-            val.assignString(value.getValue());
-        }
+        value.getValue().unescapeToStream(val.ostream());
         String name = param.getValue().subString(1, 0);
         def.setStringProperty(name, val);
         name.destroy();
+        return def;
+    }
+    
+    [GrammarDefinition] addIgnoreList(GrammarDefinition def, AnyList symbols) {
+        AnyIterator it = symbols.iterator();
+        while (it.hasNext()) {
+            Symbol s = it.next();
+            s.setIgnore(true);
+        }
+        it.destroy();
         return def;
     }
 
