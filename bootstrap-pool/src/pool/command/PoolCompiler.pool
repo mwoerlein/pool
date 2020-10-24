@@ -18,12 +18,7 @@ class PoolCompiler extends linux::Command {
 
     [] __init() {
         this._initCommand();
-        parser = this.rt().createInstance(Parser:CLASSNAME);
-    }
-    
-    [] __destruct() {
-        parser.destroy();
-        this._destructCommand();
+        parser = this.createOwn(Parser:CLASSNAME);
     }
     
     [] configure() {

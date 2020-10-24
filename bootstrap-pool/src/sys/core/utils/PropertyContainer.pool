@@ -16,13 +16,15 @@ class PropertyContainer extends Owner {
     
     AnyMap _properties;  // HashMap<(own)String, (own?)String>
 
-    [] __init() {
-        this._initPropertyContainer();
-    }
+    [] __init() { this._initPropertyContainer(); }
     [] _initPropertyContainer() {
+        // _initOwner();
         _properties = this.createOwn(AnyMap:CLASSNAME);
     }
+    
+    [] __destruct() { this._destructPropertyContainer(); }
     [] _destructPropertyContainer() {
+        // _destructOwner();
     }
 
     [int] hasStringProperty(String name) {

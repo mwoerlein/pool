@@ -14,14 +14,6 @@ use sys::stream::SeekableIOStream;
 
 class Store extends linux::Command {
 
-    [] __init() {
-        this._initCommand();
-    }
-    
-    [] __destruct() {
-        this._destructCommand();
-    }
-    
     [] configure() {
         this.setName("store")
             .setVersion("0.3.0")

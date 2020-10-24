@@ -31,17 +31,10 @@ class Pbasm extends linux::Command {
 
     [] __init() {
         this._initCommand();
-        parser = this.rt().createInstance(Parser:CLASSNAME);
-        compiler = this.rt().createInstance(Compiler:CLASSNAME);
-        unit = this.rt().createInstance(CompilationUnit:CLASSNAME);
+        parser = this.createOwn(Parser:CLASSNAME);
+        compiler = this.createOwn(Compiler:CLASSNAME);
+        unit = this.createOwn(CompilationUnit:CLASSNAME);
         status = ERRNO_OK;
-    }
-    
-    [] __destruct() {
-        unit.destroy();
-        compiler.destroy();
-        parser.destroy();
-        this._destructCommand();
     }
     
     [] configure() {

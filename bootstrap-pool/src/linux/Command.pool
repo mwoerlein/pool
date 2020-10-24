@@ -36,6 +36,16 @@ class Command extends CommandLine {
     abstract [] configure();
     abstract [int] run();
     
+    [] __init() { this._initCommand(); }
+    [] _initCommand() {
+        this._initCommandLine();
+    }
+    
+    [] __destruct() { this._destructCommand(); }
+    [] _destructCommand() {
+        this._destructCommandLine();
+    }
+    
     [int] execute(int argc, int argv) {
         this.configure();
         if (this._parseArgv(argc, argv)) {
@@ -59,14 +69,6 @@ class Command extends CommandLine {
         this.usage = usage;
         // TODO: implement usage parsing (see http://docopt.org/)
         return this;
-    }
-    
-    [] _initCommand() {
-        this._initCommandLine();
-    }
-    
-    [] _destructCommand() {
-        this._destructCommandLine();
     }
     
     [IStream] openStdIn() {
