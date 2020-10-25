@@ -6,11 +6,6 @@ version = 0.1.0
 namespace pool::generator::parser::grammar;
 
 use pool::generator::Symbol;
-
-use pool::generator::regex::Parser as RegexParser;
-use pool::generator::regex::fa::NFA as RegexNFA;
-use pool::generator::regex::fa::NFAOStream as RegexNFAOStream;
-use pool::generator::regex::node::List as RegexList;
 use pool::generator::tokenizer::dfa::DFA as TokenizerDFA;
 
 use sys::core::String;
@@ -36,11 +31,11 @@ class Grammar extends sys::core::Object {
         this.terminals = this.createOwn(AnyList:CLASSNAME);
         this.nonTerminals = this.createOwn(AnyList:CLASSNAME);
         this.states = this.createOwn(AnyList:CLASSNAME);
-        this.tokenizerDFA = null; // lazy initialization
     }
     
     [Grammar] setDefinition(GrammarDefinition def) { this.own(this.definition = def); return this; }
-    [GrammarDefinition] getDefinition() { return this.definition; }
+    [Grammar] setTokenizerDFA(TokenizerDFA dfa) { this.own(this.tokenizerDFA = dfa); return this; }
+    [TokenizerDFA] getTokenizerDFA() { return this.tokenizerDFA; }
     
     [State] newInitState() { return init = this.newState(); }
     [State] getInitState() { return init; }
@@ -76,51 +71,4 @@ class Grammar extends sys::core::Object {
     [String] getTokenizerClassname() { return definition.getCStringProperty("tokenizer"); }
     [String] getExtends() { return definition.getCStringProperty("extends"); }
     [String] getSourceName() { return definition.getCStringProperty("source.name"); }
-    
-    [TokenizerDFA] getTokenizerDFA() {
-        if (!this.tokenizerDFA) {
-            this.tokenizerDFA = this.createOwn(TokenizerDFA:CLASSNAME);
-            {
-                AnyIterator it = definition.tokens();
-                while (it.hasNext()) {
-                    Token t = it.next();
-                    if (t.isInlineDefinition()) {
-                        Symbol s = t.getSymbol();
-                        
-                        RegexNFAOStream inline = this.rt().createInstance(RegexNFAOStream:CLASSNAME);
-                        t.getDefinition()._unescapeToStream(inline.ostream(), '\'', '\\');
-                        
-                        this.tokenizerDFA._addTerminal(s, inline.toNFA());
-                        
-                        inline.destroy();
-                    }
-                }
-                it.destroy();
-            }
-            {
-                RegexParser parser = this.rt().createInstance(RegexParser:CLASSNAME);
-                AnyIterator it = definition.tokens();
-                while (it.hasNext()) {
-                    Token t = it.next();
-                    if (!t.isInlineDefinition()) {
-                        Symbol s = t.getSymbol();
-                        
-                        String def = t.getDefinition().subString(1, -1);
-                        IStream is = def.toIStream();
-                        RegexList l = parser.parse(is, s.getName());
-    
-                        this.tokenizerDFA._addTerminal(s, l.toNFA());
-                        
-                        l.destroy();
-                        is.destroy();
-                        def.destroy();
-                    }
-                }
-                it.destroy();
-                parser.destroy();
-            }
-            this.tokenizerDFA._buildActions();
-        }
-        return this.tokenizerDFA;
-    }
 }
