@@ -46,6 +46,7 @@ BitWidth Register::getOperandSize() {
         case reg_ss:
             return bit_16;
     }
+    return bit_auto;
 }
 
 RegisterKind Register::kind() {

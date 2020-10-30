@@ -26,6 +26,7 @@ class String::_IStream: public IStream {
             c = (char) *ack;
             ack = ack->next;
         }
+        return *this;
     }
     virtual bool isEmpty() override {
         return ack == 0;

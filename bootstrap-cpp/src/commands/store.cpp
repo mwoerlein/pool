@@ -76,6 +76,7 @@ class StoreCommand: public CommandLine {
         }
 
         outfile.destroy();
+        return 0;
     }
 };
 

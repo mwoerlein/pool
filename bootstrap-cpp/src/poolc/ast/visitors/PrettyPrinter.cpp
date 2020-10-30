@@ -37,6 +37,7 @@ bool PrettyPrinter::visit(TranslationUnitNode & translationUnit) {
 
 bool PrettyPrinter::visit(NamespaceDeclNode & namespaceDecl) {
     indent() << "namespace " << namespaceDecl.name << ";\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(UseStatementNode & useStmt) {
@@ -45,6 +46,7 @@ bool PrettyPrinter::visit(UseStatementNode & useStmt) {
         line << " as " << useStmt.alias;
     }
     line << ";\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(ClassDeclNode & classDecl) {
@@ -85,6 +87,7 @@ bool PrettyPrinter::visit(ClassDeclNode & classDecl) {
     }
     
     endBlock();
+    return true;
 }
 
 bool PrettyPrinter::visit(StructDeclNode & structDecl) {
@@ -104,6 +107,7 @@ bool PrettyPrinter::visit(StructDeclNode & structDecl) {
     }
     
     endBlock();
+    return true;
 }
 
 bool PrettyPrinter::visit(MethodDeclNode & methodDecl) {
@@ -158,6 +162,7 @@ bool PrettyPrinter::visit(MethodDeclNode & methodDecl) {
             }
     }
     indent() << "\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(VariableInitInstNode & variableInit) {
@@ -180,12 +185,14 @@ bool PrettyPrinter::visit(VariableInitInstNode & variableInit) {
     line << (variableInit.final ? (variableInit.reinterpret ? " ::= " : " := ") : " = ");
     variableInit.initializer.accept(*this);
     line << ";\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(VariableDeclNode & variableDecl) {
     OStream & line = indent();
     variableDecl.type.accept(*this);
     line << " " << variableDecl.name << ";\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(BlockInstNode & block) {
@@ -196,12 +203,14 @@ bool PrettyPrinter::visit(BlockInstNode & block) {
         block.instructions.acceptAll(*this);
         endBlock();
     }
+    return true;
 }
 
 bool PrettyPrinter::visit(ExpressionInstNode & exprInst) {
     OStream & line = indent();
     exprInst.expression.accept(*this);
     line << ";\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(IfInstNode & ifInst) {
@@ -230,6 +239,7 @@ bool PrettyPrinter::visit(IfInstNode & ifInst) {
         }
         endBlock();
     }
+    return true;
 }
 
 bool PrettyPrinter::visit(InlinePasmInstNode & pasmInst) {
@@ -260,6 +270,7 @@ bool PrettyPrinter::visit(InlinePasmInstNode & pasmInst) {
         it.destroy();
     }
     elem() << "});\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
@@ -281,6 +292,7 @@ bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
     }
     if (tuple) { line << "]"; }
     line << ";\n";
+    return true;
 }
 
 bool PrettyPrinter::visit(WhileInstNode & whileInst) {
@@ -295,6 +307,7 @@ bool PrettyPrinter::visit(WhileInstNode & whileInst) {
         whileInst.block.instructions.acceptAll(*this);
         endBlock();
     }
+    return true;
 }
 
 bool PrettyPrinter::visit(ArithAssignmentExprNode & arithAssignment) {
@@ -309,6 +322,7 @@ bool PrettyPrinter::visit(ArithAssignmentExprNode & arithAssignment) {
     }
     arithAssignment.value.accept(*this);
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(ArithBinaryExprNode & arithBinary) {
     elem() << "(";
@@ -322,6 +336,7 @@ bool PrettyPrinter::visit(ArithBinaryExprNode & arithBinary) {
     }
     arithBinary.right.accept(*this);
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(ArithUnaryExprNode & arithUnary) {
     elem() << "(";
@@ -332,6 +347,7 @@ bool PrettyPrinter::visit(ArithUnaryExprNode & arithUnary) {
         case unary_post_dec: arithUnary.variable.accept(*this); elem() << "--"; break;
     }
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(AssignmentExprNode & assignment) {
     elem() << "(";
@@ -339,12 +355,15 @@ bool PrettyPrinter::visit(AssignmentExprNode & assignment) {
     elem() << " = ";
     assignment.value.accept(*this);
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(ConstCStringExprNode & constCString) {
     constCString.value.escapeToStream(elem());
+    return true;
 }
 bool PrettyPrinter::visit(ConstIntExprNode & constInt) {
     elem() << constInt.value;
+    return true;
 }
 bool PrettyPrinter::visit(LogicalBinaryExprNode & logicalBinary) {
     elem() << "(";
@@ -361,6 +380,7 @@ bool PrettyPrinter::visit(LogicalBinaryExprNode & logicalBinary) {
     }
     logicalBinary.right.accept(*this);
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(LogicalUnaryExprNode & logicalUnary) {
     elem() << "(";
@@ -368,6 +388,7 @@ bool PrettyPrinter::visit(LogicalUnaryExprNode & logicalUnary) {
         case unary_not: elem() << "!"; logicalUnary.expression.accept(*this); break;
     }
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
     methodCall.context.accept(*this);
@@ -381,9 +402,11 @@ bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
         it.destroy();
     }
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(NullExprNode & constNull) {
     elem() << "null";
+    return true;
 }
 bool PrettyPrinter::visit(SignExprNode & sign) {
     elem() << "(";
@@ -392,9 +415,11 @@ bool PrettyPrinter::visit(SignExprNode & sign) {
         case sign_minus: elem() << "-"; sign.expression.accept(*this); break;
     }
     elem() << ")";
+    return true;
 }
 bool PrettyPrinter::visit(ThisExprNode & constThis) {
     elem() << "this";
+    return true;
 }
 bool PrettyPrinter::visit(VariableExprNode & variable) {
     if (variable.context) {
@@ -406,13 +431,14 @@ bool PrettyPrinter::visit(VariableExprNode & variable) {
         }
     }
     elem() << variable.name;
+    return true;
 }
 
-bool PrettyPrinter::visit(AllRefNode & type) { elem() << "__all__"; }
-bool PrettyPrinter::visit(AnyRefNode & type) { elem() << "__any__"; }
-bool PrettyPrinter::visit(ClassRefNode & classRef) { elem() << classRef.name; }
-bool PrettyPrinter::visit(CStringRefNode & type) { elem() << "cstring"; }
-bool PrettyPrinter::visit(IntRefNode & type) { elem() << "int"; }
+bool PrettyPrinter::visit(AllRefNode & type) { elem() << "__all__"; return true; }
+bool PrettyPrinter::visit(AnyRefNode & type) { elem() << "__any__"; return true; }
+bool PrettyPrinter::visit(ClassRefNode & classRef) { elem() << classRef.name; return true; }
+bool PrettyPrinter::visit(CStringRefNode & type) { elem() << "cstring"; return true; }
+bool PrettyPrinter::visit(IntRefNode & type) { elem() << "int"; return true; }
 
 // private
 OStream & PrettyPrinter::indent() {

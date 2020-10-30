@@ -12,7 +12,7 @@ class OStreamPoolStorage: public PoolStorage {
         public:
         OStreamPoolStorageOStream(Environment & env, MemoryInfo & mi, OStream & out): Object(env, mi), _out(out) {}
         virtual ~OStreamPoolStorageOStream() {}
-        virtual OStream & operator <<(char c) override { _out<<c; }
+        virtual OStream & operator <<(char c) override { _out<<c; return *this; }
     };
     OStream &out;
     

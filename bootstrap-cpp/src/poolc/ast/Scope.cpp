@@ -81,6 +81,7 @@ NamedType * Scope::registerNamedType(NamedType & type, String & alias) {
         if (old && (old->parent == this)) { old->destroy(); }
         return structScope;
     }
+    return 0;
 }
 NamedType * Scope::getNamedType(String & name) {
     if (ClassScope *scope = &_classes.get(name)) {

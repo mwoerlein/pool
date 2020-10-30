@@ -16,6 +16,7 @@ template <class Obj> class NodeMap: public HashMap<String, Obj> {
             it.next().accept(visitor);
         }
         it.destroy();
+        return true;
     }
     
     virtual void destroyAll() {

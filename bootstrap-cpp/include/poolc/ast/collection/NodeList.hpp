@@ -16,6 +16,7 @@ template <class Obj> class NodeList: public LinkedList<Obj> {
             it.next().accept(visitor);
         }
         it.destroy();
+        return true;
     }
     
     virtual void destroyAll() {

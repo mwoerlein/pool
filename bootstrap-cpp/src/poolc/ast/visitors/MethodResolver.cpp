@@ -338,6 +338,7 @@ bool MethodResolver::registerSupers(ClassDeclNode & classDecl) {
     it.destroy();
     
     classScope->addSuper(*classScope);
+    return true;
 }
 
 bool MethodResolver::registerMethods(ClassDeclNode & classDecl) {

@@ -41,4 +41,5 @@ void Ascii::writeOperandsToStream(OStream & stream) {
 OStream & Ascii::operator >>(OStream & stream) {
     stream << (terminalZero ? ".asciz " : ".ascii ");
     value.escapeToStream(stream);
+    return stream;
 }

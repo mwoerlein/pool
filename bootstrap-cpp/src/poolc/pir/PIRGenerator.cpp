@@ -161,6 +161,7 @@ bool PIRGenerator::visit(IfInstNode & ifInst) {
     curBlock->next = next;
     
     curBlock = next;
+    return true;
 }
 
 bool PIRGenerator::visit(ReturnInstNode & returnInst) {
@@ -222,6 +223,7 @@ bool PIRGenerator::visit(WhileInstNode & whileInst) {
     whileInst.block.accept(*this);
     curBlock->next = test;
     curBlock = next;
+    return true;
 }
 
 bool PIRGenerator::visit(ArithAssignmentExprNode & arithAssignment) {

@@ -107,6 +107,7 @@ class PasmCommand: public CommandLine {
         infile.destroy();
         outfile.destroy();
         list.destroy();
+        return 0;
     }
 };
 
