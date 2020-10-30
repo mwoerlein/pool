@@ -123,7 +123,6 @@ class PoolBootstrapCompilerCommand: public CommandLine {
                     classDef->accept(resolveTypes);
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                     classDef->accept(generatePIR);
-                    classDef->accept(dump);
                     if (logger.has(log_error)) { env().err() << name << ": failed\n"; break; }
                 }
             }
