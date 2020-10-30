@@ -57,30 +57,30 @@ int Parser::makeNaked()     { return NAKED; }
 int Parser::makePasm()      { return PASM; }
 
 int Parser::makeID(String & s) {
-    d_val__.u_string = &s;
+    d_val_.u_string = &s;
     return ID;
 }
 
 int Parser::makeString(String & s) {
-    d_val__.u_string = &s;
+    d_val_.u_string = &s;
     return STRING;
 }
 
 int Parser::makeFullQualifiedName(String & s) {
-    d_val__.u_string = &s;
+    d_val_.u_string = &s;
     return FQN;
 }
 
 int Parser::makeNumber(long value) {
-    d_val__.u_number = value;
+    d_val_.u_number = value;
     return NUMBER;
 }
 
 void Parser::setLocation(int first_line, int first_column, int last_line, int last_column) {
-    d_loc__.first_line = first_line;
-    d_loc__.first_column = first_column;
-    d_loc__.last_line = last_line;
-    d_loc__.last_column = last_column;
+    d_loc_.first_line = first_line;
+    d_loc_.first_column = first_column;
+    d_loc_.last_line = last_line;
+    d_loc_.last_column = last_column;
 }
 
 int Parser::lex()
@@ -90,7 +90,7 @@ int Parser::lex()
 
 void Parser::error()
 {
-    driver.logError("Syntax error", d_loc__.first_line, d_loc__.first_column);
+    driver.logError("Syntax error", d_loc_.first_line, d_loc_.first_column);
 }
 
 void Parser::exceptionHandler(std::exception const &exc)         
