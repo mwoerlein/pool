@@ -82,7 +82,7 @@ Pool Bootstrap Assembler.
         }
         
         OStream err = this.rt().err();
-        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::File:MODE_WRITE);
+        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
         if (!outfile) { status = ERRNO_IO; }
         if (status == ERRNO_OK) {
             this.parse();
