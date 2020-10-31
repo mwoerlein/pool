@@ -62,7 +62,7 @@ class Parser extends sys::core::Object {
                 int goto = this.__goto(stack.getState(), lhs);
                 if (goto < 0) {
                     result = Parser:ERROR;
-                    t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error 1 in state ").printInt(stack.getState()).printCString(" near "));
+                    t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error 1 in state ").printInt(stack.getState()).printCString(" near ")).printNewline();
                 } else { stack.push(goto, v); }
             } else if (action == Parser:SHIFT_REDUCE) {
                 stack.push(Parser:UNKNOWN, t);
@@ -72,14 +72,14 @@ class Parser extends sys::core::Object {
                 int goto = this.__goto(stack.getState(), lhs);
                 if (goto < 0) {
                     result = Parser:ERROR;
-                    t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error 2 in state ").printInt(stack.getState()).printCString(" near "));
+                    t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error 2 in state ").printInt(stack.getState()).printCString(" near ")).printNewline();
                 } else {
                     stack.push(goto, v);
                     t = tokens.next();
                 }
             } else if (action == Parser:ERROR) {
                 result = Parser:ERROR;
-                t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error 3 in state ").printInt(stack.getState()).printCString(" near "));
+                t.debugToStream(tokens.symbolTable(), this.newError().printCString("Parsing error 3 in state ").printInt(stack.getState()).printCString(" near ")).printNewline();
             }
         }
         stack.destroy();

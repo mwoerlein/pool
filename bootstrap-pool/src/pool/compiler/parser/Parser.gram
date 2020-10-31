@@ -31,14 +31,25 @@ EXCLAMATIONMARK         := /!/
 EOL         := /(\r?\n|\r)/
 WSP         := /[ \t]*/
 ID          := /[a-zA-Z_][a-zA-Z0-9_]*/
-FQN         := /[a-zA-Z_][a-zA-Z0-9_]*(::[a-zA-Z_][a-zA-Z0-9_]*)+/
+---FQN         := /[a-zA-Z_][a-zA-Z0-9_]*(::[a-zA-Z_][a-zA-Z0-9_]*)+/
 
 NUMBER      := /(0|true|false|0[bB][01]+|0[0-7]+|[1-9][0-9]*|0[xX][0-9a-fA-F]+|'([^\\\n\r']|\\[^\n\r\t])')/
-STRING      := /"([^\\\n\r"]|\\[^\n\r\t])*"/
-MLSTRING    := /<"[ \t]*(\r?\n|\r).*(\r?\n|\r)[ \t]*">/
+SLSTRING    := /"([^\\\n\r"]|\\[^\n\r\t])*"/
+MLSTRING    := /<"[ \t]*(\r?\n|\r)[ \t]*(([^"]|"[^>])*(\r?\n|\r)[ \t]*)*">/
 COMMENT     := /(\/\/|#)[^\n\r]*/
 MLCOMMENT   := /\/\*([^\*]*\*+)([^\/\*][^\*]*\*+)*\//
 
+%right '=' PLUS_EQUAL MINUS_EQUAL STAR_EQUAL SLASH_EQUAL PERCENTAGE_EQUAL
+%left PIPE_PIPE
+%left AMPERSAND_AMPERSAND
+%left EQUAL_EQUAL EXCLAMATIONMARK_EQUAL
+%left ANGLEBRACKETOPEN ANGLEBRACKETOPEN_EQUAL ANGLEBRACKETCLOSE ANGLEBRACKETCLOSE_EQUAL 
+%left PLUS MINUS
+%left STAR SLASH PERCENTAGE
+%right @SIGN_PREC PLUS_PLUS MINUS_MINUS EXCLAMATIONMARK
+%left @UNARY_POST_PREC
+%left '.'
+%left '::'
 
 -----------------
 --- STRUCTURE ---
@@ -49,7 +60,13 @@ translation_unit: translation_unit use_stmt                                     
 translation_unit: translation_unit class_decl                                                                   { $$ = null; }
 translation_unit: translation_unit struct_decl                                                                  { $$ = null; }
 
-namespace_decl: 'namespace' ID ';'                                                                              { $$ = null; }
+STRING: SLSTRING                                                                                                { $$ = null; }
+STRING: MLSTRING                                                                                                { $$ = null; }
+
+FQN: ID                                                                                                         { $$ = null; }
+FQN: FQN '::' ID                                                                                                { $$ = null; }
+
+---namespace_decl: 'namespace' ID ';'                                                                              { $$ = null; }
 namespace_decl: 'namespace' FQN ';'                                                                             { $$ = null; }
 
 use_stmt: 'use' FQN ';'                                                                                         { $$ = null; }
@@ -68,7 +85,7 @@ class_body_empty: class_body_empty variable_decl ';'                            
 class_body_empty: class_body_empty variable_initializer_inst ';'                                                { $$ = null; }
 class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = null; }
 
-type: ID                                                                                                        { $$ = null; }
+---type: ID                                                                                                        { $$ = null; }
 type: FQN                                                                                                       { $$ = null; }
 type: '__all__'                                                                                                 { $$ = null; }
 type: '__any__'                                                                                                 { $$ = null; }
@@ -98,8 +115,8 @@ method_decl: 'abstract' '[' type_list_empty ']' ID '(' variable_decl_list_empty 
 expression: value_expr                                                                                          { $$ = null; }
 expression: variable_expr                                                                                       { $$ = null; }
 expression: method_call_expr                                                                                    { $$ = null; }
----expression: arithmetic_expr                                                                                  { $$ = null; }
----expression: logical_expr                                                                                     { $$ = null; }
+expression: arithmetic_expr                                                                                     { $$ = null; }
+expression: logical_expr                                                                                        { $$ = null; }
 expression: '(' expression ')'                                                                                  { $$ = null; }
 
 expression_list: expression                                                                                     { $$ = null; }
@@ -113,48 +130,48 @@ expression_map_empty:                                                           
 expression_map_empty: expression_map                                                                            { $$ = null; }
 
 value_expr: NUMBER                                                                                              { $$ = null; }
-value_expr: PLUS NUMBER                                                                                         { $$ = null; }
-value_expr: MINUS NUMBER                                                                                        { $$ = null; }
+value_expr: PLUS NUMBER                         @SIGN_PREC                                                      { $$ = null; }
+value_expr: MINUS NUMBER                        @SIGN_PREC                                                      { $$ = null; }
 value_expr: STRING                                                                                              { $$ = null; }
 value_expr: 'this'                                                                                              { $$ = null; }
 value_expr: 'null'                                                                                              { $$ = null; }
 
 variable_expr: ID                                                                                               { $$ = null; }
 variable_expr: expression '.' ID                                                                                { $$ = null; }
-variable_expr: ID ':' ID                                                                                        { $$ = null; }
+---variable_expr: ID ':' ID                                                                                        { $$ = null; }
 variable_expr: FQN ':' ID                                                                                       { $$ = null; }
 
 method_call_expr: expression '.' ID '(' expression_list_empty ')'                                               { $$ = null; }
-method_call_expr: ID ':' ID '(' expression_list_empty ')'                                                       { $$ = null; }
+---method_call_expr: ID ':' ID '(' expression_list_empty ')'                                                       { $$ = null; }
 method_call_expr: FQN ':' ID '(' expression_list_empty ')'                                                      { $$ = null; }
 
----arithmetic_expr: expression PLUS expression                                                                  { $$ = null; }
----arithmetic_expr: expression MINUS expression                                                                 { $$ = null; }
----arithmetic_expr: expression STAR expression                                                                  { $$ = null; }
----arithmetic_expr: expression SLASH expression                                                                 { $$ = null; }
----arithmetic_expr: expression PERCENTAGE expression                                                            { $$ = null; }
----arithmetic_expr: PLUS expression                                                                             { $$ = null; }
----arithmetic_expr: MINUS expression                                                                            { $$ = null; }
----arithmetic_expr: PLUS_PLUS variable_expr                                                                     { $$ = null; }
----arithmetic_expr: MINUS_MINUS variable_expr                                                                   { $$ = null; }
----arithmetic_expr: variable_expr PLUS_PLUS                                                                     { $$ = null; }
----arithmetic_expr: variable_expr MINUS_MINUS                                                                   { $$ = null; }
----arithmetic_expr: variable_expr '=' expression                                                                { $$ = null; }
----arithmetic_expr: variable_expr PLUS_EQUAL expression                                                         { $$ = null; }
----arithmetic_expr: variable_expr MINUS_EQUAL expression                                                        { $$ = null; }
----arithmetic_expr: variable_expr STAR_EQUAL expression                                                         { $$ = null; }
----arithmetic_expr: variable_expr SLASH_EQUAL expression                                                        { $$ = null; }
----arithmetic_expr: variable_expr PERCENTAGE_EQUAL expression                                                   { $$ = null; }
+arithmetic_expr: expression PLUS expression                                                                     { $$ = null; }
+arithmetic_expr: expression MINUS expression                                                                    { $$ = null; }
+arithmetic_expr: expression STAR expression                                                                     { $$ = null; }
+arithmetic_expr: expression SLASH expression                                                                    { $$ = null; }
+arithmetic_expr: expression PERCENTAGE expression                                                               { $$ = null; }
+arithmetic_expr: PLUS expression                @SIGN_PREC                                                      { $$ = null; }
+arithmetic_expr: MINUS expression               @SIGN_PREC                                                      { $$ = null; }
+arithmetic_expr: PLUS_PLUS variable_expr                                                                        { $$ = null; }
+arithmetic_expr: MINUS_MINUS variable_expr                                                                      { $$ = null; }
+arithmetic_expr: variable_expr PLUS_PLUS        @UNARY_POST_PREC                                                { $$ = null; }
+arithmetic_expr: variable_expr MINUS_MINUS      @UNARY_POST_PREC                                                { $$ = null; }
+arithmetic_expr: variable_expr '=' expression                                                                   { $$ = null; }
+arithmetic_expr: variable_expr PLUS_EQUAL expression                                                            { $$ = null; }
+arithmetic_expr: variable_expr MINUS_EQUAL expression                                                           { $$ = null; }
+arithmetic_expr: variable_expr STAR_EQUAL expression                                                            { $$ = null; }
+arithmetic_expr: variable_expr SLASH_EQUAL expression                                                           { $$ = null; }
+arithmetic_expr: variable_expr PERCENTAGE_EQUAL expression                                                      { $$ = null; }
 
----logical_expr: expression AMPERSAND_AMPERSAND expression                                                      { $$ = null; }
----logical_expr: expression PIPE_PIPE expression                                                                { $$ = null; }
----logical_expr: EXCLAMATIONMARK expression                                                                     { $$ = null; }
----logical_expr: expression EQUAL_EQUAL expression                                                              { $$ = null; }
----logical_expr: expression EXCLAMATIONMARK_EQUAL expression                                                    { $$ = null; }
----logical_expr: expression ANGLEBRACKETOPEN expression                                                         { $$ = null; }
----logical_expr: expression ANGLEBRACKETOPEN_EQUAL expression                                                   { $$ = null; }
----logical_expr: expression ANGLEBRACKETCLOSE expression                                                        { $$ = null; }
----logical_expr: expression ANGLEBRACKETCLOSE_EQUAL expression                                                  { $$ = null; }
+logical_expr: expression AMPERSAND_AMPERSAND expression                                                         { $$ = null; }
+logical_expr: expression PIPE_PIPE expression                                                                   { $$ = null; }
+logical_expr: EXCLAMATIONMARK expression                                                                        { $$ = null; }
+logical_expr: expression EQUAL_EQUAL expression                                                                 { $$ = null; }
+logical_expr: expression EXCLAMATIONMARK_EQUAL expression                                                       { $$ = null; }
+logical_expr: expression ANGLEBRACKETOPEN expression                                                            { $$ = null; }
+logical_expr: expression ANGLEBRACKETOPEN_EQUAL expression                                                      { $$ = null; }
+logical_expr: expression ANGLEBRACKETCLOSE expression                                                           { $$ = null; }
+logical_expr: expression ANGLEBRACKETCLOSE_EQUAL expression                                                     { $$ = null; }
 
 --------------------
 --- INSTRUCTIONS ---
