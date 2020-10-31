@@ -24,6 +24,7 @@ class Definition extends PropertyContainer {
     AnyMap symbols; // HashMap<String, Symbol>
     AnyMap precRefs; // HashMap<String, Symbol>
     Symbol eoi;
+    Precedence defaultPrec;
 
     [] __init() { this._initGrammarDefinition(); }
     [] _initGrammarDefinition() {
@@ -35,6 +36,9 @@ class Definition extends PropertyContainer {
         this.symbols = this.createOwn(AnyMap:CLASSNAME);
         this.precRefs = this.createOwn(AnyMap:CLASSNAME);
         eoi = this.getCSymbol("EOI").setId(pool::generator::tokenizer::Tokenizer:T_EOI);
+        AnyList aliases = this.createOwn(AnyList:CLASSNAME);
+        aliases.add(eoi);
+        defaultPrec = this.newPrecedence().setPrec(0).setNonAsso().setAliases(aliases);
     }
     
     [String] setSourceName(String sourceName) {
@@ -102,10 +106,11 @@ class Definition extends PropertyContainer {
 
     [Precedence] newPrecedence() {
         Precedence p = this.createOwn(Precedence:CLASSNAME);
-        precedences.add(p);
         p.setPrec(precedences.size());
+        precedences.add(p);
         return p;
     }
+    [Precedence] getDefaultPrecedence() { return defaultPrec; }
     [AnyIterator] precedences() { return precedences.iterator(); }
 
     [OStream] printToStream(OStream stream) {

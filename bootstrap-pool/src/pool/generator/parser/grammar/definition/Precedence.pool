@@ -19,10 +19,11 @@ class Precedence extends sys::core::Object {
     AnyList aliases; // AnyList<Symbol>
 
     [Precedence] setPrec(int prec) { this.prec = prec; return this; }
-    [Precedence] setAliases(AnyList aliases) { this.aliases = this.own(aliases); return this; }
     [Precedence] setNonAsso() { offset = 0; return this; }
     [Precedence] setLeft() { offset = +1; return this; }
     [Precedence] setRight() { offset = -1; return this; }
+    [Precedence] setAliases(AnyList aliases) { this.aliases = this.own(aliases); return this; }
+    [Precedence] addAlias(Symbol alias) { this.aliases.add(alias); return this; }
     
     [int] getToken() { return prec * 3; }
     [int] getProduction() { return prec * 3 + offset; }

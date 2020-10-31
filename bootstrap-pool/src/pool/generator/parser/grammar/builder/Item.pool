@@ -3,10 +3,10 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::generator::parser::grammar;
+namespace pool::generator::parser::grammar::builder;
 
-use pool::generator::parser::grammar::definition::Rule;
 use pool::generator::Symbol;
+use pool::generator::parser::grammar::definition::Rule;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;

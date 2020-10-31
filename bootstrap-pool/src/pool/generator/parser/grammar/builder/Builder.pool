@@ -3,14 +3,17 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::generator::parser::grammar;
+namespace pool::generator::parser::grammar::builder;
 
+use pool::generator::Symbol;
+
+use pool::generator::parser::grammar::Action;
+use pool::generator::parser::grammar::Grammar;
+use pool::generator::parser::grammar::State;
 use pool::generator::parser::grammar::definition::Definition;
 use pool::generator::parser::grammar::definition::Precedence;
 use pool::generator::parser::grammar::definition::Rule;
 use pool::generator::parser::grammar::definition::TokenDesc;
-
-use pool::generator::Symbol;
 
 use pool::generator::regex::Parser as RegexParser;
 use pool::generator::regex::fa::NFA as RegexNFA;
@@ -27,7 +30,7 @@ use sys::core::anycollection::AnySet;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
-class GrammarBuilder extends sys::core::Object {
+class Builder extends sys::core::Object {
 
     Grammar g;
     Definition def;
@@ -38,7 +41,7 @@ class GrammarBuilder extends sys::core::Object {
     AnySet nullable; // HashSet<Symbol>
     AnyMap first; // HashMap<Symbol, HashSet<Symbol>>
     AnyMap follow; // HashMap<Symbol, HashSet<Symbol>>
-    AnyMap prec; // HashMap<Symbol, Precedence>
+    AnyMap precedences; // HashMap<Symbol, Precedence>
     
     AnyMap states; // HashMap<InfoSet, State>
     AnyMap transitions; // HashMap<State, HashMap<Symbol, State>>
@@ -49,7 +52,7 @@ class GrammarBuilder extends sys::core::Object {
         nullable = this.createOwn(AnySet:CLASSNAME);
         first = this.createOwn(AnyMap:CLASSNAME);
         follow = this.createOwn(AnyMap:CLASSNAME);
-        prec = this.createOwn(AnyMap:CLASSNAME);
+        precedences = this.createOwn(AnyMap:CLASSNAME);
         states = this.createOwn(AnyMap:CLASSNAME);
         transitions = this.createOwn(AnyMap:CLASSNAME);
     }
@@ -76,11 +79,11 @@ class GrammarBuilder extends sys::core::Object {
                     AnyIterator sit = p.aliases();
                     while (sit.hasNext()) {
                         Symbol s = sit.next();
-                        if (prec.has(s)) {
+                        if (precedences.has(s)) {
                             errors++;
                             err.printCString("duplicate precedence for token: ").print(s.getName()).printNewline();
                         } else {
-                            prec.set(s, p);
+                            precedences.set(s, p);
                         }
                     }
                     sit.destroy();
@@ -101,7 +104,9 @@ class GrammarBuilder extends sys::core::Object {
                 } else {
                     g.markTerminal(s);
                     this._initializeSets(s).add(s);
-                    // TODO: inject default precedence
+                    if (!precedences.has(s)) {
+                        precedences.set(s, def.getDefaultPrecedence().addAlias(s));
+                    }
                 }
             }
             it.destroy();
@@ -117,7 +122,9 @@ class GrammarBuilder extends sys::core::Object {
                 } else {
                     g.markTerminal(s);
                     this._initializeSets(s).add(s);
-                    // TODO: inject default precedence
+                    if (!precedences.has(s)) {
+                        precedences.set(s, def.getDefaultPrecedence().addAlias(s));
+                    }
                 }
             }
             it.destroy();
@@ -134,7 +141,25 @@ class GrammarBuilder extends sys::core::Object {
                 } else if (!g.hasNonTerminal(s)) {
                     g.markNonTerminal(s);
                     this._initializeSets(s);
-                    // TODO: determine rule precedence
+                }
+                {
+                    Symbol p = r.getPrecedence();
+                    if (!p) {
+                        p = def.getEOI();
+                        AnyIterator it = r.getRHS();
+                        while (it.hasNext()) {
+                            Symbol rhs = it.next();
+                            if (g.hasTerminal(rhs)) {
+                                p = rhs;
+                            }
+                        }
+                        it.destroy();
+                        r.setPrecedence(p);
+                    }
+                    if (!precedences.has(p)) {
+                        errors++;
+                        err.printCString("unknown precedence of rule: ").print(r).printNewline();
+                    }
                 }
                 {
                     if (rules.isEmpty()) { this._initAccept(s); }
@@ -433,33 +458,59 @@ class GrammarBuilder extends sys::core::Object {
     }
     
     [] addReduceAction(State state, Symbol symbol, Rule rule) {
+        Precedence np = precedences.get(rule.getPrecedence());
+        int n = np.getProduction();
 /*
         this.rt().out().printCString("reduce ").printInt(state.getId())
             .printCString(" at ").print(symbol)
-            .printCString(" via ").print(rule).printNewline();
-*/            
+            .printCString(" via ").print(rule)
+            .printCString(" prec ").printInt(n).printNewline();
+//*/            
         Action a = state.getAction(symbol);
         if (a) {
-            this.rt().err().printCString("Reduce conflict on ").print(rule).printNewline();
-            errors++;
-            return;
+            if (a.getPrec() > n) {
+                // resolve conflict: ignore lesser one
+//                this.rt().out().printCString("resolve conflict: keep ").print(a).printNewline();
+                return;
+            } else if (a.getPrec() < n) {
+                // resolve conflict: ignore lesser one
+//                this.rt().out().printCString("resolve conflict: ignore ").print(a).printNewline();
+            } else {
+                this.rt().err().printCString("Reduce conflict on ").print(rule).printNewline();
+                errors++;
+                return;
+            }
         }
-        state.addAction(symbol, this.reduce(rule));
+        state.addAction(symbol, this.reduce(rule).setPrec(n));
+        if (a) { a.destroy(); }
     }
     
     [] addShiftAction(State state, Symbol symbol, State dest) {
+        Precedence np = precedences.get(symbol);
+        int n = np.getToken();
 /*
         this.rt().out().printCString("shift ").printInt(state.getId())
             .printCString(" at ").print(symbol)
-            .printCString(" to ").printInt(dest.getId()).printNewline();
-*/
+            .printCString(" to ").printInt(dest.getId())
+            .printCString(" prec ").printInt(n).printNewline();
+//*/
         Action a = state.getAction(symbol);
         if (a) {
-            this.rt().err().printCString("Shift conflict on ").print(symbol).printNewline();
-            errors++;
-            return;
+            if (a.getPrec() > n) {
+                // resolve conflict: ignore lesser one
+//                this.rt().out().printCString("resolve conflict: keep ").print(a).printNewline();
+                return;
+            } else if (a.getPrec() < n) {
+                // resolve conflict: ignore lesser one
+//                this.rt().out().printCString("resolve conflict: ignore ").print(a).printNewline();
+            } else {
+                this.rt().err().printCString("Shift conflict on ").print(symbol).printNewline();
+                errors++;
+                return;
+            }
         }
-        state.addAction(symbol, this.shift(dest));
+        state.addAction(symbol, this.shift(dest).setPrec(n));
+        if (a) { a.destroy(); }
     }
     
     [Action] action() { return this.rt().createInstance(Action:CLASSNAME); }
@@ -510,6 +561,27 @@ class GrammarBuilder extends sys::core::Object {
     }
         
     // DEBUG
+    [OStream] debugPrecedence(OStream out) {
+        out.printCString("PRECEDENCE:").printNewline();
+        {
+            AnyMapEntryIterator eit = precedences.entries();
+            while (eit.hasNext()) {
+                [Symbol s, Precedence p] = eit.nextPair();
+                out.print(s).printChar(' ').print(p).printNewline();
+            }
+            eit.destroy();
+        }
+        {
+            AnyIterator it = def.rules();
+            while (it.hasNext()) {
+                Rule r = it.next();
+                out.print(r).printCString(" => ").print(precedences.get(r.getPrecedence())).printNewline();
+            }
+            it.destroy();
+        }
+        return out;
+    }
+    
     [OStream] debugNullable(OStream out) {
         out.printCString("NULLABLE:");
         AnyIterator it = nullable.iterator();

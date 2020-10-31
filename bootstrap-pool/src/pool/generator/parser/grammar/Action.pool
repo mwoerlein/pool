@@ -12,6 +12,7 @@ use sys::core::utils::Bitset;
 class Action extends sys::core::Object {
 
     int action;
+    int prec;
     Rule rule;
     State state;
     
@@ -38,4 +39,6 @@ class Action extends sys::core::Object {
     [Rule] getRule() { return rule; }
     [State] getState() { return state; }
     
+    [Action] setPrec(int prec) { this.prec = prec; return this; }
+    [int] getPrec() { return this.prec; }
 }

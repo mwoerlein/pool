@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::generator::parser::grammar;
 
 use pool::generator::Symbol;
+use pool::generator::parser::grammar::builder::Builder;
 use pool::generator::parser::grammar::definition::Definition;
 use pool::generator::parser::grammar::definition::Precedence;
 use pool::generator::parser::grammar::definition::Rule;
@@ -29,7 +30,7 @@ class BaseParser extends pool::generator::parser::Parser {
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
         this._parse(in.init(input, inputName));
         in.destroy();
-        GrammarBuilder gb = this.rt().createInstance(GrammarBuilder:CLASSNAME);
+        Builder gb = this.rt().createInstance(Builder:CLASSNAME);
         Grammar g = gb.build(this.definition, this.rt().err());
         this.definition = null;
         gb.destroy();
