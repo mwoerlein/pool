@@ -14,34 +14,38 @@ use pool::generator::parser::ParseStack;
 class Parser extends BaseParser {
 
     int NT_GRAM_DEF := 0;
-    int NT_TOKEN_DEF := 1;
-    int NT_RULE_DEF := 2;
-    int NT_PREC_LIST := 3;
-    int NT_PREC := 4;
-    int NT_SYMBOL_LIST := 5;
+    int NT_PRECEDENCE_DEF := 1;
+    int NT_TOKEN_DEF := 2;
+    int NT_RULE_DEF := 3;
+    int NT_PREC_LIST := 4;
+    int NT_PREC := 5;
+    int NT_SYMBOL_LIST := 6;
+    int NT_SYMBOL := 7;
 
     [int, int] __getRule(int rule) {
         if (rule == 0) { return [Parser:NT_GRAM_DEF, 0]; }
         else if (rule == 1) { return [Parser:NT_GRAM_DEF, 2]; }
         else if (rule == 2) { return [Parser:NT_GRAM_DEF, 4]; }
         else if (rule == 3) { return [Parser:NT_GRAM_DEF, 4]; }
-        else if (rule == 4) { return [Parser:NT_GRAM_DEF, 4]; }
-        else if (rule == 5) { return [Parser:NT_GRAM_DEF, 4]; }
+        else if (rule == 4) { return [Parser:NT_GRAM_DEF, 3]; }
+        else if (rule == 5) { return [Parser:NT_GRAM_DEF, 3]; }
         else if (rule == 6) { return [Parser:NT_GRAM_DEF, 3]; }
-        else if (rule == 7) { return [Parser:NT_GRAM_DEF, 3]; }
-        else if (rule == 8) { return [Parser:NT_TOKEN_DEF, 3]; }
-        else if (rule == 9) { return [Parser:NT_RULE_DEF, 3]; }
-        else if (rule == 10) { return [Parser:NT_RULE_DEF, 4]; }
+        else if (rule == 7) { return [Parser:NT_PRECEDENCE_DEF, 2]; }
+        else if (rule == 8) { return [Parser:NT_PRECEDENCE_DEF, 2]; }
+        else if (rule == 9) { return [Parser:NT_TOKEN_DEF, 3]; }
+        else if (rule == 10) { return [Parser:NT_RULE_DEF, 3]; }
         else if (rule == 11) { return [Parser:NT_RULE_DEF, 4]; }
-        else if (rule == 12) { return [Parser:NT_RULE_DEF, 5]; }
-        else if (rule == 13) { return [Parser:NT_PREC_LIST, 0]; }
-        else if (rule == 14) { return [Parser:NT_PREC_LIST, 2]; }
-        else if (rule == 15) { return [Parser:NT_PREC, 1]; }
+        else if (rule == 12) { return [Parser:NT_RULE_DEF, 4]; }
+        else if (rule == 13) { return [Parser:NT_RULE_DEF, 5]; }
+        else if (rule == 14) { return [Parser:NT_PREC_LIST, 0]; }
+        else if (rule == 15) { return [Parser:NT_PREC_LIST, 2]; }
         else if (rule == 16) { return [Parser:NT_PREC, 1]; }
         else if (rule == 17) { return [Parser:NT_PREC, 1]; }
-        else if (rule == 18) { return [Parser:NT_SYMBOL_LIST, 0]; }
-        else if (rule == 19) { return [Parser:NT_SYMBOL_LIST, 2]; }
+        else if (rule == 18) { return [Parser:NT_PREC, 1]; }
+        else if (rule == 19) { return [Parser:NT_SYMBOL_LIST, 0]; }
         else if (rule == 20) { return [Parser:NT_SYMBOL_LIST, 2]; }
+        else if (rule == 21) { return [Parser:NT_SYMBOL, 1]; }
+        else if (rule == 22) { return [Parser:NT_SYMBOL, 1]; }
         return [Parser:ERROR, 0];
     }
 
@@ -49,25 +53,27 @@ class Parser extends BaseParser {
         __any__ result = null;
         if (rule == 0) { result = this.definition; }
         else if (rule == 1) { result = s.at(1); }
-        else if (rule == 2) { result = this.addParameter(s.at(3), s.at(2), s.at(1)); }
-        else if (rule == 3) { result = this.addIgnoreList(s.at(3), s.at(1)); }
-        else if (rule == 4) { result = s.at(3); }
-        else if (rule == 5) { result = s.at(3); }
+        else if (rule == 2) { result = s.at(3); this.addParameter(s.at(2), s.at(1)); }
+        else if (rule == 3) { result = s.at(3); this.addIgnoreList(s.at(1)); }
+        else if (rule == 4) { result = s.at(2); }
+        else if (rule == 5) { result = s.at(2); }
         else if (rule == 6) { result = s.at(2); }
-        else if (rule == 7) { result = s.at(2); }
-        else if (rule == 8) { result = this.addToken(this.definition, s.at(2), s.at(0)); }
-        else if (rule == 9) { result = this.addRule(this.definition, s.at(2), s.at(0), null); }
-        else if (rule == 10) { result = this.addRule(this.definition, s.at(3), s.at(1), null); }
-        else if (rule == 11) { result = this.addRule(this.definition, s.at(3), s.at(1), s.at(0)); }
-        else if (rule == 12) { result = this.addRule(this.definition, s.at(4), s.at(2), s.at(0)); }
-        else if (rule == 13) { result = null; }
-        else if (rule == 14) { result = null; }
-        else if (rule == 15) { result = null; }
-        else if (rule == 16) { result = null; }
-        else if (rule == 17) { result = null; }
-        else if (rule == 18) { result = this.list(); }
-        else if (rule == 19) { result = this.addSymbolToList(s.at(1), s.at(0)); }
-        else if (rule == 20) { result = this.addInlineToList(s.at(1), s.at(0)); }
+        else if (rule == 7) { result = this.newPrecedence(s.at(0)).setLeft(); }
+        else if (rule == 8) { result = this.newPrecedence(s.at(0)).setRight(); }
+        else if (rule == 9) { result = this.newToken(s.at(2), s.at(0)); }
+        else if (rule == 10) { result = this.newRule(s.at(2), s.at(0), null, null); }
+        else if (rule == 11) { result = this.newRule(s.at(3), s.at(1), s.at(0), null); }
+        else if (rule == 12) { result = this.newRule(s.at(3), s.at(1), null, s.at(0)); }
+        else if (rule == 13) { result = this.newRule(s.at(4), s.at(2), s.at(1), s.at(0)); }
+        else if (rule == 14) { result = this.newList(); }
+        else if (rule == 15) { result = this.addToList(s.at(1), s.at(0)); }
+        else if (rule == 16) { result = this.getSymbol(s.at(0)); }
+        else if (rule == 17) { result = this.getInlineSymbol(s.at(0)); }
+        else if (rule == 18) { result = this.getPrecRefSymbol(s.at(0)); }
+        else if (rule == 19) { result = this.newList(); }
+        else if (rule == 20) { result = this.addToList(s.at(1), s.at(0)); }
+        else if (rule == 21) { result = this.getSymbol(s.at(0)); }
+        else if (rule == 22) { result = this.getInlineSymbol(s.at(0)); }
 
         return result;
     }
@@ -76,20 +82,25 @@ class Parser extends BaseParser {
         if (state == 0) {
             if (symbol == Parser:NT_GRAM_DEF) { return 1; }
         } else if (state == 1) {
-            if (symbol == Parser:NT_TOKEN_DEF) { return 8; }
-            else if (symbol == Parser:NT_RULE_DEF) { return 9; }
+            if (symbol == Parser:NT_PRECEDENCE_DEF) { return 6; }
+            else if (symbol == Parser:NT_TOKEN_DEF) { return 7; }
+            else if (symbol == Parser:NT_RULE_DEF) { return 8; }
         } else if (state == 5) {
-            if (symbol == Parser:NT_SYMBOL_LIST) { return 13; }
-        } else if (state == 6) {
-            if (symbol == Parser:NT_PREC_LIST) { return 14; }
-        } else if (state == 7) {
-            if (symbol == Parser:NT_PREC_LIST) { return 15; }
-        } else if (state == 11) {
-            if (symbol == Parser:NT_SYMBOL_LIST) { return 19; }
+            if (symbol == Parser:NT_SYMBOL_LIST) { return 14; }
+        } else if (state == 9) {
+            if (symbol == Parser:NT_PREC_LIST) { return 18; }
+        } else if (state == 10) {
+            if (symbol == Parser:NT_PREC_LIST) { return 19; }
+        } else if (state == 12) {
+            if (symbol == Parser:NT_SYMBOL_LIST) { return 21; }
         } else if (state == 14) {
-            if (symbol == Parser:NT_PREC) { return 28; }
-        } else if (state == 15) {
-            if (symbol == Parser:NT_PREC) { return 28; }
+            if (symbol == Parser:NT_SYMBOL) { return 26; }
+        } else if (state == 18) {
+            if (symbol == Parser:NT_PREC) { return 30; }
+        } else if (state == 19) {
+            if (symbol == Parser:NT_PREC) { return 30; }
+        } else if (state == 21) {
+            if (symbol == Parser:NT_SYMBOL) { return 26; }
         }
 
         return Parser:ERROR;
@@ -102,8 +113,8 @@ class Parser extends BaseParser {
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 0]; }
             else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 0]; }
             else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 0]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 0]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 0]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 0]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 0]; }
             else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 0]; }
         } else if (state == 1) {
             if (symbol == Tokenizer:T_EOI) { return [Parser:ACCEPT, 0]; }
@@ -111,158 +122,158 @@ class Parser extends BaseParser {
             else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:SHIFT, 3]; }
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 4]; }
             else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:SHIFT, 5]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:SHIFT, 6]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:SHIFT, 7]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:SHIFT, 9]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:SHIFT, 10]; }
         } else if (state == 2) {
-            if (symbol == Tokenizer:T_INLINE_19) { return [Parser:SHIFT, 10]; }
-            else if (symbol == Tokenizer:T_INLINE_20) { return [Parser:SHIFT, 11]; }
+            if (symbol == Tokenizer:T_INLINE_20) { return [Parser:SHIFT, 11]; }
+            else if (symbol == Tokenizer:T_INLINE_21) { return [Parser:SHIFT, 12]; }
         } else if (state == 3) {
-            if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 12]; }
+            if (symbol == Tokenizer:T_STRING) { return [Parser:SHIFT, 13]; }
         } else if (state == 4) {
             if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 1]; }
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 1]; }
             else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 1]; }
             else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 1]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 1]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 1]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 1]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 1]; }
             else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 1]; }
         } else if (state == 5) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 18]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 18]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 18]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 19]; }
         } else if (state == 6) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 13]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 13]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 13]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 13]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 15]; }
         } else if (state == 7) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 13]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 13]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 13]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 13]; }
-        } else if (state == 8) {
             if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 16]; }
-        } else if (state == 9) {
+        } else if (state == 8) {
             if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 17]; }
+        } else if (state == 9) {
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 14]; }
         } else if (state == 10) {
-            if (symbol == Tokenizer:T_REGEX) { return [Parser:SHIFT, 18]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 14]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 14]; }
         } else if (state == 11) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 18]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 18]; }
-            else if (symbol == Tokenizer:T_CODE) { return [Parser:REDUCE, 18]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 18]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 18]; }
+            if (symbol == Tokenizer:T_REGEX) { return [Parser:SHIFT, 20]; }
         } else if (state == 12) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 20]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_CODE) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 19]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 19]; }
         } else if (state == 13) {
-            if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 21]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 22]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 23]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 22]; }
         } else if (state == 14) {
-            if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 24]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:SHIFT, 25]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 26]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 27]; }
+            if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 25]; }
         } else if (state == 15) {
-            if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 24]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:SHIFT, 25]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 26]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:SHIFT, 29]; }
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 4]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 4]; }
         } else if (state == 16) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 5]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 5]; }
+        } else if (state == 17) {
             if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 6]; }
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 6]; }
             else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 6]; }
             else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 6]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 6]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 6]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 6]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 6]; }
             else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 6]; }
-        } else if (state == 17) {
-            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 7]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 7]; }
-            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 7]; }
-            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 7]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 7]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 7]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 7]; }
         } else if (state == 18) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 8]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 7]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 27]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:SHIFT, 28]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 29]; }
         } else if (state == 19) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 9]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 21]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:SHIFT, 30]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 22]; }
-            else if (symbol == Tokenizer:T_CODE) { return [Parser:SHIFT, 31]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 8]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 27]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:SHIFT, 28]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 29]; }
         } else if (state == 20) {
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 9]; }
+        } else if (state == 21) {
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 10]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:SHIFT, 23]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:SHIFT, 31]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:SHIFT, 24]; }
+            else if (symbol == Tokenizer:T_CODE) { return [Parser:SHIFT, 32]; }
+        } else if (state == 22) {
             if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 2]; }
             else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 2]; }
             else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 2]; }
             else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 2]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 2]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 2]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 2]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 2]; }
             else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 2]; }
-        } else if (state == 21) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 19]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 19]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 19]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 19]; }
-            else if (symbol == Tokenizer:T_CODE) { return [Parser:REDUCE, 19]; }
-        } else if (state == 22) {
+        } else if (state == 23) {
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 21]; }
+            else if (symbol == Tokenizer:T_CODE) { return [Parser:REDUCE, 21]; }
+        } else if (state == 24) {
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 22]; }
+            else if (symbol == Tokenizer:T_CODE) { return [Parser:REDUCE, 22]; }
+        } else if (state == 25) {
+            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_INLINE_17) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_INLINE_19) { return [Parser:REDUCE, 3]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 3]; }
+        } else if (state == 26) {
             if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 20]; }
             else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 20]; }
             else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 20]; }
             else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 20]; }
             else if (symbol == Tokenizer:T_CODE) { return [Parser:REDUCE, 20]; }
-        } else if (state == 23) {
-            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 3]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 3]; }
-            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 3]; }
-            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 3]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 3]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 3]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 3]; }
-        } else if (state == 24) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 15]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 15]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 15]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 15]; }
-        } else if (state == 25) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 17]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 17]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 17]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 17]; }
-        } else if (state == 26) {
+        } else if (state == 27) {
             if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 16]; }
             else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 16]; }
             else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 16]; }
             else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 16]; }
-        } else if (state == 27) {
-            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 4]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 4]; }
-            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 4]; }
-            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 4]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 4]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 4]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 4]; }
         } else if (state == 28) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 14]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 14]; }
-            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 14]; }
-            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 14]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 18]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 18]; }
         } else if (state == 29) {
-            if (symbol == Tokenizer:T_EOI) { return [Parser:REDUCE, 5]; }
-            else if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 5]; }
-            else if (symbol == Tokenizer:T_PARAMETER) { return [Parser:REDUCE, 5]; }
-            else if (symbol == Tokenizer:T_INLINE_12) { return [Parser:REDUCE, 5]; }
-            else if (symbol == Tokenizer:T_INLINE_14) { return [Parser:REDUCE, 5]; }
-            else if (symbol == Tokenizer:T_INLINE_16) { return [Parser:REDUCE, 5]; }
-            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 5]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 17]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 17]; }
         } else if (state == 30) {
-            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 10]; }
-            else if (symbol == Tokenizer:T_CODE) { return [Parser:SHIFT, 32]; }
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_SYMBOL) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_INLINE) { return [Parser:REDUCE, 15]; }
+            else if (symbol == Tokenizer:T_PREC_REF) { return [Parser:REDUCE, 15]; }
         } else if (state == 31) {
             if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 11]; }
+            else if (symbol == Tokenizer:T_CODE) { return [Parser:SHIFT, 33]; }
         } else if (state == 32) {
             if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 12]; }
+        } else if (state == 33) {
+            if (symbol == Tokenizer:T_NEWLINE) { return [Parser:REDUCE, 13]; }
         }
 
         return [Parser:ERROR, 0];

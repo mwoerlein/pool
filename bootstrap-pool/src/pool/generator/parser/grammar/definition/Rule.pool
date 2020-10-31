@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::generator::parser::grammar;
+namespace pool::generator::parser::grammar::definition;
 
 use pool::generator::Symbol;
 
@@ -18,9 +18,9 @@ class Rule extends sys::core::Object {
     Symbol lhs;
     AnyList rhs; // LinkedList<Symbol>
     String code;
+    Symbol prec;
 
     [] __init() {
-        rhs = this.createOwn(AnyList:CLASSNAME);
         code = this.createOwn(String:CLASSNAME);
         code.assignCString("{ $$ = $1; }");
     }
@@ -31,10 +31,13 @@ class Rule extends sys::core::Object {
     [Rule] setLHS(Symbol lhs) { this.lhs = lhs; return this; }
     [Symbol] getLHS() { return lhs; }
     
-    [Rule] addRHS(Symbol s) { this.rhs.add(s); return this; }
+    [Rule] setRHS(AnyList rhs) { this.rhs = this.own(rhs); return this; }
     [int] getRHSSize() { return this.rhs.size(); }
     [AnyIterator] getRHS() { return this.rhs.iterator(); }
     [Symbol] getRHSat(int pos) { return this.rhs.at(pos); }
+
+    [Rule] setPrecedence(Symbol prec) { this.prec = prec; return this; }
+    [Symbol] getPrecedence() { return prec; }
     
     [Rule] setCCode(cstring code) { this.code.assignCString(code); return this; }
     [Rule] setCode(String code) { this.code.assignString(code); return this; }

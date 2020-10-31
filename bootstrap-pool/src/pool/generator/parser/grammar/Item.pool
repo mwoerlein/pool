@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
+use pool::generator::parser::grammar::definition::Rule;
 use pool::generator::Symbol;
 
 use sys::core::String;

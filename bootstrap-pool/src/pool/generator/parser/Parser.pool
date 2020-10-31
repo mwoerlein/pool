@@ -8,8 +8,8 @@ namespace pool::generator::parser;
 use pool::generator::Symbol;
 use pool::generator::parser::grammar::Action;
 use pool::generator::parser::grammar::Grammar;
-use pool::generator::parser::grammar::Rule;
 use pool::generator::parser::grammar::State;
+use pool::generator::parser::grammar::definition::Rule;
 
 use pool::generator::tokenizer::Token;
 use pool::generator::tokenizer::Tokenizer;

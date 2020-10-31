@@ -6,6 +6,10 @@ version = 0.1.0
 namespace pool::generator::parser::grammar;
 
 use pool::generator::Symbol;
+use pool::generator::parser::grammar::definition::Definition;
+use pool::generator::parser::grammar::definition::Precedence;
+use pool::generator::parser::grammar::definition::Rule;
+use pool::generator::parser::grammar::definition::TokenDesc;
 use pool::generator::tokenizer::Token;
 
 use sys::core::String;
@@ -15,71 +19,60 @@ use sys::stream::IStream;
 
 class BaseParser extends pool::generator::parser::Parser {
     
-    GrammarDefinition definition;
+    Definition definition;
     
     [sys::stream::OStream] newError() { return this.rt().err(); }
     
     [Grammar] parse(IStream input, String inputName, String sourceName) {
-        this.definition = this.rt().createInstance(GrammarDefinition:CLASSNAME);
+        this.definition = this.rt().createInstance(Definition:CLASSNAME);
         this.definition.setSourceName(sourceName);
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
         this._parse(in.init(input, inputName));
         in.destroy();
         GrammarBuilder gb = this.rt().createInstance(GrammarBuilder:CLASSNAME);
         Grammar g = gb.build(this.definition, this.rt().err());
-        g.own(this.definition);
         this.definition = null;
         gb.destroy();
         return g;
     }
 
     // Definition creation helper
-    [GrammarDefinition] addParameter(GrammarDefinition def, Token param, Token value) {
-        String val = def.createOwn(String:CLASSNAME);
+    [] addParameter(Token param, Token value) {
+        String val = definition.createOwn(String:CLASSNAME);
         value.getValue().unescapeToStream(val.ostream());
         String name = param.getValue().subString(1, 0);
-        def.setStringProperty(name, val);
+        definition.setStringProperty(name, val);
         name.destroy();
-        return def;
     }
     
-    [GrammarDefinition] addIgnoreList(GrammarDefinition def, AnyList symbols) {
+    [] addIgnoreList(AnyList symbols) {
         AnyIterator it = symbols.iterator();
         while (it.hasNext()) {
             Symbol s = it.next();
             s.setIgnore(true);
         }
         it.destroy();
-        return def;
+    }
+    
+    [Precedence] newPrecedence(AnyList symbols) {
+        return definition.newPrecedence().setAliases(symbols);
+    }
+    
+    [TokenDesc] newToken(Token symbol, Token regex) {
+        return definition.newToken(this.getSymbol(symbol)).setDefinition(regex.getValue());
     }
 
-    [GrammarDefinition] addToken(GrammarDefinition def, Token symbol, Token regex) {
-        def.newToken(def.getSymbol(symbol.getValue())).setDefinition(regex.getValue(), false);
-        return def;
-    }
-
-    [GrammarDefinition] addRule(GrammarDefinition def, Token symbol, AnyList rhs, Token code) {
-        Rule r = def.newRule(def.getSymbol(symbol.getValue()));
-        {
-            AnyIterator it = rhs.iterator();
-            while (it.hasNext()) { r.addRHS(it.next()); }
-            it.destroy();
-        }
+    [Rule] newRule(Token symbol, AnyList rhs, Token precRef, Token code) {
+        Rule r = definition.newRule(this.getSymbol(symbol)).setRHS(rhs);
+        if (precRef) { r.setPrecedence(this.getPrecRefSymbol(precRef)); }
         if (code) { r.setCode(code.getValue()); }
-        return def;
+        return r;
     }
+    
+    [Symbol] getSymbol(Token t) { return definition.getSymbol(t.getValue());}
+    [Symbol] getInlineSymbol(Token t) { return definition.getInlineSymbol(t.getValue());}
+    [Symbol] getPrecRefSymbol(Token t) { return definition.getPrecRefSymbol(t.getValue());}
 
-    [AnyList] list() {
-        return this.createOwn(AnyList:CLASSNAME);
-    }
-    
-    [AnyList] addSymbolToList(AnyList l, Token symbol) {
-        l.add(definition.getSymbol(symbol.getValue()));
-        return l;
-    }
-    
-    [AnyList] addInlineToList(AnyList l, Token inline) {
-        l.add(definition.getInlineSymbol(inline.getValue()));
-        return l;
-    }
+    [AnyList] newList() { return this.createOwn(AnyList:CLASSNAME); }
+    [AnyList] addToList(AnyList l, Symbol s) { l.add(s); return l; }
 }

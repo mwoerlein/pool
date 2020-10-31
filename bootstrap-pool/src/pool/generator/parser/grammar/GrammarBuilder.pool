@@ -5,6 +5,11 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
+use pool::generator::parser::grammar::definition::Definition;
+use pool::generator::parser::grammar::definition::Precedence;
+use pool::generator::parser::grammar::definition::Rule;
+use pool::generator::parser::grammar::definition::TokenDesc;
+
 use pool::generator::Symbol;
 
 use pool::generator::regex::Parser as RegexParser;
@@ -25,7 +30,7 @@ use sys::stream::OStream;
 class GrammarBuilder extends sys::core::Object {
 
     Grammar g;
-    GrammarDefinition def;
+    Definition def;
     int errors;
     
     Rule accept;
@@ -33,6 +38,7 @@ class GrammarBuilder extends sys::core::Object {
     AnySet nullable; // HashSet<Symbol>
     AnyMap first; // HashMap<Symbol, HashSet<Symbol>>
     AnyMap follow; // HashMap<Symbol, HashSet<Symbol>>
+    AnyMap prec; // HashMap<Symbol, Precedence>
     
     AnyMap states; // HashMap<InfoSet, State>
     AnyMap transitions; // HashMap<State, HashMap<Symbol, State>>
@@ -43,11 +49,12 @@ class GrammarBuilder extends sys::core::Object {
         nullable = this.createOwn(AnySet:CLASSNAME);
         first = this.createOwn(AnyMap:CLASSNAME);
         follow = this.createOwn(AnyMap:CLASSNAME);
+        prec = this.createOwn(AnyMap:CLASSNAME);
         states = this.createOwn(AnyMap:CLASSNAME);
         transitions = this.createOwn(AnyMap:CLASSNAME);
     }
     
-    [Grammar] build(GrammarDefinition def, OStream err) {
+    [Grammar] build(Definition def, OStream err) {
         g = this.rt().createInstance(Grammar:CLASSNAME);
         g.setDefinition(this.def = def);
         if (!errors) { this._initialize(err); }
@@ -60,11 +67,33 @@ class GrammarBuilder extends sys::core::Object {
     }
     
     [] _initialize(OStream err) {
+        // init precedence map
+        {
+            AnyIterator it = def.precedences();
+            while (it.hasNext()) {
+                Precedence p = it.next();
+                {
+                    AnyIterator sit = p.aliases();
+                    while (sit.hasNext()) {
+                        Symbol s = sit.next();
+                        if (prec.has(s)) {
+                            errors++;
+                            err.printCString("duplicate precedence for token: ").print(s.getName()).printNewline();
+                        } else {
+                            prec.set(s, p);
+                        }
+                    }
+                    sit.destroy();
+                }
+            }
+            it.destroy();
+        }
+        
         // init terminals
         {
-            AnyIterator it = def.tokens();
+            AnyIterator it = def.inlineTokens();
             while (it.hasNext()) {
-                Token t = it.next();
+                TokenDesc t = it.next();
                 Symbol s = t.getSymbol();
                 if (g.hasTerminal(s)) {
                     errors++;
@@ -72,6 +101,23 @@ class GrammarBuilder extends sys::core::Object {
                 } else {
                     g.markTerminal(s);
                     this._initializeSets(s).add(s);
+                    // TODO: inject default precedence
+                }
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = def.regexTokens();
+            while (it.hasNext()) {
+                TokenDesc t = it.next();
+                Symbol s = t.getSymbol();
+                if (g.hasTerminal(s)) {
+                    errors++;
+                    err.printCString("duplicate definition for token: ").print(s.getName()).printNewline();
+                } else {
+                    g.markTerminal(s);
+                    this._initializeSets(s).add(s);
+                    // TODO: inject default precedence
                 }
             }
             it.destroy();
@@ -88,6 +134,7 @@ class GrammarBuilder extends sys::core::Object {
                 } else if (!g.hasNonTerminal(s)) {
                     g.markNonTerminal(s);
                     this._initializeSets(s);
+                    // TODO: determine rule precedence
                 }
                 {
                     if (rules.isEmpty()) { this._initAccept(s); }
@@ -141,7 +188,11 @@ class GrammarBuilder extends sys::core::Object {
         Symbol end = def.getEOI();
         this._initializeSets(end).add(end);
         
-        accept.setLHS(start).addRHS(s).addRHS(end);
+        AnyList rhs = this.createOwn(AnyList:CLASSNAME);
+        rhs.add(s);
+        rhs.add(end);
+        
+        accept.setLHS(start).setRHS(rhs);
     }
     
     [AnySet] _initializeSets(Symbol s) {
@@ -420,40 +471,36 @@ class GrammarBuilder extends sys::core::Object {
     [] _buildTokenizerDfa() {
         TokenizerDFA dfa = this.createOwn(TokenizerDFA:CLASSNAME);
         {
-            AnyIterator it = def.tokens();
+            AnyIterator it = def.inlineTokens();
             while (it.hasNext()) {
-                Token t = it.next();
-                if (t.isInlineDefinition()) {
-                    Symbol s = t.getSymbol();
-                    
-                    RegexNFAOStream inline = this.rt().createInstance(RegexNFAOStream:CLASSNAME);
-                    t.getDefinition()._unescapeToStream(inline.ostream(), '\'', '\\');
-                    
-                    dfa._addTerminal(s, inline.toNFA());
-                    
-                    inline.destroy();
-                }
+                TokenDesc t = it.next();
+                Symbol s = t.getSymbol();
+                
+                RegexNFAOStream inline = this.rt().createInstance(RegexNFAOStream:CLASSNAME);
+                t.getDefinition()._unescapeToStream(inline.ostream(), '\'', '\\');
+                
+                dfa._addTerminal(s, inline.toNFA());
+                
+                inline.destroy();
             }
             it.destroy();
         }
         {
             RegexParser parser = this.rt().createInstance(RegexParser:CLASSNAME);
-            AnyIterator it = def.tokens();
+            AnyIterator it = def.regexTokens();
             while (it.hasNext()) {
-                Token t = it.next();
-                if (!t.isInlineDefinition()) {
-                    Symbol s = t.getSymbol();
-                    
-                    String def = t.getDefinition().subString(1, -1);
-                    IStream is = def.toIStream();
-                    RegexList l = parser.parse(is, s.getName());
+                TokenDesc t = it.next();
+                Symbol s = t.getSymbol();
+                
+                String def = t.getDefinition().subString(1, -1);
+                IStream is = def.toIStream();
+                RegexList l = parser.parse(is, s.getName());
 
-                    dfa._addTerminal(s, l.toNFA());
-                    
-                    l.destroy();
-                    is.destroy();
-                    def.destroy();
-                }
+                dfa._addTerminal(s, l.toNFA());
+                
+                l.destroy();
+                is.destroy();
+                def.destroy();
             }
             it.destroy();
             parser.destroy();

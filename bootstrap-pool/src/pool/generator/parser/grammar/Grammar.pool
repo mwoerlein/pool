@@ -5,6 +5,9 @@ version = 0.1.0
 */
 namespace pool::generator::parser::grammar;
 
+use pool::generator::parser::grammar::definition::Definition;
+use pool::generator::parser::grammar::definition::Rule;
+
 use pool::generator::Symbol;
 use pool::generator::tokenizer::dfa::DFA as TokenizerDFA;
 
@@ -19,7 +22,7 @@ use sys::stream::OStream;
 
 class Grammar extends sys::core::Object {
 
-    GrammarDefinition definition;
+    Definition definition;
     TokenizerDFA tokenizerDFA;
     
     AnyList terminals; // ArrayList<Symbol>
@@ -33,7 +36,7 @@ class Grammar extends sys::core::Object {
         this.states = this.createOwn(AnyList:CLASSNAME);
     }
     
-    [Grammar] setDefinition(GrammarDefinition def) { this.own(this.definition = def); return this; }
+    [Grammar] setDefinition(Definition def) { this.own(this.definition = def); return this; }
     [Grammar] setTokenizerDFA(TokenizerDFA dfa) { this.own(this.tokenizerDFA = dfa); return this; }
     [TokenizerDFA] getTokenizerDFA() { return this.tokenizerDFA; }
     

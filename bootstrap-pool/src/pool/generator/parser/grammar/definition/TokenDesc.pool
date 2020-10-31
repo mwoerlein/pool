@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar::definition;
+
+use pool::generator::Symbol;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class TokenDesc extends sys::core::Object {
+    
+    Symbol symbol;
+    String definition;
+    
+    [] __init() { definition = this.createOwn(String:CLASSNAME); }
+    
+    [TokenDesc] setSymbol(Symbol s) { this.symbol = s; return this; }
+    [Symbol] getSymbol() { return symbol; }
+    
+    [TokenDesc] setDefinition(String def) {
+        this.definition.assignString(def);
+        return this;
+    }
+    [String] getDefinition() { return this.definition; }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.print(symbol).printCString(": ").print(definition);
+    }
+
+}

@@ -1,0 +1,39 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::generator::parser::grammar::definition;
+
+use pool::generator::Symbol;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class Precedence extends sys::core::Object {
+
+    int prec;
+    int offset;
+    AnyList aliases; // AnyList<Symbol>
+
+    [Precedence] setPrec(int prec) { this.prec = prec; return this; }
+    [Precedence] setAliases(AnyList aliases) { this.aliases = this.own(aliases); return this; }
+    [Precedence] setNonAsso() { offset = 0; return this; }
+    [Precedence] setLeft() { offset = +1; return this; }
+    [Precedence] setRight() { offset = -1; return this; }
+    
+    [int] getToken() { return prec * 3; }
+    [int] getProduction() { return prec * 3 + offset; }
+    [AnyIterator] aliases() { return aliases.iterator(); }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.printInt(prec).printChar('/').printInt(offset).printChar(':');
+        AnyIterator it = this.aliases();
+        while (it.hasNext()) {
+            stream.printChar(' ').print(it.next());
+        }
+        return stream;
+    }
+}
