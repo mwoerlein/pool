@@ -35,7 +35,9 @@ class File extends SeekableIOStream {
         fd = SysCall:open(filename, mode);
         if (fd < 0) {
             this.rt().err().printCString("failed to open file: ").printCString(filename).printNewline();
+            return -1;
         }
+        SysCall:seek(fd, offset, SysCall:SEEK_SET);
         return fd;
     }
     
