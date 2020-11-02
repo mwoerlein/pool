@@ -13,6 +13,7 @@ class Mimetype {
     int POOL_SRC := 0;
     int POOL_ASM := 1;
     int POOL_GRAMMAR := 2;
+    int POOL_X86_CLASS := 3;
     
     cstring TYPE_UNKNOWN        := "application/octet-stream";
     

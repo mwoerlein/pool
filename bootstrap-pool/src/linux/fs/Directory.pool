@@ -10,10 +10,12 @@ use pool::storage::PoolStorage;
 use pool::storage::PropertiesMarshaller;
 use sys::core::String;
 use sys::core::utils::FullQualifiedNameIterator;
+use sys::runtime::ClassDescriptor;
+use sys::runtime::ClassDescriptorLoader;
 use sys::store::StorageElement;
 use sys::stream::OStream;
 
-class DirectoryPoolStorage extends PoolStorage {
+class Directory extends PoolStorage, ClassDescriptorLoader {
 
     String baseDir;
     PropertiesMarshaller pm;
@@ -22,12 +24,29 @@ class DirectoryPoolStorage extends PoolStorage {
         pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
     }
     
-    [DirectoryPoolStorage] setBaseDir(String dir) {
+    [Directory] setBaseDir(String dir) {
         baseDir = this.createOwn(String:CLASSNAME);
         baseDir.assignString(dir);
         return this;
     }
+    
+    //// ClassDescriptorLoader ////
+    [ClassDescriptor] loadClassDesc(cstring name) {
+        String fullQualifiedName = this.rt().createInstance(String:CLASSNAME);
+        fullQualifiedName.assignCString(name);
+        StorageElement e = this.getElement(fullQualifiedName, Mimetype:POOL_X86_CLASS);
+        fullQualifiedName.destroy();
+        
+        ClassDescriptor ret = null;
+        if (e) {
+            // TODO: validate meta.mimetype and pool.class property?
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
+            e.destroy();
+        }
+        return ret;
+    }
 
+    //// PoolStorage ////
     [StorageElement] getElement(String fullQualifiedName, int mimeType) {
         FileElement fe = this.rt().createInstance(FileElement:CLASSNAME);
         return fe.init(this.buildFilePath(fullQualifiedName, mimeType, false), pm).storageElement();
@@ -58,7 +77,7 @@ class DirectoryPoolStorage extends PoolStorage {
         return ret;
     }
     
-    
+    //// Directory ////
     [String] buildFilePath(String fullQualifiedName, int mimetype, int createPath) {
         String path = this.rt().createInstance(String:CLASSNAME);
         path.assignString(baseDir);
@@ -75,6 +94,7 @@ class DirectoryPoolStorage extends PoolStorage {
         if (mimetype == Mimetype:POOL_SRC) { path.printCString(".pool"); }
         else if (mimetype == Mimetype:POOL_ASM) { path.printCString(".pasm"); }
         else if (mimetype == Mimetype:POOL_GRAMMAR) { path.printCString(".gram"); }
+        else if (mimetype == Mimetype:POOL_X86_CLASS) { path.printCString(".p86"); }
         
         return path;
     }

@@ -59,7 +59,7 @@ Parser Generator.
             return -1;
         }
         
-        PoolStorage storage = this.openPoolStorage(this.getValueOption("classpath"));
+        PoolStorage storage = this.openDirectory(this.getValueOption("classpath")).poolStorage();
         {
             AnyIterator argIt = this.getArguments();
             while (argIt.hasNext()) {

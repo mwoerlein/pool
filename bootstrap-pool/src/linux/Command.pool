@@ -6,9 +6,7 @@ version = 0.1.0
 namespace linux;
 
 use linux::fs::File;
-use linux::fs::DirectoryPoolStorage;
-
-use pool::storage::PoolStorage;
+use linux::fs::Directory;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
@@ -94,10 +92,9 @@ class Command extends CommandLine {
         return this.rt().cast(SeekableIOStream:CLASSNAME, f);
     }
     
-    [PoolStorage] openPoolStorage(String classpath) {
-        linux::fs::DirectoryPoolStorage storage = this.rt().createInstance(linux::fs::DirectoryPoolStorage:CLASSNAME);
-        storage.setBaseDir(classpath);
-        return storage.poolStorage();        
+    [Directory] openDirectory(String classpath) {
+        linux::fs::Directory d = this.rt().createInstance(linux::fs::Directory:CLASSNAME);
+        return d.setBaseDir(classpath);
     }
     
     // debug

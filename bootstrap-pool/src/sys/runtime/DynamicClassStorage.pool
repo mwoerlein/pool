@@ -14,9 +14,12 @@ class DynamicClassStorage extends ClassStorage {
     MemoryInfo bucketsInfo;
     int bucketsCount;
     int classDescCount;
+    ClassDescriptorLoader firstLoader;
+    ClassDescriptorLoader lastLoader;
     
     [] __init() { this._initDynamicClassStorage(239); }
     [] _initDynamicClassStorage(int bucketsCount) {
+        this.firstLoader = this.lastLoader = null;
         this.classDescCount = 0;
         this.bucketsCount = bucketsCount;
         this.bucketsInfo = this.rt().getAllocator().allocate(bucketsCount * Address:SIZE);
@@ -74,8 +77,22 @@ class DynamicClassStorage extends ClassStorage {
         // TODO: resize/rehash classDescriptors?
     }
     
+    [] addLoader(ClassDescriptorLoader loader) {
+        if (lastLoader) {
+            lastLoader.setNext(loader);
+            lastLoader = loader;
+        } else {
+            firstLoader = lastLoader = loader;
+        }
+    }
+    
     [ClassDescriptor] loadClassDesc(cstring name) {
-        // might be overwritten to support dynamic loading
+        ClassDescriptorLoader loader = firstLoader;
+        while (loader) {
+            ClassDescriptor cd = loader.loadClassDesc(name);
+            if (cd) { return cd; }
+            loader = loader.getNext();
+        }
         return null;
     }
     
