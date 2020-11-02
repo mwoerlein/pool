@@ -1,0 +1,113 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::command;
+
+use pool::compiler::parser::Parser;
+use sys::core::String;
+use sys::core::Thread;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::IStream;
+use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
+use sys::runtime::ClassDescriptor;
+use sys::runtime::ClassDescriptorLoader;
+use sys::runtime::DynamicClassStorage;
+use sys::runtime::Class;
+use sys::runtime::Runtime;
+
+class PoolRuntime extends linux::Command {
+
+    Parser parser;
+
+    [] __init() {
+        this._initCommand();
+        parser = this.createOwn(Parser:CLASSNAME);
+    }
+    
+    [] configure() {
+        this.setName("poolb")
+            .setVersion("0.1.0")
+            .setUsage(<"
+Pool Bootstrap Runtime.
+
+    Usage:
+      poolb [options] -c <dir> [-c <dir>]... <fqn>
+
+    Options:
+      -h --help                     Show this screen.
+      --version                     Show version.
+      -c <dir> --classpath <dir>    Search for classes in all of these directories.
+">);
+// TODO: poolb [options] -c <dir> [-c <dir>]... --class <fqn> [<arg>]...
+// or:   poolb [options] -c <dir> [-c <dir>]... <fqn> [--] [<arg>]...
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('c', "classpath")
+            //.registerOptionList("classpath")
+        ;
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (this.getArgumentsSize() != 1) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+        
+        // TODO: setup dynamic runtime
+/*/
+        Runtime rt = this.rt();
+        DynamicClassStorage dcs = rt.cast(DynamicClassStorage:CLASSNAME, rt.getClassStorage());
+        dcs.addLoader(this.openDirectory(this.getValueOption("classpath")).classDescriptorLoader());
+/*/
+        Runtime parent = this.rt();
+        Runtime rt = parent.createInstance(Runtime:CLASSNAME);
+        rt.setAllocator(parent.getAllocator());
+        rt.setOut(parent.out());
+        rt.setErr(parent.err());
+        
+        DynamicClassStorage dcs = parent.createInstance(DynamicClassStorage:CLASSNAME);
+        dcs.addLoader(this.openDirectory(this.getValueOption("classpath")).classDescriptorLoader());
+        rt.setClassStorage(dcs.classStorage());
+        
+        Class classClass = rt._createClassClass();
+        rt.refreshInstance(rt);
+        rt.refreshInstance(rt.out());
+        rt.refreshInstance(rt.err());
+        rt.refreshInstance(rt.getAllocator());
+//*/
+        
+        Thread t = null;
+        
+        AnyIterator argIt = this.getArguments();
+        String classname = argIt.next();
+        argIt.destroy();
+        {
+            int buf = 0;
+            __pasm__("subl %eax, %esp", {"%eax": classname.length() + 1}, {"%esp": buf});
+            t = rt.createInstanceAs(classname.toCString(buf), Thread:CLASSNAME);
+            __pasm__("addl %eax, %esp", {"%eax": classname.length() + 1});
+        }
+        if (t) {
+            t.run();
+        }
+        
+        return 0;
+    }
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        PoolRuntime pool = linux::Runtime:buildRuntime().createInstance(PoolRuntime:CLASSNAME);
+        return pool.execute(argc, argv);
+    }
+}
