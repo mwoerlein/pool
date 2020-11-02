@@ -31,7 +31,7 @@ class StaticResolvedClassStorage extends ClassStorage {
         return null;
     }
     
-    [] transferClasses(DynamicListClassStorage store, Allocator allocator) {
+    [] transferClasses(DynamicClassStorage store, Allocator allocator) {
         ClassDescriptor classDesc = Address:cast(classesStart);
         while ((Address:from(classDesc) < classesEnd) && (classDesc.magic == ClassDescriptor:MAGIC)) {
             this.transferClass(classDesc, store, allocator);

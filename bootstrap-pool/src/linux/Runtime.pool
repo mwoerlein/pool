@@ -10,6 +10,7 @@ use sys::memory::PageAllocator;
 use sys::memory::PagedMemoryManager;
 use sys::runtime::Runtime as SysRuntime;
 use sys::runtime::StaticResolvedClassStorage;
+use sys::runtime::DynamicClassStorage;
 use sys::stream::OStream;
 
 class Runtime extends sys::runtime::RuntimeBuilder {
@@ -39,9 +40,10 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         rt.setClassStorage(bsRt.getClassStorage());
         rt.setAllocator(bsPMM.allocator());
         
-        StaticResolvedClassStorage crcs = rt.createInstance(StaticResolvedClassStorage:CLASSNAME);
-        rt.setClassStorage(crcs.classStorage());
-        crcs.rebuildClasses();
+        DynamicClassStorage dcs = rt.createInstance(DynamicClassStorage:CLASSNAME);
+        bsRt.getClassStorage().transferClasses(dcs, null);
+        rt.setClassStorage(dcs.classStorage());
+        dcs.rebuildClasses();
         
         PageAllocator pa := rt.createInstanceAs(LinuxPageAllocator:CLASSNAME, PageAllocator:CLASSNAME);
         PagedMemoryManager pmm := rt.createInstance(PagedMemoryManager:CLASSNAME);

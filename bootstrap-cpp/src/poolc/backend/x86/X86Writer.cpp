@@ -118,7 +118,7 @@ bool X86Writer::visit(ClassDeclNode & classDef) {
     } else {
         LONG("0");                        // resolved
     }
-    LONG("0");                            // dynamic memory info
+    LONG("0xFFFFFFFF");                   // dynamic memory info "NONE"
     LONG("0");                            // dynamic next class desc
     LONG("0");                            // reserved
     LONG("0");                            // reserved

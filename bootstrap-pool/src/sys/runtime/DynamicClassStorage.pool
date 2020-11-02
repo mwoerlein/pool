@@ -1,0 +1,149 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+use sys::memory::Address;
+use sys::memory::Allocator;
+use sys::memory::MemoryInfo;
+
+class DynamicClassStorage extends ClassStorage {
+    
+    MemoryInfo bucketsInfo;
+    int bucketsCount;
+    int classDescCount;
+    
+    [] __init() { this._initDynamicClassStorage(239); }
+    [] _initDynamicClassStorage(int bucketsCount) {
+        this.classDescCount = 0;
+        this.bucketsCount = bucketsCount;
+        this.bucketsInfo = this.rt().getAllocator().allocate(bucketsCount * Address:SIZE);
+        int i = bucketsCount;
+        while (i--) {
+            this._setBucket(i, null);
+        }
+    }
+    
+    [] __destruct() { this._destructDynamicClassStorage(); }
+    [] _destructDynamicClassStorage() {
+        Allocator alloc = this.rt().getAllocator();
+        int i = bucketsCount;
+        while (i--) {
+            ClassDescriptor classDesc = this._getBucket(i);
+            while (classDesc) {
+                ClassDescriptor free = classDesc;
+                classDesc = classDesc.next_desc;
+                if (free.class_instance) {
+                    free.class_instance.destroy();
+                }
+                if (Address:from(free.mem_info) != MemoryInfo:NONE) {
+                    alloc.free(free.mem_info);
+                }
+            }
+        }
+        alloc.free(this.bucketsInfo);
+    }
+    
+    [ClassDescriptor] getClassDesc(cstring name) {
+        int bucketNumber = this._getBucketNumber(name);
+        ClassDescriptor desc = this._findInBucket(this._getBucket(bucketNumber), name);
+        if (!desc) {
+            desc = this.loadClassDesc(name);
+            if (!desc) { return null; }
+            this.addClassDesc(desc);
+        }
+        if (!desc.resolved && !this._resolve(desc)) { return null; }
+        return desc;
+    }
+    
+    [] addClassDesc(ClassDescriptor desc) {
+        cstring name = Address:string(desc, desc.classname_offset);
+        
+        int bucketNumber = this._getBucketNumber(name);
+        ClassDescriptor bucket = this._getBucket(bucketNumber);
+        ClassDescriptor d = this._findInBucket(bucket, name);
+        if (d) {
+            this.rt().err().printCString("ignore already added class ").printCString(name).printNewline();
+            return;
+        }
+        desc.next_desc = bucket;
+        this._setBucket(bucketNumber, desc);
+        classDescCount++;
+        // TODO: resize/rehash classDescriptors?
+    }
+    
+    [ClassDescriptor] loadClassDesc(cstring name) {
+        // might be overwritten to support dynamic loading
+        return null;
+    }
+    
+    [] transferClasses(DynamicClassStorage store, Allocator allocator) {
+        int i = bucketsCount;
+        while (i--) {
+            ClassDescriptor classDesc = this._getBucket(i);
+            while (classDesc) {
+                // transferClass might reuse classDesc.next_desc
+                ClassDescriptor next = classDesc.next_desc;
+                this.transferClass(classDesc, store, allocator);
+                classDesc = next;
+            }
+            if (!allocator) {
+                this._setBucket(i, null);
+            }
+        }
+    }
+    
+    [] rebuildClasses() {
+        Runtime rt = this.rt();
+        int i = bucketsCount;
+        while (i--) {
+            ClassDescriptor classDesc = this._getBucket(i);
+            while (classDesc) {
+                if (classDesc.class_instance && !rt.equals(classDesc.class_instance.rt())) {
+                    classDesc.class_instance.destroy();
+                    rt._createClass(classDesc);
+                }
+                classDesc = classDesc.next_desc;
+            }
+        }
+    }
+   
+    [] _setBucket(int number, ClassDescriptor value) {
+        int addr = bucketsInfo.buf + number * Address:SIZE;
+        Address:store(addr, value);
+    }
+    
+    [ClassDescriptor] _getBucket(int number) {
+        int addr = bucketsInfo.buf + number * Address:SIZE;
+        return Address:load(addr);
+    }
+    
+    [int] _getBucketNumber(cstring name) {
+        int hash = 0;
+        int p = Address:fromString(name);
+        int c = Address:loadChar(p++);
+        while (c) {
+            hash *= 33;
+            hash += c;
+            c = Address:loadChar(p++);
+        }
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": hash, "%ebx": bucketsCount}, {"%edx": hash}); // hash %= bucketsCount; (unsigned)
+        return hash;
+    }
+    
+    [ClassDescriptor] _findInBucket(ClassDescriptor classDesc, cstring name) {
+        while (classDesc) {
+            cstring descName = Address:string(classDesc, classDesc.classname_offset);
+            if (sys::core::String:compareCStrings(descName, name) == 0) {
+                return classDesc;
+            }
+            classDesc = classDesc.next_desc;
+        }
+        return null;
+    }
+
+    // TODO: remove with implicit cast
+    [DynamicClassStorage] dynamicClassStorage() { return this; }
+}

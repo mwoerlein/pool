@@ -14,9 +14,9 @@ class ClassStorage extends Object {
     
     // methods
     abstract [ClassDescriptor] getClassDesc(cstring name);
-    abstract [] transferClasses(DynamicListClassStorage store, Allocator allocator);
+    abstract [] transferClasses(DynamicClassStorage store, Allocator allocator);
     
-    [] transferClass(ClassDescriptor classDesc, DynamicListClassStorage store, Allocator allocator) {
+    [] transferClass(ClassDescriptor classDesc, DynamicClassStorage store, Allocator allocator) {
         ClassDescriptor desc = classDesc;
         if (allocator) {
             MemoryInfo info = allocator.allocate(classDesc.class_size);
@@ -29,6 +29,27 @@ class ClassStorage extends Object {
         store.addClassDesc(desc);
     }
     
+    [int] _resolve(ClassDescriptor desc) {
+        //this.rt().out().printCString("resolve ").printCString(Address:string(desc, desc.classname_offset)).printNewline();
+        ClassTableEntry cte = Address:offset(desc, desc.class_tabs_offset);
+        while (cte.classname_offset) {
+            if (cte.classname_offset == desc.classname_offset) {
+                cte.class_desc = desc;
+            } else {
+                cstring classname = Address:string(desc, cte.classname_offset);
+                ClassDescriptor sDesc = this.getClassDesc(classname);
+                if (!sDesc) {
+                    this.rt().err().printCString("unknown class ").printCString(classname).printNewline();
+                    return false;
+                } 
+                cte.class_desc = sDesc;
+            }
+            cte = Address:offset(cte, ClassTableEntry:SIZEOF);
+        }
+        desc.resolved = true;
+        return true;
+    } 
+        
     // TODO: remove with implicit cast
     [ClassStorage] classStorage() { return this; }
 }
