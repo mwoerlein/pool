@@ -23,7 +23,12 @@ class BaseParser extends pool::generator::parser::Parser {
         in.destroy();
         return expression;
     }
-    
+/*    
+    [Expr] idExpr(Token t) {
+        Expr e = this.createOwn(Expr:CLASSNAME);
+        return e.initValue(0);
+    }
+*/    
     [Expr] valueExpr(Token t) {
         Expr e = this.createOwn(Expr:CLASSNAME);
         return e.initValue(t.toInt());

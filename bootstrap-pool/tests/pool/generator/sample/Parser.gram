@@ -7,20 +7,29 @@
 --- tokens
 WSP         := /[ \t]*/
 NUMBER      := /(0[0-7]*|[1-9][0-9]*|0[bB][01]+|0[xX][0-9a-fA-F]+)*/
+---FQN         := /[a-zA-Z_][a-zA-Z0-9_]*(::[a-zA-Z_][a-zA-Z0-9_]*)+/
+---ID          := /[a-zA-Z_][a-zA-Z0-9_]*/
 
 --- precedences
----%left '+' '-'
----%left '*' '/' '%'
----%right @SIGN
+%left '+' '-'
+%left '*' '/' '%'
+%right @SIGN
+---%left ':'
 
 --- rules
 expression: expr            { $$ = this.expression = $1; }
+---expr: ID                 { $$ = this.idExpr($1); }
+---expr: FQN                { $$ = this.idExpr($1); }
+---expr: ID ':' ID          { $$ = this.opExpr(this.idExpr($1), $2, this.idExpr($3)); }
+---expr: FQN ':' ID         { $$ = this.opExpr(this.idExpr($1), $2, this.idExpr($3)); }
 expr: NUMBER                { $$ = this.valueExpr($1); }
----expr: expr '+' expr         { $$ = this.opExpr($1, $2, $3); }
----expr: expr '-' expr         { $$ = this.opExpr($1, $2, $3); }
----expr: expr '*' expr         { $$ = this.opExpr($1, $2, $3); }
----expr: expr '/' expr         { $$ = this.opExpr($1, $2, $3); }
----expr: expr '%' expr         { $$ = this.opExpr($1, $2, $3); }
----expr: '+' expr @SIGN        { $$ = this.signExpr($1, $2); }
----expr: '-' expr @SIGN        { $$ = this.signExpr($1, $2); }
+expr: '+' NUMBER @SIGN      { $$ = this.valueExpr($2); }
+expr: '-' NUMBER @SIGN      { $$ = this.signExpr($1, this.valueExpr($2)); }
+expr: expr '+' expr         { $$ = this.opExpr($1, $2, $3); }
+expr: expr '-' expr         { $$ = this.opExpr($1, $2, $3); }
+expr: expr '*' expr         { $$ = this.opExpr($1, $2, $3); }
+expr: expr '/' expr         { $$ = this.opExpr($1, $2, $3); }
+expr: expr '%' expr         { $$ = this.opExpr($1, $2, $3); }
+expr: '+' expr @SIGN        { $$ = this.signExpr($1, $2); }
+expr: '-' expr @SIGN        { $$ = this.signExpr($1, $2); }
 expr: '(' expr ')'          { $$ = $2; }

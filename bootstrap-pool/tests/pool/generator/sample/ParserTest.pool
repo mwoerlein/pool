@@ -26,7 +26,12 @@ class ParserTest extends test::TestCase {
         this.caseExpr(p, "1+2*3-4/2", "((1+(2*3))-(4/2))", 5);
         this.caseExpr(p, "10--4*+3/-2----5", "((10-(((0-4)*3)/(0-2)))-(0-(0-(0-5))))", 9);
         this.caseExpr(p, "+(2*6)", "(0+(2*6))", 12);
-        
+/*        
+        this.caseExpr(p, "Abc", "0", 0);
+        this.caseExpr(p, "Abc::Def", "0", 0);
+        this.caseExpr(p, "Abc:D", "(0:0)", 0);
+        this.caseExpr(p, "Abc::Def:g", "(0:0)", 0);
+*/        
         p.destroy();
         return this.successCases();
     }
