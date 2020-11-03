@@ -63,6 +63,14 @@ class IStream extends Object {
         return stream;
     }
     
+    [OStream] printNToStream(int n, OStream stream) {
+        int i = n;
+        while ((--i >= 0) && !this.isEmpty()) {
+            stream.printChar(this.readChar());
+        }
+        return stream;
+    }
+    
     [int] _peekDigit() {
         int c = this.peekChar();
         if (c >= '0' && c <= '9') { return c - '0'; }

@@ -14,5 +14,5 @@ struct StorageElementDesc {
     int nameHash;
     int reserved_1;
     int reserved_2;
-    int reserved_3;
+    StorageElementDesc next;
 }

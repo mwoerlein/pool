@@ -1,0 +1,118 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::store;
+
+use pool::storage::Mimetype;
+use pool::storage::PropertiesMarshaller;
+
+use sys::core::String;
+use sys::core::utils::PropertyContainer;
+use sys::memory::Address;
+use sys::memory::MemoryIOStream;
+use sys::runtime::ClassDescriptor;
+use sys::runtime::ClassDescriptorLoader;
+use sys::stream::SeekableIOStream;
+
+class Store extends PropertyContainer, ClassDescriptorLoader {
+
+    int elementCount;
+    StorageElementDesc first;
+    
+    SeekableIOStream content;
+    PropertiesMarshaller pm;
+    
+    [] __init() { this._initStore(); }
+    [] _initStore() {
+        pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+        this._initPropertyContainer();
+    }
+    [] __destruct() { this._destructStore(); }
+    [] _destructStore() {
+        this._destructPropertyContainer();
+    }
+    
+    [Store] setContent(SeekableIOStream content) {
+        content.seek(0);
+        pm.unmarshall(content.istream(), this.propertyContainer());
+        
+        this.content = this.own(content);
+
+        String elements = this.getCStringProperty("store.elements");
+        if (elements) {
+            elementCount = elements.toInt();
+            
+            // read element descriptors into memory
+            int descLen = elementCount * StorageElementDesc:SIZEOF;
+            MemoryIOStream desc = this.createOwn(MemoryIOStream:CLASSNAME);
+            desc._init(descLen);
+            content.printNToStream(descLen, desc.ostream());
+            
+            // build in-memory index
+            StorageElementDesc cur = Address:cast(desc.startAddr());
+            first = cur;
+            int i = elementCount;
+            while (--i > 0) {
+                cur.next = Address:offset(cur, StorageElementDesc:SIZEOF);
+                // TODO: use hashmaps for more efficient access?!?
+                cur = cur.next;
+            }
+            cur.next = null;
+        } else {
+            // TODO: Bailout? Read old index? 
+        }
+        return this;
+    }
+    
+    [StorageElement] findElement(String name, int mimeType) {
+        StorageElementDesc cur = first;
+        while (cur) {
+            if (this._descMatches(cur, name, mimeType)) {
+                StorageElement e = this._getElement(cur);
+                if (this._elementMatches(e, name, mimeType)) { return e; }
+                e.destroy();
+            }
+            cur = cur.next;
+        }
+        return null;
+    }
+    
+    //// ClassDescriptorLoader ////
+    [ClassDescriptor] loadClassDesc(cstring name) {
+        String fullQualifiedName = this.rt().createInstance(String:CLASSNAME);
+        fullQualifiedName.assignCString(name);
+        StorageElement e = this.findElement(fullQualifiedName, Mimetype:POOL_X86_CLASS);
+        fullQualifiedName.destroy();
+        
+        ClassDescriptor ret = null;
+        if (e) {
+            // TODO: validate meta.mimetype and pool.class property?
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
+            e.destroy();
+        }
+        return ret;
+    }
+    
+    //// Store ////
+    [PropertiesMarshaller] getPropertiesMarshaller() { return pm; }
+    
+    [StorageElement] _getElement(StorageElementDesc desc) {
+        IOStreamElement e = this.rt().createInstance(IOStreamElement:CLASSNAME);
+        e.init(content.getView(desc.start, desc.size), pm);
+        // TODO: update element descriptor with storage element information
+        return e.storageElement();
+    }
+    
+    [int] _descMatches(StorageElementDesc desc, String name, int mimeType) {
+        if (desc.mimeType && (desc.mimeType != mimeType)) { return false; }
+        if (desc.nameHash && (desc.nameHash != name.hash())) { return false; }
+        return true;
+    }
+    
+    [int] _elementMatches(StorageElement se, String name, int mimeType) {
+        // TODO: implement mimeType specific checks
+        return true;
+    }
+}

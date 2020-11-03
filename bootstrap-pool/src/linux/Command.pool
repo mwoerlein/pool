@@ -18,6 +18,7 @@ use sys::core::utils::CommandLineParser;
 use sys::core::utils::CommandLineParserTarget;
 use sys::memory::Address;
 use sys::runtime::Runtime;
+use sys::store::Store;
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
@@ -93,8 +94,13 @@ class Command extends CommandLine {
     }
     
     [Directory] openDirectory(String classpath) {
-        linux::fs::Directory d = this.rt().createInstance(linux::fs::Directory:CLASSNAME);
+        Directory d = this.rt().createInstance(Directory:CLASSNAME);
         return d.setBaseDir(classpath);
+    }
+    
+    [Store] openStoreFile(String filename) {
+        Store s = this.rt().createOwn(Store:CLASSNAME);
+        return s.setContent(this.openFile(this.getValueOption("store"), linux::fs::File:MODE_READ));
     }
     
     // debug
