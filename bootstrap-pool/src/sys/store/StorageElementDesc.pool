@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::store;
+
+
+struct StorageElementDesc {
+    int start;
+    int size;
+    int headerSize;
+    int mimeType;
+    int nameHash;
+    int reserved_1;
+    int reserved_2;
+    int reserved_3;
+}

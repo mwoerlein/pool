@@ -9,8 +9,11 @@ use pool::asm::InstructionList;
 use pool::asm::Parser;
 use pool::asm::CompilationUnit;
 use pool::asm::i386::Compiler;
+use pool::storage::PropertiesMarshaller;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::utils::PropertyContainer;
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
@@ -27,6 +30,7 @@ class Pbasm extends linux::Command {
     Parser parser;
     Compiler compiler;
     CompilationUnit unit;
+    PropertyContainer classProperties;
     int status;
 
     [] __init() {
@@ -80,6 +84,9 @@ Pool Bootstrap Assembler.
         if (this.hasValueOption("t")) {
             startAddress = this.getValueOption("t").toInt();
         }
+        if (this.hasOption("class")) {
+            this.classProperties = this.createOwn(PropertyContainer:CLASSNAME);
+        }
         
         OStream err = this.rt().err();
         SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
@@ -107,19 +114,29 @@ Pool Bootstrap Assembler.
     }
     
     [] parse() {
+        PropertiesMarshaller pm = null;
         AnyIterator argIt = this.getArguments();
         while (argIt.hasNext()) {
             String name = argIt.next();
             if (name.compareCString("-") == 0) {
                 IStream in = this.openStdIn();
+                if (classProperties && !pm) {
+                    pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+                    pm.unmarshall(in, classProperties);
+                }
                 parser.parse(in, name, unit);
                 in.destroy();
             } else {
                 SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
                 if (!f) { status = ERRNO_IO; }
                 if (status == ERRNO_OK) {
-                    parser.parse(f.istream(), name, unit);
-                    f.destroy();
+                    IStream in = f.istream();
+                    if (classProperties && !pm) {
+                        pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+                        pm.unmarshall(in, classProperties);
+                    }
+                    parser.parse(in, name, unit);
+                    in.destroy();
                 }
             }
         }
@@ -134,8 +151,13 @@ Pool Bootstrap Assembler.
             
             out.printCString("[pool]").printNewline();
             out.printCString("version = ").printCString(version).printNewline();
-            if (this.hasOption("class")) {
+            if (classProperties) {
                 out.printCString("class = true").printNewline();
+                if (classProperties.hasCStringProperty("pool.name")) {
+                    out.printCString("name = ").print(classProperties.getCStringProperty("pool.name")).printNewline();
+                } else if (classProperties.hasCStringProperty("pool_source.unit")) {
+                    out.printCString("name = ").print(classProperties.getCStringProperty("pool_source.unit")).printNewline();
+                }
             }
             out.printCString("*/").printNewline();
         }

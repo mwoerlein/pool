@@ -6,14 +6,24 @@ version = 0.1.0
 namespace pool::command;
 
 use pool::storage::Mimetype;
+use pool::storage::PropertiesMarshaller;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::utils::PropertyContainer;
+use sys::store::StorageElementDesc;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
 class Store extends linux::Command {
 
+    PropertiesMarshaller pm;
+    
+    [] __init() {
+        this._initCommand();
+        pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+    }
+    
     [] configure() {
         this.setName("store")
             .setVersion("0.3.0")
@@ -26,10 +36,12 @@ Storage Bootstrap Builder.
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
+      -i --indexV2                  Write enhanced index information.
       -o <file> --output <file>     Place the store into <file>.
       -a <align> --align <align>    Ensure that storage size is a multiple of align.
 ">);
         this.registerOptionAlias('h', "help")
+            .registerOptionAlias('i', "indexV2")
             .registerOptionAlias('o', "output")
             .registerOptionAlias('a', "align")
         ;
@@ -50,16 +62,24 @@ Storage Bootstrap Builder.
             return -1;
         }
         
+        int indexV2 = this.hasOption("indexV2");
+        int elements = this.getArgumentsSize();
+        
         SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
         outfile.printCString("/*[meta]").printNewline();
         outfile.printCString("mimetype = ").printCString(Mimetype:TYPE_GRID_STORE).printNewline();
+        if (indexV2) {
+            outfile.printCString("[store]").printNewline();
+            outfile.printCString("indexVersion = 0.2.0").printNewline();
+            outfile.printCString("elements = ").printInt(elements).printNewline();
+        }
         outfile.printCString("*/").printNewline();
 
         int index = outfile.pos();
-        int i = this.getArgumentsSize() + 1; // index terminator entry
-        while (i--) {
-            outfile.printRawInt(0).printRawInt(0);
-        }
+        // prepare index
+        int indexSize = 2 * (elements + 1); // index terminator entry
+        if (indexV2) { indexSize = elements * StorageElementDesc:SIZEOF; }
+        while (indexSize--) { outfile.printRawInt(0); }
         
         {
             AnyIterator argIt = this.getArguments();
@@ -70,7 +90,33 @@ Storage Bootstrap Builder.
                 int size = infile.length();
 //                out.printCString("store ").print(name).printCString(" at ").printInt(start).printChar(':').printInt(size).printChar(' ').printInt(index).printNewline();
                 outfile.seek(index);
-                outfile.printRawInt(start).printRawInt(size);
+                if (indexV2) {
+                    PropertyContainer p = this.rt().createInstance(PropertyContainer:CLASSNAME);
+                    pm.unmarshall(infile.istream(), p);
+                    
+                    int nameHash = 0;
+                    if (p.hasCStringProperty("pool.name")) {
+                        nameHash = p.getCStringProperty("pool.name").hash();
+                    } else if (p.hasCStringProperty("pool_source.unit")) {
+                        nameHash = p.getCStringProperty("pool_source.unit").hash();
+                    }
+                    // TODO: extract classname from .pool file?
+                    
+                    outfile
+                        .printRawInt(/*start*/      start)
+                        .printRawInt(/*size*/       size)
+                        .printRawInt(/*headerSize*/ infile.pos())
+                        .printRawInt(/*mimeType*/   Mimetype:fromProperties(p))
+                        .printRawInt(/*nameHash*/   nameHash)
+                        .printRawInt(/*reserved*/   0)
+                        .printRawInt(/*reserved*/   0)
+                        .printRawInt(/*reserved*/   0)
+                    ;
+                    p.destroy();
+                    infile.seek(0);
+                } else {
+                    outfile.printRawInt(start).printRawInt(size);
+                }
                 index = outfile.pos();
                 outfile.seek(start);
                 outfile.print(infile);
