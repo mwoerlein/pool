@@ -29,16 +29,24 @@ class File extends SeekableIOStream {
     
     int fd;
     int offset;
+    int length;
     
     [int] _init(cstring filename, int mode, int offset) {
-        this.offset = offset;
         fd = SysCall:open(filename, mode);
         if (fd < 0) {
             this.rt().err().printCString("failed to open file: ").printCString(filename).printNewline();
             return -1;
         }
-        SysCall:seek(fd, offset, SysCall:SEEK_SET);
+        this._initFile(fd, offset, -1);
         return fd;
+    }
+    
+    [File] _initFile(int fd, int offset, int length) {
+        this.fd = fd;
+        this.offset = offset;
+        this.length = length;
+        SysCall:seek(fd, offset, SysCall:SEEK_SET);
+        return this;
     }
     
     [] __destruct() {
@@ -48,6 +56,9 @@ class File extends SeekableIOStream {
     }
     
     [int] isEmpty() {
+        if (length != -1) {
+            return SysCall:seek(fd, 0, SysCall:SEEK_CUR) - offset >= length;
+        }
         int p = SysCall:seek(fd, 0, SysCall:SEEK_CUR);
         int len = SysCall:seek(fd, 0, SysCall:SEEK_END);
         SysCall:seek(fd, p, SysCall:SEEK_SET);
@@ -55,6 +66,9 @@ class File extends SeekableIOStream {
     }
     
     [int] length() {
+        if (length != -1) {
+            return length;
+        }
         int p = SysCall:seek(fd, 0, SysCall:SEEK_CUR);
         int len = SysCall:seek(fd, 0, SysCall:SEEK_END);
         SysCall:seek(fd, p, SysCall:SEEK_SET);
@@ -82,6 +96,13 @@ class File extends SeekableIOStream {
     }
     
     [] seek(int pos) {
-        SysCall:seek(fd, pos + offset, SysCall:SEEK_SET);
+        int p = pos;
+        if (length != -1 && p > length) { p = length; }
+        SysCall:seek(fd, p + offset, SysCall:SEEK_SET);
+    }
+    
+    [SeekableIOStream] getView(int offset, int length) {
+        File view = this.createOwn(File:CLASSNAME);
+        return view._initFile(fd, this.offset+offset, length).iostream();
     }
 }

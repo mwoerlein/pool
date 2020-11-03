@@ -12,6 +12,10 @@ class SeekableIOStream extends OStream, IStream {
     abstract [int] pos();
     abstract [] seek(int pos);
     
+    abstract [SeekableIOStream] getView(int offset, int length);
+    
     [] rewind() { this.seek(0); }
 
+    // TODO: remove with implicit cast
+    [SeekableIOStream] iostream() { return this; }
 }

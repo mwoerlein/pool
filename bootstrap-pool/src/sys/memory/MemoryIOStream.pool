@@ -16,19 +16,20 @@ class MemoryIOStream extends SeekableIOStream {
     int _len;
     MemoryInfo _owned;
     
-    [] _init(int size) {
+    [MemoryIOStream] _init(int size) {
         _owned = this.rt().getAllocator().allocate(size);
-        this._initBuf(_owned.buf, _owned.len);
+        return this._initBuf(_owned.buf, _owned.len);
     }
     
-    [] _initMem(MemoryInfo mem) {
-        this._initBuf(mem.buf, mem.len);
+    [MemoryIOStream] _initMem(MemoryInfo mem) {
+        return this._initBuf(mem.buf, mem.len);
     }
     
-    [] _initBuf(int buf, int len) {
+    [MemoryIOStream] _initBuf(int buf, int len) {
         _buf = buf;
         _len = len;
         _pos = 0;
+        return this;
     }
     
     [] __destruct() {
@@ -78,5 +79,19 @@ class MemoryIOStream extends SeekableIOStream {
     
     [int] startAddr() {
         return _buf;
+    }
+
+    [SeekableIOStream] getView(int offset, int length) {
+        MemoryIOStream view = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+        
+        int nb = _buf + offset;
+        if (offset < 0) { nb = _buf; }
+        else if (offset > _len) { nb = _buf + _len; }
+        
+        int nl = length;
+        if (length < 0) { nl = 0; }
+        else if (nb + length > _buf + _len) { nl = _buf + _len - nb; }
+        
+        return view._initBuf(nb, nl).iostream();
     }
 }
