@@ -7,22 +7,47 @@ namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+
 use sys::core::String;
 use sys::stream::OStream;
 
 class ClassDeclNode extends Node {
 
-    String name;
+    String _name;
+    
+    NodeList _extends; // NodeList<TypeRefNode>
+    NodeList _consts; // NodeList<VariableInitInstNode>
+    NodeList _variables; // NodeList<VariableDeclNode>
+    NodeList _methods; // NodeList<MethodDeclNode>
 
     [] __init() {
-        name = this.createOwn(String:CLASSNAME);
+        _name = this.createOwn(String:CLASSNAME);
+        _extends = this.createOwn(NodeList:CLASSNAME);
+        _consts = this.createOwn(NodeList:CLASSNAME);
+        _variables = this.createOwn(NodeList:CLASSNAME);
+        _methods = this.createOwn(NodeList:CLASSNAME);
     }
     
-    [ClassDeclNode] setName(String name) { this.name.assignString(name); return this; }
+    [ClassDeclNode] setName(String name) { _name.assignString(name); return this; }
+    [String] getName() { return _name; }
+    
+    [ClassDeclNode] setExtends(NodeList exts) { _extends = this.own(exts); return this; }
+    [NodeList] getExtends() { return _extends; }
+    
+    [ClassDeclNode] addVariableInitInst(VariableInitInstNode varInitInst) { _consts.add(_consts.own(varInitInst)); return this; }
+    [NodeList] getConsts() { return _consts; }
+    
+    [ClassDeclNode] addVariableDecl(VariableDeclNode varDecl) { _variables.add(_variables.own(varDecl)); return this; }
+    [NodeList] getVariables() { return _variables; }
+    
+    [ClassDeclNode] addMethodDecl(MethodDeclNode methodDecl) { _methods.add(_methods.own(methodDecl)); return this; }
+    [NodeList] getMethods() { return _methods; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitClassDecl(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("class-<").print(name).printChar('>');
+        return stream.printCString("class-<").print(_name).printChar('>');
     }
 }

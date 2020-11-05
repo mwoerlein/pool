@@ -7,35 +7,34 @@ namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
 
-use sys::core::anycollection::AnyList;
-use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 
 class TranslationUnitNode extends Node {
 
-    NamespaceDeclNode ns;
-    AnyList uses; //NodeList<UseStatementNode>
-    AnyList classes; //NodeList<ClassDeclNode>
-//    AnyList structs; //NodeList<StructDeclNode>
+    NamespaceDeclNode _ns;
+    NodeList _uses; //NodeList<UseStatementNode>
+    NodeList _classes; //NodeList<ClassDeclNode>
+    NodeList _structs; //NodeList<StructDeclNode>
     
     [] __init() {
-        uses = this.createOwn(AnyList:CLASSNAME);
-        classes = this.createOwn(AnyList:CLASSNAME);
-//        structs = this.createOwn(AnyList:CLASSNAME);
+        _uses = this.createOwn(NodeList:CLASSNAME);
+        _classes = this.createOwn(NodeList:CLASSNAME);
+        _structs = this.createOwn(NodeList:CLASSNAME);
     }
     
-    [TranslationUnitNode] setNamespace(NamespaceDeclNode ns) { this.ns = ns; return this; }
-    [NamespaceDeclNode] getNamespace() { return this.ns; }
+    [TranslationUnitNode] setNamespace(NamespaceDeclNode ns) { _ns = ns; return this; }
+    [NamespaceDeclNode] getNamespace() { return _ns; }
     
-    [TranslationUnitNode] addUseStatement(UseStatementNode useStmt) { uses.add(uses.own(useStmt)); return this; }
-    [AnyIterator] uses() { return uses.iterator(); }
+    [TranslationUnitNode] addUseStatement(UseStatementNode useStmt) { _uses.add(_uses.own(useStmt)); return this; }
+    [NodeList] getUses() { return _uses; }
     
-    [TranslationUnitNode] addClassDecl(ClassDeclNode decl) { classes.add(classes.own(decl)); return this; }
-    [AnyIterator] classes() { return classes.iterator(); }
+    [TranslationUnitNode] addClassDecl(ClassDeclNode decl) { _classes.add(_classes.own(decl)); return this; }
+    [NodeList] getClasses() { return _classes; }
     
-//    [TranslationUnitNode] addStructDecl(StructDeclNode decl) { structs.add(structs.own(decl)); return this; }
-//    [AnyIterator] structs() { return structs.iterator(); }
+    [TranslationUnitNode] addStructDecl(StructDeclNode decl) { _structs.add(_structs.own(decl)); return this; }
+    [NodeList] getStructs() { return _structs; }
 
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitTranslationUnit(this); }

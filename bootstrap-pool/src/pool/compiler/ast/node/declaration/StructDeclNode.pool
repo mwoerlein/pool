@@ -1,0 +1,43 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::declaration;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class StructDeclNode extends Node {
+
+    String _name;
+    
+    NodeList _variables; // NodeList<VariableDeclNode>
+    NodeList _consts; // NodeList<VariableInitInstNode>
+
+    [] __init() {
+        _name = this.createOwn(String:CLASSNAME);
+        _consts = this.createOwn(NodeList:CLASSNAME);
+        _variables = this.createOwn(NodeList:CLASSNAME);
+    }
+    
+    [StructDeclNode] setName(String name) { _name.assignString(name); return this; }
+    [String] getName() { return _name; }
+    
+    [StructDeclNode] addVariableInitInst(VariableInitInstNode varInitInst) { _consts.add(_consts.own(varInitInst)); return this; }
+    [NodeList] getConsts() { return _consts; }
+    
+    [StructDeclNode] addVariableDecl(VariableDeclNode varDecl) { _variables.add(_variables.own(varDecl)); return this; }
+    [NodeList] getVariables() { return _variables; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitStructDecl(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("struct-<").print(_name).printChar('>');
+    }
+}

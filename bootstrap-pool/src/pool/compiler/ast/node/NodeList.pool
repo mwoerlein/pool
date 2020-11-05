@@ -1,0 +1,29 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+
+use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::OStream;
+
+class NodeList extends AnyList {
+
+    [int] acceptAll(Visitor visitor) {
+        int ret = true;
+        AnyIterator it = this.iterator();
+        while (it.hasNext()) {
+            Node node = this.rt().cast(Node:CLASSNAME, it.next());
+            if (!node.accept(visitor)) { ret = false; }
+        }
+        it.destroy();
+        return ret;
+    }
+
+}

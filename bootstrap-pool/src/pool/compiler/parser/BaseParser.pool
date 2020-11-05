@@ -6,10 +6,18 @@ version = 0.1.0
 namespace pool::compiler::parser;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::node::NodeList;
+
 use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
 
 use pool::generator::tokenizer::Token;
 
@@ -43,13 +51,10 @@ class BaseParser extends pool::generator::parser::Parser {
         return fqn;
     }
     
-    [ClassDeclNode] classDecl(Token name, __any__ extendList, __any__ body, Token first, Token last) {
-        ClassDeclNode node = this.rt().createInstance(ClassDeclNode:CLASSNAME);
-        node.setName(name.getValue());
-        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
-        return node;
-    }
+    [NodeList] nodeList() { return this.rt().createInstance(NodeList:CLASSNAME); }
+    [NodeList] addToNodeList(NodeList list, __any__ node) { if (node) { list.add(node); } return list; }
     
+    // declarations
     [NamespaceDeclNode] namespaceDecl(String fqn, Token first, Token last) {
         NamespaceDeclNode node = this.rt().createInstance(NamespaceDeclNode:CLASSNAME);
         node.setName(fqn);
@@ -64,5 +69,51 @@ class BaseParser extends pool::generator::parser::Parser {
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
         return node;
     }
-
+    
+    [ClassDeclNode] newClassDecl() { return this.rt().createInstance(ClassDeclNode:CLASSNAME); }
+    [ClassDeclNode] classDecl(ClassDeclNode node) { return node; }
+    [ClassDeclNode] finalizeClassDecl(ClassDeclNode node, Token name, Token first, Token last) {
+        node.setName(name.getValue());
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    [StructDeclNode] newStructDecl() { return this.rt().createInstance(StructDeclNode:CLASSNAME); }
+    [StructDeclNode] structDecl(StructDeclNode node) { return node; }
+    [StructDeclNode] finalizeStructDecl(StructDeclNode node, Token name, Token first, Token last) {
+        node.setName(name.getValue());
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    [MethodDeclNode] methodDecl(Token name) {
+        MethodDeclNode node = this.rt().createInstance(MethodDeclNode:CLASSNAME);
+        node.setName(name.getValue());
+        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    [VariableDeclNode] variableDecl(Token name) {
+        VariableDeclNode node = this.rt().createInstance(VariableDeclNode:CLASSNAME);
+        node.setName(name.getValue());
+        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    // instructions
+    [VariableInitInstNode] variableInit(VariableDeclNode decl, __any__ expr) {
+        VariableInitInstNode node = this.rt().createInstance(VariableInitInstNode:CLASSNAME);
+        node.setName(decl.getName());
+        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    // references
+    [ClassRefNode] classRef(String fqn) {
+        ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);
+        node.setName(fqn);
+        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
 }

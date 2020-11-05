@@ -7,12 +7,18 @@ namespace pool::compiler::ast::visitor;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
+
 use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
 
-use sys::core::anycollection::AnyIterator;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
+
 use sys::stream::OStream;
 
 class PrettyPrinter extends Visitor {
@@ -21,29 +27,40 @@ class PrettyPrinter extends Visitor {
         this.debugNode(node.node());
         
         node.getNamespace().accept(this.visitor());
-        {
-            AnyIterator it = node.uses();
-            while (it.hasNext()) {
-                UseStatementNode cd = it.next();
-                cd.accept(this.visitor());
-            }
-            it.destroy();
-        }
-        {
-            AnyIterator it = node.classes();
-            while (it.hasNext()) {
-                ClassDeclNode cd = it.next();
-                cd.accept(this.visitor());
-            }
-            it.destroy();
-        }
+        node.getUses().acceptAll(this.visitor());
+        node.getClasses().acceptAll(this.visitor());
+        node.getStructs().acceptAll(this.visitor());
         
         return true;
     }
 
-    [int] visitClassDecl(ClassDeclNode node) { return this.debugNode(node.node()); }
+    [int] visitClassDecl(ClassDeclNode node) {
+        this.debugNode(node.node());
+        
+        node.getExtends().acceptAll(this.visitor());
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        node.getMethods().acceptAll(this.visitor());
+        
+        return true;
+    }
+
+    [int] visitStructDecl(StructDeclNode node) {
+        this.debugNode(node.node());
+        
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        
+        return true;
+    }
+    
+    [int] visitMethodDecl(MethodDeclNode node) { return this.debugNode(node.node()); }
     [int] visitNamespaceDecl(NamespaceDeclNode node) { return this.debugNode(node.node()); }
     [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
+    [int] visitVariableDecl(VariableDeclNode node) { return this.debugNode(node.node()); }
+    
+    [int] visitVariableInitInst(VariableInitInstNode node) { return this.debugNode(node.node()); }
+    [int] visitClassRef(ClassRefNode node) { return this.debugNode(node.node()); }
     
     [int] debugNode(Node node) {
         node.debugToStream(this.rt().out()).printNewline();

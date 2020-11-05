@@ -3,14 +3,14 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::compiler::ast::node::declaration;
+namespace pool::compiler::ast::node::reference;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
 
-class NamespaceDeclNode extends Node {
+class ClassRefNode extends Node {
 
     String _name;
 
@@ -18,12 +18,12 @@ class NamespaceDeclNode extends Node {
         _name = this.createOwn(String:CLASSNAME);
     }
     
-    [NamespaceDeclNode] setName(String name) { _name.assignString(name); return this; }
+    [ClassRefNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
     
     // NODE
-    [int] accept(Visitor visitor) { return visitor.visitNamespaceDecl(this); }
+    [int] accept(Visitor visitor) { return visitor.visitClassRef(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("namespace-<").print(_name).printChar('>');
+        return stream.printCString("class-ref-<").print(_name).printChar('>');
     }
 }

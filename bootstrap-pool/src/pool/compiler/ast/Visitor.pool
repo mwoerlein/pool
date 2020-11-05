@@ -6,9 +6,15 @@ version = 0.1.0
 namespace pool::compiler::ast;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
 
 use sys::stream::OStream;
 
@@ -16,11 +22,16 @@ class Visitor extends sys::core::Object {
 
     [int] visit(Node node) { return node.accept(this); }
 
-    [int] visitTranslationUnit(TranslationUnitNode node) { return false; }
-    
     [int] visitClassDecl(ClassDeclNode node) { return false; }
+    [int] visitMethodDecl(MethodDeclNode node) { return false; }
     [int] visitNamespaceDecl(NamespaceDeclNode node) { return false; }
+    [int] visitStructDecl(StructDeclNode node) { return false; }
+    [int] visitTranslationUnit(TranslationUnitNode node) { return false; }
     [int] visitUseStatement(UseStatementNode node) { return false; }
+    [int] visitVariableDecl(VariableDeclNode node) { return false; }
+    
+    [int] visitVariableInitInst(VariableInitInstNode node) { return false; }
+    [int] visitClassRef(ClassRefNode node) { return false; }
     
     // TODO: remove with implicit cast
     [Visitor] visitor() { return this; }

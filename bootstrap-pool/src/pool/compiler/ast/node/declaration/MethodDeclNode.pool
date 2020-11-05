@@ -10,7 +10,7 @@ use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
 
-class NamespaceDeclNode extends Node {
+class MethodDeclNode extends Node {
 
     String _name;
 
@@ -18,12 +18,12 @@ class NamespaceDeclNode extends Node {
         _name = this.createOwn(String:CLASSNAME);
     }
     
-    [NamespaceDeclNode] setName(String name) { _name.assignString(name); return this; }
+    [MethodDeclNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
     
     // NODE
-    [int] accept(Visitor visitor) { return visitor.visitNamespaceDecl(this); }
+    [int] accept(Visitor visitor) { return visitor.visitMethodDecl(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("namespace-<").print(_name).printChar('>');
+        return stream.printCString("method-<").print(_name).printChar('>');
     }
 }

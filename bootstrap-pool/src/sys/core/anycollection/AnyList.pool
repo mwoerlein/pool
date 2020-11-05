@@ -105,6 +105,14 @@ class AnyList extends AnyCollection {
         return false;
     }
     
+    [] addAll(AnyList items) {
+        AnyIterator it = items.iterator();
+        while (it.hasNext()) {
+            this.add(it.next());
+        }
+        it.destroy();
+    }
+    
     [AnyIterator] iterator() {
         Runtime rt = this.rt();
         AnyListIterator it = rt.createInstance(AnyListIterator:CLASSNAME);
@@ -152,4 +160,7 @@ class AnyList extends AnyCollection {
         _size++;
         return true;
     }
+    
+    // TODO: remove with implicit cast
+    [AnyList] list() { return this; }
 }
