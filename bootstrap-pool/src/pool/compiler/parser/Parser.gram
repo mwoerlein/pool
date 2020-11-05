@@ -55,30 +55,30 @@ MLCOMMENT   := /\/\*([^\*]*\*+)([^\/\*][^\*]*\*+)*\//
 --- STRUCTURE ---
 -----------------
 
-translation_unit: namespace_decl                                                                                { $$ = null; }
-translation_unit: translation_unit use_stmt                                                                     { $$ = null; }
-translation_unit: translation_unit class_decl                                                                   { $$ = null; }
-translation_unit: translation_unit struct_decl                                                                  { $$ = null; }
+translation_unit: namespace_decl                                                                                { $$ = this.unit.setNamespace($1); }
+translation_unit: translation_unit use_stmt                                                                     { $$ = this.unit.addUseStatement($2); }
+translation_unit: translation_unit class_decl                                                                   { $$ = this.unit.addClassDecl($2); }
+translation_unit: translation_unit struct_decl                                                                  { $$ = this.unit; }
 
 STRING: SLSTRING                                                                                                { $$ = null; }
 STRING: MLSTRING                                                                                                { $$ = null; }
 
-FQN: ID                                                                                                         { $$ = null; }
-FQN: FQN '::' ID                                                                                                { $$ = null; }
+FQN: ID                                                                                                         { $$ = this.fqn($1); }
+FQN: FQN '::' ID                                                                                                { $$ = this.fqnAppend($1, $3); }
 
----namespace_decl: 'namespace' ID ';'                                                                              { $$ = null; }
-namespace_decl: 'namespace' FQN ';'                                                                             { $$ = null; }
+---namespace_decl: 'namespace' ID ';'                                                                              { $$ = this.namespaceDecl($2, $1, $3); }
+namespace_decl: 'namespace' FQN ';'                                                                             { $$ = this.namespaceDecl($2, $1, $3); }
 
-use_stmt: 'use' FQN ';'                                                                                         { $$ = null; }
-use_stmt: 'use' FQN 'as' ID ';'                                                                                 { $$ = null; }
+use_stmt: 'use' FQN ';'                                                                                         { $$ = this.useStatement($2, null, $1, $3); }
+use_stmt: 'use' FQN 'as' ID ';'                                                                                 { $$ = this.useStatement($2, $4, $1, $5); }
 
 struct_decl: 'struct' ID '{' struct_body_empty '}'                                                              { $$ = null; }
 struct_body_empty:                                                                                              { $$ = null; }
 struct_body_empty: struct_body_empty variable_decl ';'                                                          { $$ = null; }
 struct_body_empty: struct_body_empty 'global' variable_initializer_inst ';'                                     { $$ = null; }
 
-class_decl: 'class' ID '{' class_body_empty '}'                                                                 { $$ = null; }
-class_decl: 'class' ID 'extends' type_list '{' class_body_empty '}'                                             { $$ = null; }
+class_decl: 'class' ID '{' class_body_empty '}'                                                                 { $$ = this.classDecl($2, null, $4, $1, $5); }
+class_decl: 'class' ID 'extends' type_list '{' class_body_empty '}'                                             { $$ = this.classDecl($2, $4, $6, $1, $5); }
 class_body_empty:                                                                                               { $$ = null; }
 class_body_empty: class_body_empty method_decl                                                                  { $$ = null; }
 class_body_empty: class_body_empty variable_decl ';'                                                            { $$ = null; }

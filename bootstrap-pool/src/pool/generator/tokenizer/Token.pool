@@ -49,6 +49,10 @@ class Token extends Object {
         this.lastColumn = lastColumn;
         return this;
     }
+    [int] getFirstLine() { return firstLine; }
+    [int] getFirstColumn() { return firstColumn; }
+    [int] getLastLine() { return lastLine; }
+    [int] getLastColumn() { return lastColumn; }
     
     [OStream] printToStream(OStream stream) {
         return stream.print(value);

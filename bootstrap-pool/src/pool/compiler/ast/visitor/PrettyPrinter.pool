@@ -1,0 +1,52 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::visitor;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+
+use sys::core::anycollection::AnyIterator;
+use sys::stream::OStream;
+
+class PrettyPrinter extends Visitor {
+
+    [int] visitTranslationUnit(TranslationUnitNode node) {
+        this.debugNode(node.node());
+        
+        node.getNamespace().accept(this.visitor());
+        {
+            AnyIterator it = node.uses();
+            while (it.hasNext()) {
+                UseStatementNode cd = it.next();
+                cd.accept(this.visitor());
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = node.classes();
+            while (it.hasNext()) {
+                ClassDeclNode cd = it.next();
+                cd.accept(this.visitor());
+            }
+            it.destroy();
+        }
+        
+        return true;
+    }
+
+    [int] visitClassDecl(ClassDeclNode node) { return this.debugNode(node.node()); }
+    [int] visitNamespaceDecl(NamespaceDeclNode node) { return this.debugNode(node.node()); }
+    [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
+    
+    [int] debugNode(Node node) {
+        node.debugToStream(this.rt().out()).printNewline();
+        return true;
+    }
+}

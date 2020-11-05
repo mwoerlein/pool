@@ -1,0 +1,28 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::declaration;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use sys::core::String;
+use sys::stream::OStream;
+
+class ClassDeclNode extends Node {
+
+    String name;
+
+    [] __init() {
+        name = this.createOwn(String:CLASSNAME);
+    }
+    
+    [ClassDeclNode] setName(String name) { this.name.assignString(name); return this; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitClassDecl(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("class-<").print(name).printChar('>');
+    }
+}

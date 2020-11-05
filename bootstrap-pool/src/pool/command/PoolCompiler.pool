@@ -5,7 +5,10 @@ version = 0.1.0
 */
 namespace pool::command;
 
+use pool::compiler::ast::Node;
+use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::parser::Parser;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::stream::IStream;
@@ -55,23 +58,29 @@ Pool Bootstrap Assembler.
         
         
         OStream err = this.rt().err();
+        Node unit = null;
         {
             AnyIterator argIt = this.getArguments();
-            while (argIt.hasNext()) {
+            if (argIt.hasNext()) {
                 String name = argIt.next();
                 if (name.compareCString("-") == 0) {
                     IStream in = this.openStdIn();
-                    parser.parse(in, name);
+                    unit = parser.parse(in, name);
                     in.destroy();
                 } else {
                     SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
                     if (f) {
-                        parser.parse(f.istream(), name);
+                        unit = parser.parse(f.istream(), name);
                         f.destroy();
                     }
                 }
             }
             argIt.destroy();
+        }
+        if (unit) {
+            PrettyPrinter pp = this.rt().createInstance(PrettyPrinter:CLASSNAME);
+            pp.visit(unit);
+            pp.destroy();
         }
     }
     

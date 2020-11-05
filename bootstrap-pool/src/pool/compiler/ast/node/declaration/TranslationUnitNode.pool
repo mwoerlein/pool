@@ -1,0 +1,45 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::declaration;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+use sys::stream::OStream;
+
+class TranslationUnitNode extends Node {
+
+    NamespaceDeclNode ns;
+    AnyList uses; //NodeList<UseStatementNode>
+    AnyList classes; //NodeList<ClassDeclNode>
+//    AnyList structs; //NodeList<StructDeclNode>
+    
+    [] __init() {
+        uses = this.createOwn(AnyList:CLASSNAME);
+        classes = this.createOwn(AnyList:CLASSNAME);
+//        structs = this.createOwn(AnyList:CLASSNAME);
+    }
+    
+    [TranslationUnitNode] setNamespace(NamespaceDeclNode ns) { this.ns = ns; return this; }
+    [NamespaceDeclNode] getNamespace() { return this.ns; }
+    
+    [TranslationUnitNode] addUseStatement(UseStatementNode useStmt) { uses.add(uses.own(useStmt)); return this; }
+    [AnyIterator] uses() { return uses.iterator(); }
+    
+    [TranslationUnitNode] addClassDecl(ClassDeclNode decl) { classes.add(classes.own(decl)); return this; }
+    [AnyIterator] classes() { return classes.iterator(); }
+    
+//    [TranslationUnitNode] addStructDecl(StructDeclNode decl) { structs.add(structs.own(decl)); return this; }
+//    [AnyIterator] structs() { return structs.iterator(); }
+
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitTranslationUnit(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("unit-<").printCString("NAME").printChar('>');
+    }
+}

@@ -1,0 +1,27 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+
+use sys::stream::OStream;
+
+class Visitor extends sys::core::Object {
+
+    [int] visit(Node node) { return node.accept(this); }
+
+    [int] visitTranslationUnit(TranslationUnitNode node) { return false; }
+    
+    [int] visitClassDecl(ClassDeclNode node) { return false; }
+    [int] visitNamespaceDecl(NamespaceDeclNode node) { return false; }
+    [int] visitUseStatement(UseStatementNode node) { return false; }
+    
+    // TODO: remove with implicit cast
+    [Visitor] visitor() { return this; }
+}

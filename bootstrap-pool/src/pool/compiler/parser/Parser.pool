@@ -169,23 +169,23 @@ class Parser extends BaseParser {
 
     [__any__] __executeRule(int rule, ParseStack s) {
         __any__ result = null;
-        if (rule == 0) { result = null; }
-        else if (rule == 1) { result = null; }
-        else if (rule == 2) { result = null; }
-        else if (rule == 3) { result = null; }
+        if (rule == 0) { result = this.unit.setNamespace(s.at(0)); }
+        else if (rule == 1) { result = this.unit.addUseStatement(s.at(0)); }
+        else if (rule == 2) { result = this.unit.addClassDecl(s.at(0)); }
+        else if (rule == 3) { result = this.unit; }
         else if (rule == 4) { result = null; }
         else if (rule == 5) { result = null; }
-        else if (rule == 6) { result = null; }
-        else if (rule == 7) { result = null; }
-        else if (rule == 8) { result = null; }
-        else if (rule == 9) { result = null; }
-        else if (rule == 10) { result = null; }
+        else if (rule == 6) { result = this.fqn(s.at(0)); }
+        else if (rule == 7) { result = this.fqnAppend(s.at(2), s.at(0)); }
+        else if (rule == 8) { result = this.namespaceDecl(s.at(1), s.at(2), s.at(0)); }
+        else if (rule == 9) { result = this.useStatement(s.at(1), null, s.at(2), s.at(0)); }
+        else if (rule == 10) { result = this.useStatement(s.at(3), s.at(1), s.at(4), s.at(0)); }
         else if (rule == 11) { result = null; }
         else if (rule == 12) { result = null; }
         else if (rule == 13) { result = null; }
         else if (rule == 14) { result = null; }
-        else if (rule == 15) { result = null; }
-        else if (rule == 16) { result = null; }
+        else if (rule == 15) { result = this.classDecl(s.at(3), null, s.at(1), s.at(4), s.at(0)); }
+        else if (rule == 16) { result = this.classDecl(s.at(5), s.at(3), s.at(1), s.at(6), s.at(2)); }
         else if (rule == 17) { result = null; }
         else if (rule == 18) { result = null; }
         else if (rule == 19) { result = null; }

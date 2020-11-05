@@ -5,18 +5,64 @@ version = 0.1.0
 */
 namespace pool::compiler::parser;
 
+use pool::compiler::ast::Node;
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+
+use pool::generator::tokenizer::Token;
+
 use sys::core::String;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
 class BaseParser extends pool::generator::parser::Parser {
     
+    TranslationUnitNode unit;
+    
     [OStream] newError() { return this.rt().err(); }
     
-    [] parse(IStream input, String inputName) {
+    [Node] parse(IStream input, String inputName) {
+        TranslationUnitNode ret = unit = this.rt().createInstance(TranslationUnitNode:CLASSNAME);
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
         this._parse(in.init(input, inputName));
         in.destroy();
+        unit = null;
+        return ret.node();
+    }
+    
+    [String] fqn(Token id) { 
+        String fqn = this.createOwn(String:CLASSNAME);
+        fqn.assignString(id.getValue());
+        return fqn;
+    }
+    
+    [String] fqnAppend(String fqn, Token id) {
+        fqn.printChar(':').printChar(':').print(id.getValue());
+        return fqn;
+    }
+    
+    [ClassDeclNode] classDecl(Token name, __any__ extendList, __any__ body, Token first, Token last) {
+        ClassDeclNode node = this.rt().createInstance(ClassDeclNode:CLASSNAME);
+        node.setName(name.getValue());
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    [NamespaceDeclNode] namespaceDecl(String fqn, Token first, Token last) {
+        NamespaceDeclNode node = this.rt().createInstance(NamespaceDeclNode:CLASSNAME);
+        node.setName(fqn);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    [UseStatementNode] useStatement(String fqn, Token alias, Token first, Token last) {
+        UseStatementNode node = this.rt().createInstance(UseStatementNode:CLASSNAME);
+        node.setName(fqn);
+        if (alias) { node.setAlias(alias.getValue()); }
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
     }
 
 }
