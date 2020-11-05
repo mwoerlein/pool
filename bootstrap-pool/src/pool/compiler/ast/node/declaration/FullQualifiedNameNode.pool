@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::declaration;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use sys::core::String;
+use sys::stream::OStream;
+
+class FullQualifiedNameNode extends Node {
+
+    String _name;
+
+    [] __init() {
+        _name = this.createOwn(String:CLASSNAME);
+    }
+    
+    [FullQualifiedNameNode] setName(String name) { _name.assignString(name); return this; }
+    [FullQualifiedNameNode] appendName(String name) { _name.printChar(':').printChar(':').print(name); return this; }
+    [String] getName() { return _name; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return false; }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("full-qualified-name-<").print(_name).printChar('>');
+    }
+}

@@ -12,16 +12,15 @@ use sys::stream::OStream;
 
 class UseStatementNode extends Node {
 
-    String _name;
+    FullQualifiedNameNode _name;
     String _alias;
 
     [] __init() {
-        _name = this.createOwn(String:CLASSNAME);
         _alias = this.createOwn(String:CLASSNAME);
     }
     
-    [UseStatementNode] setName(String name) { _name.assignString(name); return this; }
-    [String] getName() { return _name; }
+    [UseStatementNode] setName(FullQualifiedNameNode name) { _name = this.own(name); return this; }
+    [FullQualifiedNameNode] getName() { return _name; }
     
     [UseStatementNode] setAlias(String alias) { _alias.assignString(alias); return this; }
     [String] getAlias() { return _alias; }
@@ -29,6 +28,6 @@ class UseStatementNode extends Node {
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitUseStatement(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("use-<").print(_name).printChar('>');
+        return stream.printCString("use-<").print(_name.getName()).printChar('>');
     }
 }

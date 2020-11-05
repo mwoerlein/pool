@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::reference;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class CStringRefNode extends TypeRefNode {
+    
+    // TYPE_REF_NODE
+    [CStringRefNode] asCStringRef() { return this; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitCStringRef(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("type-<cstring>");
+    }
+}

@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::reference;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class IntRefNode extends TypeRefNode {
+    
+    // TYPE_REF_NODE
+    [IntRefNode] asIntRef() { return this; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitIntRef(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("type-<int>");
+    }
+}

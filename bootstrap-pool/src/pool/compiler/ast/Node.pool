@@ -25,6 +25,16 @@ class Node extends sys::core::Object {
         this.lastColumn = lastColumn;
         return this;
     }
+    [Node] setFirstLocation(int firstLine, int firstColumn) {
+        this.firstLine = firstLine;
+        this.firstColumn = firstColumn;
+        return this;
+    }
+    [Node] setLastLocation(int lastLine, int lastColumn) {
+        this.lastLine = lastLine;
+        this.lastColumn = lastColumn;
+        return this;
+    }
     [int] getFirstLine() { return firstLine; }
     [int] getFirstColumn() { return firstColumn; }
     [int] getLastLine() { return lastLine; }

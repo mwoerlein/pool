@@ -9,6 +9,7 @@ use pool::compiler::ast::Node;
 use pool::compiler::ast::node::NodeList;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::FullQualifiedNameNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
@@ -17,7 +18,12 @@ use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
+
+use pool::compiler::ast::node::reference::AllRefNode;
+use pool::compiler::ast::node::reference::AnyRefNode;
 use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::IntRefNode;
 
 use pool::generator::tokenizer::Token;
 
@@ -40,14 +46,17 @@ class BaseParser extends pool::generator::parser::Parser {
         return ret.node();
     }
     
-    [String] fqn(Token id) { 
-        String fqn = this.createOwn(String:CLASSNAME);
-        fqn.assignString(id.getValue());
+    [FullQualifiedNameNode] fqn(Token id) { 
+        FullQualifiedNameNode fqn = this.createOwn(FullQualifiedNameNode:CLASSNAME);
+        fqn.setName(id.getValue());
+        fqn.setLocation(id.getFirstLine(), id.getFirstColumn(), id.getLastLine(), id.getLastColumn());
         return fqn;
     }
     
-    [String] fqnAppend(String fqn, Token id) {
-        fqn.printChar(':').printChar(':').print(id.getValue());
+    [FullQualifiedNameNode] fqnAppend(FullQualifiedNameNode fqn, Token id) {
+        fqn.appendName(id.getValue());
+        // TODO: validate continuity of fqn
+        fqn.setLastLocation(id.getLastLine(), id.getLastColumn());
         return fqn;
     }
     
@@ -55,14 +64,14 @@ class BaseParser extends pool::generator::parser::Parser {
     [NodeList] addToNodeList(NodeList list, __any__ node) { if (node) { list.add(node); } return list; }
     
     // declarations
-    [NamespaceDeclNode] namespaceDecl(String fqn, Token first, Token last) {
+    [NamespaceDeclNode] namespaceDecl(FullQualifiedNameNode fqn, Token first, Token last) {
         NamespaceDeclNode node = this.rt().createInstance(NamespaceDeclNode:CLASSNAME);
         node.setName(fqn);
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
         return node;
     }
     
-    [UseStatementNode] useStatement(String fqn, Token alias, Token first, Token last) {
+    [UseStatementNode] useStatement(FullQualifiedNameNode fqn, Token alias, Token first, Token last) {
         UseStatementNode node = this.rt().createInstance(UseStatementNode:CLASSNAME);
         node.setName(fqn);
         if (alias) { node.setAlias(alias.getValue()); }
@@ -109,10 +118,34 @@ class BaseParser extends pool::generator::parser::Parser {
     }
     
     // references
-    [ClassRefNode] classRef(String fqn) {
+    [AllRefNode] allRef(Token t) {
+        AllRefNode node = this.rt().createInstance(AllRefNode:CLASSNAME);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
+    [AnyRefNode] anyRef(Token t) {
+        AnyRefNode node = this.rt().createInstance(AnyRefNode:CLASSNAME);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
+    [ClassRefNode] classRef(FullQualifiedNameNode fqn) {
         ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);
         node.setName(fqn);
-        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        node.setLocation(fqn.getFirstLine(), fqn.getFirstColumn(), fqn.getLastLine(), fqn.getLastColumn());
+        return node;
+    }
+    
+    [CStringRefNode] cstringRef(Token t) {
+        CStringRefNode node = this.rt().createInstance(CStringRefNode:CLASSNAME);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
+    [IntRefNode] intRef(Token t) {
+        IntRefNode node = this.rt().createInstance(IntRefNode:CLASSNAME);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
         return node;
     }
     

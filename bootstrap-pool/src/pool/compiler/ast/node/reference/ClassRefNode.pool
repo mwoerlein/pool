@@ -5,25 +5,24 @@ version = 0.1.0
 */
 namespace pool::compiler::ast::node::reference;
 
-use pool::compiler::ast::Node;
+use pool::compiler::ast::node::declaration::FullQualifiedNameNode;
+
 use pool::compiler::ast::Visitor;
-use sys::core::String;
 use sys::stream::OStream;
 
-class ClassRefNode extends Node {
+class ClassRefNode extends TypeRefNode {
 
-    String _name;
+    FullQualifiedNameNode _name;
 
-    [] __init() {
-        _name = this.createOwn(String:CLASSNAME);
-    }
+    [ClassRefNode] setName(FullQualifiedNameNode name) { _name = this.own(name); return this; }
+    [FullQualifiedNameNode] getName() { return _name; }
     
-    [ClassRefNode] setName(String name) { _name.assignString(name); return this; }
-    [String] getName() { return _name; }
+    // TYPE_REF_NODE
+    [ClassRefNode] asClassRef() { return this; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitClassRef(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("class-ref-<").print(_name).printChar('>');
+        return stream.printCString("type-<").print(_name.getName()).printChar('>');
     }
 }

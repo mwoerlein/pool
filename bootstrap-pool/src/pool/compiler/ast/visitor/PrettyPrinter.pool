@@ -17,12 +17,18 @@ use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
+
+use pool::compiler::ast::node::reference::AllRefNode;
+use pool::compiler::ast::node::reference::AnyRefNode;
 use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::IntRefNode;
 
 use sys::stream::OStream;
 
 class PrettyPrinter extends Visitor {
 
+    // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
         this.debugNode(node.node());
         
@@ -59,8 +65,15 @@ class PrettyPrinter extends Visitor {
     [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
     [int] visitVariableDecl(VariableDeclNode node) { return this.debugNode(node.node()); }
     
+    // instructions
     [int] visitVariableInitInst(VariableInitInstNode node) { return this.debugNode(node.node()); }
+    
+    // references
+    [int] visitAllRef(AllRefNode node) { return this.debugNode(node.node()); }
+    [int] visitAnyRef(AnyRefNode node) { return this.debugNode(node.node()); }
     [int] visitClassRef(ClassRefNode node) { return this.debugNode(node.node()); }
+    [int] visitCStringRef(CStringRefNode node) { return this.debugNode(node.node()); }
+    [int] visitIntRef(IntRefNode node) { return this.debugNode(node.node()); }
     
     [int] debugNode(Node node) {
         node.debugToStream(this.rt().out()).printNewline();
