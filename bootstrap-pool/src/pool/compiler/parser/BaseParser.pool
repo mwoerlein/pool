@@ -66,8 +66,11 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [NodeMap] nodeMap() { return this.rt().createInstance(NodeMap:CLASSNAME); }
     [NodeMap] addToNodeMap(NodeMap map, Token key, __any__ node) {
-        // TODO clone key
-        if (node) { map.set(map.own(key.getValue()), map.own(node)); }
+        if (node) {
+            String k = map.createOwn(String:CLASSNAME);
+            k.assignString(key.getValue());
+            map.set(k, map.own(node));
+        }
         return map;
     }
     
@@ -80,7 +83,21 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [StringNode] mlString(Token t) { 
         StringNode node = this.createOwn(StringNode:CLASSNAME);
-        node.setValue(t.getValue()); //TODO: remove first and last line;
+        String v = node.getValue();
+        {
+            IStream in = t.getValue().toIStream();
+            // skip first line
+            while (!in.isEmpty() && (in.readChar() != '\n')) {}
+            int lines = t.getLastLine() - t.getFirstLine() - 1;
+            while (lines > 0 && !in.isEmpty()) {
+                int c = in.readChar();
+                if (c == '\n') { lines--; }
+                if (lines > 0) {
+                    v.printChar(c);
+                }
+            }
+            in.destroy();
+        }
         node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
         return node;
     }
@@ -93,9 +110,13 @@ class BaseParser extends pool::generator::parser::Parser {
     }
     
     [FullQualifiedNameNode] fqnAppend(FullQualifiedNameNode fqn, Token id) {
+        int fqnLine = fqn.getLastLine(); 
+        int fqnEnd = fqn.getLastColumn(); 
         fqn.appendName(id.getValue());
-        // TODO: validate continuity of fqn
         fqn.setLastLocation(id.getLastLine(), id.getLastColumn());
+        if ((fqnLine != id.getFirstLine()) || (fqnEnd + 3 != id.getFirstColumn())) {
+            fqn.debugToStream(this.newError().printCString("non-consecutive full qualified name: ")).printNewline();
+        }
         return fqn;
     }
     
@@ -191,6 +212,8 @@ class BaseParser extends pool::generator::parser::Parser {
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), init.getLastLine(), init.getLastColumn());
         return node;
     }
+    
+    [VariableInitInstNode] markVarInitGlobal(VariableInitInstNode node) { return node.setGlobal(); }
 
     [InlinePasmInstNode] inlinePasm(StringNode pasm, Token first, Token last) {
         InlinePasmInstNode node = this.rt().createInstance(InlinePasmInstNode:CLASSNAME);

@@ -50,7 +50,7 @@ use_stmt: 'use' fqn 'as' ID ';'                                                 
 struct_decl: 'struct' ID '{' struct_body_empty '}'                                                              { $$ = this.finalizeStructDecl($4, $2, $1, $5); }
 struct_body_empty:                                                                                              { $$ = this.newStructDecl(); }
 struct_body_empty: struct_body_empty variable_decl ';'                                                          { $$ = this.structDecl($1).addVariableDecl($2); }
-struct_body_empty: struct_body_empty 'global' variable_initializer_inst ';'                                     { $$ = this.structDecl($1).addVariableInitInst($3); /*TODO: global*/}
+struct_body_empty: struct_body_empty 'global' variable_initializer_inst ';'                                     { $$ = this.structDecl($1).addVariableInitInst(this.markVarInitGlobal($3)); }
 
 class_decl: 'class' ID '{' class_body_empty '}'                                                                 { $$ = this.finalizeClassDecl($4, $2, $1, $5); }
 class_decl: 'class' ID 'extends' type_list '{' class_body_empty '}'                                             { $$ = this.finalizeClassDecl($6, $2, $1, $5).setExtends($4); }
@@ -58,7 +58,7 @@ class_body_empty:                                                               
 class_body_empty: class_body_empty method_decl                                                                  { $$ = this.classDecl($1).addMethodDecl($2); }
 class_body_empty: class_body_empty variable_decl ';'                                                            { $$ = this.classDecl($1).addVariableDecl($2); }
 class_body_empty: class_body_empty variable_initializer_inst ';'                                                { $$ = this.classDecl($1).addVariableInitInst($2); }
-class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = this.classDecl($1).addVariableInitInst($3);  /*TODO: global*/}
+class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = this.classDecl($1).addVariableInitInst(this.markVarInitGlobal($3)); }
 
 type: fqn                                                                                                       { $$ = this.classRef($1).typeRef(); }
 type: '__all__'                                                                                                 { $$ = this.allRef($1).typeRef(); }
