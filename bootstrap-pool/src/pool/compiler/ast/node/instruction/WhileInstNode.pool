@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::instruction;
+
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use sys::stream::OStream;
+
+class WhileInstNode extends InstructionNode {
+
+    ExpressionNode _condition;
+    BlockInstNode _block;
+    int _postTest;
+
+    [WhileInstNode] setCondition(ExpressionNode cond) { _condition = this.own(cond); return this; }
+    [ExpressionNode] getCondition() { return _condition; }
+    
+    [WhileInstNode] setBlock(BlockInstNode block) { _block = this.own(block); return this; }
+    [BlockInstNode] getBlock() { return _block; }
+    
+    [WhileInstNode] setPostTest() { _postTest = true; return this; }
+    [int] isPostTest() { return _postTest; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitWhileInst(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("while-<").print(_condition).printChar('>');
+    }
+}

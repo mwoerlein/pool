@@ -1,0 +1,24 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::instruction;
+
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+use sys::stream::OStream;
+
+class ReturnInstNode extends InstructionNode {
+
+    NodeList _values; //NodeList<ExpressionNode>
+    
+    [ReturnInstNode] setValues(NodeList values) { _values = this.own(values); return this; }
+    [NodeList] getValues() { return _values; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitReturnInst(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("return");
+    }
+}

@@ -17,7 +17,12 @@ use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
 use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
 use pool::compiler::ast::node::reference::AnyRefNode;
@@ -85,8 +90,27 @@ class PrettyPrinter extends Visitor {
     [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
     
     // instructions
-    [int] visitBlockInst(BlockInstNode node) { return this.debugNode(node.node()); }
+    [int] visitBlockInst(BlockInstNode node) {
+        this.debugNode(node.node());
+        node.getInstructions().acceptAll(this.visitor());
+        return true;
+    }
+    [int] visitExpressionInst(ExpressionInstNode node) { return this.debugNode(node.node()); }
+    [int] visitIfInst(IfInstNode node) {
+        this.debugNode(node.node());
+        node.getTrueBlock().accept(this.visitor());
+        BlockInstNode b = node.getFalseBlock();
+        if (b) { b.accept(this.visitor()); }
+        return true;
+    }
+    [int] visitInlinePasmInst(InlinePasmInstNode node) { return this.debugNode(node.node()); }
+    [int] visitReturnInst(ReturnInstNode node) { return this.debugNode(node.node()); }
     [int] visitVariableInitInst(VariableInitInstNode node) { return this.debugNode(node.node()); }
+    [int] visitWhileInst(WhileInstNode node) {
+        this.debugNode(node.node());
+        node.getBlock().accept(this.visitor());
+        return true;
+    }
     
     // references
     [int] visitAllRef(AllRefNode node) { return this.debugNode(node.node()); }

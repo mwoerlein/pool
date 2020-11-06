@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::instruction;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use sys::core::String;
+use sys::stream::OStream;
+
+class InstructionNode extends Node {
+
+    // TODO: remove with implicit cast
+    [InstructionNode] instruction() { return this; }
+}

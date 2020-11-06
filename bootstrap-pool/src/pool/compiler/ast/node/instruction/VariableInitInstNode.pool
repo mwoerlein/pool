@@ -5,26 +5,47 @@ version = 0.1.0
 */
 namespace pool::compiler::ast::node::instruction;
 
-use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
-use sys::core::String;
+use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
 use sys::stream::OStream;
 
-class VariableInitInstNode extends Node {
+class VariableInitInstNode extends InstructionNode {
 
-    // TODO
-    String _name;
+    NodeList _variables; //NodeList<VariableDeclNode>
+    ExpressionNode _initializer;
+    int _final;
+    int _global;
 
-    [] __init() {
-        _name = this.createOwn(String:CLASSNAME);
-    }
+    [VariableInitInstNode] setVariables(NodeList variables) { _variables = this.own(variables); return this; }
+    [NodeList] getVariables() { return _variables; }
     
-    [VariableInitInstNode] setName(String name) { _name.assignString(name); return this; }
-    [String] getName() { return _name; }
+    [VariableInitInstNode] setInitializer(ExpressionNode expr) { _initializer = this.own(expr); return this; }
+    [ExpressionNode] getInitializer() { return _initializer; }
+    
+    [VariableInitInstNode] setFinal() { _final = true; return this; }
+    [int] isFinal() { return _final; }
+    
+    [VariableInitInstNode] setGlobal() { _global = true; return this; }
+    [int] isGlobal() { return _global; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitVariableInitInst(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("variable-init-<").print(_name).printChar('>');
+        stream.printCString("variable-init-<");
+        {
+            sys::core::anycollection::AnyIterator it = _variables.iterator();
+            if (it.hasNext()) {
+                VariableDeclNode d = it.next();
+                stream.print(d.getName());
+            } 
+            while (it.hasNext()) {
+                VariableDeclNode d = it.next();
+                stream.printChar(',').print(d.getName());
+            }
+            it.destroy();
+        }
+        return stream.printChar('>');
     }
 }

@@ -7,8 +7,10 @@ namespace pool::compiler::parser;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::node::NodeMap;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::StringNode;
 use pool::compiler::ast::node::declaration::FullQualifiedNameNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
@@ -17,8 +19,16 @@ use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
+use pool::compiler::ast::node::expression::ExpressionNode;
+
 use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::InstructionNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
 use pool::compiler::ast::node::reference::AnyRefNode;
@@ -48,6 +58,33 @@ class BaseParser extends pool::generator::parser::Parser {
         return ret.node();
     }
     
+    [NodeList] nodeList() { return this.rt().createInstance(NodeList:CLASSNAME); }
+    [NodeList] addToNodeList(NodeList list, __any__ node) {
+        if (node) { list.add(list.own(node)); }
+        return list;
+    }
+    
+    [NodeMap] nodeMap() { return this.rt().createInstance(NodeMap:CLASSNAME); }
+    [NodeMap] addToNodeMap(NodeMap map, Token key, __any__ node) {
+        // TODO clone key
+        if (node) { map.set(map.own(key.getValue()), map.own(node)); }
+        return map;
+    }
+    
+    [StringNode] slString(Token t) { 
+        StringNode node = this.createOwn(StringNode:CLASSNAME);
+        t.getValue().unescapeToStream(node.getValue().ostream());
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
+    [StringNode] mlString(Token t) { 
+        StringNode node = this.createOwn(StringNode:CLASSNAME);
+        node.setValue(t.getValue()); //TODO: remove first and last line;
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
     [FullQualifiedNameNode] fqn(Token id) { 
         FullQualifiedNameNode fqn = this.createOwn(FullQualifiedNameNode:CLASSNAME);
         fqn.setName(id.getValue());
@@ -61,9 +98,6 @@ class BaseParser extends pool::generator::parser::Parser {
         fqn.setLastLocation(id.getLastLine(), id.getLastColumn());
         return fqn;
     }
-    
-    [NodeList] nodeList() { return this.rt().createInstance(NodeList:CLASSNAME); }
-    [NodeList] addToNodeList(NodeList list, __any__ node) { if (node) { list.add(node); } return list; }
     
     // declarations
     [NamespaceDeclNode] namespaceDecl(FullQualifiedNameNode fqn, Token first, Token last) {
@@ -111,14 +145,77 @@ class BaseParser extends pool::generator::parser::Parser {
         return node;
     }
     
-    // instructions
-    [BlockInstNode] blockInst() { return this.rt().createInstance(BlockInstNode:CLASSNAME); }
-    [BlockInstNode] addInstToBlock(BlockInstNode block, __any__ inst) { return block; }
+    // expressions
+    [ExpressionNode] expression() { return this.rt().createInstance(ExpressionNode:CLASSNAME); }
     
-    [VariableInitInstNode] variableInit(VariableDeclNode decl, __any__ expr) {
+    // instructions
+    [InstructionNode] asInst(__any__ node) { return this.rt().cast(InstructionNode:CLASSNAME, node); }
+    
+    [BlockInstNode] blockInst() { return this.rt().createInstance(BlockInstNode:CLASSNAME); }
+    [BlockInstNode] addInstToBlock(BlockInstNode block, InstructionNode inst) { return block.addInstruction(inst); }
+    
+    [ExpressionInstNode] expressionInst(ExpressionNode expr) {
+        ExpressionInstNode node = this.rt().createInstance(ExpressionInstNode:CLASSNAME);
+        node.setExpression(expr);
+        node.setLocation(expr.getFirstLine(), expr.getFirstColumn(), expr.getLastLine(), expr.getLastColumn());
+        return node;
+    }
+    
+    [ReturnInstNode] returnInst(Token first, Token last) {
+        ReturnInstNode node = this.rt().createInstance(ReturnInstNode:CLASSNAME);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+    
+    [ReturnInstNode] returnExprInst(Token first, ExpressionNode value) {
+        ReturnInstNode node = this.rt().createInstance(ReturnInstNode:CLASSNAME);
+        NodeList values = this.nodeList();
+        values.add(value);
+        node.setValues(values);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), value.getLastLine(), value.getLastColumn());
+        return node;
+    }
+    
+    [VariableInitInstNode] variableInit(VariableDeclNode var, ExpressionNode init) {
         VariableInitInstNode node = this.rt().createInstance(VariableInitInstNode:CLASSNAME);
-        node.setName(decl.getName());
-        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        NodeList vars = this.nodeList();
+        vars.add(var);
+        node.setVariables(vars).setInitializer(init);
+        node.setLocation(var.getFirstLine(), var.getFirstColumn(), init.getLastLine(), init.getLastColumn());
+        return node;
+    }
+    
+    [VariableInitInstNode] multiVariableInit(NodeList vars, ExpressionNode init, Token first) {
+        VariableInitInstNode node = this.rt().createInstance(VariableInitInstNode:CLASSNAME);
+        node.setVariables(vars).setInitializer(init);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), init.getLastLine(), init.getLastColumn());
+        return node;
+    }
+
+    [InlinePasmInstNode] inlinePasm(StringNode pasm, Token first, Token last) {
+        InlinePasmInstNode node = this.rt().createInstance(InlinePasmInstNode:CLASSNAME);
+        node.setPasm(pasm);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+
+    [WhileInstNode] whileInst(ExpressionNode cond, BlockInstNode block  , Token first, Token last) {
+        WhileInstNode node = this.rt().createInstance(WhileInstNode:CLASSNAME);
+        node.setCondition(cond).setBlock(block);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+
+    [IfInstNode] ifInst(Token first, Token last) {
+        IfInstNode node = this.rt().createInstance(IfInstNode:CLASSNAME);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        return node;
+    }
+
+    [IfInstNode] ifCascadeInst(Token first, IfInstNode cascade) {
+        IfInstNode node = this.rt().createInstance(IfInstNode:CLASSNAME);
+        node.setFalseBlock(this.blockInst().addInstruction(cascade.instruction()));
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), cascade.getLastLine(), cascade.getLastColumn());
         return node;
     }
     

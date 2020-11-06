@@ -1,0 +1,24 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::instruction;
+
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use sys::stream::OStream;
+
+class ExpressionInstNode extends InstructionNode {
+
+    ExpressionNode _expression;
+    
+    [ExpressionInstNode] setExpression(ExpressionNode expression) { _expression = this.own(expression); return this; }
+    [ExpressionNode] getExpression() { return _expression; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitExpressionInst(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("expr-<").print(_expression).printChar('>');
+    }
+}

@@ -5,26 +5,24 @@ version = 0.1.0
 */
 namespace pool::compiler::ast::node::instruction;
 
-use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
-use sys::core::String;
+use pool::compiler::ast::node::NodeList;
 use sys::stream::OStream;
 
-class BlockInstNode extends Node {
+class BlockInstNode extends InstructionNode {
 
-    // TODO
-    String _name;
+    NodeList _instructions; //NodeList<InstructionNode>
 
     [] __init() {
-        _name = this.createOwn(String:CLASSNAME);
+        _instructions = this.createOwn(NodeList:CLASSNAME);
     }
     
-    [BlockInstNode] setName(String name) { _name.assignString(name); return this; }
-    [String] getName() { return _name; }
+    [BlockInstNode] addInstruction(InstructionNode inst) { _instructions.add(inst); return this; }
+    [NodeList] getInstructions() { return _instructions; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitBlockInst(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("block-<").print(_name).printChar('>');
+        return stream.printCString("block");
     }
 }

@@ -1,0 +1,34 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::instruction;
+
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeMap;
+use pool::compiler::ast::node::declaration::StringNode;
+use sys::core::String;
+use sys::stream::OStream;
+
+class InlinePasmInstNode extends InstructionNode {
+
+    StringNode _pasm;
+    NodeMap _in; //NodeMap<ExpressionNode>
+    NodeMap _out; //NodeMap<ExpressionNode>
+    
+    [InlinePasmInstNode] setPasm(StringNode pasm) { _pasm = this.own(pasm); return this; }
+    [StringNode] getPasm() { return _pasm; }
+
+    [InlinePasmInstNode] setIn(NodeMap in) { _in = this.own(in); return this; }
+    [NodeMap] getIn() { return _in; }
+
+    [InlinePasmInstNode] setOut(NodeMap out) { _out = this.own(out); return this; }
+    [NodeMap] getOut() { return _out; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitInlinePasmInst(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("inline-pasm");
+    }
+}

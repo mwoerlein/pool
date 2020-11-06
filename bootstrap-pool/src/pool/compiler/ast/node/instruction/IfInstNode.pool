@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::instruction;
+
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use sys::stream::OStream;
+
+class IfInstNode extends InstructionNode {
+
+    ExpressionNode _condition;
+    BlockInstNode _trueBlock;
+    BlockInstNode _falseBlock;
+    
+    [IfInstNode] setCondition(ExpressionNode cond) { _condition = this.own(cond); return this; }
+    [ExpressionNode] getCondition() { return _condition; }
+    
+    [IfInstNode] setTrueBlock(BlockInstNode block) { _trueBlock = this.own(block); return this; }
+    [BlockInstNode] getTrueBlock() { return _trueBlock; }
+    
+    [IfInstNode] setFalseBlock(BlockInstNode block) { _falseBlock = this.own(block); return this; }
+    [BlockInstNode] getFalseBlock() { return _falseBlock; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitIfInst(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("if-<").print(_condition).printChar('>');
+    }
+}

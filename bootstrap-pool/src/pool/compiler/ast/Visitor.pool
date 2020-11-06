@@ -14,7 +14,12 @@ use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
 use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
 use pool::compiler::ast::node::reference::AnyRefNode;
@@ -39,7 +44,12 @@ class Visitor extends sys::core::Object {
     
     // instructions
     [int] visitBlockInst(BlockInstNode node) { return false; }
+    [int] visitExpressionInst(ExpressionInstNode node) { return false; }
+    [int] visitIfInst(IfInstNode node) { return false; }
+    [int] visitInlinePasmInst(InlinePasmInstNode node) { return false; }
+    [int] visitReturnInst(ReturnInstNode node) { return false; }
     [int] visitVariableInitInst(VariableInitInstNode node) { return false; }
+    [int] visitWhileInst(WhileInstNode node) { return false; }
     
     // references
     [int] visitAllRef(AllRefNode node) { return false; }
