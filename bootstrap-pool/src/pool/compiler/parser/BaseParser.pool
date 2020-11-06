@@ -10,7 +10,6 @@ use pool::compiler::ast::node::NodeList;
 use pool::compiler::ast::node::NodeMap;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
-use pool::compiler::ast::node::declaration::StringNode;
 use pool::compiler::ast::node::declaration::FullQualifiedNameNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
@@ -19,7 +18,20 @@ use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
+use pool::compiler::ast::node::expression::ArithAssignmentExprNode;
+use pool::compiler::ast::node::expression::ArithBinaryExprNode;
+use pool::compiler::ast::node::expression::ArithUnaryExprNode;
+use pool::compiler::ast::node::expression::AssignmentExprNode;
+use pool::compiler::ast::node::expression::ConstCStringExprNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
 use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
+use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
+use pool::compiler::ast::node::expression::MethodCallExprNode;
+use pool::compiler::ast::node::expression::NullExprNode;
+use pool::compiler::ast::node::expression::SignExprNode;
+use pool::compiler::ast::node::expression::ThisExprNode;
+use pool::compiler::ast::node::expression::VariableExprNode;
 
 use pool::compiler::ast::node::instruction::BlockInstNode;
 use pool::compiler::ast::node::instruction::ExpressionInstNode;
@@ -72,34 +84,6 @@ class BaseParser extends pool::generator::parser::Parser {
             map.set(k, map.own(node));
         }
         return map;
-    }
-    
-    [StringNode] slString(Token t) { 
-        StringNode node = this.createOwn(StringNode:CLASSNAME);
-        t.getValue().unescapeToStream(node.getValue().ostream());
-        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
-        return node;
-    }
-    
-    [StringNode] mlString(Token t) { 
-        StringNode node = this.createOwn(StringNode:CLASSNAME);
-        String v = node.getValue();
-        {
-            IStream in = t.getValue().toIStream();
-            // skip first line
-            while (!in.isEmpty() && (in.readChar() != '\n')) {}
-            int lines = t.getLastLine() - t.getFirstLine() - 1;
-            while (lines > 0 && !in.isEmpty()) {
-                int c = in.readChar();
-                if (c == '\n') { lines--; }
-                if (lines > 0) {
-                    v.printChar(c);
-                }
-            }
-            in.destroy();
-        }
-        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
-        return node;
     }
     
     [FullQualifiedNameNode] fqn(Token id) { 
@@ -167,7 +151,150 @@ class BaseParser extends pool::generator::parser::Parser {
     }
     
     // expressions
-    [ExpressionNode] expression() { return this.rt().createInstance(ExpressionNode:CLASSNAME); }
+    [ExpressionNode] asExpr(__any__ node) { return this.rt().cast(ExpressionNode:CLASSNAME, node); }
+    
+    [ConstCStringExprNode] slStringExpr(Token t) { 
+        ConstCStringExprNode node = this.createOwn(ConstCStringExprNode:CLASSNAME);
+        t.getValue().unescapeToStream(node.getValue().ostream());
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
+    [ConstCStringExprNode] mlStringExpr(Token t) { 
+        ConstCStringExprNode node = this.createOwn(ConstCStringExprNode:CLASSNAME);
+        String v = node.getValue();
+        {
+            IStream in = t.getValue().toIStream();
+            // skip first line
+            while (!in.isEmpty() && (in.readChar() != '\n')) {}
+            int lines = t.getLastLine() - t.getFirstLine() - 1;
+            while (lines > 0 && !in.isEmpty()) {
+                int c = in.readChar();
+                if (c == '\n') { lines--; }
+                if (lines > 0) {
+                    v.printChar(c);
+                }
+            }
+            in.destroy();
+        }
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+    
+    [ConstIntExprNode] intExpr(Token t, Token sign) { 
+        ConstIntExprNode node = this.createOwn(ConstIntExprNode:CLASSNAME);
+        
+        String v = t.getValue();
+        int val = 0;
+        if (v.cequals("true")) { val = 1; }
+        else if (v.cequals("false")) { val = 0; }
+        else if (v.at(0) == '\'') {
+            String tmp = this.rt().createInstance(String:CLASSNAME);
+            v._unescapeToStream(tmp.ostream(), '\'', '\\');
+            if (tmp.length() == 1) {
+                val = tmp.at(0);
+            } else {
+                this.newError().printCString("invalid character sequence: ").print(v).printNewline();
+            }
+        } else { val = v.toInt(); }
+        
+        node.setValue(val);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        if (sign) {
+            if (sign.getValue().at(0) == '-') {
+                node.setValue(-val);
+            }
+            node.setFirstLocation(sign.getFirstLine(), sign.getFirstColumn());
+        }
+        return node;
+    }
+
+    [ThisExprNode] thisExpr(Token t) { 
+        ThisExprNode node = this.createOwn(ThisExprNode:CLASSNAME);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+
+    [NullExprNode] nullExpr(Token t) { 
+        NullExprNode node = this.createOwn(NullExprNode:CLASSNAME);
+        node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
+        return node;
+    }
+
+    [VariableExprNode] variableExpr(Token name, ExpressionNode context) { 
+        VariableExprNode node = this.createOwn(VariableExprNode:CLASSNAME);
+        node.setName(name.getValue());
+        node.setLocation(name.getFirstLine(), name.getFirstColumn(), name.getLastLine(), name.getLastColumn());
+        if (context) {
+            node.setContext(context);
+            node.setFirstLocation(context.getFirstLine(), context.getFirstColumn());
+        }
+        return node;
+    }
+
+    [MethodCallExprNode] methodCallExpr(Token name, ExpressionNode context, Token last) { 
+        MethodCallExprNode node = this.createOwn(MethodCallExprNode:CLASSNAME);
+        node.setName(name.getValue());
+        node.setLocation(name.getFirstLine(), name.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        if (context) {
+            node.setContext(context);
+            node.setFirstLocation(context.getFirstLine(), context.getFirstColumn());
+        }
+        return node;
+    }
+    
+    [SignExprNode] signExpr(ExpressionNode expr, Token first) {
+        SignExprNode node = this.createOwn(SignExprNode:CLASSNAME);
+        node.setExpression(expr);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), expr.getLastLine(), expr.getLastColumn());
+        return node;
+    }
+    
+    [ArithBinaryExprNode] arithBinaryExpr(ExpressionNode left, ExpressionNode right) {
+        ArithBinaryExprNode node = this.createOwn(ArithBinaryExprNode:CLASSNAME);
+        node.setLeft(left).setRight(right);
+        node.setLocation(left.getFirstLine(), left.getFirstColumn(), right.getLastLine(), right.getLastColumn());
+        return node;
+    }
+    
+    [ArithUnaryExprNode] arithUnaryExpr(VariableExprNode var, Token first, Token last) {
+        ArithUnaryExprNode node = this.createOwn(ArithUnaryExprNode:CLASSNAME);
+        node.setVariable(var);
+        node.setLocation(var.getFirstLine(), var.getFirstColumn(), var.getLastLine(), var.getLastColumn());
+        if (first) { node.setFirstLocation(first.getFirstLine(), first.getFirstColumn()); }
+        if (last) { node.setFirstLocation(last.getLastLine(), last.getLastColumn()); }
+        return node;
+    }
+    
+    [LogicalBinaryExprNode] logicalBinaryExpr(ExpressionNode left, ExpressionNode right) {
+        LogicalBinaryExprNode node = this.createOwn(LogicalBinaryExprNode:CLASSNAME);
+        node.setLeft(left).setRight(right);
+        node.setLocation(left.getFirstLine(), left.getFirstColumn(), right.getLastLine(), right.getLastColumn());
+        return node;
+    }
+    
+    [LogicalUnaryExprNode] logicalUnaryExpr(ExpressionNode expr, Token first, Token last) {
+        LogicalUnaryExprNode node = this.createOwn(LogicalUnaryExprNode:CLASSNAME);
+        node.setExpression(expr);
+        node.setLocation(expr.getFirstLine(), expr.getFirstColumn(), expr.getLastLine(), expr.getLastColumn());
+        if (first) { node.setFirstLocation(first.getFirstLine(), first.getFirstColumn()); }
+        if (last) { node.setFirstLocation(last.getLastLine(), last.getLastColumn()); }
+        return node;
+    }
+    
+    [AssignmentExprNode] assignmentExpr(VariableExprNode var, ExpressionNode value) {
+        AssignmentExprNode node = this.createOwn(AssignmentExprNode:CLASSNAME);
+        node.setVariable(var).setValue(value);  
+        node.setLocation(var.getFirstLine(), var.getFirstColumn(), value.getLastLine(), value.getLastColumn());
+        return node;
+    }
+    
+    [ArithAssignmentExprNode] arithAssignmentExpr(VariableExprNode var, ExpressionNode value) {
+        ArithAssignmentExprNode node = this.createOwn(ArithAssignmentExprNode:CLASSNAME);
+        node.setVariable(var).setValue(value);
+        node.setLocation(var.getFirstLine(), var.getFirstColumn(), value.getLastLine(), value.getLastColumn());
+        return node;
+    }
     
     // instructions
     [InstructionNode] asInst(__any__ node) { return this.rt().cast(InstructionNode:CLASSNAME, node); }
@@ -215,7 +342,7 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [VariableInitInstNode] markVarInitGlobal(VariableInitInstNode node) { return node.setGlobal(); }
 
-    [InlinePasmInstNode] inlinePasm(StringNode pasm, Token first, Token last) {
+    [InlinePasmInstNode] inlinePasm(ConstCStringExprNode pasm, Token first, Token last) {
         InlinePasmInstNode node = this.rt().createInstance(InlinePasmInstNode:CLASSNAME);
         node.setPasm(pasm);
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());

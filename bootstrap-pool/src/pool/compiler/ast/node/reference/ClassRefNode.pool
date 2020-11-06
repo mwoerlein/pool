@@ -6,11 +6,12 @@ version = 0.1.0
 namespace pool::compiler::ast::node::reference;
 
 use pool::compiler::ast::node::declaration::FullQualifiedNameNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
 
 use pool::compiler::ast::Visitor;
 use sys::stream::OStream;
 
-class ClassRefNode extends TypeRefNode {
+class ClassRefNode extends TypeRefNode, ExpressionNode {
 
     FullQualifiedNameNode _name;
 

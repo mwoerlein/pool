@@ -3,14 +3,13 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::compiler::ast::node::declaration;
+namespace pool::compiler::ast::node::expression;
 
-use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
 
-class StringNode extends Node {
+class ConstCStringExprNode extends ExpressionNode {
 
     String _value;
 
@@ -18,12 +17,12 @@ class StringNode extends Node {
         _value = this.createOwn(String:CLASSNAME);
     }
     
-    [StringNode] setValue(String value) { _value.assignString(value); return this; }
+    [ConstCStringExprNode] setValue(String value) { _value.assignString(value); return this; }
     [String] getValue() { return _value; }
     
     // NODE
-    [int] accept(Visitor visitor) { return false; }
+    [int] accept(Visitor visitor) { return visitor.visitConstCStringExpr(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("string-<").print(_value).printChar('>');
+        return _value.escapeToStream(stream.printCString("const-<")).printChar('>');
     }
 }

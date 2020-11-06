@@ -1,0 +1,37 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+use sys::core::String;
+use sys::stream::OStream;
+
+class MethodCallExprNode extends ExpressionNode {
+
+    String _name;
+    NodeList _parameters; //NodeList<ExpressionNode>
+    ExpressionNode _context;
+
+    [] __init() {
+        _name = this.createOwn(String:CLASSNAME);
+    }
+    
+    [MethodCallExprNode] setName(String name) { _name.assignString(name); return this; }
+    [String] getName() { return _name; }
+    
+    [MethodCallExprNode] setParameters(NodeList parameters) { _parameters = this.own(parameters); return this; }
+    [NodeList] getParameters() { return _parameters; }
+    
+    [MethodCallExprNode] setContext(ExpressionNode context) { _context = this.own(context); return this; }
+    [ExpressionNode] getContext() { return _context; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitMethodCallExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("method-call-<").print(_name).printChar('>');
+    }
+}

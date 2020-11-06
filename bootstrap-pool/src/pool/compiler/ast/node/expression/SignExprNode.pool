@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class SignExprNode extends ExpressionNode {
+
+    int _sign;
+    ExpressionNode _expression;
+
+    [SignExprNode] setPlus() { _sign = ExpressionNode:SIGN_PLUS; return this; }
+    [SignExprNode] setMinus() { _sign = ExpressionNode:SIGN_MINUS; return this; }
+    [int] isPlus() { return _sign == ExpressionNode:SIGN_PLUS; }
+    [int] isMinus() { return _sign == ExpressionNode:SIGN_MINUS; }
+    
+    [SignExprNode] setExpression(ExpressionNode expression) { _expression = this.own(expression); return this; }
+    [ExpressionNode] getExpression() { return _expression; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitSignExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        stream.printCString("sign-<");
+        if (this.isPlus()) { stream.printChar('+').print(_expression); }
+        else if (this.isMinus()) { stream.printChar('-').print(_expression); }
+        return stream.printChar('>');
+    }
+}

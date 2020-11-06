@@ -1,0 +1,45 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class ArithBinaryExprNode extends ExpressionNode {
+
+    int _op;
+    ExpressionNode _left;
+    ExpressionNode _right;
+
+    [ArithBinaryExprNode] setAdd() { _op = ExpressionNode:OP_ADD; return this; }
+    [ArithBinaryExprNode] setSub() { _op = ExpressionNode:OP_SUB; return this; }
+    [ArithBinaryExprNode] setMul() { _op = ExpressionNode:OP_MUL; return this; }
+    [ArithBinaryExprNode] setDiv() { _op = ExpressionNode:OP_DIV; return this; }
+    [ArithBinaryExprNode] setMod() { _op = ExpressionNode:OP_MOD; return this; }
+    [int] isAdd() { return _op == ExpressionNode:OP_ADD; }
+    [int] isSub() { return _op == ExpressionNode:OP_SUB; }
+    [int] isMul() { return _op == ExpressionNode:OP_MUL; }
+    [int] isDiv() { return _op == ExpressionNode:OP_DIV; }
+    [int] isMod() { return _op == ExpressionNode:OP_MOD; }
+    
+    [ArithBinaryExprNode] setLeft(ExpressionNode left) { _left = this.own(left); return this; }
+    [ExpressionNode] getLeft() { return _left; }
+    
+    [ArithBinaryExprNode] setRight(ExpressionNode right) { _right = this.own(right); return this; }
+    [ExpressionNode] getRight() { return _right; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitArithBinaryExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        stream.printCString("arith-binary-<");
+        if (this.isAdd()) { stream.printChar('+'); }
+        else if (this.isSub()) { stream.printChar('-'); }
+        else if (this.isMul()) { stream.printChar('*'); }
+        else if (this.isDiv()) { stream.printChar('/'); }
+        else if (this.isMod()) { stream.printChar('%'); }
+        return stream.printChar('>');
+    }
+}

@@ -10,7 +10,7 @@ WSP         := /[ \t]*/
 ID          := /[a-zA-Z_][a-zA-Z0-9_]*/
 ---FQN         := /[a-zA-Z_][a-zA-Z0-9_]*(::[a-zA-Z_][a-zA-Z0-9_]*)+/
 
-NUMBER      := /(0|true|false|0[bB][01]+|0[0-7]+|[1-9][0-9]*|0[xX][0-9a-fA-F]+|'([^\\\n\r']|\\[^\n\r\t])')/
+NUMBER      := /(0|true|false|0[bB][01]+|0[0-7]+|[1-9][0-9]*|0[xX][0-9a-fA-F]+|'([^\\\n\r']|\\[^\n\r\t])*')/
 SLSTRING    := /"([^\\\n\r"]|\\[^\n\r\t])*"/
 MLSTRING    := /<"[ \t]*(\r?\n|\r)[ \t]*(([^"]|"[^>])*(\r?\n|\r)[ \t]*)*">/
 COMMENT     := /(\/\/|#)[^\n\r]*/
@@ -35,9 +35,6 @@ translation_unit: namespace_decl                                                
 translation_unit: translation_unit use_stmt                                                                     { $$ = this.unit.addUseStatement($2); }
 translation_unit: translation_unit class_decl                                                                   { $$ = this.unit.addClassDecl($2); }
 translation_unit: translation_unit struct_decl                                                                  { $$ = this.unit.addStructDecl($2); }
-
-string: SLSTRING                                                                                                { $$ = this.slString($1); }
-string: MLSTRING                                                                                                { $$ = this.mlString($1); }
 
 fqn: ID                                                                                                         { $$ = this.fqn($1); }
 fqn: fqn '::' ID                                                                                                { $$ = this.fqnAppend($1, $3); }
@@ -86,11 +83,11 @@ method_decl: 'abstract' '[' type_list_empty ']' ID '(' variable_decl_list_empty 
 --- EXPRESSIONS ---
 -------------------
 
-expression: value_expr                                                                                          { $$ = this.expression(); }
-expression: variable_expr                                                                                       { $$ = this.expression(); }
-expression: method_call_expr                                                                                    { $$ = this.expression(); }
-expression: arithmetic_expr                                                                                     { $$ = this.expression(); }
-expression: logical_expr                                                                                        { $$ = this.expression(); }
+expression: value_expr                                                                                          { $$ = this.asExpr($1); }
+expression: variable_expr                                                                                       { $$ = this.asExpr($1); }
+expression: method_call_expr                                                                                    { $$ = this.asExpr($1); }
+expression: arithmetic_expr                                                                                     { $$ = this.asExpr($1); }
+expression: logical_expr                                                                                        { $$ = this.asExpr($1); }
 expression: '(' expression ')'                                                                                  { $$ = $2; }
 
 expression_list: expression                                                                                     { $$ = this.addToNodeList(this.nodeList(), $1); }
@@ -103,47 +100,50 @@ expression_map: expression_map ',' SLSTRING ':' expression                      
 expression_map_empty:                                                                                           { $$ = this.nodeMap(); }
 expression_map_empty: expression_map                                                                            { $$ = $1; }
 
-value_expr: NUMBER                                                                                              { $$ = null; }
-value_expr: '+' NUMBER                          @SIGN_PREC                                                      { $$ = null; }
-value_expr: '-' NUMBER                          @SIGN_PREC                                                      { $$ = null; }
-value_expr: string                                                                                              { $$ = null; }
-value_expr: 'this'                                                                                              { $$ = null; }
-value_expr: 'null'                                                                                              { $$ = null; }
+string_expr: SLSTRING                                                                                           { $$ = this.slStringExpr($1); }
+string_expr: MLSTRING                                                                                           { $$ = this.mlStringExpr($1); }
 
-variable_expr: ID                                                                                               { $$ = null; }
-variable_expr: expression '.' ID                                                                                { $$ = null; }
-variable_expr: fqn ':' ID                                                                                       { $$ = null; }
+value_expr: NUMBER                                                                                              { $$ = this.intExpr($1, null); }
+value_expr: '+' NUMBER                          @SIGN_PREC                                                      { $$ = this.intExpr($2, $1); }
+value_expr: '-' NUMBER                          @SIGN_PREC                                                      { $$ = this.intExpr($2, $1); }
+value_expr: string_expr                                                                                         { $$ = $1; }
+value_expr: 'this'                                                                                              { $$ = this.thisExpr($1); }
+value_expr: 'null'                                                                                              { $$ = this.nullExpr($1); }
 
-method_call_expr: expression '.' ID '(' expression_list_empty ')'                                               { $$ = this.expression(); }
-method_call_expr: fqn ':' ID '(' expression_list_empty ')'                                                      { $$ = this.expression(); }
+variable_expr: ID                                                                                               { $$ = this.variableExpr($1, null); }
+variable_expr: expression '.' ID                                                                                { $$ = this.variableExpr($3, $1); }
+variable_expr: fqn ':' ID                                                                                       { $$ = this.variableExpr($3, this.classRef($1).expression()); }
 
-arithmetic_expr: expression '+' expression                                                                      { $$ = null; }
-arithmetic_expr: expression '-' expression                                                                      { $$ = null; }
-arithmetic_expr: expression '*' expression                                                                      { $$ = null; }
-arithmetic_expr: expression '/' expression                                                                      { $$ = null; }
-arithmetic_expr: expression '%' expression                                                                      { $$ = null; }
-arithmetic_expr: '+' expression                 @SIGN_PREC                                                      { $$ = null; }
-arithmetic_expr: '-' expression                 @SIGN_PREC                                                      { $$ = null; }
-arithmetic_expr: '++' variable_expr             @UNARY_PRE_PREC                                                 { $$ = null; }
-arithmetic_expr: '--' variable_expr             @UNARY_PRE_PREC                                                 { $$ = null; }
-arithmetic_expr: variable_expr '++'             @UNARY_POST_PREC                                                { $$ = null; }
-arithmetic_expr: variable_expr '--'             @UNARY_POST_PREC                                                { $$ = null; }
-arithmetic_expr: variable_expr '=' expression                                                                   { $$ = null; }
-arithmetic_expr: variable_expr '+=' expression                                                                  { $$ = null; }
-arithmetic_expr: variable_expr '-=' expression                                                                  { $$ = null; }
-arithmetic_expr: variable_expr '*=' expression                                                                  { $$ = null; }
-arithmetic_expr: variable_expr '/=' expression                                                                  { $$ = null; }
-arithmetic_expr: variable_expr '%=' expression                                                                  { $$ = null; }
+method_call_expr: expression '.' ID '(' expression_list_empty ')'                                               { $$ = this.methodCallExpr($3, $1, $6).setParameters($5); }
+method_call_expr: fqn ':' ID '(' expression_list_empty ')'                                                      { $$ = this.methodCallExpr($3, this.classRef($1).expression(), $6).setParameters($5); }
 
-logical_expr: expression '&&' expression                                                                        { $$ = null; }
-logical_expr: expression '||' expression                                                                        { $$ = null; }
-logical_expr: '!' expression                                                                                    { $$ = null; }
-logical_expr: expression '==' expression                                                                        { $$ = null; }
-logical_expr: expression '!=' expression                                                                        { $$ = null; }
-logical_expr: expression '<' expression                                                                         { $$ = null; }
-logical_expr: expression '<=' expression                                                                        { $$ = null; }
-logical_expr: expression '>' expression                                                                         { $$ = null; }
-logical_expr: expression '>=' expression                                                                        { $$ = null; }
+arithmetic_expr: expression '+' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setAdd(); }
+arithmetic_expr: expression '-' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setSub(); }
+arithmetic_expr: expression '*' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setMul(); }
+arithmetic_expr: expression '/' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setDiv(); }
+arithmetic_expr: expression '%' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setMod(); }
+arithmetic_expr: '+' expression                 @SIGN_PREC                                                      { $$ = this.signExpr($2, $1).setPlus(); }
+arithmetic_expr: '-' expression                 @SIGN_PREC                                                      { $$ = this.signExpr($2, $1).setMinus(); }
+arithmetic_expr: '++' variable_expr             @UNARY_PRE_PREC                                                 { $$ = this.arithUnaryExpr($2, $1, null).setPreInc(); }
+arithmetic_expr: '--' variable_expr             @UNARY_PRE_PREC                                                 { $$ = this.arithUnaryExpr($2, $1, null).setPreDec(); }
+arithmetic_expr: variable_expr '++'             @UNARY_POST_PREC                                                { $$ = this.arithUnaryExpr($1, null, $2).setPostInc(); }
+arithmetic_expr: variable_expr '--'             @UNARY_POST_PREC                                                { $$ = this.arithUnaryExpr($1, null, $2).setPostDec(); }
+arithmetic_expr: variable_expr '=' expression                                                                   { $$ = this.assignmentExpr($1, $3); }
+arithmetic_expr: variable_expr '+=' expression                                                                  { $$ = this.arithAssignmentExpr($1, $3).setAdd(); }
+arithmetic_expr: variable_expr '-=' expression                                                                  { $$ = this.arithAssignmentExpr($1, $3).setSub(); }
+arithmetic_expr: variable_expr '*=' expression                                                                  { $$ = this.arithAssignmentExpr($1, $3).setMul(); }
+arithmetic_expr: variable_expr '/=' expression                                                                  { $$ = this.arithAssignmentExpr($1, $3).setDiv(); }
+arithmetic_expr: variable_expr '%=' expression                                                                  { $$ = this.arithAssignmentExpr($1, $3).setMod(); }
+
+logical_expr: '!' expression                                                                                    { $$ = this.logicalUnaryExpr($2, $1, null).setNot(); }
+logical_expr: expression '&&' expression                                                                        { $$ = this.logicalBinaryExpr($1, $3).setAnd(); }
+logical_expr: expression '||' expression                                                                        { $$ = this.logicalBinaryExpr($1, $3).setOr(); }
+logical_expr: expression '==' expression                                                                        { $$ = this.logicalBinaryExpr($1, $3).setEq(); }
+logical_expr: expression '!=' expression                                                                        { $$ = this.logicalBinaryExpr($1, $3).setNeq(); }
+logical_expr: expression '<' expression                                                                         { $$ = this.logicalBinaryExpr($1, $3).setLt(); }
+logical_expr: expression '<=' expression                                                                        { $$ = this.logicalBinaryExpr($1, $3).setLe(); }
+logical_expr: expression '>' expression                                                                         { $$ = this.logicalBinaryExpr($1, $3).setGt(); }
+logical_expr: expression '>=' expression                                                                        { $$ = this.logicalBinaryExpr($1, $3).setGe(); }
 
 --------------------
 --- INSTRUCTIONS ---
@@ -169,9 +169,9 @@ variable_initializer_inst: variable_decl ':=' expression                        
 variable_initializer_inst: '[' variable_decl_list ']' '=' method_call_expr                                      { $$ = this.multiVariableInit($2, $5, $1); }
 variable_initializer_inst: '[' variable_decl_list ']' ':=' method_call_expr                                     { $$ = this.multiVariableInit($2, $5, $1).setFinal(); }
 
-inline_pasm_inst: '__pasm__' '(' string ')'                                                                     { $$ = this.inlinePasm($3, $1, $4); }
-inline_pasm_inst: '__pasm__' '(' string ',' '{' expression_map_empty '}' ')'                                    { $$ = this.inlinePasm($3, $1, $8).setIn($6); }
-inline_pasm_inst: '__pasm__' '(' string ',' '{' expression_map_empty '}' ',' '{' expression_map_empty '}' ')'   { $$ = this.inlinePasm($3, $1, $12).setIn($6).setOut($10); }
+inline_pasm_inst: '__pasm__' '(' string_expr ')'                                                                     { $$ = this.inlinePasm($3, $1, $4); }
+inline_pasm_inst: '__pasm__' '(' string_expr ',' '{' expression_map_empty '}' ')'                                    { $$ = this.inlinePasm($3, $1, $8).setIn($6); }
+inline_pasm_inst: '__pasm__' '(' string_expr ',' '{' expression_map_empty '}' ',' '{' expression_map_empty '}' ')'   { $$ = this.inlinePasm($3, $1, $12).setIn($6).setOut($10); }
 
 loop_inst: 'while' '(' expression ')' '{' instruction_block '}'                                                 { $$ = this.whileInst($3, $6, $1, $7); }
 loop_inst: 'do' '{' instruction_block '}' 'while' '(' expression ')' ';'                                        { $$ = this.whileInst($7, $3, $1, $8).setPostTest(); }

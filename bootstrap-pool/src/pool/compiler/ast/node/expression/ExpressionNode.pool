@@ -12,12 +12,30 @@ use sys::stream::OStream;
 
 class ExpressionNode extends Node {
 
-    // TODO
-    // NODE
-    [int] accept(Visitor visitor) { return false; }
-    [OStream] printDebugName(OStream stream) {
-        return stream.printCString("expression");
-    }
+    int SIGN_PLUS       := 0x01;
+    int SIGN_MINUS      := 0x02;
+    
+    int OP_ADD          := 0x11;
+    int OP_SUB          := 0x12;
+    int OP_MUL          := 0x13;
+    int OP_DIV          := 0x14;
+    int OP_MOD          := 0x15;
+    
+    int OP_AND          := 0x21;
+    int OP_OR           := 0x22;
+    int OP_EQ           := 0x23;
+    int OP_NEQ          := 0x24;
+    int OP_LT           := 0x25;
+    int OP_LE           := 0x26;
+    int OP_GT           := 0x27;
+    int OP_GE           := 0x28;
+    
+    int UNARY_PRE_INC   := 0x31;
+    int UNARY_PRE_DEC   := 0x32;
+    int UNARY_POST_INC  := 0x33;
+    int UNARY_POST_DEC  := 0x34;
+    
+    int UNARY_NOT       := 0x41;
 
     // TODO: remove with implicit cast
     [ExpressionNode] expression() { return this; }

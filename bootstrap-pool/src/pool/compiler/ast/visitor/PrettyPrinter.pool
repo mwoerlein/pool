@@ -16,6 +16,20 @@ use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
+use pool::compiler::ast::node::expression::ArithAssignmentExprNode;
+use pool::compiler::ast::node::expression::ArithBinaryExprNode;
+use pool::compiler::ast::node::expression::ArithUnaryExprNode;
+use pool::compiler::ast::node::expression::AssignmentExprNode;
+use pool::compiler::ast::node::expression::ConstCStringExprNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
+use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
+use pool::compiler::ast::node::expression::MethodCallExprNode;
+use pool::compiler::ast::node::expression::NullExprNode;
+use pool::compiler::ast::node::expression::SignExprNode;
+use pool::compiler::ast::node::expression::ThisExprNode;
+use pool::compiler::ast::node::expression::VariableExprNode;
+
 use pool::compiler::ast::node::instruction::BlockInstNode;
 use pool::compiler::ast::node::instruction::ExpressionInstNode;
 use pool::compiler::ast::node::instruction::IfInstNode;
@@ -88,6 +102,21 @@ class PrettyPrinter extends Visitor {
 
     [int] visitNamespaceDecl(NamespaceDeclNode node) { return this.debugNode(node.node()); }
     [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
+    
+    // expressions
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) { return this.debugNode(node.node()); }
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) { return this.debugNode(node.node()); }
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) { return this.debugNode(node.node()); }
+    [int] visitAssignmentExpr(AssignmentExprNode node) { return this.debugNode(node.node()); }
+    [int] visitConstCStringExpr(ConstCStringExprNode node) { return this.debugNode(node.node()); }
+    [int] visitConstIntExpr(ConstIntExprNode node) { return this.debugNode(node.node()); }
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) { return this.debugNode(node.node()); }
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) { return this.debugNode(node.node()); }
+    [int] visitMethodCallExpr(MethodCallExprNode node) { return this.debugNode(node.node()); }
+    [int] visitNullExpr(NullExprNode node) { return this.debugNode(node.node()); }
+    [int] visitSignExpr(SignExprNode node) { return this.debugNode(node.node()); }
+    [int] visitThisExpr(ThisExprNode node) { return this.debugNode(node.node()); }
+    [int] visitVariableExpr(VariableExprNode node) { return this.debugNode(node.node()); }
     
     // instructions
     [int] visitBlockInst(BlockInstNode node) {

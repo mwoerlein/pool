@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class NullExprNode extends ExpressionNode {
+
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitNullExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("null");
+    }
+}

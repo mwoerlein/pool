@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class ConstIntExprNode extends ExpressionNode {
+
+    int _value;
+
+    [ConstIntExprNode] setValue(int value) { _value = value; return this; }
+    [int] getValue() { return _value; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitConstIntExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("const-<").printInt(_value).printChar('>');
+    }
+}

@@ -1,0 +1,29 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class LogicalUnaryExprNode extends ExpressionNode {
+
+    int _op;
+    ExpressionNode _expression;
+
+    [LogicalUnaryExprNode] setNot() { _op = ExpressionNode:UNARY_NOT; return this; }
+    [int] isNot() { return _op == ExpressionNode:UNARY_NOT; }
+    
+    [LogicalUnaryExprNode] setExpression(ExpressionNode expression) { _expression = this.own(expression); return this; }
+    [ExpressionNode] getExpression() { return _expression; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitLogicalUnaryExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        stream.printCString("logical-unary-<");
+        if (this.isNot()) { stream.printCString("NOT-").print(_expression); }
+        return stream.printChar('>');
+    }
+}

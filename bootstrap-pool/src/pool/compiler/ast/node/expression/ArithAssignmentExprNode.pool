@@ -1,0 +1,39 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class ArithAssignmentExprNode extends ExpressionNode {
+
+    int _op;
+    VariableExprNode _variable;
+    ExpressionNode _value;
+
+    [ArithAssignmentExprNode] setAdd() { _op = ExpressionNode:OP_ADD; return this; }
+    [ArithAssignmentExprNode] setSub() { _op = ExpressionNode:OP_SUB; return this; }
+    [ArithAssignmentExprNode] setMul() { _op = ExpressionNode:OP_MUL; return this; }
+    [ArithAssignmentExprNode] setDiv() { _op = ExpressionNode:OP_DIV; return this; }
+    [ArithAssignmentExprNode] setMod() { _op = ExpressionNode:OP_MOD; return this; }
+    [int] isAdd() { return _op == ExpressionNode:OP_ADD; }
+    [int] isSub() { return _op == ExpressionNode:OP_SUB; }
+    [int] isMul() { return _op == ExpressionNode:OP_MUL; }
+    [int] isDiv() { return _op == ExpressionNode:OP_DIV; }
+    [int] isMod() { return _op == ExpressionNode:OP_MOD; }
+    
+    [ArithAssignmentExprNode] setVariable(VariableExprNode variable) { _variable = this.own(variable); return this; }
+    [VariableExprNode] getVariable() { return _variable; }
+    
+    [ArithAssignmentExprNode] setValue(ExpressionNode value) { _value = this.own(value); return this; }
+    [ExpressionNode] getValue() { return _value; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitArithAssignmentExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("arith-assign-<").print(_variable).printChar('>');
+    }
+}

@@ -1,0 +1,54 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class LogicalBinaryExprNode extends ExpressionNode {
+
+    int _op;
+    ExpressionNode _left;
+    ExpressionNode _right;
+
+    [LogicalBinaryExprNode] setAnd() { _op = ExpressionNode:OP_AND; return this; }
+    [LogicalBinaryExprNode] setOr() { _op = ExpressionNode:OP_OR; return this; }
+    [LogicalBinaryExprNode] setEq() { _op = ExpressionNode:OP_EQ; return this; }
+    [LogicalBinaryExprNode] setNeq() { _op = ExpressionNode:OP_NEQ; return this; }
+    [LogicalBinaryExprNode] setLt() { _op = ExpressionNode:OP_LT; return this; }
+    [LogicalBinaryExprNode] setLe() { _op = ExpressionNode:OP_LE; return this; }
+    [LogicalBinaryExprNode] setGt() { _op = ExpressionNode:OP_GT; return this; }
+    [LogicalBinaryExprNode] setGe() { _op = ExpressionNode:OP_GE; return this; }
+    [int] isAnd() { return _op == ExpressionNode:OP_AND; }
+    [int] isOr() { return _op == ExpressionNode:OP_OR; }
+    [int] isEq() { return _op == ExpressionNode:OP_EQ; }
+    [int] isNeq() { return _op == ExpressionNode:OP_NEQ; }
+    [int] isLt() { return _op == ExpressionNode:OP_LT; }
+    [int] isLe() { return _op == ExpressionNode:OP_LE; }
+    [int] isGt() { return _op == ExpressionNode:OP_GT; }
+    [int] isGe() { return _op == ExpressionNode:OP_GE; }
+    
+    [LogicalBinaryExprNode] setLeft(ExpressionNode left) { _left = this.own(left); return this; }
+    [ExpressionNode] getLeft() { return _left; }
+    
+    [LogicalBinaryExprNode] setRight(ExpressionNode right) { _right = this.own(right); return this; }
+    [ExpressionNode] getRight() { return _right; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitLogicalBinaryExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        stream.printCString("logical-binary-<");
+        if (this.isAnd()) { stream.printCString("AND"); }
+        else if (this.isOr()) { stream.printCString("OR"); }
+        else if (this.isEq()) { stream.printCString("EQ"); }
+        else if (this.isNeq()) { stream.printCString("NEQ"); }
+        else if (this.isLt()) { stream.printCString("LT"); }
+        else if (this.isLe()) { stream.printCString("LE"); }
+        else if (this.isGt()) { stream.printCString("GT"); }
+        else if (this.isGe()) { stream.printCString("GE"); }
+        return stream.printChar('>');
+    }
+}

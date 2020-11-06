@@ -1,0 +1,27 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class AssignmentExprNode extends ExpressionNode {
+
+    VariableExprNode _variable;
+    ExpressionNode _value;
+
+    [AssignmentExprNode] setVariable(VariableExprNode variable) { _variable = this.own(variable); return this; }
+    [VariableExprNode] getVariable() { return _variable; }
+    
+    [AssignmentExprNode] setValue(ExpressionNode value) { _value = this.own(value); return this; }
+    [ExpressionNode] getValue() { return _value; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitAssignmentExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("assign-<").print(_variable).printChar('>');
+    }
+}

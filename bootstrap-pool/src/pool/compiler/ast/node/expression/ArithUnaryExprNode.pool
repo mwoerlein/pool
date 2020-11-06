@@ -1,0 +1,38 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::node::expression;
+
+use pool::compiler::ast::Visitor;
+use sys::stream::OStream;
+
+class ArithUnaryExprNode extends ExpressionNode {
+
+    int _op;
+    VariableExprNode _variable;
+
+    [ArithUnaryExprNode] setPreInc() { _op = ExpressionNode:UNARY_PRE_INC; return this; }
+    [ArithUnaryExprNode] setPreDec() { _op = ExpressionNode:UNARY_PRE_DEC; return this; }
+    [ArithUnaryExprNode] setPostInc() { _op = ExpressionNode:UNARY_POST_INC; return this; }
+    [ArithUnaryExprNode] setPostDec() { _op = ExpressionNode:UNARY_POST_DEC; return this; }
+    [int] isPreInc() { return _op == ExpressionNode:UNARY_PRE_INC; }
+    [int] isPreDec() { return _op == ExpressionNode:UNARY_PRE_DEC; }
+    [int] isPostInc() { return _op == ExpressionNode:UNARY_POST_INC; }
+    [int] isPostDec() { return _op == ExpressionNode:UNARY_POST_DEC; }
+    
+    [ArithUnaryExprNode] setVariable(VariableExprNode variable) { _variable = this.own(variable); return this; }
+    [VariableExprNode] getVariable() { return _variable; }
+    
+    // NODE
+    [int] accept(Visitor visitor) { return visitor.visitArithUnaryExpr(this); }
+    [OStream] printDebugName(OStream stream) {
+        stream.printCString("logical-unary-<");
+        if (this.isPreInc()) { stream.printCString("++").print(_variable); }
+        else if (this.isPreDec()) { stream.printCString("--").print(_variable); }
+        else if (this.isPostInc()) { stream.print(_variable).printCString("++"); }
+        else if (this.isPostDec()) { stream.print(_variable).printCString("--"); }
+        return stream.printChar('>');
+    }
+}
