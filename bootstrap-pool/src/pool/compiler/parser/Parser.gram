@@ -36,9 +36,6 @@ translation_unit: translation_unit use_stmt                                     
 translation_unit: translation_unit class_decl                                                                   { $$ = this.unit.addClassDecl($2); }
 translation_unit: translation_unit struct_decl                                                                  { $$ = this.unit.addStructDecl($2); }
 
-STRING: SLSTRING                                                                                                { $$ = null; }
-STRING: MLSTRING                                                                                                { $$ = null; }
-
 fqn: ID                                                                                                         { $$ = this.fqn($1); }
 fqn: fqn '::' ID                                                                                                { $$ = this.fqnAppend($1, $3); }
 
@@ -50,7 +47,7 @@ use_stmt: 'use' fqn 'as' ID ';'                                                 
 struct_decl: 'struct' ID '{' struct_body_empty '}'                                                              { $$ = this.finalizeStructDecl($4, $2, $1, $5); }
 struct_body_empty:                                                                                              { $$ = this.newStructDecl(); }
 struct_body_empty: struct_body_empty variable_decl ';'                                                          { $$ = this.structDecl($1).addVariableDecl($2); }
-struct_body_empty: struct_body_empty 'global' variable_initializer_inst ';'                                     { $$ = this.structDecl($1).addVariableInitInst($3); }
+struct_body_empty: struct_body_empty 'global' variable_initializer_inst ';'                                     { $$ = this.structDecl($1).addVariableInitInst($3); /*TODO: global*/}
 
 class_decl: 'class' ID '{' class_body_empty '}'                                                                 { $$ = this.finalizeClassDecl($4, $2, $1, $5); }
 class_decl: 'class' ID 'extends' type_list '{' class_body_empty '}'                                             { $$ = this.finalizeClassDecl($6, $2, $1, $5).setExtends($4); }
@@ -58,7 +55,7 @@ class_body_empty:                                                               
 class_body_empty: class_body_empty method_decl                                                                  { $$ = this.classDecl($1).addMethodDecl($2); }
 class_body_empty: class_body_empty variable_decl ';'                                                            { $$ = this.classDecl($1).addVariableDecl($2); }
 class_body_empty: class_body_empty variable_initializer_inst ';'                                                { $$ = this.classDecl($1).addVariableInitInst($2); }
-class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = this.classDecl($1).addVariableInitInst($3); }
+class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = this.classDecl($1).addVariableInitInst($3);  /*TODO: global*/}
 
 type: fqn                                                                                                       { $$ = this.classRef($1).typeRef(); }
 type: '__all__'                                                                                                 { $$ = this.allRef($1).typeRef(); }
@@ -66,25 +63,28 @@ type: '__any__'                                                                 
 type: 'cstring'                                                                                                 { $$ = this.cstringRef($1).typeRef(); }
 type: 'int'                                                                                                     { $$ = this.intRef($1).typeRef(); }
 type_list: type                                                                                                 { $$ = this.addToNodeList(this.nodeList(), $1); }
-type_list: type_list ',' type                                                                                   { $$ = this.addToNodeList($1, $2); }
+type_list: type_list ',' type                                                                                   { $$ = this.addToNodeList($1, $3); }
 type_list_empty:                                                                                                { $$ = this.nodeList(); }
 type_list_empty: type_list                                                                                      { $$ = $1; }
 
-variable_decl: type ID                                                                                          { $$ = this.variableDecl($2); }
+variable_decl: type ID                                                                                          { $$ = this.variableDecl($2, $1); }
 variable_decl_list: variable_decl                                                                               { $$ = this.addToNodeList(this.nodeList(), $1); }
-variable_decl_list: variable_decl_list ',' variable_decl                                                        { $$ = this.addToNodeList($1, $2); }
+variable_decl_list: variable_decl_list ',' variable_decl                                                        { $$ = this.addToNodeList($1, $3); }
 variable_decl_list_empty:                                                                                       { $$ = this.nodeList(); }
 variable_decl_list_empty: variable_decl_list                                                                    { $$ = $1; }
 
-method_decl: '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'              { $$ = this.methodDecl($4); }
-method_decl: 'global' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'     { $$ = this.methodDecl($5); }
-method_decl: '__entry__' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'  { $$ = this.methodDecl($5); }
-method_decl: '__naked__' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'  { $$ = this.methodDecl($5); }
-method_decl: 'abstract' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' ';'                         { $$ = this.methodDecl($5); }
+method_decl: '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'              { $$ = this.methodDecl($4, $6, $2, $1, $10).setBody($9); }
+method_decl: 'global' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'     { $$ = this.methodDecl($5, $7, $3, $1, $11).setBody($10).setGlobal(); }
+method_decl: '__entry__' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'  { $$ = this.methodDecl($5, $7, $3, $1, $11).setBody($10).setEntry(); }
+method_decl: '__naked__' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' '{' instruction_block '}'  { $$ = this.methodDecl($5, $7, $3, $1, $11).setBody($10).setNaked(); }
+method_decl: 'abstract' '[' type_list_empty ']' ID '(' variable_decl_list_empty ')' ';'                         { $$ = this.methodDecl($5, $7, $3, $1, $9).setAbstract(); }
 
 -------------------
 --- EXPRESSIONS ---
 -------------------
+
+STRING: SLSTRING                                                                                                { $$ = null; }
+STRING: MLSTRING                                                                                                { $$ = null; }
 
 expression: value_expr                                                                                          { $$ = null; }
 expression: variable_expr                                                                                       { $$ = null; }
@@ -149,8 +149,8 @@ logical_expr: expression '>=' expression                                        
 --- INSTRUCTIONS ---
 --------------------
 
-instruction_block:                                                                                              { $$ = null; }
-instruction_block: instruction_block instruction                                                                { $$ = null; }
+instruction_block:                                                                                              { $$ = this.blockInst(); }
+instruction_block: instruction_block instruction                                                                { $$ = this.addInstToBlock($1, $2); }
 
 instruction: expression ';'                                                                                     { $$ = null; }
 instruction: variable_initializer_inst ';'                                                                      { $$ = null; }

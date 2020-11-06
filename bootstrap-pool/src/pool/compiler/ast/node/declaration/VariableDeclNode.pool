@@ -7,12 +7,15 @@ namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::reference::TypeRefNode;
 use sys::core::String;
 use sys::stream::OStream;
 
 class VariableDeclNode extends Node {
 
     String _name;
+    TypeRefNode _type;
+    int _global;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
@@ -20,6 +23,12 @@ class VariableDeclNode extends Node {
     
     [VariableDeclNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
+    
+    [VariableDeclNode] setType(TypeRefNode type) { _type = this.own(type); return this; }
+    [TypeRefNode] getType() { return _type; }
+    
+    [VariableDeclNode] setGlobal() { _global = true; return this; }
+    [int] isGlobal() { return _global; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitVariableDecl(this); }

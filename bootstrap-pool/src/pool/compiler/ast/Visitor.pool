@@ -13,6 +13,7 @@ use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
+use pool::compiler::ast::node::instruction::BlockInstNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
@@ -37,6 +38,7 @@ class Visitor extends sys::core::Object {
     [int] visitVariableDecl(VariableDeclNode node) { return false; }
     
     // instructions
+    [int] visitBlockInst(BlockInstNode node) { return false; }
     [int] visitVariableInitInst(VariableInitInstNode node) { return false; }
     
     // references

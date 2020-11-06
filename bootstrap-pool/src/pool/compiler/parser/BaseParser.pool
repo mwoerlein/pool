@@ -17,6 +17,7 @@ use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
+use pool::compiler::ast::node::instruction::BlockInstNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
@@ -24,6 +25,7 @@ use pool::compiler::ast::node::reference::AnyRefNode;
 use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::CStringRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
+use pool::compiler::ast::node::reference::TypeRefNode;
 
 use pool::generator::tokenizer::Token;
 
@@ -95,21 +97,24 @@ class BaseParser extends pool::generator::parser::Parser {
         return node;
     }
     
-    [MethodDeclNode] methodDecl(Token name) {
+    [MethodDeclNode] methodDecl(Token name, NodeList params, NodeList returnTypes, Token first, Token last) {
         MethodDeclNode node = this.rt().createInstance(MethodDeclNode:CLASSNAME);
-        node.setName(name.getValue());
-        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        node.setName(name.getValue()).setParameters(params).setReturnTypes(returnTypes);
+        node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
         return node;
     }
     
-    [VariableDeclNode] variableDecl(Token name) {
+    [VariableDeclNode] variableDecl(Token name, TypeRefNode type) {
         VariableDeclNode node = this.rt().createInstance(VariableDeclNode:CLASSNAME);
-        node.setName(name.getValue());
-        //node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
+        node.setName(name.getValue()).setType(type);
+        node.setLocation(type.getFirstLine(), type.getFirstColumn(), name.getLastLine(), name.getLastColumn());
         return node;
     }
     
     // instructions
+    [BlockInstNode] blockInst() { return this.rt().createInstance(BlockInstNode:CLASSNAME); }
+    [BlockInstNode] addInstToBlock(BlockInstNode block, __any__ inst) { return block; }
+    
     [VariableInitInstNode] variableInit(VariableDeclNode decl, __any__ expr) {
         VariableInitInstNode node = this.rt().createInstance(VariableInitInstNode:CLASSNAME);
         node.setName(decl.getName());

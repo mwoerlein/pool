@@ -10,7 +10,7 @@ use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
 
-class VariableInitInstNode extends Node {
+class BlockInstNode extends Node {
 
     // TODO
     String _name;
@@ -19,12 +19,12 @@ class VariableInitInstNode extends Node {
         _name = this.createOwn(String:CLASSNAME);
     }
     
-    [VariableInitInstNode] setName(String name) { _name.assignString(name); return this; }
+    [BlockInstNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
     
     // NODE
-    [int] accept(Visitor visitor) { return visitor.visitVariableInitInst(this); }
+    [int] accept(Visitor visitor) { return visitor.visitBlockInst(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("variable-init-<").print(_name).printChar('>');
+        return stream.printCString("block-<").print(_name).printChar('>');
     }
 }

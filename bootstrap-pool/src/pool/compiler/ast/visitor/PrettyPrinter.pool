@@ -16,6 +16,7 @@ use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::UseStatementNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 
+use pool::compiler::ast::node::instruction::BlockInstNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
@@ -60,12 +61,31 @@ class PrettyPrinter extends Visitor {
         return true;
     }
     
-    [int] visitMethodDecl(MethodDeclNode node) { return this.debugNode(node.node()); }
+    [int] visitMethodDecl(MethodDeclNode node) {
+        this.debugNode(node.node());
+        
+        node.getReturnTypes().acceptAll(this.visitor());
+        node.getParameters().acceptAll(this.visitor());
+        if (!node.isAbstract()) {
+            node.getBody().accept(this.visitor());
+        }
+        
+        return true;
+    }
+    
+    [int] visitVariableDecl(VariableDeclNode node) {
+        this.debugNode(node.node());
+        
+        node.getType().accept(this.visitor());
+        
+        return true;
+    }
+
     [int] visitNamespaceDecl(NamespaceDeclNode node) { return this.debugNode(node.node()); }
     [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
-    [int] visitVariableDecl(VariableDeclNode node) { return this.debugNode(node.node()); }
     
     // instructions
+    [int] visitBlockInst(BlockInstNode node) { return this.debugNode(node.node()); }
     [int] visitVariableInitInst(VariableInitInstNode node) { return this.debugNode(node.node()); }
     
     // references

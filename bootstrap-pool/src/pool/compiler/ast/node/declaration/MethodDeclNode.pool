@@ -7,12 +7,25 @@ namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::node::instruction::BlockInstNode;
 use sys::core::String;
 use sys::stream::OStream;
 
 class MethodDeclNode extends Node {
 
+    int KIND_NORMAL     := 0;
+    int KIND_ABSTRACT   := 1;
+    int KIND_NAKED      := 2;
+    int KIND_ENTRY      := 3;
+    
     String _name;
+    NodeList _parameters; //NodeList<VariableDeclNode>
+    NodeList _returnTypes; //NodeList<TypeRefNode>
+    BlockInstNode _body;
+    
+    int _kind;
+    int _global;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
@@ -20,6 +33,27 @@ class MethodDeclNode extends Node {
     
     [MethodDeclNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
+    
+    [MethodDeclNode] setParameters(NodeList parameters) { _parameters = this.own(parameters); return this; }
+    [NodeList] getParameters() { return _parameters; }
+    
+    [MethodDeclNode] setReturnTypes(NodeList returnTypes) { _returnTypes = this.own(returnTypes); return this; }
+    [NodeList] getReturnTypes() { return _returnTypes; }
+    
+    [MethodDeclNode] setBody(BlockInstNode body) { _body = this.own(body); return this; }
+    [BlockInstNode] getBody() { return _body; }
+    
+    [MethodDeclNode] setAbstract() { _kind = MethodDeclNode:KIND_ABSTRACT; return this; }
+    [MethodDeclNode] setNaked() { _kind = MethodDeclNode:KIND_NAKED; return this; }
+    [MethodDeclNode] setEntry() { _kind = MethodDeclNode:KIND_ENTRY; return this; }
+    
+    [int] isNormal() { return _kind == MethodDeclNode:KIND_NORMAL; }
+    [int] isAbstract() { return _kind == MethodDeclNode:KIND_ABSTRACT; }
+    [int] isNaked() { return _kind == MethodDeclNode:KIND_NAKED; }
+    [int] isEntry() { return _kind == MethodDeclNode:KIND_ENTRY; }
+    
+    [MethodDeclNode] setGlobal() { _global = true; return this; }
+    [int] isGlobal() { return _global; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitMethodDecl(this); }
