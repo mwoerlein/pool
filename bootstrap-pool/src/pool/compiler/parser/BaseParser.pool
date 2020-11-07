@@ -80,7 +80,7 @@ class BaseParser extends pool::generator::parser::Parser {
     [NodeMap] addToNodeMap(NodeMap map, Token key, __any__ node) {
         if (node) {
             String k = map.createOwn(String:CLASSNAME);
-            k.assignString(key.getValue());
+            key.getValue().unescapeToStream(k.ostream());
             map.set(k, map.own(node));
         }
         return map;
