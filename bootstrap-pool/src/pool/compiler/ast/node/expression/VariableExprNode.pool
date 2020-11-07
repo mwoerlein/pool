@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::ast::node::expression;
 
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::reference::ClassRefNode;
 use sys::core::String;
 use sys::stream::OStream;
 
@@ -23,6 +24,14 @@ class VariableExprNode extends ExpressionNode {
     
     [VariableExprNode] setContext(ExpressionNode context) { _context = this.own(context); return this; }
     [ExpressionNode] getContext() { return _context; }
+    [int] hasContext() { return !!_context; }
+    [int] contextIsGlobal() {
+        // TODO: use resolved type of context instead of guessing from node type
+        if (this.rt().cast(ClassRefNode:CLASSNAME, _context)) {
+            return true;
+        }
+        return false;
+    }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitVariableExpr(this); }

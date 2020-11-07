@@ -380,19 +380,143 @@ class PrettyPrinter extends Visitor {
     }
     
     // expressions
-    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) { return this.debugNode(node.node()); }
-    [int] visitArithBinaryExpr(ArithBinaryExprNode node) { return this.debugNode(node.node()); }
-    [int] visitArithUnaryExpr(ArithUnaryExprNode node) { return this.debugNode(node.node()); }
-    [int] visitAssignmentExpr(AssignmentExprNode node) { return this.debugNode(node.node()); }
-    [int] visitConstCStringExpr(ConstCStringExprNode node) { return this.debugNode(node.node()); }
-    [int] visitConstIntExpr(ConstIntExprNode node) { return this.debugNode(node.node()); }
-    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) { return this.debugNode(node.node()); }
-    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) { return this.debugNode(node.node()); }
-    [int] visitMethodCallExpr(MethodCallExprNode node) { return this.debugNode(node.node()); }
-    [int] visitNullExpr(NullExprNode node) { return this.debugNode(node.node()); }
-    [int] visitSignExpr(SignExprNode node) { return this.debugNode(node.node()); }
-    [int] visitThisExpr(ThisExprNode node) { return this.debugNode(node.node()); }
-    [int] visitVariableExpr(VariableExprNode node) { return this.debugNode(node.node()); }
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
+        OStream line = this.elem().printChar('(');
+        node.getVariable().accept(this.visitor());
+        if (node.isAdd()) { line.printChar('+').printChar('='); }
+        else if (node.isSub()) { line.printChar('-').printChar('='); }
+        else if (node.isMul()) { line.printChar('*').printChar('='); }
+        else if (node.isDiv()) { line.printChar('/').printChar('='); }
+        else if (node.isMod()) { line.printChar('%').printChar('='); }
+        node.getValue().accept(this.visitor());
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
+        OStream line = this.elem().printChar('(');
+        node.getLeft().accept(this.visitor());
+        if (node.isAdd()) { line.printChar('+'); }
+        else if (node.isSub()) { line.printChar('-'); }
+        else if (node.isMul()) { line.printChar('*'); }
+        else if (node.isDiv()) { line.printChar('/'); }
+        else if (node.isMod()) { line.printChar('%'); }
+        node.getRight().accept(this.visitor());
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
+        OStream line = this.elem().printChar('(');
+        if (node.isPreInc()) { line.printChar('+').printChar('+'); node.getVariable().accept(this.visitor()); }
+        else if (node.isPreDec()) { line.printChar('-').printChar('-'); node.getVariable().accept(this.visitor()); }
+        else if (node.isPostInc()) { node.getVariable().accept(this.visitor()); line.printChar('+').printChar('+'); }
+        else if (node.isPostDec()) { node.getVariable().accept(this.visitor()); line.printChar('-').printChar('-'); }
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitAssignmentExpr(AssignmentExprNode node) {
+        OStream line = this.elem().printChar('(');
+        node.getVariable().accept(this.visitor());
+        line.printChar('=');
+        node.getValue().accept(this.visitor());
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitConstCStringExpr(ConstCStringExprNode node) {
+        node.getValue().escapeToStream(this.elem());
+        return true;
+    }
+    
+    [int] visitConstIntExpr(ConstIntExprNode node) {
+        this.elem().printInt(node.getValue());
+        return true;
+    }
+    
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
+        OStream line = this.elem().printChar('(');
+        node.getLeft().accept(this.visitor());
+        if (node.isAnd()) { line.printChar('&').printChar('&'); }
+        else if (node.isOr()) { line.printChar('|').printChar('|'); }
+        else if (node.isEq()) { line.printChar('=').printChar('='); }
+        else if (node.isNeq()) { line.printChar('!').printChar('='); }
+        else if (node.isLt()) { line.printChar('<'); }
+        else if (node.isLe()) { line.printChar('<').printChar('='); }
+        else if (node.isGt()) { line.printChar('>'); }
+        else if (node.isGe()) { line.printChar('>').printChar('='); }
+        node.getRight().accept(this.visitor());
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
+        OStream line = this.elem().printChar('(');
+        if (node.isNot()) { line.printChar('!'); node.getExpression().accept(this.visitor()); }
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitMethodCallExpr(MethodCallExprNode node) {
+        OStream line = this.elem();
+        if (node.hasContext()) {
+            node.getContext().accept(this.visitor());
+            if (node.contextIsGlobal()) {
+                line.printChar(':');
+            } else {
+                line.printChar('.');
+            }
+        }
+        line.print(node.getName()).printChar('(');
+        if (node.hasParameters()) {
+            AnyIterator it = node.getParameters().iterator();
+            if (it.hasNext()) {
+                ExpressionNode e = it.next();
+                e.accept(this.visitor());
+            }
+            while (it.hasNext()) {
+                line.printChar(',').printChar(' ');
+                ExpressionNode e = it.next();
+                e.accept(this.visitor());
+            }
+            it.destroy();
+        }
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitNullExpr(NullExprNode node) {
+        this.elem().printCString("null");
+        return true;
+    }
+    
+    [int] visitSignExpr(SignExprNode node) {
+        OStream line = this.elem().printChar('(');
+        if (node.isPlus()) { line.printChar('+'); node.getExpression().accept(this.visitor()); }
+        else if (node.isMinus()) { line.printChar('-'); node.getExpression().accept(this.visitor()); }
+        line.printChar(')');
+        return true;
+    }
+    
+    [int] visitThisExpr(ThisExprNode node) {
+        this.elem().printCString("this");
+        return true;
+    }
+    
+    [int] visitVariableExpr(VariableExprNode node) {
+        OStream line = this.elem();
+        if (node.hasContext()) {
+            node.getContext().accept(this.visitor());
+            if (node.contextIsGlobal()) {
+                line.printChar(':');
+            } else {
+                line.printChar('.');
+            }
+        }
+        line.print(node.getName());
+        return true;
+    }
     
     // references
     [int] visitAllRef(AllRefNode node) { this.elem().printCString("__all__"); return true; }
