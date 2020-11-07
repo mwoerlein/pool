@@ -28,7 +28,7 @@ class ArithUnaryExprNode extends ExpressionNode {
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitArithUnaryExpr(this); }
     [OStream] printDebugName(OStream stream) {
-        stream.printCString("logical-unary-<");
+        stream.printCString("arith-unary-<");
         if (this.isPreInc()) { stream.printCString("++").print(_variable); }
         else if (this.isPreDec()) { stream.printCString("--").print(_variable); }
         else if (this.isPostInc()) { stream.print(_variable).printCString("++"); }

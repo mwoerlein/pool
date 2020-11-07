@@ -19,6 +19,6 @@ class ExpressionInstNode extends InstructionNode {
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitExpressionInst(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("expr-<").print(_expression).printChar('>');
+        return stream.printCString("expression-<").print(_expression).printChar('>');
     }
 }
