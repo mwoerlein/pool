@@ -23,6 +23,7 @@ class UseStatementNode extends Node {
     [FullQualifiedNameNode] getName() { return _name; }
     
     [UseStatementNode] setAlias(String alias) { _alias.assignString(alias); return this; }
+    [int] hasAlias() { return _alias.length() > 0; }
     [String] getAlias() { return _alias; }
     
     // NODE

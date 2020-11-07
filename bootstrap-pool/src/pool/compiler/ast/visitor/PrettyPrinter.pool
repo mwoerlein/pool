@@ -7,6 +7,7 @@ namespace pool::compiler::ast::visitor;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
@@ -22,6 +23,7 @@ use pool::compiler::ast::node::expression::ArithUnaryExprNode;
 use pool::compiler::ast::node::expression::AssignmentExprNode;
 use pool::compiler::ast::node::expression::ConstCStringExprNode;
 use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
 use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
 use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
 use pool::compiler::ast::node::expression::MethodCallExprNode;
@@ -43,65 +45,339 @@ use pool::compiler::ast::node::reference::AnyRefNode;
 use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::CStringRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
+use pool::compiler::ast::node::reference::TypeRefNode;
 
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::String;
+use sys::runtime::Runtime;
 use sys::stream::OStream;
 
 class PrettyPrinter extends Visitor {
 
+    OStream _element;
+    int _indent;
+    
+    [PrettyPrinter] init(OStream out) {
+        _indent = 0;
+        _element = out;
+    }
+    
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
-        this.debugNode(node.node());
         
         node.getNamespace().accept(this.visitor());
+        this.indent().printNewline();
         node.getUses().acceptAll(this.visitor());
+        this.indent().printNewline();
         node.getClasses().acceptAll(this.visitor());
         node.getStructs().acceptAll(this.visitor());
         
         return true;
     }
-
-    [int] visitClassDecl(ClassDeclNode node) {
-        this.debugNode(node.node());
-        
-        node.getExtends().acceptAll(this.visitor());
-        node.getConsts().acceptAll(this.visitor());
-        node.getVariables().acceptAll(this.visitor());
-        node.getMethods().acceptAll(this.visitor());
-        
+    
+    [int] visitNamespaceDecl(NamespaceDeclNode node) {
+        this.indent().printCString("namespace ").print(node.getName().getName()).printChar(';').printNewline();
         return true;
     }
+    
+    [int] visitUseStatement(UseStatementNode node) {
+        OStream line = this.indent().printCString("use ").print(node.getName().getName());
+        if (node.hasAlias()) {
+            line.printCString(" as ").print(node.getAlias());
+        }
+        line.printChar(';').printNewline();
+        return true;
+    }
+    
+    [int] visitClassDecl(ClassDeclNode node) {
+        Runtime rt = this.rt();
+        OStream line = this.indent().printCString("class ").print(node.getName());
 
-    [int] visitStructDecl(StructDeclNode node) {
-        this.debugNode(node.node());
+        if (!node.getExtends().isEmpty()) {
+            line.printCString(" extends");
+            AnyIterator it = node.getExtends().iterator();
+            if (it.hasNext()) {
+                line.printChar(' ');
+                TypeRefNode c = it.next();
+                c.accept(this.visitor());
+            }
+            while (it.hasNext()) {
+                line.printChar(',').printChar(' ');
+                TypeRefNode c = it.next();
+                c.accept(this.visitor());
+            }
+            it.destroy();
+        }
         
-        node.getConsts().acceptAll(this.visitor());
-        node.getVariables().acceptAll(this.visitor());
+        this.startBlock(line);
+        
+        if (!node.getConsts().isEmpty()) {
+            this.indent().printNewline();
+            this.indent().printCString("// constants").printNewline();
+            node.getConsts().acceptAll(this.visitor());
+        }
+        if (!node.getVariables().isEmpty()) {
+            this.indent().printNewline();
+            this.indent().printCString("// variables").printNewline();
+            node.getVariables().acceptAll(this.visitor());
+        }
+        if (!node.getMethods().isEmpty()) {
+            this.indent().printNewline();
+            this.indent().printCString("// methods").printNewline();
+            node.getMethods().acceptAll(this.visitor());
+        }
+        
+        this.endBlock();
         
         return true;
     }
     
-    [int] visitMethodDecl(MethodDeclNode node) {
-        this.debugNode(node.node());
+    [int] visitStructDecl(StructDeclNode node) {
+        OStream line = this.indent().printCString("struct ").print(node.getName());
         
-        node.getReturnTypes().acceptAll(this.visitor());
-        node.getParameters().acceptAll(this.visitor());
-        if (!node.isAbstract()) {
-            node.getBody().accept(this.visitor());
+        this.startBlock(line);
+        
+        if (!node.getConsts().isEmpty()) {
+            this.indent().printNewline();
+            this.indent().printCString("// constants").printNewline();
+            node.getConsts().acceptAll(this.visitor());
+        }
+        if (!node.getVariables().isEmpty()) {
+            this.indent().printNewline();
+            this.indent().printCString("// variables").printNewline();
+            node.getVariables().acceptAll(this.visitor());
+        }
+        
+        this.endBlock();
+    }
+    
+    [int] visitMethodDecl(MethodDeclNode node) {
+        OStream line = this.indent();
+        if (node.isAbstract()) { line.printCString("abstract "); }
+        if (node.isEntry()) { line.printCString("__entry__ "); }
+        if (node.isNaked()) { line.printCString("__naked__ "); }
+        if (node.isGlobal()) { line.printCString("global "); }
+        
+        line.printChar('[');
+        {
+            AnyIterator it = node.getReturnTypes().iterator();
+            if (it.hasNext()) {
+                TypeRefNode c = it.next();
+                c.accept(this.visitor());
+            }
+            while (it.hasNext()) {
+                line.printChar(',').printChar(' ');
+                TypeRefNode c = it.next();
+                c.accept(this.visitor());
+            }
+            it.destroy();
+        }
+        line.printChar(']').printChar(' ').print(node.getName()).printChar('(');
+        {
+            AnyIterator it = node.getParameters().iterator();
+            if (it.hasNext()) {
+                this.printVariableDecl(it.next());
+            }
+            while (it.hasNext()) {
+                line.printChar(',').printChar(' ');
+                this.printVariableDecl(it.next());
+            }
+            it.destroy();
+        }
+        line.printChar(')');
+        if (node.isAbstract()) {
+            line.printChar(';').printNewline();
+        } else if (node.getBody().getInstructions().isEmpty()) {
+            line.printChar(' ').printChar('{').printChar('}').printNewline();
+        } else {
+            this.startBlock(line);
+            node.getBody().getInstructions().acceptAll(this.visitor());
+            this.endBlock();
+        }
+        
+        this.indent().printNewline();
+        return true;
+    }
+    
+    [int] visitVariableDecl(VariableDeclNode node) {
+        this.indent();
+        this.printVariableDecl(node).printNewline();
+        return true;
+    }
+    
+    // instructions
+    [int] visitBlockInst(BlockInstNode node) {
+        if (node.getInstructions().isEmpty()) {
+            this.indent().printChar('{').printChar('}').printNewline();
+        } else {
+            this.startBlock(null);
+            node.getInstructions().acceptAll(this.visitor());
+            this.endBlock();
+        }
+        return true;
+    }
+    
+    [int] visitExpressionInst(ExpressionInstNode node) {
+        OStream line = this.indent();
+        node.getExpression().accept(this.visitor());
+        line.printChar(';').printNewline();
+        return true;
+    }
+    
+    [int] visitIfInst(IfInstNode node) {
+        OStream line = this.indent().printCString("if (");
+        node.getCondition().accept(this.visitor());
+        line.printChar(')');
+        
+        if (node.hasTrueBlock()) {
+            this.startBlock(line);
+            node.getTrueBlock().getInstructions().acceptAll(this.visitor());
+            if (node.hasFalseBlock()) {
+                _indent -= 4;
+                this.indent().printCString("} else {").printNewline();
+                _indent += 4;
+                node.getFalseBlock().getInstructions().acceptAll(this.visitor());
+            }
+            this.endBlock();
+        } else {
+            line.printCString(" {}");
+            if (node.hasFalseBlock()) {
+                line.printCString(" else");
+                this.startBlock(line);
+                node.getFalseBlock().getInstructions().acceptAll(this.visitor());
+                this.endBlock();
+            } else {
+                line.printNewline();
+            }
         }
         
         return true;
     }
     
-    [int] visitVariableDecl(VariableDeclNode node) {
-        this.debugNode(node.node());
-        
-        node.getType().accept(this.visitor());
-        
+    [int] visitInlinePasmInst(InlinePasmInstNode node) {
+        this.indent().printCString("__pasm__(<\"").printNewline()
+            .print(node.getPasm().getValue()).printNewline();
+        this.indent().printCString("\">, {");
+        if (node.hasIn()) {
+            AnyMapEntryIterator it = node.getIn().entries();
+            if (it.hasNext()) {
+                [String key, ExpressionNode expr] = it.nextPair();
+                key.escapeToStream(this.elem()).printChar(':').printChar(' ');
+                expr.accept(this.visitor());
+            }
+            while (it.hasNext()) {
+                this.elem().printChar(',').printChar(' ');
+                [String key, ExpressionNode expr] = it.nextPair();
+                key.escapeToStream(this.elem()).printChar(':').printChar(' ');
+                expr.accept(this.visitor());
+            }
+            it.destroy();
+        }
+        this.elem().printCString("}, {");
+        if (node.hasOut()) {
+            AnyMapEntryIterator it = node.getOut().entries();
+            if (it.hasNext()) {
+                [String key, ExpressionNode expr] = it.nextPair();
+                key.escapeToStream(this.elem()).printChar(':').printChar(' ');
+                expr.accept(this.visitor());
+            }
+            while (it.hasNext()) {
+                this.elem().printChar(',').printChar(' ');
+                [String key, ExpressionNode expr] = it.nextPair();
+                key.escapeToStream(this.elem()).printChar(':').printChar(' ');
+                expr.accept(this.visitor());
+            }
+            it.destroy();
+        }
+        this.elem().printChar('}').printChar(')').printChar(';').printNewline();
+        return true;
+    }
+    
+    [int] visitReturnInst(ReturnInstNode node) {
+        if (node.hasValues()) {
+            NodeList values = node.getValues();
+            int isTuple = values.size() > 1;
+            OStream line = this.indent().printCString("return ");
+            if (isTuple) { line.printChar('['); }
+            {
+                AnyIterator it = values.iterator();
+                if (it.hasNext()) {
+                    ExpressionNode e = it.next();
+                    e.accept(this.visitor());
+                }
+                while (it.hasNext()) {
+                    line.printChar(',').printChar(' ');
+                    ExpressionNode e = it.next();
+                    e.accept(this.visitor());
+                }
+                it.destroy();
+            }
+            if (isTuple) { line.printChar(']'); }
+            line.printChar(';').printNewline();
+        } else {
+            this.indent().printCString("return;").printNewline();
+        }
         return true;
     }
 
-    [int] visitNamespaceDecl(NamespaceDeclNode node) { return this.debugNode(node.node()); }
-    [int] visitUseStatement(UseStatementNode node) { return this.debugNode(node.node()); }
+    [int] visitVariableInitInst(VariableInitInstNode node) {
+        OStream line = this.indent();
+        NodeList vars = node.getVariables();
+        int isTuple = vars.size() > 1;
+        
+        if (node.isGlobal()) { line.printCString("global "); }
+        if (isTuple) { line.printChar('['); }
+        {
+            AnyIterator it = vars.iterator();
+            if (it.hasNext()) {
+                this.printVariableDecl(it.next());
+            }
+            while (it.hasNext()) {
+                line.printChar(',').printChar(' ');
+                this.printVariableDecl(it.next());
+            }
+            it.destroy();
+        }
+        if (isTuple) { line.printChar(']'); }
+        if (node.isFinal()) {
+            line.printCString(" := ");
+        } else {
+            line.printCString(" = ");
+        }
+        node.getInitializer().accept(this.visitor());
+        line.printChar(';').printNewline();
+        return true;
+    }
+
+    [int] visitWhileInst(WhileInstNode node) {
+        if (node.isPostTest()) {
+            OStream line = this.indent().printCString("do");
+            if (node.getBlock().getInstructions().isEmpty()) {
+                line.printCString(" {}");
+            } else {
+                this.startBlock(line);
+                node.getBlock().getInstructions().acceptAll(this.visitor());
+                _indent -= 4;
+                this.indent().printChar('}');
+            }
+            line = this.elem().printCString(" while (");
+            node.getCondition().accept(this.visitor());
+            line.printChar(')').printChar(';').printNewline();
+        } else {
+            OStream line = this.indent().printCString("while (");
+            node.getCondition().accept(this.visitor());
+            line.printChar(')');
+            if (node.getBlock().getInstructions().isEmpty()) {
+                line.printCString(" {}").printNewline();
+            } else {
+                this.startBlock(line);
+                node.getBlock().getInstructions().acceptAll(this.visitor());
+                this.endBlock();
+            }
+        }
+        return true;
+    }
     
     // expressions
     [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) { return this.debugNode(node.node()); }
@@ -118,38 +394,47 @@ class PrettyPrinter extends Visitor {
     [int] visitThisExpr(ThisExprNode node) { return this.debugNode(node.node()); }
     [int] visitVariableExpr(VariableExprNode node) { return this.debugNode(node.node()); }
     
-    // instructions
-    [int] visitBlockInst(BlockInstNode node) {
-        this.debugNode(node.node());
-        node.getInstructions().acceptAll(this.visitor());
-        return true;
-    }
-    [int] visitExpressionInst(ExpressionInstNode node) { return this.debugNode(node.node()); }
-    [int] visitIfInst(IfInstNode node) {
-        this.debugNode(node.node());
-        node.getTrueBlock().accept(this.visitor());
-        BlockInstNode b = node.getFalseBlock();
-        if (b) { b.accept(this.visitor()); }
-        return true;
-    }
-    [int] visitInlinePasmInst(InlinePasmInstNode node) { return this.debugNode(node.node()); }
-    [int] visitReturnInst(ReturnInstNode node) { return this.debugNode(node.node()); }
-    [int] visitVariableInitInst(VariableInitInstNode node) { return this.debugNode(node.node()); }
-    [int] visitWhileInst(WhileInstNode node) {
-        this.debugNode(node.node());
-        node.getBlock().accept(this.visitor());
-        return true;
-    }
-    
     // references
-    [int] visitAllRef(AllRefNode node) { return this.debugNode(node.node()); }
-    [int] visitAnyRef(AnyRefNode node) { return this.debugNode(node.node()); }
-    [int] visitClassRef(ClassRefNode node) { return this.debugNode(node.node()); }
-    [int] visitCStringRef(CStringRefNode node) { return this.debugNode(node.node()); }
-    [int] visitIntRef(IntRefNode node) { return this.debugNode(node.node()); }
+    [int] visitAllRef(AllRefNode node) { this.elem().printCString("__all__"); return true; }
+    [int] visitAnyRef(AnyRefNode node) { this.elem().printCString("__any__"); return true; }
+    [int] visitClassRef(ClassRefNode node) { this.elem().print(node.getName().getName()); return true; }
+    [int] visitCStringRef(CStringRefNode node) { this.elem().printCString("cstring"); return true; }
+    [int] visitIntRef(IntRefNode node) { this.elem().printCString("int"); return true; }
     
     [int] debugNode(Node node) {
         node.debugToStream(this.rt().out()).printNewline();
         return true;
     }
+    
+    // helper
+    [OStream] printVariableDecl(VariableDeclNode node) {
+        node.getType().accept(this.visitor());
+        return this.elem().printChar(' ').print(node.getName());
+    }
+    
+    [OStream] elem() { return _element; }
+    
+    [OStream] indent() {
+        OStream line = this.elem();
+        int i = _indent;
+        while (i-- > 0) {
+            line.printChar(' ');
+        }
+        return line;
+    }
+    
+    [] startBlock(OStream line) {
+        if (line) {
+            line.printChar(' ').printChar('{').printNewline();
+        } else {
+            this.indent().printChar('{').printNewline();
+        }
+        _indent += 4;
+    }
+    
+    [] endBlock() {
+        _indent -= 4;
+        this.indent().printChar('}').printNewline();
+    }
+    
 }

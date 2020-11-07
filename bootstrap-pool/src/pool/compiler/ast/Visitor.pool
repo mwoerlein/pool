@@ -48,13 +48,22 @@ class Visitor extends sys::core::Object {
     [int] visit(Node node) { return node.accept(this); }
 
     // declarations
-    [int] visitClassDecl(ClassDeclNode node) { return false; }
-    [int] visitMethodDecl(MethodDeclNode node) { return false; }
-    [int] visitNamespaceDecl(NamespaceDeclNode node) { return false; }
-    [int] visitStructDecl(StructDeclNode node) { return false; }
     [int] visitTranslationUnit(TranslationUnitNode node) { return false; }
+    [int] visitNamespaceDecl(NamespaceDeclNode node) { return false; }
     [int] visitUseStatement(UseStatementNode node) { return false; }
+    [int] visitClassDecl(ClassDeclNode node) { return false; }
+    [int] visitStructDecl(StructDeclNode node) { return false; }
+    [int] visitMethodDecl(MethodDeclNode node) { return false; }
     [int] visitVariableDecl(VariableDeclNode node) { return false; }
+    
+    // instructions
+    [int] visitBlockInst(BlockInstNode node) { return false; }
+    [int] visitExpressionInst(ExpressionInstNode node) { return false; }
+    [int] visitIfInst(IfInstNode node) { return false; }
+    [int] visitInlinePasmInst(InlinePasmInstNode node) { return false; }
+    [int] visitReturnInst(ReturnInstNode node) { return false; }
+    [int] visitVariableInitInst(VariableInitInstNode node) { return false; }
+    [int] visitWhileInst(WhileInstNode node) { return false; }
     
     // expressions
     [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) { return false; }
@@ -70,15 +79,6 @@ class Visitor extends sys::core::Object {
     [int] visitSignExpr(SignExprNode node) { return false; }
     [int] visitThisExpr(ThisExprNode node) { return false; }
     [int] visitVariableExpr(VariableExprNode node) { return false; }
-    
-    // instructions
-    [int] visitBlockInst(BlockInstNode node) { return false; }
-    [int] visitExpressionInst(ExpressionInstNode node) { return false; }
-    [int] visitIfInst(IfInstNode node) { return false; }
-    [int] visitInlinePasmInst(InlinePasmInstNode node) { return false; }
-    [int] visitReturnInst(ReturnInstNode node) { return false; }
-    [int] visitVariableInitInst(VariableInitInstNode node) { return false; }
-    [int] visitWhileInst(WhileInstNode node) { return false; }
     
     // references
     [int] visitAllRef(AllRefNode node) { return false; }

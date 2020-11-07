@@ -20,9 +20,11 @@ class IfInstNode extends InstructionNode {
     
     [IfInstNode] setTrueBlock(BlockInstNode block) { _trueBlock = this.own(block); return this; }
     [BlockInstNode] getTrueBlock() { return _trueBlock; }
+    [int] hasTrueBlock() { return _trueBlock && !_trueBlock.getInstructions().isEmpty(); }
     
     [IfInstNode] setFalseBlock(BlockInstNode block) { _falseBlock = this.own(block); return this; }
     [BlockInstNode] getFalseBlock() { return _falseBlock; }
+    [int] hasFalseBlock() { return _falseBlock && !_falseBlock.getInstructions().isEmpty(); }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitIfInst(this); }

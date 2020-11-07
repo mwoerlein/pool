@@ -15,6 +15,7 @@ class ReturnInstNode extends InstructionNode {
     
     [ReturnInstNode] setValues(NodeList values) { _values = this.own(values); return this; }
     [NodeList] getValues() { return _values; }
+    [int] hasValues() { return _values && !_values.isEmpty(); }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitReturnInst(this); }

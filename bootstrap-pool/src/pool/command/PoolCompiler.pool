@@ -79,7 +79,7 @@ Pool Bootstrap Assembler.
         }
         if (unit) {
             PrettyPrinter pp = this.rt().createInstance(PrettyPrinter:CLASSNAME);
-            pp.visit(unit);
+            pp.init(out).visit(unit);
             pp.destroy();
         }
     }

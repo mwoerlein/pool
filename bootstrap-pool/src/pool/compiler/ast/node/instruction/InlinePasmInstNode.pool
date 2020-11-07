@@ -22,9 +22,11 @@ class InlinePasmInstNode extends InstructionNode {
 
     [InlinePasmInstNode] setIn(NodeMap in) { _in = this.own(in); return this; }
     [NodeMap] getIn() { return _in; }
+    [int] hasIn() { return _in && !_in.isEmpty(); }
 
     [InlinePasmInstNode] setOut(NodeMap out) { _out = this.own(out); return this; }
     [NodeMap] getOut() { return _out; }
+    [int] hasOut() { return _out && !_out.isEmpty(); }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitInlinePasmInst(this); }
