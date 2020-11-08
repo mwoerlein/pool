@@ -8,8 +8,6 @@
 EOL         := /(\r?\n|\r)/
 WSP         := /[ \t]*/
 ID          := /[a-zA-Z_][a-zA-Z0-9_]*/
----FQN         := /[a-zA-Z_][a-zA-Z0-9_]*(::[a-zA-Z_][a-zA-Z0-9_]*)+/
-
 NUMBER      := /(0|true|false|0[bB][01]+|0[0-7]+|[1-9][0-9]*|0[xX][0-9a-fA-F]+|'([^\\\n\r']|\\[^\n\r\t])*')/
 SLSTRING    := /"([^\\\n\r"]|\\[^\n\r\t])*"/
 MLSTRING    := /<"[ \t]*(\r?\n|\r)[ \t]*(([^"]|"[^>])*(\r?\n|\r)[ \t]*)*">/
@@ -36,13 +34,10 @@ translation_unit: translation_unit use_stmt                                     
 translation_unit: translation_unit class_decl                                                                   { $$ = this.unit.addClassDecl($2); }
 translation_unit: translation_unit struct_decl                                                                  { $$ = this.unit.addStructDecl($2); }
 
-fqn: ID                                                                                                         { $$ = this.fqn($1); }
-fqn: fqn '::' ID                                                                                                { $$ = this.fqnAppend($1, $3); }
+namespace_decl: 'namespace' class_ref ';'                                                                       { $$ = this.namespaceDecl($2, $1, $3); }
 
-namespace_decl: 'namespace' fqn ';'                                                                             { $$ = this.namespaceDecl($2, $1, $3); }
-
-use_stmt: 'use' fqn ';'                                                                                         { $$ = this.useStatement($2, null, $1, $3); }
-use_stmt: 'use' fqn 'as' ID ';'                                                                                 { $$ = this.useStatement($2, $4, $1, $5); }
+use_stmt: 'use' class_ref ';'                                                                                   { $$ = this.useStatement($2, null, $1, $3); }
+use_stmt: 'use' class_ref 'as' ID ';'                                                                           { $$ = this.useStatement($2, $4, $1, $5); }
 
 struct_decl: 'struct' ID '{' struct_body_empty '}'                                                              { $$ = this.finalizeStructDecl($4, $2, $1, $5); }
 struct_body_empty:                                                                                              { $$ = this.newStructDecl(); }
@@ -57,7 +52,10 @@ class_body_empty: class_body_empty variable_decl ';'                            
 class_body_empty: class_body_empty variable_initializer_inst ';'                                                { $$ = this.classDecl($1).addVariableInitInst($2); }
 class_body_empty: class_body_empty 'global' variable_initializer_inst ';'                                       { $$ = this.classDecl($1).addVariableInitInst(this.markVarInitGlobal($3)); }
 
-type: fqn                                                                                                       { $$ = this.classRef($1).typeRef(); }
+class_ref: ID                                                                                                   { $$ = this.classRef($1); }
+class_ref: class_ref '::' ID                                                                                    { $$ = this.appendToClassRef($1, $3); }
+
+type: class_ref                                                                                                 { $$ = this.asRef($1); }
 type: '__all__'                                                                                                 { $$ = this.allRef($1).typeRef(); }
 type: '__any__'                                                                                                 { $$ = this.anyRef($1).typeRef(); }
 type: 'cstring'                                                                                                 { $$ = this.cstringRef($1).typeRef(); }
@@ -112,10 +110,10 @@ value_expr: 'null'                                                              
 
 variable_expr: ID                                                                                               { $$ = this.variableExpr($1, null); }
 variable_expr: expression '.' ID                                                                                { $$ = this.variableExpr($3, $1); }
-variable_expr: fqn ':' ID                                                                                       { $$ = this.variableExpr($3, this.classRef($1).expression()); }
+variable_expr: class_ref ':' ID                                                                                 { $$ = this.variableExpr($3, this.asExpr($1)); }
 
 method_call_expr: expression '.' ID '(' expression_list_empty ')'                                               { $$ = this.methodCallExpr($3, $1, $6).setParameters($5); }
-method_call_expr: fqn ':' ID '(' expression_list_empty ')'                                                      { $$ = this.methodCallExpr($3, this.classRef($1).expression(), $6).setParameters($5); }
+method_call_expr: class_ref ':' ID '(' expression_list_empty ')'                                                { $$ = this.methodCallExpr($3, this.asExpr($1), $6).setParameters($5); }
 
 arithmetic_expr: expression '+' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setAdd(); }
 arithmetic_expr: expression '-' expression                                                                      { $$ = this.arithBinaryExpr($1, $3).setSub(); }

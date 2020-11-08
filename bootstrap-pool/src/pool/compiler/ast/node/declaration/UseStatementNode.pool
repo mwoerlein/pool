@@ -6,21 +6,22 @@ version = 0.1.0
 namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
 
 class UseStatementNode extends Node {
 
-    FullQualifiedNameNode _name;
+    ClassRefNode _name;
     String _alias;
 
     [] __init() {
         _alias = this.createOwn(String:CLASSNAME);
     }
     
-    [UseStatementNode] setName(FullQualifiedNameNode name) { _name = this.own(name); return this; }
-    [FullQualifiedNameNode] getName() { return _name; }
+    [UseStatementNode] setName(ClassRefNode name) { _name = this.own(name); return this; }
+    [ClassRefNode] getName() { return _name; }
     
     [UseStatementNode] setAlias(String alias) { _alias.assignString(alias); return this; }
     [int] hasAlias() { return _alias.length() > 0; }

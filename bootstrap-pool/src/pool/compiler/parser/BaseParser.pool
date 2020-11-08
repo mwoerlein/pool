@@ -10,7 +10,6 @@ use pool::compiler::ast::node::NodeList;
 use pool::compiler::ast::node::NodeMap;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
-use pool::compiler::ast::node::declaration::FullQualifiedNameNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::NamespaceDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
@@ -86,35 +85,17 @@ class BaseParser extends pool::generator::parser::Parser {
         return map;
     }
     
-    [FullQualifiedNameNode] fqn(Token id) { 
-        FullQualifiedNameNode fqn = this.createOwn(FullQualifiedNameNode:CLASSNAME);
-        fqn.setName(id.getValue());
-        fqn.setLocation(id.getFirstLine(), id.getFirstColumn(), id.getLastLine(), id.getLastColumn());
-        return fqn;
-    }
-    
-    [FullQualifiedNameNode] fqnAppend(FullQualifiedNameNode fqn, Token id) {
-        int fqnLine = fqn.getLastLine(); 
-        int fqnEnd = fqn.getLastColumn(); 
-        fqn.appendName(id.getValue());
-        fqn.setLastLocation(id.getLastLine(), id.getLastColumn());
-        if ((fqnLine != id.getFirstLine()) || (fqnEnd + 3 != id.getFirstColumn())) {
-            fqn.debugToStream(this.newError().printCString("non-consecutive full qualified name: ")).printNewline();
-        }
-        return fqn;
-    }
-    
     // declarations
-    [NamespaceDeclNode] namespaceDecl(FullQualifiedNameNode fqn, Token first, Token last) {
+    [NamespaceDeclNode] namespaceDecl(ClassRefNode name, Token first, Token last) {
         NamespaceDeclNode node = this.rt().createInstance(NamespaceDeclNode:CLASSNAME);
-        node.setName(fqn);
+        node.setName(name);
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
         return node;
     }
     
-    [UseStatementNode] useStatement(FullQualifiedNameNode fqn, Token alias, Token first, Token last) {
+    [UseStatementNode] useStatement(ClassRefNode name, Token alias, Token first, Token last) {
         UseStatementNode node = this.rt().createInstance(UseStatementNode:CLASSNAME);
-        node.setName(fqn);
+        node.setName(name);
         if (alias) { node.setAlias(alias.getValue()); }
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), last.getLastLine(), last.getLastColumn());
         return node;
@@ -370,6 +351,8 @@ class BaseParser extends pool::generator::parser::Parser {
     }
     
     // references
+    [TypeRefNode] asRef(__any__ node) { return this.rt().cast(TypeRefNode:CLASSNAME, node); }
+
     [AllRefNode] allRef(Token t) {
         AllRefNode node = this.rt().createInstance(AllRefNode:CLASSNAME);
         node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
@@ -382,10 +365,21 @@ class BaseParser extends pool::generator::parser::Parser {
         return node;
     }
     
-    [ClassRefNode] classRef(FullQualifiedNameNode fqn) {
-        ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);
-        node.setName(fqn);
-        node.setLocation(fqn.getFirstLine(), fqn.getFirstColumn(), fqn.getLastLine(), fqn.getLastColumn());
+    [ClassRefNode] classRef(Token id) {
+        ClassRefNode node = this.createOwn(ClassRefNode:CLASSNAME);
+        node.setName(id.getValue());
+        node.setLocation(id.getFirstLine(), id.getFirstColumn(), id.getLastLine(), id.getLastColumn());
+        return node;
+    }
+    
+    [ClassRefNode] appendToClassRef(ClassRefNode node, Token id) {
+        int line = node.getLastLine(); 
+        int end = node.getLastColumn();
+        node.getName().printChar(':').printChar(':').print(id.getValue());
+        node.setLastLocation(id.getLastLine(), id.getLastColumn());
+        if ((id.getFirstLine() != line) || (id.getFirstColumn() != end + 3)) {
+            node.debugToStream(this.newError().printCString("non-consecutive full qualified name: ")).printNewline();
+        }
         return node;
     }
     

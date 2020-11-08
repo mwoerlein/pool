@@ -6,15 +6,16 @@ version = 0.1.0
 namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::Visitor;
 use sys::stream::OStream;
 
 class NamespaceDeclNode extends Node {
 
-    FullQualifiedNameNode _name;
-
-    [NamespaceDeclNode] setName(FullQualifiedNameNode name) { _name = this.own(name); return this; }
-    [FullQualifiedNameNode] getName() { return _name; }
+    ClassRefNode _name;
+    
+    [NamespaceDeclNode] setName(ClassRefNode name) { _name = this.own(name); return this; }
+    [ClassRefNode] getName() { return _name; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitNamespaceDecl(this); }
