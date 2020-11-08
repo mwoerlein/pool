@@ -272,7 +272,7 @@ class Parser extends BaseParser {
         else if (rule == 100) { result = this.asInst(s.at(1)); }
         else if (rule == 101) { result = this.returnInst(s.at(3), s.at(0)).setValues(s.at(1)); }
         else if (rule == 102) { result = this.returnExprInst(s.at(1), s.at(0)); }
-        else if (rule == 103) { result = this.returnInst(s.at(0), s.at(0)).setValues(this.nodeList()); }
+        else if (rule == 103) { result = this.returnInst(s.at(0), s.at(0)); }
         else if (rule == 104) { result = this.variableInit(s.at(2), s.at(0)); }
         else if (rule == 105) { result = this.variableInit(s.at(2), s.at(0)).setFinal(); }
         else if (rule == 106) { result = this.multiVariableInit(s.at(3), s.at(0), s.at(4)); }
