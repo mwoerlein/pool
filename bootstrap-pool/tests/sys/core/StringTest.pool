@@ -53,6 +53,7 @@ class StringTest extends test::TestCase {
         String s2 = this.rt().createInstance(String:CLASSNAME); s2.assignCString("strin"); s2.printChar(0x2300 + 'g');
         String s3 = this.rt().createInstance(String:CLASSNAME); s3.assignCString("other string");
         
+        if (s1.hash() != String:hashCString("string")) { return this.fail("Hash value is not identical to cstring hash"); }
         if (s1.hash() != s1.hash()) { return this.fail("Hash value is not constant"); }
         if (s1.hash() != s2.hash()) { return this.fail("Hash value of Strings differs for same cstring values"); }
         if (s1.hash() == s3.hash()) { return this.fail("Hash value of Strings is identical for different cstring values"); }

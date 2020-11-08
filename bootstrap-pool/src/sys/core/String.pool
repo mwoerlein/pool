@@ -12,6 +12,8 @@ use sys::stream::OStream;
 
 class String extends OStream {
 
+    int HASH_FACTOR := 33;
+    
     StringElement _first;
     StringElement _last;
     
@@ -56,7 +58,7 @@ class String extends OStream {
             _first = _last = newElem;
         }
         _length++;
-        _hash *= 33;
+        _hash *= String:HASH_FACTOR;
         _hash += newElem.hash();
         
         return this.ostream();
@@ -275,18 +277,36 @@ class String extends OStream {
         int ret = 0;
         __pasm__(<"
             movl 0, %ecx
-        _lr2_strcmp_loop:
+        _scs_strcmp_loop:
             movb (%ebx), %cl
-            cmpb 0, %cl;        je _lr2_strcmp_ret_neg_a
-            cmpb 0, (%eax);     je _lr2_strcmp_ret
-            subb (%eax), %cl;   jnz _lr2_strcmp_ret
+            cmpb 0, %cl;        je _scs_strcmp_ret_neg_a
+            cmpb 0, (%eax);     je _scs_strcmp_ret
+            subb (%eax), %cl;   jnz _scs_strcmp_ret
             addl 1, %eax
             addl 1, %ebx
-            jmp _lr2_strcmp_loop
-        _lr2_strcmp_ret_neg_a:
+            jmp _scs_strcmp_loop
+        _scs_strcmp_ret_neg_a:
             subb (%eax), %cl
-        _lr2_strcmp_ret:
+        _scs_strcmp_ret:
         ">, {"%eax": a, "%ebx": b}, {"%ecx": ret});
         return ret;
     }
+    
+    global [int] hashCString(cstring a) {
+        int ret = 0;
+        __pasm__(<"
+            movl 0, %eax
+            movl 0, %edx
+        _scs_strhash_loop:
+            movb (%ecx), %dl
+            cmpb 0, %dl;     je _scs_strhash_ret
+            .byte 0x0f; .byte 0xaf; .byte 0xc3 #//imul %ebx, %eax
+            addl %edx, %eax;
+            addl 1, %ecx
+            jmp _scs_strhash_loop
+        _scs_strhash_ret:
+        ">, {"%ebx": String:HASH_FACTOR, "%ecx": a}, {"%eax": ret});
+        return ret;
+    }
+
 }

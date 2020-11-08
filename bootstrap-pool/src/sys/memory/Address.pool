@@ -5,7 +5,6 @@ version = 0.1.0
 */
 namespace sys::memory;
 
-use sys::runtime::ClassDescriptor;
 
 class Address {
     global int SIZE := 4;

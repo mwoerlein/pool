@@ -111,6 +111,7 @@ class OStream extends Object {
         
         /*  Divide D by BASE until D == 0. */
         do {
+            // [cur, remainder] /\= base; // unsigned div-mod
             __pasm__("movl 0, %edx; div %ebx", {"%eax": cur, "%ebx": base}, {"%eax": cur, "%edx": remainder});
             if (remainder < 10) {
                 Address:storeChar(--p, remainder + '0');

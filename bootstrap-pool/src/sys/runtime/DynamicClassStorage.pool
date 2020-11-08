@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::core::String;
 use sys::memory::Address;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
@@ -138,22 +139,16 @@ class DynamicClassStorage extends ClassStorage {
     }
     
     [int] _getBucketNumber(cstring name) {
+        // return String:hashCString(name) \ bucketsCount; // unsigned mod
         int hash = 0;
-        int p = Address:fromString(name);
-        int c = Address:loadChar(p++);
-        while (c) {
-            hash *= 33;
-            hash += c;
-            c = Address:loadChar(p++);
-        }
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": hash, "%ebx": bucketsCount}, {"%edx": hash}); // hash %= bucketsCount; (unsigned)
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": String:hashCString(name), "%ebx": bucketsCount}, {"%edx": hash});
         return hash;
     }
     
     [ClassDescriptor] _findInBucket(ClassDescriptor classDesc, cstring name) {
         while (classDesc) {
             cstring descName = Address:string(classDesc, classDesc.classname_offset);
-            if (sys::core::String:compareCStrings(descName, name) == 0) {
+            if (String:compareCStrings(descName, name) == 0) {
                 return classDesc;
             }
             classDesc = classDesc.next_desc;
