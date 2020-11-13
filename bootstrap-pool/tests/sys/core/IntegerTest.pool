@@ -129,6 +129,16 @@ class IntegerTest extends test::TestCase {
         i.printToStream(s.ostream());
         if (!s.cequals("12345678")) { return this.fail("Invalid value printed for 12345678"); }
         
+        i.assignInt(2147483647);
+        s.clear();
+        i.printToStream(s.ostream());
+        if (!s.cequals("2147483647")) { return this.fail("Invalid value printed for 2147483647"); }
+        
+        i.assignInt(-2147483648);
+        s.clear();
+        i.printToStream(s.ostream());
+        if (!s.cequals("-2147483648")) { return this.fail("Invalid value printed for -2147483648"); }
+
         s.destroy();
         i.destroy();
         return this.success();
