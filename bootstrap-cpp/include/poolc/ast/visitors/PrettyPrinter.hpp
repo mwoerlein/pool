@@ -2,6 +2,7 @@
 #define POOLC_AST_VISITORS_PRETTYPRINTER_HPP_LOCK
 
 #include "poolc/ast/visitors/Writer.hpp"
+class ExpressionNode;
 
 class PrettyPrinter: public Writer {
     private:
@@ -10,6 +11,7 @@ class PrettyPrinter: public Writer {
     virtual OStream & indent();
     virtual void startBlock(OStream *line = 0);
     virtual void endBlock();
+    virtual void visitContext(ExpressionNode * context);
     
     public:
     PrettyPrinter(Environment &env, MemoryInfo &mi, PoolStorage &ps);

@@ -296,16 +296,32 @@ bool PrettyPrinter::visit(ReturnInstNode & returnInst) {
 }
 
 bool PrettyPrinter::visit(WhileInstNode & whileInst) {
-    OStream & line = indent() << "while (";
-    whileInst.condition.accept(*this);
-    line << ")";
-    
-    if (whileInst.block.isEmpty()) {
-        line << " {}\n";
+    if (whileInst.postTest) {
+        OStream & line = indent() << "do";
+        
+        if (whileInst.block.isEmpty()) {
+            line << " {}";
+        } else {
+            startBlock(&line);
+            whileInst.block.instructions.acceptAll(*this);
+            _indent -= 4;
+            indent() << "}";
+        }
+        line << " while (";
+        whileInst.condition.accept(*this);
+        line << ");\n";
     } else {
-        startBlock(&line);
-        whileInst.block.instructions.acceptAll(*this);
-        endBlock();
+        OStream & line = indent() << "while (";
+        whileInst.condition.accept(*this);
+        line << ")";
+        
+        if (whileInst.block.isEmpty()) {
+            line << " {}\n";
+        } else {
+            startBlock(&line);
+            whileInst.block.instructions.acceptAll(*this);
+            endBlock();
+        }
     }
     return true;
 }
@@ -391,8 +407,8 @@ bool PrettyPrinter::visit(LogicalUnaryExprNode & logicalUnary) {
     return true;
 }
 bool PrettyPrinter::visit(MethodCallExprNode & methodCall) {
-    methodCall.context.accept(*this);
-    elem() << "." << methodCall.name << "(";
+    visitContext(&(methodCall.context));
+    elem() << methodCall.name << "(";
     {
         Iterator<ExpressionNode> &it = methodCall.parameters.iterator();
         while (it.hasNext()) {
@@ -422,14 +438,7 @@ bool PrettyPrinter::visit(ThisExprNode & constThis) {
     return true;
 }
 bool PrettyPrinter::visit(VariableExprNode & variable) {
-    if (variable.context) {
-        variable.context->accept(*this);
-        if (variable.context->resolvedType && variable.context->resolvedType->isClass()) {
-            elem() << ":";
-        } else {
-            elem() << ".";
-        }
-    }
+    visitContext(variable.context);
     elem() << variable.name;
     return true;
 }
@@ -460,4 +469,17 @@ void PrettyPrinter::startBlock(OStream *line) {
 void PrettyPrinter::endBlock() {
     _indent -= 4;
     indent() << "}\n";
+}
+
+void PrettyPrinter::visitContext(ExpressionNode * context) {
+    if (context) {
+        context->accept(*this);
+        if (context->resolvedType && context->resolvedType->isClass()) {
+            elem() << ":";
+        } else if (context->isClass()){
+            elem() << ":";
+        } else {
+            elem() << ".";
+        }
+    }
 }

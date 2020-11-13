@@ -383,11 +383,11 @@ class PrettyPrinter extends Visitor {
     [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
         OStream line = this.elem().printChar('(');
         node.getVariable().accept(this.visitor());
-        if (node.isAdd()) { line.printChar('+').printChar('='); }
-        else if (node.isSub()) { line.printChar('-').printChar('='); }
-        else if (node.isMul()) { line.printChar('*').printChar('='); }
-        else if (node.isDiv()) { line.printChar('/').printChar('='); }
-        else if (node.isMod()) { line.printChar('%').printChar('='); }
+        if (node.isAdd())      { line.printChar(' ').printChar('+').printChar('=').printChar(' '); }
+        else if (node.isSub()) { line.printChar(' ').printChar('-').printChar('=').printChar(' '); }
+        else if (node.isMul()) { line.printChar(' ').printChar('*').printChar('=').printChar(' '); }
+        else if (node.isDiv()) { line.printChar(' ').printChar('/').printChar('=').printChar(' '); }
+        else if (node.isMod()) { line.printChar(' ').printChar('%').printChar('=').printChar(' '); }
         node.getValue().accept(this.visitor());
         line.printChar(')');
         return true;
@@ -396,11 +396,11 @@ class PrettyPrinter extends Visitor {
     [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
         OStream line = this.elem().printChar('(');
         node.getLeft().accept(this.visitor());
-        if (node.isAdd()) { line.printChar('+'); }
-        else if (node.isSub()) { line.printChar('-'); }
-        else if (node.isMul()) { line.printChar('*'); }
-        else if (node.isDiv()) { line.printChar('/'); }
-        else if (node.isMod()) { line.printChar('%'); }
+        if (node.isAdd())      { line.printChar(' ').printChar('+').printChar(' '); }
+        else if (node.isSub()) { line.printChar(' ').printChar('-').printChar(' '); }
+        else if (node.isMul()) { line.printChar(' ').printChar('*').printChar(' '); }
+        else if (node.isDiv()) { line.printChar(' ').printChar('/').printChar(' '); }
+        else if (node.isMod()) { line.printChar(' ').printChar('%').printChar(' '); }
         node.getRight().accept(this.visitor());
         line.printChar(')');
         return true;
@@ -408,8 +408,8 @@ class PrettyPrinter extends Visitor {
     
     [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
         OStream line = this.elem().printChar('(');
-        if (node.isPreInc()) { line.printChar('+').printChar('+'); node.getVariable().accept(this.visitor()); }
-        else if (node.isPreDec()) { line.printChar('-').printChar('-'); node.getVariable().accept(this.visitor()); }
+        if (node.isPreInc())       { line.printChar('+').printChar('+'); node.getVariable().accept(this.visitor()); }
+        else if (node.isPreDec())  { line.printChar('-').printChar('-'); node.getVariable().accept(this.visitor()); }
         else if (node.isPostInc()) { node.getVariable().accept(this.visitor()); line.printChar('+').printChar('+'); }
         else if (node.isPostDec()) { node.getVariable().accept(this.visitor()); line.printChar('-').printChar('-'); }
         line.printChar(')');
@@ -419,7 +419,7 @@ class PrettyPrinter extends Visitor {
     [int] visitAssignmentExpr(AssignmentExprNode node) {
         OStream line = this.elem().printChar('(');
         node.getVariable().accept(this.visitor());
-        line.printChar('=');
+        line.printChar(' ').printChar('=').printChar(' ');
         node.getValue().accept(this.visitor());
         line.printChar(')');
         return true;
@@ -438,14 +438,14 @@ class PrettyPrinter extends Visitor {
     [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
         OStream line = this.elem().printChar('(');
         node.getLeft().accept(this.visitor());
-        if (node.isAnd()) { line.printChar('&').printChar('&'); }
-        else if (node.isOr()) { line.printChar('|').printChar('|'); }
-        else if (node.isEq()) { line.printChar('=').printChar('='); }
-        else if (node.isNeq()) { line.printChar('!').printChar('='); }
-        else if (node.isLt()) { line.printChar('<'); }
-        else if (node.isLe()) { line.printChar('<').printChar('='); }
-        else if (node.isGt()) { line.printChar('>'); }
-        else if (node.isGe()) { line.printChar('>').printChar('='); }
+        if (node.isAnd())      { line.printChar(' ').printChar('&').printChar('&').printChar(' '); }
+        else if (node.isOr())  { line.printChar(' ').printChar('|').printChar('|').printChar(' '); }
+        else if (node.isEq())  { line.printChar(' ').printChar('=').printChar('=').printChar(' '); }
+        else if (node.isNeq()) { line.printChar(' ').printChar('!').printChar('=').printChar(' '); }
+        else if (node.isLt())  { line.printChar(' ').printChar('<').printChar(' '); }
+        else if (node.isLe())  { line.printChar(' ').printChar('<').printChar('=').printChar(' '); }
+        else if (node.isGt())  { line.printChar(' ').printChar('>').printChar(' '); }
+        else if (node.isGe())  { line.printChar(' ').printChar('>').printChar('=').printChar(' '); }
         node.getRight().accept(this.visitor());
         line.printChar(')');
         return true;
