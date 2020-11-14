@@ -110,38 +110,32 @@ class MemoryManager extends Allocator {
     [] initEmpty(MemoryInfo available, int allocateIncreasing, int poolElements) {
         this.allocateIncreasing = allocateIncreasing;
         
-        // initialize pool
-        [MemoryInfoPool pool, MemoryInfo initialAvailable] = this._createPool(available, 3 + poolElements);
-        if (Address:from(pool) == MemoryInfo:NONE) { return; } // bail out
+        // allocate pool
+        int poolSize = MemoryInfoPool:SIZEOF + (poolElements + 3)*MemoryInfo:SIZEOF;
+        int requiredSize = MemoryInfo:SIZEOF + poolSize;
+        if (Address:compareAddress(available.len, requiredSize + MemoryInfo:SIZEOF) < 0) {
+            // bail out
+            this.rt().err().printCString("too many pool elements for available space\n");
+            return;
+        }
+        [MemoryInfo used, MemoryInfo initialAvailable] = this._splitAvailableMemoryInfo(available, poolSize);
+        used.flags = MemoryInfo:FLAGS_USED;
         
-        // init manager
-        this.nonEmbeddedInfos = pool;
-        this.available = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
-        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
-        this.reserved  = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_RESERVED);
+        this._initEmptyPool(used, poolElements + 3);
         
         this._appendMemoryInfo(this.available.prev, initialAvailable);
-        this._appendMemoryInfo(this.used.prev, pool.self);
+        this._appendMemoryInfo(this.used.prev, used);
     }
     
     [] initEmptyFromAllocator(Allocator allocator, int allocateIncreasing, int poolElements) {
-        // initialize pool
+        this.allocateIncreasing = allocateIncreasing;
+        
+        // allocate pool
         int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
         MemoryInfo used = allocator.allocate(poolSize);
         if (Address:from(used) == MemoryInfo:NONE) { return; } // bail out
         
-        MemoryInfoPool pool = Address:cast(used.buf);
-        pool.self = used;
-        pool.size = poolElements;
-        pool.used = 0;
-        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
-        
-        // init manager
-        this.allocateIncreasing = allocateIncreasing;
-        this.nonEmbeddedInfos = pool;
-        this.available = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
-        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
-        this.reserved  = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_RESERVED);
+        this._initEmptyPool(used, poolElements);
     }
     
     [] initFromMemoryManager(MemoryManager src) {
@@ -152,26 +146,17 @@ class MemoryManager extends Allocator {
         this.reserved = src.reserved;
     }
     
-    [MemoryInfoPool, MemoryInfo] _createPool(MemoryInfo available, int poolElements) {
-        int poolSize = MemoryInfoPool:SIZEOF + poolElements*MemoryInfo:SIZEOF;
-        int requiredSize = MemoryInfo:SIZEOF + poolSize;
-        if (Address:compareAddress(available.len, requiredSize + MemoryInfo:SIZEOF) < 0) {
-            // bail out
-            this.rt().err().printCString("too many pool elements for available space\n");
-            return [Address:cast(MemoryInfo:NONE), Address:cast(MemoryInfo:NONE)];
-        }
-        // separate remaining space
-        [MemoryInfo used, MemoryInfo remaining] = this._splitAvailableMemoryInfo(available, poolSize);
-        
-        // initiate pool
-        used.flags = MemoryInfo:FLAGS_USED;
-        
-        MemoryInfoPool pool = Address:cast(used.buf);
-        pool.self = used;
+    [MemoryInfoPool] _initEmptyPool(MemoryInfo info, int poolElements) {
+        MemoryInfoPool pool = Address:cast(info.buf);
+        pool.self = info;
         pool.size = poolElements;
         pool.used = 0;
-        pool.elements = used.buf + MemoryInfoPool:SIZEOF;
-        return [pool, remaining];
+        pool.elements = info.buf + MemoryInfoPool:SIZEOF;
+        
+        this.nonEmbeddedInfos = pool;
+        this.available = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
+        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
+        this.reserved  = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_RESERVED);
     }
     
     // pool handling
