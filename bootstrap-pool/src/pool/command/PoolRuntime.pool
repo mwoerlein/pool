@@ -99,15 +99,8 @@ Pool Bootstrap Runtime.
         AnyIterator argIt = this.getArguments();
         String classname = argIt.next();
         argIt.destroy();
-        {
-            int buf = 0;
-            __pasm__("subl %eax, %esp", {"%eax": classname.length() + 1}, {"%esp": buf});
-            t = rt.createInstanceAs(classname.toCString(buf), Thread:CLASSNAME);
-            __pasm__("addl %eax, %esp", {"%eax": classname.length() + 1});
-        }
-        if (t) {
-            t.run();
-        }
+        
+        rt.createAndRunThread(classname.toCString());
         
         return 0;
     }

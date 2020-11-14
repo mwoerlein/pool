@@ -76,11 +76,7 @@ class Command extends CommandLine {
     }
     
     [SeekableIOStream] openFile(String filename, int mode) {
-        int buf = 0;
-        __pasm__("subl %eax, %esp", {"%eax": filename.length() + 1}, {"%esp": buf});
-        SeekableIOStream f = this.openCFile(filename.toCString(buf), mode);
-        __pasm__("addl %eax, %esp", {"%eax": filename.length() + 1});
-        return f;
+        return this.openCFile(filename.toCString(), mode);
     }
     
     [SeekableIOStream] openCFile(cstring filename, int mode) {
@@ -90,7 +86,7 @@ class Command extends CommandLine {
             f.destroy();
             return null;
         }
-        return this.rt().cast(SeekableIOStream:CLASSNAME, f);
+        return f.iostream();
     }
     
     [Directory] openDirectory(String classpath) {

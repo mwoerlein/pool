@@ -16,7 +16,7 @@ use sys::memory::MemoryInfo;
 class FileElement extends StorageElement {
     
     MemoryInfo buffer;
-    cstring filename;
+    String filename;
     int offset;
     int contentSize;
     
@@ -30,15 +30,13 @@ class FileElement extends StorageElement {
     }
     
     [FileElement] init(String path, PropertiesMarshaller pm) {
-        buffer = this.rt().getAllocator().allocate(path.length() + 1);
-        this.filename = path.toCString(buffer.buf);
-        path.destroy();
+        filename = path;
         offset = 0;
         contentSize = 0;
         
         File file = this.rt().createInstance(File:CLASSNAME);
         
-        if (file._init(filename, File:MODE_READ, offset) >= 0) {
+        if (file._init(filename.toCString(), File:MODE_READ, offset) >= 0) {
             if (pm && pm.unmarshall(file.istream(), this.propertyContainer())) {
                 offset = file.pos();
             } else {
@@ -55,7 +53,7 @@ class FileElement extends StorageElement {
     [IStream] getContent() {
         File file = this.rt().createInstance(File:CLASSNAME);
         
-        if (file._init(filename, File:MODE_READ, offset) < 0) {
+        if (file._init(filename.toCString(), File:MODE_READ, offset) < 0) {
             file.destroy();
             return null;
         }

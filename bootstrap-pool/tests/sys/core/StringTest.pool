@@ -234,19 +234,17 @@ class StringTest extends test::TestCase {
     
     [int] testToCString() {
         this.start("testToCString");
-        sys::memory::MemoryInfo info = this.rt().getAllocator().allocate(20);
         String testString = this.rt().createInstance(String:CLASSNAME);
         
-        if (!testString.cequals(testString.toCString(info.buf))) { return this.fail("Test \"\".toCString()"); }
+        if (!testString.cequals(testString.toCString())) { return this.fail("Test \"\".toCString()"); }
         
         testString.assignCString("string");
-        if (!testString.cequals(testString.toCString(info.buf))) { return this.fail("Test \"string\".toCString()"); }
+        if (!testString.cequals(testString.toCString())) { return this.fail("Test \"string\".toCString()"); }
         
         testString.assignCString("s");
-        if (!testString.cequals(testString.toCString(info.buf))) { return this.fail("Test \"s\".toCString()"); }
+        if (!testString.cequals(testString.toCString())) { return this.fail("Test \"s\".toCString()"); }
         
         testString.destroy();
-        this.rt().getAllocator().free(info);
         return this.success();
     }
     

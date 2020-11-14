@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::core;
 
 use sys::memory::Address;
+use sys::memory::MemoryInfo;
 use sys::runtime::Runtime;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -19,6 +20,7 @@ class String extends OStream {
     
     int _length;
     int _hash;
+    MemoryInfo _buffer;
     
     // TODO #7: move to constructor with (implicit) parent calls
     [] __init() {
@@ -46,6 +48,7 @@ class String extends OStream {
         }
         _first = _last = null;
         _length = _hash = 0;
+        if (_buffer) { this.rt().getAllocator().free(_buffer); _buffer = null; }
     }
 
     [OStream] printChar(int c) {
@@ -60,6 +63,7 @@ class String extends OStream {
         _length++;
         _hash *= String:HASH_FACTOR;
         _hash += newElem.hash();
+        if (_buffer) { this.rt().getAllocator().free(_buffer); _buffer = null; }
         
         return this.ostream();
     }
@@ -213,15 +217,18 @@ class String extends OStream {
         return i;
     }
     
-    [cstring] toCString(int buffer) {
-        int p = buffer;
-        StringElement cur = _first;
-        while (cur) {
-            Address:storeChar(p++, cur.getChar());
-            cur = cur.getNext();
+    [cstring] toCString() {
+        if (!_buffer) {
+            _buffer = this.rt().getAllocator().allocate(this.length() + 1);
+            int p = _buffer.buf;
+            StringElement cur = _first;
+            while (cur) {
+                Address:storeChar(p++, cur.getChar());
+                cur = cur.getNext();
+            }
+            Address:storeChar(p++, 0);
         }
-        Address:storeChar(p++, 0);
-        return Address:string(null, buffer);
+        return Address:string(null, _buffer.buf);
     }
     
     [IStream] toIStream() {
