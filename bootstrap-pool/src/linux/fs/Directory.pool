@@ -53,7 +53,7 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
     }
     
     [OStream] writeElement(String fullQualifiedName, int mimeType) {
-        String filepath = this.buildFilePath(fullQualifiedName, mimeType, false);
+        String filepath = this.buildFilePath(fullQualifiedName, mimeType, true);
         int buf = 0;
         File f = this.rt().createInstance(File:CLASSNAME);
         int r = f._init(filepath.toCString(), File:MODE_WRITE, 0);
@@ -81,6 +81,7 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
             FullQualifiedNameIterator parts = this.rt().createInstance(FullQualifiedNameIterator:CLASSNAME);
             parts.init(fullQualifiedName.toIStream());
             while (parts.hasNext()) {
+                if (createPath) { linux::SysCall:mkdir(path.toCString()); }
                 path.printChar('/').print(parts.next());
             }
             parts.destroy();

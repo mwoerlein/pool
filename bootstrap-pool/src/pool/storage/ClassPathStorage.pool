@@ -1,0 +1,54 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::storage;
+
+use sys::core::String;
+use sys::store::StorageElement;
+use sys::stream::OStream;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+
+class ClassPathStorage extends AnyList { // LinkedList<PoolStorage>
+    
+    [] __destruct() {
+        this.destroyAll();
+    }
+    
+    [StorageElement] getSourceClass(String fullQualifiedName) {
+        return this.getElement(fullQualifiedName, Mimetype:POOL_SRC);
+    }
+    
+    [StorageElement] getHeader(String fullQualifiedName) {
+        String search = this.rt().createInstance(String:CLASSNAME);
+        search.assignString(fullQualifiedName);
+        search.printCString("_header");
+        StorageElement ret = this.getElement(search, Mimetype:POOL_ASM);
+        search.destroy();
+        return ret;
+    }
+    
+    [StorageElement] getFooter(String fullQualifiedName) {
+        String search = this.rt().createInstance(String:CLASSNAME);
+        search.assignString(fullQualifiedName);
+        search.printCString("_footer");
+        StorageElement ret = this.getElement(search, Mimetype:POOL_ASM);
+        search.destroy();
+        return ret;
+    }
+    
+    [StorageElement] getElement(String fullQualifiedName, int mimeType) {
+        StorageElement ret = null;
+        AnyIterator it = this.iterator();
+        while (!ret && it.hasNext()) {
+            PoolStorage s = it.next();
+            ret = s.getElement(fullQualifiedName, mimeType);
+        }
+        it.destroy();
+        return ret;
+    }
+   
+}

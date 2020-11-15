@@ -8,9 +8,12 @@ namespace pool::command;
 use pool::compiler::ast::Node;
 use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::parser::Parser;
+use pool::storage::ClassPathStorage;
+use pool::storage::PoolStorage;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::store::StorageElement;
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
@@ -28,16 +31,24 @@ class PoolCompiler extends linux::Command {
         this.setName("poolc")
             .setVersion("0.3.0")
             .setUsage(<"
-Pool Bootstrap Assembler.
+Pool Bootstrap Compiler.
 
     Usage:
-      pasm [options] <file>...
+      poolbc [options] -o <dir> [-p <dir>] -c <dir> [-c <dir>]... <fqn>...
 
     Options:
-      -h --help                 Show this screen.
-      --version                 Show version.
+      -h --help                     Show this screen.
+      --version                     Show version.
+      -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
+      -c <dir> --classpath <dir>    Search for classes in all of these directories.
+      -p <dir> --prettyprint <dir>  Dump classes into <dir>.
+      -r --recursive                Generate output for all required classes.
 ">);
         this.registerOptionAlias('h', "help")
+            .registerOptionAlias('o', "output")
+            .registerOptionAlias('p', "prettyprint")
+            .registerOptionAlias('c', "classpath").registerOptionList("classpath")
+            .registerOptionAlias('r', "recursive")
         ;
     }
 
@@ -51,37 +62,49 @@ Pool Bootstrap Assembler.
             out.printCString(name).printChar(' ').printCString(version).printNewline();
             return 0;
         }
-        if (this.getArgumentsSize() < 1) {
+        if (!this.hasOption("output") || this.getArgumentsSize() < 1 || this.getListOptionSize("classpath") < 1) {
             out.printCString(usage).printNewline();
             return -1;
         }
         
+        // TODO: handle log-level/logging
+        
+        ClassPathStorage classPath = this.rt().createInstance(ClassPathStorage:CLASSNAME);
+        {
+            AnyIterator it = this.getListOption("classpath");
+            while (it.hasNext()) {
+                classPath.add(this.openDirectory(it.next()).poolStorage());
+            }
+            it.destroy();
+        }
+        
+        PoolStorage outPS = this.openDirectory(this.getValueOption("output")).poolStorage();
+        
+        PrettyPrinter pp = null;
+        if (this.hasOption("prettyprint")) {
+            pp = this.rt().createInstance(PrettyPrinter:CLASSNAME);
+            pp.setStorage(this.openDirectory(this.getValueOption("prettyprint")).poolStorage());
+        }
         
         OStream err = this.rt().err();
         Node unit = null;
         {
-            AnyIterator argIt = this.getArguments();
-            if (argIt.hasNext()) {
-                String name = argIt.next();
-                if (name.compareCString("-") == 0) {
-                    IStream in = this.openStdIn();
-                    unit = parser.parse(in, name);
-                    in.destroy();
-                } else {
-                    SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
-                    if (f) {
-                        unit = parser.parse(f.istream(), name);
-                        f.destroy();
-                    }
-                }
+            AnyIterator fqnIt = this.getArguments();
+            if (this.hasOption("recursive")) {
+                // TODO: load all fqns and replace fqnIt
             }
-            argIt.destroy();
+            while (fqnIt.hasNext()) {
+                String fqn = fqnIt.next();
+                out.printCString("compile ").print(fqn).printNewline();
+                StorageElement elem = classPath.getSourceClass(fqn);
+                Node unit = parser.parse(elem.getContent(), fqn);
+                if (pp) { pp.init(fqn).visit(unit); }
+            }
+            fqnIt.destroy();
         }
-        if (unit) {
-            PrettyPrinter pp = this.rt().createInstance(PrettyPrinter:CLASSNAME);
-            pp.init(out).visit(unit);
-            pp.destroy();
-        }
+        if (pp) { pp.destroy(); }
+        outPS.destroy();
+        classPath.destroy();
     }
     
     // methods
