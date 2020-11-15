@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::log;
+
+use sys::stream::OStream;
+
+class LoggerAware extends sys::core::Object {
+
+    [] setLogger(Logger logger) { /*TODO*/ }
+    
+    [OStream] crit()  { return this.rt().err(); }
+    [OStream] error() { return this.rt().err(); }
+    [OStream] warn()  { return this.rt().err(); }
+    [OStream] note()  { return this.rt().out(); }
+    [OStream] info()  { return this.rt().out(); }
+    [OStream] debug() { return this.rt().out(); }
+
+}

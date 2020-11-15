@@ -1,0 +1,50 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::visitor::PrettyPrinter;
+use pool::compiler::parser::Parser;
+use pool::storage::ClassPathStorage;
+use pool::storage::PoolStorage;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::store::StorageElement;
+
+class Compiler extends sys::log::LoggerAware {
+
+    ClassPathStorage classPath;
+    PoolStorage out;
+    Parser parser;
+    PrettyPrinter pp;
+    
+    [] __init() {
+        parser = this.createOwn(Parser:CLASSNAME);
+        classPath = this.createOwn(ClassPathStorage:CLASSNAME);
+    }
+    
+    [Compiler] addClassPath(PoolStorage pool) { classPath.add(this.own(pool)); return this; }
+    [Compiler] setOutput(PoolStorage pool) { out = this.own(pool); return this; }
+    [Compiler] setPrettyOutput(PoolStorage pool) {
+        pp = this.createOwn(PrettyPrinter:CLASSNAME);
+        pp.setStorage(pool);
+        return this;
+    }
+    
+    [] compile(AnyIterator fqnIt, int recursive) {
+        if (recursive) {
+            // TODO: load all fqns and replace fqnIt
+        }
+        while (fqnIt.hasNext()) {
+            String fqn = fqnIt.next();
+            this.note().printCString("compile ").print(fqn).printNewline();
+            Node unit = parser.parse(classPath.getSourceClass(fqn), fqn);
+            if (pp) { pp.visit(unit); }
+        }
+        fqnIt.destroy();
+    }
+}

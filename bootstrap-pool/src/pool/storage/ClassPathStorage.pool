@@ -14,10 +14,6 @@ use sys::core::anycollection::AnyList;
 
 class ClassPathStorage extends AnyList { // LinkedList<PoolStorage>
     
-    [] __destruct() {
-        this.destroyAll();
-    }
-    
     [StorageElement] getSourceClass(String fullQualifiedName) {
         return this.getElement(fullQualifiedName, Mimetype:POOL_SRC);
     }

@@ -5,30 +5,22 @@ version = 0.1.0
 */
 namespace pool::command;
 
-use pool::compiler::ast::Node;
-use pool::compiler::ast::visitor::PrettyPrinter;
-use pool::compiler::parser::Parser;
-use pool::storage::ClassPathStorage;
-use pool::storage::PoolStorage;
+use pool::compiler::Compiler;
 
-use sys::core::String;
 use sys::core::anycollection::AnyIterator;
-use sys::store::StorageElement;
-use sys::stream::IStream;
 use sys::stream::OStream;
-use sys::stream::SeekableIOStream;
 
 class PoolCompiler extends linux::Command {
 
-    Parser parser;
+    Compiler compiler;
 
     [] __init() {
         this._initCommand();
-        parser = this.createOwn(Parser:CLASSNAME);
+        compiler = this.createOwn(Compiler:CLASSNAME);
     }
     
     [] configure() {
-        this.setName("poolc")
+        this.setName("poolbc")
             .setVersion("0.3.0")
             .setUsage(<"
 Pool Bootstrap Compiler.
@@ -68,48 +60,22 @@ Pool Bootstrap Compiler.
         }
         
         // TODO: handle log-level/logging
-        
-        ClassPathStorage classPath = this.rt().createInstance(ClassPathStorage:CLASSNAME);
         {
             AnyIterator it = this.getListOption("classpath");
-            while (it.hasNext()) {
-                classPath.add(this.openDirectory(it.next()).poolStorage());
-            }
+            while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).poolStorage()); }
             it.destroy();
         }
-        
-        PoolStorage outPS = this.openDirectory(this.getValueOption("output")).poolStorage();
-        
-        PrettyPrinter pp = null;
+        compiler.setOutput(this.openDirectory(this.getValueOption("output")).poolStorage());
         if (this.hasOption("prettyprint")) {
-            pp = this.rt().createInstance(PrettyPrinter:CLASSNAME);
-            pp.setStorage(this.openDirectory(this.getValueOption("prettyprint")).poolStorage());
+            compiler.setPrettyOutput(this.openDirectory(this.getValueOption("prettyprint")).poolStorage());
         }
         
-        OStream err = this.rt().err();
-        Node unit = null;
-        {
-            AnyIterator fqnIt = this.getArguments();
-            if (this.hasOption("recursive")) {
-                // TODO: load all fqns and replace fqnIt
-            }
-            while (fqnIt.hasNext()) {
-                String fqn = fqnIt.next();
-                out.printCString("compile ").print(fqn).printNewline();
-                StorageElement elem = classPath.getSourceClass(fqn);
-                Node unit = parser.parse(elem, fqn);
-                if (pp) { pp.visit(unit); }
-            }
-            fqnIt.destroy();
-        }
-        if (pp) { pp.destroy(); }
-        outPS.destroy();
-        classPath.destroy();
+        compiler.compile(this.getArguments(), this.hasOption("recursive"));
     }
     
     // methods
     __entry__ [int] entry(int argc, int argv) {
-        PoolCompiler poolc = linux::Runtime:buildRuntime().createInstance(PoolCompiler:CLASSNAME);
-        return poolc.execute(argc, argv);
+        PoolCompiler poolbc = linux::Runtime:buildRuntime().createInstance(PoolCompiler:CLASSNAME);
+        return poolbc.execute(argc, argv);
     }
 }
