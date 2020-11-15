@@ -24,7 +24,9 @@ class PropertiesMarshaller extends sys::core::Object {
     
     [int] marshall(OStream out, PropertyContainer container) {
         // TODO: write correct format
+        out.printCString("/*").printNewline();
         container.dumpPropertiesToStream(out);
+        out.printCString("*/").printNewline();
         return true;
     }
     

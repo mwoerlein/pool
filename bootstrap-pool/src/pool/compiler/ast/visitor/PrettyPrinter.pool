@@ -61,16 +61,13 @@ class PrettyPrinter extends Visitor {
     OStream _element;
     int _indent;
     
-    [PrettyPrinter] init(String fqn) {
-        _indent = 0;
-        _element = _out.writeElement(fqn, Mimetype:POOL_SRC);
-        return this;
-    }
-    
-    [PrettyPrinter] setStorage(PoolStorage out) { _out = out; return this; }
+    [PrettyPrinter] setStorage(PoolStorage out) { _out = this.own(out); return this; }
     
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
+        _indent = 0;
+        _element = _out.writeElement(node.getName(), Mimetype:POOL_SRC, node.getElement().propertyContainer());
+        if (!_element) { return false; }
         
         node.getNamespace().accept(this.visitor());
         this.indent().printNewline();

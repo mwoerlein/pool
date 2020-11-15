@@ -97,8 +97,8 @@ Pool Bootstrap Compiler.
                 String fqn = fqnIt.next();
                 out.printCString("compile ").print(fqn).printNewline();
                 StorageElement elem = classPath.getSourceClass(fqn);
-                Node unit = parser.parse(elem.getContent(), fqn);
-                if (pp) { pp.init(fqn).visit(unit); }
+                Node unit = parser.parse(elem, fqn);
+                if (pp) { pp.visit(unit); }
             }
             fqnIt.destroy();
         }

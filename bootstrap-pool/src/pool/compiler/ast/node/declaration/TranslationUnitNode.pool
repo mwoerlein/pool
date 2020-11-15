@@ -9,9 +9,14 @@ use pool::compiler::ast::Node;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::NodeList;
 
+use sys::core::String;
+use sys::store::StorageElement;
 use sys::stream::OStream;
 
 class TranslationUnitNode extends Node {
+
+    StorageElement _element;
+    String _name;
 
     NamespaceDeclNode _ns;
     NodeList _uses; //NodeList<UseStatementNode>
@@ -22,9 +27,20 @@ class TranslationUnitNode extends Node {
         _uses = this.createOwn(NodeList:CLASSNAME);
         _classes = this.createOwn(NodeList:CLASSNAME);
         _structs = this.createOwn(NodeList:CLASSNAME);
+        _name = this.createOwn(String:CLASSNAME);
+        _name.assignCString("UNKNOWN");
     }
     
-    [TranslationUnitNode] setNamespace(NamespaceDeclNode ns) { _ns = ns; return this; }
+    [TranslationUnitNode] init(StorageElement src, String fqn) {
+        _element = this.own(src);
+        _name.assignString(fqn);
+        return this;
+    }
+    
+    [StorageElement] getElement() { return _element; }
+    [String] getName() { return _name; }
+    
+    [TranslationUnitNode] setNamespace(NamespaceDeclNode ns) { _ns = this.own(ns); return this; }
     [NamespaceDeclNode] getNamespace() { return _ns; }
     
     [TranslationUnitNode] addUseStatement(UseStatementNode useStmt) { _uses.add(_uses.own(useStmt)); return this; }
@@ -39,6 +55,6 @@ class TranslationUnitNode extends Node {
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitTranslationUnit(this); }
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("unit-<").printCString("NAME").printChar('>');
+        return stream.printCString("unit-<").print(_name).printChar('>');
     }
 }

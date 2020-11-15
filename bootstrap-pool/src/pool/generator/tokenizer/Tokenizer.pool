@@ -100,7 +100,7 @@ class Tokenizer extends sys::core::anycollection::AnyIterator, SymbolTable {
         String classname = gram.getTokenizerClassname();
         String fqn = storage.rt().createInstance(String:CLASSNAME);
         fqn.print(ns).printCString("::").print(classname);
-        OStream out = storage.writeElement(fqn, pool::storage::Mimetype:POOL_SRC);
+        OStream out = storage.writeElement(fqn, pool::storage::Mimetype:POOL_SRC, null);
         
         State init = d.getInitState();
         out.printChar('/').printChar('*').printCString(<"

@@ -10,6 +10,7 @@ use pool::storage::PoolStorage;
 use pool::storage::PropertiesMarshaller;
 use sys::core::String;
 use sys::core::utils::FullQualifiedNameIterator;
+use sys::core::utils::PropertyContainer;
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassDescriptorLoader;
 use sys::store::StorageElement;
@@ -52,7 +53,7 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
         return fe.init(this.buildFilePath(fullQualifiedName, mimeType, false), pm).storageElement();
     }
     
-    [OStream] writeElement(String fullQualifiedName, int mimeType) {
+    [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
         String filepath = this.buildFilePath(fullQualifiedName, mimeType, true);
         int buf = 0;
         File f = this.rt().createInstance(File:CLASSNAME);
@@ -62,6 +63,7 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
             f.destroy();
             return null;
         }
+        if (properties) { pm.marshall(f.ostream(), properties); }
         return f.ostream();
     }
     

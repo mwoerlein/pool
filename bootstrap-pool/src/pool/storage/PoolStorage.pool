@@ -6,13 +6,14 @@ version = 0.1.0
 namespace pool::storage;
 
 use sys::core::String;
+use sys::core::utils::PropertyContainer;
 use sys::store::StorageElement;
 use sys::stream::OStream;
 
 class PoolStorage extends sys::core::Object {
     
     abstract [StorageElement] getElement(String fullQualifiedName, int mimeType);
-    abstract [OStream] writeElement(String fullQualifiedName, int mimeType);
+    abstract [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties);
     abstract [int] removeElement(String fullQualifiedName, int mimeType);
     
     // TODO: remove with implicit cast

@@ -51,6 +51,7 @@ use pool::compiler::ast::node::reference::TypeRefNode;
 use pool::generator::tokenizer::Token;
 
 use sys::core::String;
+use sys::store::StorageElement;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
@@ -60,10 +61,11 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [OStream] newError() { return this.rt().err(); }
     
-    [Node] parse(IStream input, String inputName) {
-        TranslationUnitNode ret = unit = this.rt().createInstance(TranslationUnitNode:CLASSNAME);
+    [Node] parse(StorageElement input, String inputName) {
+        unit = this.rt().createInstance(TranslationUnitNode:CLASSNAME);
+        TranslationUnitNode ret = unit.init(input, inputName);
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
-        this._parse(in.init(input, inputName));
+        this._parse(in.init(input.getContent(), inputName));
         in.destroy();
         unit = null;
         return ret.node();
