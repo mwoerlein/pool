@@ -83,6 +83,8 @@ class PropertyContainer extends Owner {
         return stream;
     }
     
+    [AnyMapEntryIterator] properties() { return _properties.entries(); }
+    
     // TODO: remove with implicit cast
     [PropertyContainer] propertyContainer() { return this; }
 }

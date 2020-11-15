@@ -6,6 +6,8 @@ version = 0.1.0
 namespace pool::storage;
 
 use sys::core::String;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -23,10 +25,55 @@ class PropertiesMarshaller extends sys::core::Object {
     }
     
     [int] marshall(OStream out, PropertyContainer container) {
-        // TODO: write correct format
-        out.printCString("/*").printNewline();
-        container.dumpPropertiesToStream(out);
+        int c = 0;
+        AnyMap groups = this.rt().createInstance(AnyMap:CLASSNAME);
+        
+        // group properties
+        {
+            AnyMapEntryIterator it = container.properties();
+            while (it.hasNext()) {
+                [String key, __any__ value] = it.nextPair();
+                {
+                    block.clear(); name.clear();
+                    IStream in = key.toIStream();
+                    while ((c = in.readChar()) && (c != '.')) { block.printChar(c); }
+                    while (c = in.readChar()) { name.printChar(c); }
+                    in.destroy();
+                }
+                AnyMap group = groups.get(block);
+                if (!group) {
+                    String groupsBlock = groups.createOwn(String:CLASSNAME);
+                    groupsBlock.assignString(block);
+                    groups.set(groupsBlock, group = groups.createOwn(AnyMap:CLASSNAME));
+                }
+                String groupName = group.createOwn(String:CLASSNAME);
+                groupName.assignString(name);
+                group.set(groupName, value);
+            }
+            it.destroy();
+        }
+        
+        // marshall grouped properties
+        out.printCString("/*");
+        {
+            AnyMapEntryIterator git = groups.entries();
+            while (git.hasNext()) {
+                [String block, AnyMap map] = git.nextPair();
+                out.printChar('[').print(block).printChar(']').printNewline();
+                {
+                    AnyMapEntryIterator it = map.entries();
+                    while (it.hasNext()) {
+                        [String name, __any__ value] = it.nextPair();
+                        out.print(name).printChar(' ').printChar('=').printChar(' ').print(value).printNewline();
+                    }
+                    it.destroy();
+                }
+            }
+            git.destroy();
+        }
         out.printCString("*/").printNewline();
+        
+        groups.destroy();
         return true;
     }
     
