@@ -58,6 +58,7 @@ class Definition extends PropertyContainer {
 
         Symbol s = this.createOwn(Symbol:CLASSNAME);
         s.getName().printCString("INLINE_").printInt(symbols.size());
+        s.setDebug(value);
         symbols.set(this.createOwnStringFromString(value), s);
         
         TokenDesc t = this.createOwn(TokenDesc:CLASSNAME);

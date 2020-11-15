@@ -12,11 +12,11 @@ namespace pool::generator::parser::grammar;
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
     int T_ERROR := -2;
-    int T_INLINE_12 := 0;
-    int T_INLINE_17 := 1;
-    int T_INLINE_19 := 2;
-    int T_INLINE_20 := 3;
-    int T_INLINE_21 := 4;
+    int T_INLINE_12 := 0; // '%ignores'
+    int T_INLINE_17 := 1; // '%left'
+    int T_INLINE_19 := 2; // '%right'
+    int T_INLINE_20 := 3; // ':='
+    int T_INLINE_21 := 4; // ':'
     int T_SYMBOL := 5;
     int T_PARAMETER := 6;
     int T_PREC_REF := 7;
@@ -31,11 +31,11 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
         else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
-        else if (symbol == Tokenizer:T_INLINE_12) { stream.printCString("INLINE_12"); }
-        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("INLINE_17"); }
-        else if (symbol == Tokenizer:T_INLINE_19) { stream.printCString("INLINE_19"); }
-        else if (symbol == Tokenizer:T_INLINE_20) { stream.printCString("INLINE_20"); }
-        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("INLINE_21"); }
+        else if (symbol == Tokenizer:T_INLINE_12) { stream.printCString("'%ignores'"); }
+        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("'%left'"); }
+        else if (symbol == Tokenizer:T_INLINE_19) { stream.printCString("'%right'"); }
+        else if (symbol == Tokenizer:T_INLINE_20) { stream.printCString("':='"); }
+        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("':'"); }
         else if (symbol == Tokenizer:T_SYMBOL) { stream.printCString("SYMBOL"); }
         else if (symbol == Tokenizer:T_PARAMETER) { stream.printCString("PARAMETER"); }
         else if (symbol == Tokenizer:T_PREC_REF) { stream.printCString("PREC_REF"); }

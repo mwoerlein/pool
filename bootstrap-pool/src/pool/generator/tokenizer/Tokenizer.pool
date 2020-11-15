@@ -124,7 +124,9 @@ mimetype = text/x-pool-grammar
             while (sit.hasNext()) {
                 Symbol s = sit.next();
                 out.printCString("    int T_").print(s.getName()).printCString(" := ")
-                    .printInt(s.getId()).printChar(';').printNewline();
+                    .printInt(s.getId()).printChar(';');
+                if (s.hasDebug()) { out.printCString(" // ").print(s.getDebug()); }
+                out.printNewline();
             }
             sit.destroy();
         }
@@ -136,7 +138,13 @@ mimetype = text/x-pool-grammar
             while (sit.hasNext()) {
                 Symbol s = sit.next();
                 out.printCString("        else if (symbol == ").print(classname).printCString(":T_").print(s.getName())
-                    .printCString(") { stream.printCString(").escapeString(s.getName()).printCString("); }").printNewline();
+                    .printCString(") { stream.printCString(");
+                if (s.hasDebug()) {
+                    out.escapeString(s.getDebug());
+                } else {
+                    out.escapeString(s.getName());
+                }
+                out.printCString("); }").printNewline();
             }
             sit.destroy();
         }

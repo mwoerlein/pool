@@ -12,64 +12,64 @@ namespace pool::compiler::parser;
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
     int T_ERROR := -2;
-    int T_INLINE_9 := 0;
-    int T_INLINE_10 := 1;
-    int T_INLINE_11 := 2;
-    int T_INLINE_12 := 3;
-    int T_INLINE_13 := 4;
-    int T_INLINE_14 := 5;
-    int T_INLINE_15 := 6;
-    int T_INLINE_16 := 7;
-    int T_INLINE_17 := 8;
-    int T_INLINE_18 := 9;
-    int T_INLINE_19 := 10;
-    int T_INLINE_20 := 11;
-    int T_INLINE_21 := 12;
-    int T_INLINE_22 := 13;
-    int T_INLINE_23 := 14;
-    int T_INLINE_24 := 15;
-    int T_INLINE_25 := 16;
-    int T_INLINE_26 := 17;
-    int T_INLINE_27 := 18;
-    int T_INLINE_28 := 19;
-    int T_INLINE_29 := 20;
-    int T_INLINE_35 := 21;
-    int T_INLINE_37 := 22;
-    int T_INLINE_38 := 23;
-    int T_INLINE_39 := 24;
-    int T_INLINE_40 := 25;
-    int T_INLINE_41 := 26;
-    int T_INLINE_43 := 27;
-    int T_INLINE_45 := 28;
-    int T_INLINE_47 := 29;
-    int T_INLINE_49 := 30;
-    int T_INLINE_52 := 31;
-    int T_INLINE_54 := 32;
-    int T_INLINE_55 := 33;
-    int T_INLINE_56 := 34;
-    int T_INLINE_57 := 35;
-    int T_INLINE_58 := 36;
-    int T_INLINE_62 := 37;
-    int T_INLINE_63 := 38;
-    int T_INLINE_64 := 39;
-    int T_INLINE_65 := 40;
-    int T_INLINE_67 := 41;
-    int T_INLINE_68 := 42;
-    int T_INLINE_69 := 43;
-    int T_INLINE_78 := 44;
-    int T_INLINE_82 := 45;
-    int T_INLINE_83 := 46;
-    int T_INLINE_84 := 47;
-    int T_INLINE_85 := 48;
-    int T_INLINE_86 := 49;
-    int T_INLINE_87 := 50;
-    int T_INLINE_93 := 51;
-    int T_INLINE_94 := 52;
-    int T_INLINE_95 := 53;
-    int T_INLINE_96 := 54;
-    int T_INLINE_97 := 55;
-    int T_INLINE_98 := 56;
-    int T_INLINE_99 := 57;
+    int T_INLINE_9 := 0; // '='
+    int T_INLINE_10 := 1; // '+='
+    int T_INLINE_11 := 2; // '-='
+    int T_INLINE_12 := 3; // '*='
+    int T_INLINE_13 := 4; // '/='
+    int T_INLINE_14 := 5; // '%='
+    int T_INLINE_15 := 6; // '||'
+    int T_INLINE_16 := 7; // '&&'
+    int T_INLINE_17 := 8; // '=='
+    int T_INLINE_18 := 9; // '!='
+    int T_INLINE_19 := 10; // '<'
+    int T_INLINE_20 := 11; // '<='
+    int T_INLINE_21 := 12; // '>'
+    int T_INLINE_22 := 13; // '>='
+    int T_INLINE_23 := 14; // '+'
+    int T_INLINE_24 := 15; // '-'
+    int T_INLINE_25 := 16; // '*'
+    int T_INLINE_26 := 17; // '/'
+    int T_INLINE_27 := 18; // '%'
+    int T_INLINE_28 := 19; // '!'
+    int T_INLINE_29 := 20; // '.'
+    int T_INLINE_35 := 21; // 'namespace'
+    int T_INLINE_37 := 22; // ';'
+    int T_INLINE_38 := 23; // 'use'
+    int T_INLINE_39 := 24; // 'as'
+    int T_INLINE_40 := 25; // 'struct'
+    int T_INLINE_41 := 26; // '{'
+    int T_INLINE_43 := 27; // '}'
+    int T_INLINE_45 := 28; // 'global'
+    int T_INLINE_47 := 29; // 'class'
+    int T_INLINE_49 := 30; // 'extends'
+    int T_INLINE_52 := 31; // '::'
+    int T_INLINE_54 := 32; // '__all__'
+    int T_INLINE_55 := 33; // '__any__'
+    int T_INLINE_56 := 34; // 'cstring'
+    int T_INLINE_57 := 35; // 'int'
+    int T_INLINE_58 := 36; // ','
+    int T_INLINE_62 := 37; // '['
+    int T_INLINE_63 := 38; // ']'
+    int T_INLINE_64 := 39; // '('
+    int T_INLINE_65 := 40; // ')'
+    int T_INLINE_67 := 41; // '__entry__'
+    int T_INLINE_68 := 42; // '__naked__'
+    int T_INLINE_69 := 43; // 'abstract'
+    int T_INLINE_78 := 44; // ':'
+    int T_INLINE_82 := 45; // 'true'
+    int T_INLINE_83 := 46; // 'false'
+    int T_INLINE_84 := 47; // 'this'
+    int T_INLINE_85 := 48; // 'null'
+    int T_INLINE_86 := 49; // '++'
+    int T_INLINE_87 := 50; // '--'
+    int T_INLINE_93 := 51; // 'return'
+    int T_INLINE_94 := 52; // ':='
+    int T_INLINE_95 := 53; // '__pasm__'
+    int T_INLINE_96 := 54; // 'while'
+    int T_INLINE_97 := 55; // 'do'
+    int T_INLINE_98 := 56; // 'if'
+    int T_INLINE_99 := 57; // 'else'
     int T_EOL := 58;
     int T_WSP := 59;
     int T_ID := 60;
@@ -82,64 +82,64 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
         else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
-        else if (symbol == Tokenizer:T_INLINE_9) { stream.printCString("INLINE_9"); }
-        else if (symbol == Tokenizer:T_INLINE_10) { stream.printCString("INLINE_10"); }
-        else if (symbol == Tokenizer:T_INLINE_11) { stream.printCString("INLINE_11"); }
-        else if (symbol == Tokenizer:T_INLINE_12) { stream.printCString("INLINE_12"); }
-        else if (symbol == Tokenizer:T_INLINE_13) { stream.printCString("INLINE_13"); }
-        else if (symbol == Tokenizer:T_INLINE_14) { stream.printCString("INLINE_14"); }
-        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("INLINE_15"); }
-        else if (symbol == Tokenizer:T_INLINE_16) { stream.printCString("INLINE_16"); }
-        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("INLINE_17"); }
-        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("INLINE_18"); }
-        else if (symbol == Tokenizer:T_INLINE_19) { stream.printCString("INLINE_19"); }
-        else if (symbol == Tokenizer:T_INLINE_20) { stream.printCString("INLINE_20"); }
-        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("INLINE_21"); }
-        else if (symbol == Tokenizer:T_INLINE_22) { stream.printCString("INLINE_22"); }
-        else if (symbol == Tokenizer:T_INLINE_23) { stream.printCString("INLINE_23"); }
-        else if (symbol == Tokenizer:T_INLINE_24) { stream.printCString("INLINE_24"); }
-        else if (symbol == Tokenizer:T_INLINE_25) { stream.printCString("INLINE_25"); }
-        else if (symbol == Tokenizer:T_INLINE_26) { stream.printCString("INLINE_26"); }
-        else if (symbol == Tokenizer:T_INLINE_27) { stream.printCString("INLINE_27"); }
-        else if (symbol == Tokenizer:T_INLINE_28) { stream.printCString("INLINE_28"); }
-        else if (symbol == Tokenizer:T_INLINE_29) { stream.printCString("INLINE_29"); }
-        else if (symbol == Tokenizer:T_INLINE_35) { stream.printCString("INLINE_35"); }
-        else if (symbol == Tokenizer:T_INLINE_37) { stream.printCString("INLINE_37"); }
-        else if (symbol == Tokenizer:T_INLINE_38) { stream.printCString("INLINE_38"); }
-        else if (symbol == Tokenizer:T_INLINE_39) { stream.printCString("INLINE_39"); }
-        else if (symbol == Tokenizer:T_INLINE_40) { stream.printCString("INLINE_40"); }
-        else if (symbol == Tokenizer:T_INLINE_41) { stream.printCString("INLINE_41"); }
-        else if (symbol == Tokenizer:T_INLINE_43) { stream.printCString("INLINE_43"); }
-        else if (symbol == Tokenizer:T_INLINE_45) { stream.printCString("INLINE_45"); }
-        else if (symbol == Tokenizer:T_INLINE_47) { stream.printCString("INLINE_47"); }
-        else if (symbol == Tokenizer:T_INLINE_49) { stream.printCString("INLINE_49"); }
-        else if (symbol == Tokenizer:T_INLINE_52) { stream.printCString("INLINE_52"); }
-        else if (symbol == Tokenizer:T_INLINE_54) { stream.printCString("INLINE_54"); }
-        else if (symbol == Tokenizer:T_INLINE_55) { stream.printCString("INLINE_55"); }
-        else if (symbol == Tokenizer:T_INLINE_56) { stream.printCString("INLINE_56"); }
-        else if (symbol == Tokenizer:T_INLINE_57) { stream.printCString("INLINE_57"); }
-        else if (symbol == Tokenizer:T_INLINE_58) { stream.printCString("INLINE_58"); }
-        else if (symbol == Tokenizer:T_INLINE_62) { stream.printCString("INLINE_62"); }
-        else if (symbol == Tokenizer:T_INLINE_63) { stream.printCString("INLINE_63"); }
-        else if (symbol == Tokenizer:T_INLINE_64) { stream.printCString("INLINE_64"); }
-        else if (symbol == Tokenizer:T_INLINE_65) { stream.printCString("INLINE_65"); }
-        else if (symbol == Tokenizer:T_INLINE_67) { stream.printCString("INLINE_67"); }
-        else if (symbol == Tokenizer:T_INLINE_68) { stream.printCString("INLINE_68"); }
-        else if (symbol == Tokenizer:T_INLINE_69) { stream.printCString("INLINE_69"); }
-        else if (symbol == Tokenizer:T_INLINE_78) { stream.printCString("INLINE_78"); }
-        else if (symbol == Tokenizer:T_INLINE_82) { stream.printCString("INLINE_82"); }
-        else if (symbol == Tokenizer:T_INLINE_83) { stream.printCString("INLINE_83"); }
-        else if (symbol == Tokenizer:T_INLINE_84) { stream.printCString("INLINE_84"); }
-        else if (symbol == Tokenizer:T_INLINE_85) { stream.printCString("INLINE_85"); }
-        else if (symbol == Tokenizer:T_INLINE_86) { stream.printCString("INLINE_86"); }
-        else if (symbol == Tokenizer:T_INLINE_87) { stream.printCString("INLINE_87"); }
-        else if (symbol == Tokenizer:T_INLINE_93) { stream.printCString("INLINE_93"); }
-        else if (symbol == Tokenizer:T_INLINE_94) { stream.printCString("INLINE_94"); }
-        else if (symbol == Tokenizer:T_INLINE_95) { stream.printCString("INLINE_95"); }
-        else if (symbol == Tokenizer:T_INLINE_96) { stream.printCString("INLINE_96"); }
-        else if (symbol == Tokenizer:T_INLINE_97) { stream.printCString("INLINE_97"); }
-        else if (symbol == Tokenizer:T_INLINE_98) { stream.printCString("INLINE_98"); }
-        else if (symbol == Tokenizer:T_INLINE_99) { stream.printCString("INLINE_99"); }
+        else if (symbol == Tokenizer:T_INLINE_9) { stream.printCString("'='"); }
+        else if (symbol == Tokenizer:T_INLINE_10) { stream.printCString("'+='"); }
+        else if (symbol == Tokenizer:T_INLINE_11) { stream.printCString("'-='"); }
+        else if (symbol == Tokenizer:T_INLINE_12) { stream.printCString("'*='"); }
+        else if (symbol == Tokenizer:T_INLINE_13) { stream.printCString("'/='"); }
+        else if (symbol == Tokenizer:T_INLINE_14) { stream.printCString("'%='"); }
+        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("'||'"); }
+        else if (symbol == Tokenizer:T_INLINE_16) { stream.printCString("'&&'"); }
+        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("'=='"); }
+        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("'!='"); }
+        else if (symbol == Tokenizer:T_INLINE_19) { stream.printCString("'<'"); }
+        else if (symbol == Tokenizer:T_INLINE_20) { stream.printCString("'<='"); }
+        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("'>'"); }
+        else if (symbol == Tokenizer:T_INLINE_22) { stream.printCString("'>='"); }
+        else if (symbol == Tokenizer:T_INLINE_23) { stream.printCString("'+'"); }
+        else if (symbol == Tokenizer:T_INLINE_24) { stream.printCString("'-'"); }
+        else if (symbol == Tokenizer:T_INLINE_25) { stream.printCString("'*'"); }
+        else if (symbol == Tokenizer:T_INLINE_26) { stream.printCString("'/'"); }
+        else if (symbol == Tokenizer:T_INLINE_27) { stream.printCString("'%'"); }
+        else if (symbol == Tokenizer:T_INLINE_28) { stream.printCString("'!'"); }
+        else if (symbol == Tokenizer:T_INLINE_29) { stream.printCString("'.'"); }
+        else if (symbol == Tokenizer:T_INLINE_35) { stream.printCString("'namespace'"); }
+        else if (symbol == Tokenizer:T_INLINE_37) { stream.printCString("';'"); }
+        else if (symbol == Tokenizer:T_INLINE_38) { stream.printCString("'use'"); }
+        else if (symbol == Tokenizer:T_INLINE_39) { stream.printCString("'as'"); }
+        else if (symbol == Tokenizer:T_INLINE_40) { stream.printCString("'struct'"); }
+        else if (symbol == Tokenizer:T_INLINE_41) { stream.printCString("'{'"); }
+        else if (symbol == Tokenizer:T_INLINE_43) { stream.printCString("'}'"); }
+        else if (symbol == Tokenizer:T_INLINE_45) { stream.printCString("'global'"); }
+        else if (symbol == Tokenizer:T_INLINE_47) { stream.printCString("'class'"); }
+        else if (symbol == Tokenizer:T_INLINE_49) { stream.printCString("'extends'"); }
+        else if (symbol == Tokenizer:T_INLINE_52) { stream.printCString("'::'"); }
+        else if (symbol == Tokenizer:T_INLINE_54) { stream.printCString("'__all__'"); }
+        else if (symbol == Tokenizer:T_INLINE_55) { stream.printCString("'__any__'"); }
+        else if (symbol == Tokenizer:T_INLINE_56) { stream.printCString("'cstring'"); }
+        else if (symbol == Tokenizer:T_INLINE_57) { stream.printCString("'int'"); }
+        else if (symbol == Tokenizer:T_INLINE_58) { stream.printCString("','"); }
+        else if (symbol == Tokenizer:T_INLINE_62) { stream.printCString("'['"); }
+        else if (symbol == Tokenizer:T_INLINE_63) { stream.printCString("']'"); }
+        else if (symbol == Tokenizer:T_INLINE_64) { stream.printCString("'('"); }
+        else if (symbol == Tokenizer:T_INLINE_65) { stream.printCString("')'"); }
+        else if (symbol == Tokenizer:T_INLINE_67) { stream.printCString("'__entry__'"); }
+        else if (symbol == Tokenizer:T_INLINE_68) { stream.printCString("'__naked__'"); }
+        else if (symbol == Tokenizer:T_INLINE_69) { stream.printCString("'abstract'"); }
+        else if (symbol == Tokenizer:T_INLINE_78) { stream.printCString("':'"); }
+        else if (symbol == Tokenizer:T_INLINE_82) { stream.printCString("'true'"); }
+        else if (symbol == Tokenizer:T_INLINE_83) { stream.printCString("'false'"); }
+        else if (symbol == Tokenizer:T_INLINE_84) { stream.printCString("'this'"); }
+        else if (symbol == Tokenizer:T_INLINE_85) { stream.printCString("'null'"); }
+        else if (symbol == Tokenizer:T_INLINE_86) { stream.printCString("'++'"); }
+        else if (symbol == Tokenizer:T_INLINE_87) { stream.printCString("'--'"); }
+        else if (symbol == Tokenizer:T_INLINE_93) { stream.printCString("'return'"); }
+        else if (symbol == Tokenizer:T_INLINE_94) { stream.printCString("':='"); }
+        else if (symbol == Tokenizer:T_INLINE_95) { stream.printCString("'__pasm__'"); }
+        else if (symbol == Tokenizer:T_INLINE_96) { stream.printCString("'while'"); }
+        else if (symbol == Tokenizer:T_INLINE_97) { stream.printCString("'do'"); }
+        else if (symbol == Tokenizer:T_INLINE_98) { stream.printCString("'if'"); }
+        else if (symbol == Tokenizer:T_INLINE_99) { stream.printCString("'else'"); }
         else if (symbol == Tokenizer:T_EOL) { stream.printCString("EOL"); }
         else if (symbol == Tokenizer:T_WSP) { stream.printCString("WSP"); }
         else if (symbol == Tokenizer:T_ID) { stream.printCString("ID"); }

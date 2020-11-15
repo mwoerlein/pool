@@ -12,9 +12,13 @@ class Symbol extends sys::core::Object {
     
     int id;
     String name;
+    String debug;
     int ignore;
     
-    [] __init() { this.name = this.createOwn(String:CLASSNAME); }
+    [] __init() {
+        this.name = this.createOwn(String:CLASSNAME);
+        this.debug = this.createOwn(String:CLASSNAME);
+    }
     
     [Symbol] setId(int id) { this.id = id; return this; }
     [int] getId() { return id; }
@@ -22,6 +26,10 @@ class Symbol extends sys::core::Object {
     [Symbol] setName(String name) { this.name.assignString(name); return this; }
     [Symbol] setCName(cstring name) { this.name.assignCString(name); return this; }
     [String] getName() { return name; }
+    
+    [Symbol] setDebug(String name) { this.debug.assignString(name); return this; }
+    [int] hasDebug() { return debug.length() > 0; }
+    [String] getDebug() { return debug; }
     
     [Symbol] setIgnore(int ignore) { this.ignore = ignore; return this; }
     [int] isIgnore() { return ignore; }

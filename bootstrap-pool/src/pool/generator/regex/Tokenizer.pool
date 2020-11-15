@@ -12,33 +12,33 @@ namespace pool::generator::regex;
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
     int T_ERROR := -2;
-    int T_INLINE_5 := 0;
-    int T_INLINE_8 := 1;
-    int T_INLINE_9 := 2;
-    int T_INLINE_10 := 3;
-    int T_INLINE_11 := 4;
-    int T_INLINE_12 := 5;
-    int T_INLINE_14 := 6;
-    int T_INLINE_15 := 7;
-    int T_INLINE_16 := 8;
-    int T_INLINE_17 := 9;
-    int T_INLINE_18 := 10;
+    int T_INLINE_5 := 0; // '|'
+    int T_INLINE_8 := 1; // '?'
+    int T_INLINE_9 := 2; // '*'
+    int T_INLINE_10 := 3; // '+'
+    int T_INLINE_11 := 4; // '.'
+    int T_INLINE_12 := 5; // '['
+    int T_INLINE_14 := 6; // ']'
+    int T_INLINE_15 := 7; // '[^'
+    int T_INLINE_16 := 8; // '('
+    int T_INLINE_17 := 9; // ')'
+    int T_INLINE_18 := 10; // '-'
     int T_CHAR := 11;
 
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
         else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
-        else if (symbol == Tokenizer:T_INLINE_5) { stream.printCString("INLINE_5"); }
-        else if (symbol == Tokenizer:T_INLINE_8) { stream.printCString("INLINE_8"); }
-        else if (symbol == Tokenizer:T_INLINE_9) { stream.printCString("INLINE_9"); }
-        else if (symbol == Tokenizer:T_INLINE_10) { stream.printCString("INLINE_10"); }
-        else if (symbol == Tokenizer:T_INLINE_11) { stream.printCString("INLINE_11"); }
-        else if (symbol == Tokenizer:T_INLINE_12) { stream.printCString("INLINE_12"); }
-        else if (symbol == Tokenizer:T_INLINE_14) { stream.printCString("INLINE_14"); }
-        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("INLINE_15"); }
-        else if (symbol == Tokenizer:T_INLINE_16) { stream.printCString("INLINE_16"); }
-        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("INLINE_17"); }
-        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("INLINE_18"); }
+        else if (symbol == Tokenizer:T_INLINE_5) { stream.printCString("'|'"); }
+        else if (symbol == Tokenizer:T_INLINE_8) { stream.printCString("'?'"); }
+        else if (symbol == Tokenizer:T_INLINE_9) { stream.printCString("'*'"); }
+        else if (symbol == Tokenizer:T_INLINE_10) { stream.printCString("'+'"); }
+        else if (symbol == Tokenizer:T_INLINE_11) { stream.printCString("'.'"); }
+        else if (symbol == Tokenizer:T_INLINE_12) { stream.printCString("'['"); }
+        else if (symbol == Tokenizer:T_INLINE_14) { stream.printCString("']'"); }
+        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("'[^'"); }
+        else if (symbol == Tokenizer:T_INLINE_16) { stream.printCString("'('"); }
+        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("')'"); }
+        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("'-'"); }
         else if (symbol == Tokenizer:T_CHAR) { stream.printCString("CHAR"); }
         return stream;
     }

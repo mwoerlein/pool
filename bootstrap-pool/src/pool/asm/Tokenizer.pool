@@ -12,11 +12,11 @@ namespace pool::asm;
 class Tokenizer extends pool::generator::tokenizer::Tokenizer {
 
     int T_ERROR := -2;
-    int T_INLINE_15 := 0;
-    int T_INLINE_17 := 1;
-    int T_INLINE_18 := 2;
-    int T_INLINE_21 := 3;
-    int T_INLINE_22 := 4;
+    int T_INLINE_15 := 0; // ':'
+    int T_INLINE_17 := 1; // ','
+    int T_INLINE_18 := 2; // ':='
+    int T_INLINE_21 := 3; // '('
+    int T_INLINE_22 := 4; // ')'
     int T_IDENTIFIER := 5;
     int T_REGISTER := 6;
     int T_CHAR := 7;
@@ -31,11 +31,11 @@ class Tokenizer extends pool::generator::tokenizer::Tokenizer {
     [sys::stream::OStream] debugSymbol(int symbol, sys::stream::OStream stream) {
         if (symbol == Tokenizer:T_EOI) { stream.printCString("EOI"); }
         else if (symbol == Tokenizer:T_ERROR) { stream.printCString("ERROR"); }
-        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("INLINE_15"); }
-        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("INLINE_17"); }
-        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("INLINE_18"); }
-        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("INLINE_21"); }
-        else if (symbol == Tokenizer:T_INLINE_22) { stream.printCString("INLINE_22"); }
+        else if (symbol == Tokenizer:T_INLINE_15) { stream.printCString("':'"); }
+        else if (symbol == Tokenizer:T_INLINE_17) { stream.printCString("','"); }
+        else if (symbol == Tokenizer:T_INLINE_18) { stream.printCString("':='"); }
+        else if (symbol == Tokenizer:T_INLINE_21) { stream.printCString("'('"); }
+        else if (symbol == Tokenizer:T_INLINE_22) { stream.printCString("')'"); }
         else if (symbol == Tokenizer:T_IDENTIFIER) { stream.printCString("IDENTIFIER"); }
         else if (symbol == Tokenizer:T_REGISTER) { stream.printCString("REGISTER"); }
         else if (symbol == Tokenizer:T_CHAR) { stream.printCString("CHAR"); }
