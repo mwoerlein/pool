@@ -15,22 +15,12 @@ use sys::memory::MemoryInfo;
 
 class FileElement extends StorageElement {
     
-    MemoryInfo buffer;
     String filename;
     int offset;
     int contentSize;
     
-    [] __init() {
-        this._initStorageElement();
-    }
-    
-    [] __destruct() {
-        this.rt().getAllocator().free(buffer);
-        this._destructStorageElement();
-    }
-    
     [FileElement] init(String path, PropertiesMarshaller pm) {
-        filename = path;
+        filename = this.own(path);
         offset = 0;
         contentSize = 0;
         

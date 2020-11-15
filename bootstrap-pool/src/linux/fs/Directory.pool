@@ -49,8 +49,13 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
 
     //// PoolStorage ////
     [StorageElement] getElement(String fullQualifiedName, int mimeType) {
+        String filepath = this.buildFilePath(fullQualifiedName, mimeType, false);
+        if (!File:exists(filepath.toCString())) {
+            filepath.destroy();
+            return null;
+        }
         FileElement fe = this.rt().createInstance(FileElement:CLASSNAME);
-        return fe.init(this.buildFilePath(fullQualifiedName, mimeType, false), pm).storageElement();
+        return fe.init(filepath, pm).storageElement();
     }
     
     [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {

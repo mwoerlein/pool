@@ -105,4 +105,13 @@ class File extends SeekableIOStream {
         File view = this.createOwn(File:CLASSNAME);
         return view._initFile(fd, this.offset+offset, length).iostream();
     }
+    
+    global [int] exists(cstring filename) {
+        int fd = SysCall:open(filename, File:MODE_READ);
+        if (fd >= 0) {
+            SysCall:close(fd);
+            return true;
+        }
+        return false;
+    }
 }
