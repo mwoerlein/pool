@@ -70,7 +70,14 @@ Pool Bootstrap Compiler.
             compiler.setPrettyOutput(this.openDirectory(this.getValueOption("prettyprint")).poolStorage());
         }
         
-        compiler.compile(this.getArguments(), this.hasOption("recursive"));
+        {
+            AnyIterator it = this.getArguments();
+            while (it.hasNext()) { compiler.prepare(it.next()); }
+            it.destroy();
+        }
+        if (!compiler.hasErrors()) {
+            if (this.hasOption("recursive")) { compiler.compileAll(); } else { compiler.compilePrepared(); }
+        }
     }
     
     // methods

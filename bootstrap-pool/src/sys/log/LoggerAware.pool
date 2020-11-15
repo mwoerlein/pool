@@ -17,5 +17,7 @@ class LoggerAware extends sys::core::Object {
     [OStream] note()  { return this.rt().out(); }
     [OStream] info()  { return this.rt().out(); }
     [OStream] debug() { return this.rt().out(); }
+    
+    [int] hasErrors() { return false; }
 
 }

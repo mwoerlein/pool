@@ -6,12 +6,16 @@ version = 0.1.0
 namespace pool::compiler;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::parser::Parser;
 use pool::storage::ClassPathStorage;
 use pool::storage::PoolStorage;
 
 use sys::core::String;
+use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
 use sys::store::StorageElement;
 
@@ -21,10 +25,16 @@ class Compiler extends sys::log::LoggerAware {
     PoolStorage out;
     Parser parser;
     PrettyPrinter pp;
+    AnyList units; // LinkedList<TranslationUnitNode>
+    AnyList classes; // LinkedList<ClassDeclNode>
+    AnyList structs; // LinkedList<StructDeclNode>
     
     [] __init() {
         parser = this.createOwn(Parser:CLASSNAME);
         classPath = this.createOwn(ClassPathStorage:CLASSNAME);
+        units = this.createOwn(AnyList:CLASSNAME);
+        classes = this.createOwn(AnyList:CLASSNAME);
+        structs = this.createOwn(AnyList:CLASSNAME);
     }
     
     [Compiler] addClassPath(PoolStorage pool) { classPath.add(this.own(pool)); return this; }
@@ -35,16 +45,71 @@ class Compiler extends sys::log::LoggerAware {
         return this;
     }
     
-    [] compile(AnyIterator fqnIt, int recursive) {
-        if (recursive) {
-            // TODO: load all fqns and replace fqnIt
+    [] prepare(String fqn) {
+        TranslationUnitNode unit = this._initialize(fqn);
+        if (unit) {
+            units.add(units.own(unit));
         }
-        while (fqnIt.hasNext()) {
-            String fqn = fqnIt.next();
-            this.note().printCString("compile ").print(fqn).printNewline();
-            Node unit = parser.parse(classPath.getSourceClass(fqn), fqn);
-            if (pp) { pp.visit(unit); }
+    }
+    
+    [] compilePrepared() {
+        AnyIterator it = units.iterator();
+        while (it.hasNext()) {
+            TranslationUnitNode unit = it.next();
+            this._compile(unit.getName(), unit.node());
         }
-        fqnIt.destroy();
+        it.destroy();
+    }
+    
+    [] compileAll() {
+        AnyIterator it = classes.iterator();
+        while (it.hasNext()) {
+            ClassDeclNode cd = it.next();
+            // TODO: use full qualified name of class
+            this._compile(cd.getName(), cd.node());
+        }
+        it.destroy();
+    }
+    
+    [TranslationUnitNode] _initialize(String fqn) {
+        this.debug().printCString("initialize ").print(fqn).printNewline();
+        StorageElement elem = classPath.getSourceClass(fqn);
+        if (!elem) {
+            this.error().printCString("declaration of '").print(fqn).printCString("' not found!").printNewline();
+            return null;
+        }
+        TranslationUnitNode unit = this.rt().createInstance(TranslationUnitNode:CLASSNAME);
+        parser.parse(unit.init(elem, fqn));
+        if (this.hasErrors()) { unit.destroy(); return null; }
+        
+        this.debug().print(fqn).printCString(": pretty print").printNewline();
+        if (pp) { pp.visit(unit.node()); }
+/*        
+        this.debug().print(fqn).printCString(": resolve type references").printNewline();
+        resolveTypeRefs.visit(unit.node());
+*/
+        return unit;
+    }
+    
+    [] _compile(String fqn, Node node) {
+        this.note().printCString("compile ").print(fqn).printNewline();
+/*        
+        this.debug().print(fqn).printCString(": resolve methods").printNewline();
+        resolveMethods.visit(node);
+        if (this.hasErrors()) { this.error().print(fqn).printCString(": failed").printNewline(); return; }
+        
+        this.debug().print(fqn).printCString(": resolve instructions").printNewline();
+        resolveInstructions.visit(node);
+        if (this.hasErrors()) { this.error().print(fqn).printCString(": failed").printNewline(); return; }
+        
+        this.debug().print(fqn).printCString(": generate PIR").printNewline();
+        generatePIR.visit(node);
+        this.debug().print(fqn).printCString(": generate binary").printNewline();
+        generatePASM.visit(node);
+        if (this.hasErrors()) { this.error().print(fqn).printCString(": failed").printNewline(); return; }
+        
+        this.debug().print(fqn).printCString(": pretty print").printNewline();
+        if (pp) { pp.visit(node.getUnitNode()); }
+*/
     }
 }

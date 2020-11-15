@@ -61,14 +61,12 @@ class BaseParser extends pool::generator::parser::Parser {
     
     [OStream] newError() { return this.rt().err(); }
     
-    [Node] parse(StorageElement input, String inputName) {
-        unit = this.rt().createInstance(TranslationUnitNode:CLASSNAME);
-        TranslationUnitNode ret = unit.init(input, inputName);
+    [] parse(TranslationUnitNode unit) {
+        this.unit = unit;
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
-        this._parse(in.init(input.getContent(), inputName));
+        this._parse(in.init(unit.getElement().getContent(), unit.getName()));
         in.destroy();
-        unit = null;
-        return ret.node();
+        this.unit = null;
     }
     
     [NodeList] nodeList() { return this.rt().createInstance(NodeList:CLASSNAME); }
