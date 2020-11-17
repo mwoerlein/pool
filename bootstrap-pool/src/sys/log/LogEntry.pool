@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::log;
+
+
+class LogEntry extends sys::core::String {
+
+    int _level;
+    
+    [LogEntry] setLevel(int level) { _level = level; return this; }
+    [int] getLevel() { return _level; }
+}

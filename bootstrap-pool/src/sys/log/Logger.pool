@@ -7,64 +7,68 @@ namespace sys::log;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
-use sys::core::String;
 use sys::stream::OStream;
-use sys::stream::NullIOStream;
 
 class Logger extends sys::core::Object {
 
-    OStream ignore;
-    AnyList warnings; // LinkedList<String>
-    AnyList errors; // LinkedList<String>
+    int CRITICAL := 6;
+    int ERROR    := 5;
+    int WARNING  := 4;
+    int NOTE     := 3;
+    int INFO     := 2;
+    int DEBUG    := 1;
+    
+    AnyList _entries; // LinkedList<LogEntry>
+    int _minLevel;
+    int _lastMax;
     
     [] __init() { this._initLogger(); }
     [] _initLogger() {
-        warnings = this.rt().createInstance(AnyList:CLASSNAME);
-        errors = this.rt().createInstance(AnyList:CLASSNAME);
-        ignore = this.rt().createInstanceAs(NullIOStream:CLASSNAME, OStream:CLASSNAME);
-    }
-
-    [] __destruct() { this._destructLogger(); }
-    [] _destructLogger() {
-        warnings.destroyAll();
-        warnings.destroy();
-        errors.destroyAll();
-        errors.destroy();
-        ignore.destroy();
+        _entries = this.createOwn(AnyList:CLASSNAME);
+        _minLevel = Logger:NOTE;
+        _lastMax = 0;
     }
     
-    [int] hasErrors() { return errors.size() > 0; }
-    [OStream] newError() {
-        String err = this.rt().createInstance(String:CLASSNAME);
-        errors.add(err);
-        return err.ostream();
+    [Logger] setLevel(int level) { _minLevel = level; return this; }
+    
+    [OStream] crit()  { return this.log(Logger:CRITICAL).ostream(); }
+    [OStream] error() { return this.log(Logger:ERROR).ostream(); }
+    [OStream] warn()  { return this.log(Logger:WARNING).ostream(); }
+    [OStream] note()  { return this.log(Logger:NOTE).ostream(); }
+    [OStream] info()  { return this.log(Logger:INFO).ostream(); }
+    [OStream] debug() { return this.log(Logger:DEBUG).ostream(); }
+    
+    [LogEntry] log(int level) {
+        LogEntry e = this.rt().createInstance(LogEntry:CLASSNAME);
+        _entries.add(e.setLevel(level));
+        return e;
     }
     
-    [int] hasWarnings() { return warnings.size() > 0; }
-    [OStream] newWarning() {
-        String warn = this.rt().createInstance(String:CLASSNAME);
-        warnings.add(warn);
-        return warn.ostream();
+    [int] has(int level) { return _lastMax >= level; }
+    
+    [] flush() {
+        AnyIterator it = _entries.iterator();
+        while (it.hasNext()) { this.showEntry(it.next()); }
+        it.destroy();
+        _entries.destroyAll();
+        _lastMax = 0;
     }
     
-    [OStream] ignore() { return ignore; }
-
+    [] showEntry(LogEntry e) {
+        int level = e.getLevel();
+        if (level < _minLevel) { /* ignore */}
+        else if (level < Logger:WARNING) { this.rt().out().print(e).printNewline(); }
+        else { this.rt().err().print(e).printNewline(); }
+    }
+    
+    // @deprecated: TODO replace all occurences (in pool::asm) with new logger methods
+    [OStream] newError() { return this.error(); }
+    [OStream] newWarning() { return this.warn(); }
+    [int] hasErrors() { return this.has(Logger:ERROR); }
     [int] flushErrors(OStream stream) {
-        if (warnings.size() > 0) {
-            AnyIterator it = warnings.iterator();
-            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
-            it.destroy();
-            warnings.clear();
-        }
-        
-        if (errors.size() > 0) {
-            AnyIterator it = errors.iterator();
-            while (it.hasNext()) { stream.print(it.next()).printNewline(); }
-            it.destroy();
-            errors.clear();
-            return true;
-        }
-        return false;
+        int ret = this.has(Logger:ERROR);
+        this.flush();
+        return ret;
     }
     
     // TODO: remove with implicit cast

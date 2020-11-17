@@ -44,7 +44,7 @@ class TestCase extends sys::core::Object {
     }
     
     [int] skip() {
-        this.printMessage(tout.message(), " skipped!");
+        this.printMessage(tout.info(), " skipped!");
         tout.printSkip();
         availableBytes = 0;
         return true;
@@ -52,7 +52,7 @@ class TestCase extends sys::core::Object {
     
     [int] success() {
         if (availableBytes && !this.checkMemory(availableBytes)) { return false; }
-        this.printMessage(tout.message(), " successful!");
+        this.printMessage(tout.info(), " successful!");
         tout.printSuccess();
         availableBytes = 0;
         return true;

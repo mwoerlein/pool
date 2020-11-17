@@ -8,7 +8,6 @@ namespace test;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
-use sys::log::Logger;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
 

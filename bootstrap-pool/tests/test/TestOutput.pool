@@ -29,14 +29,11 @@ class TestOutput extends sys::log::Logger {
         out = this.rt().out();
         fout = this.rt().cast(FOStream:CLASSNAME, out);
     }
-
+    
     [] __destruct() {
         this._finalize();
-        this._destructLogger();
+//        this._destructLogger();
     }
-
-    [OStream] error() { return this.newError(); }
-    [OStream] message() { return this.ignore(); }
     
     [] printFail() { failed++; this._printTest('F', FOStream:BRIGHT_RED); }
     [] printSkip() { skipped++; this._printTest('S', FOStream:BRIGHT_YELLOW); }
@@ -45,18 +42,18 @@ class TestOutput extends sys::log::Logger {
     [] _finalize() {
         if ((tests % TESTS_PER_LINE) > 0) { out.printNewline(); }
         
-        OStream o = out;
-        if (this.hasErrors()) {
-            o = this.rt().err();
-            this.flushErrors(o);
-            o.printNewline().printCString("FAILURES!");
+        this.flush();
+        
+        OStream result = null;
+        if (failed) {
+            result = this.rt().err().printNewline().printCString("FAILURES!");
         } else {
-            o.printNewline().printCString("OK!");
+            result = this.rt().out().printNewline().printCString("OK!");
         }
-        o.printCString(" (Tests: ").printInt(tests);
-        if (failed) { o.printCString(", Failed: ").printInt(failed); }
-        if (skipped) { o.printCString(", Skipped: ").printInt(skipped); }
-        o.printChar(')').printNewline();
+        result.printCString(" (Tests: ").printInt(tests);
+        if (failed) { result.printCString(", Failed: ").printInt(failed); }
+        if (skipped) { result.printCString(", Skipped: ").printInt(skipped); }
+        result.printChar(')').printNewline();
     }
     
     [] _printTest(int c, int fg) {
