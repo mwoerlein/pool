@@ -69,8 +69,8 @@ class Object {
     
     // TODO: move to destructor/implicit destruction instead of manual one
     [] destroy() {
-        this.__destructOwned();
         this.__destruct();
+        this.__destructOwned();
         this.rt().destroyInstance(this);
     }
     
