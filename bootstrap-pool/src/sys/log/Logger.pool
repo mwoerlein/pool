@@ -41,6 +41,7 @@ class Logger extends sys::core::Object {
     [LogEntry] log(int level) {
         LogEntry e = this.rt().createInstance(LogEntry:CLASSNAME);
         _entries.add(e.setLevel(level));
+        if (level > _lastMax) { _lastMax = level; }
         return e;
     }
     
@@ -50,6 +51,10 @@ class Logger extends sys::core::Object {
         AnyIterator it = _entries.iterator();
         while (it.hasNext()) { this.showEntry(it.next()); }
         it.destroy();
+        this.clear();
+    }
+    
+    [] clear() {
         _entries.destroyAll();
         _lastMax = 0;
     }
