@@ -9,15 +9,15 @@ use sys::stream::OStream;
 
 class LoggerAware extends sys::core::Object {
 
-    [] setLogger(Logger logger) { /*TODO*/ }
+    Logger logger;
+    [LoggerAware] setLogger(Logger logger) { this.logger = logger; return this; }
+    [Logger] getLogger() { return this.logger; }
     
-    [OStream] crit()  { return this.rt().err(); }
-    [OStream] error() { return this.rt().err(); }
-    [OStream] warn()  { return this.rt().err(); }
-    [OStream] note()  { return this.rt().out(); }
-    [OStream] info()  { return this.rt().out(); }
-    [OStream] debug() { return this.rt().out(); }
+    [OStream] crit()  { return logger.crit(); }
+    [OStream] error() { return logger.error(); }
+    [OStream] warn()  { return logger.warn(); }
+    [OStream] note()  { return logger.note(); }
+    [OStream] info()  { return logger.info(); }
+    [OStream] debug() { return logger.debug(); }
     
-    [int] hasErrors() { return false; }
-
 }

@@ -55,11 +55,11 @@ use sys::store::StorageElement;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
-class BaseParser extends pool::generator::parser::Parser {
+class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware {
     
     TranslationUnitNode unit;
     
-    [OStream] newError() { return this.rt().err(); }
+    [OStream] newError() { return this.error(); }
     
     [] parse(TranslationUnitNode unit) {
         this.unit = unit;
@@ -175,7 +175,7 @@ class BaseParser extends pool::generator::parser::Parser {
             if (tmp.length() == 1) {
                 val = tmp.at(0);
             } else {
-                this.newError().printCString("invalid character sequence: ").print(v).printNewline();
+                this.newError().printCString("invalid character sequence: ").print(v);
             }
         } else { val = v.toInt(); }
         
@@ -378,7 +378,7 @@ class BaseParser extends pool::generator::parser::Parser {
         node.getName().printChar(':').printChar(':').print(id.getValue());
         node.setLastLocation(id.getLastLine(), id.getLastColumn());
         if ((id.getFirstLine() != line) || (id.getFirstColumn() != end + 3)) {
-            node.debugToStream(this.newError().printCString("non-consecutive full qualified name: ")).printNewline();
+            node.debugToStream(this.newError().printCString("non-consecutive full qualified name: "));
         }
         return node;
     }
