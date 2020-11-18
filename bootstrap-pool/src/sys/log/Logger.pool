@@ -66,16 +66,6 @@ class Logger extends sys::core::Object {
         else { this.rt().err().print(e).printNewline(); }
     }
     
-    // @deprecated: TODO replace all occurences (in pool::asm) with new logger methods
-    [OStream] newError() { return this.error(); }
-    [OStream] newWarning() { return this.warn(); }
-    [int] hasErrors() { return this.has(Logger:ERROR); }
-    [int] flushErrors(OStream stream) {
-        int ret = this.has(Logger:ERROR);
-        this.flush();
-        return ret;
-    }
-    
     // TODO: remove with implicit cast
     [Logger] logger() { return this; }
 }

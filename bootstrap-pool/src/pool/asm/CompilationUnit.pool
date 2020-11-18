@@ -122,4 +122,14 @@ class CompilationUnit extends Owner, Logger {
         }
         return stream;
     }
+    
+    // @deprecated: TODO use new Logger/LoggerAware methods directly
+    [OStream] newError() { return this.error(); }
+    [OStream] newWarning() { return this.warn(); }
+    [int] hasErrors() { return this.has(Logger:ERROR); }
+    [int] flushErrors(OStream stream) {
+        int ret = this.has(Logger:ERROR);
+        this.flush();
+        return ret;
+    }
 }
