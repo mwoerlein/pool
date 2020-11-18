@@ -40,6 +40,9 @@ class CompilationUnit extends Owner, Logger {
         values = this.createOwn(AnyMap:CLASSNAME);
         this._initLogger();
     }
+    [] __destruct() {
+        this._destructLogger();
+    }
     
     [NodeList] getNodeList() {
         return nodeList;

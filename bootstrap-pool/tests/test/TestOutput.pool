@@ -32,7 +32,7 @@ class TestOutput extends sys::log::Logger {
     
     [] __destruct() {
         this._finalize();
-//        this._destructLogger();
+        this._destructLogger();
     }
     
     [] printFail() { failed++; this._printTest('F', FOStream:BRIGHT_RED); }

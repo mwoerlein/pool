@@ -28,6 +28,11 @@ class Logger extends sys::core::Object {
         _minLevel = Logger:NOTE;
         _lastMax = 0;
     }
+
+    [] __destruct() { this._destructLogger(); }
+    [] _destructLogger() {
+        this.clear();
+    }
     
     [Logger] setLevel(int level) { _minLevel = level; return this; }
     
