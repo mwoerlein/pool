@@ -63,9 +63,11 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     
     [] parse(TranslationUnitNode unit) {
         this.unit = unit;
+        IStream content = unit.getElement().getContent();
         Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
-        this._parse(in.init(unit.getElement().getContent(), unit.getName()));
+        this._parse(in.init(content, unit.getName()));
         in.destroy();
+        content.destroy();
         this.unit = null;
     }
     
@@ -174,7 +176,9 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
             v._unescapeToStream(tmp.ostream(), '\'', '\\');
             if (tmp.length() == 1) {
                 val = tmp.at(0);
+                tmp.destroy();
             } else {
+                tmp.destroy();
                 this.newError().printCString("invalid character sequence: ").print(v);
             }
         } else { val = v.toInt(); }

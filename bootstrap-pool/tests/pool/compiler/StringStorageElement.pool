@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler;
+
+use sys::core::String;
+use sys::store::StorageElement;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+class StringStorageElement extends StorageElement, String {
+    
+    [] __init() {
+        this._initStorageElement();
+        this._initString();
+    }
+    [] __destruct() {
+        this._destructString();
+        this._destructStorageElement();
+    }
+
+    [StringStorageElement] line(cstring line) {
+        this.printCString(line).printNewline();
+        return this;
+    }
+    
+    // StorageElement
+    [IStream] getContent() { return this.toIStream(); }
+    [int] getContentSize() { return this.length(); }
+    
+}

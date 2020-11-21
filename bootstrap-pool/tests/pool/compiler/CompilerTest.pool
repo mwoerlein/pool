@@ -1,0 +1,94 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler;
+
+use sys::core::anycollection::AnyIterator;
+use sys::log::NullLogger;
+use pool::storage::Mimetype;
+
+class CompilerTest extends test::TestCase {
+
+    [] runAll() {
+        this.testSimpleClass();
+    }
+    
+    [int] testSimpleClass() {
+        TestStorage t = this.newTestStorage("testSimpleClass");
+        
+        StringStorageElement sampleIn = t.in("my::simple::Sample", Mimetype:POOL_SRC);
+        sampleIn.line("namespace my::simple;");
+        sampleIn.line("class Sample {");
+        sampleIn.line("");
+        sampleIn.line("    [int] one() { return 1; }");
+        sampleIn.line("    [int] two(__any__ obj) {");
+        sampleIn.line("        return '\\n';");
+        sampleIn.line("    }");
+        sampleIn.line("");
+        sampleIn.line("    [int] three(__any__ obj, cstring obj2) {");
+        sampleIn.line("        //return two(obj);");
+        sampleIn.line("        return 0x80000000;");
+        sampleIn.line("    }");
+        sampleIn.line("}");
+        
+        StringStorageElement sampleP = t.pretty("my::simple::Sample", Mimetype:POOL_SRC);
+        sampleP.line("namespace my::simple;");
+        sampleP.line("");
+        sampleP.line("");
+        sampleP.line("class Sample {");
+        sampleP.line("    ");
+        sampleP.line("    // methods");
+        sampleP.line("    [int] one() {");
+        sampleP.line("        return 1;");
+        sampleP.line("    }");
+        sampleP.line("    ");
+        sampleP.line("    [int] two(__any__ obj) {");
+        sampleP.line("        return 10;");
+        sampleP.line("    }");
+        sampleP.line("    ");
+        sampleP.line("    [int] three(__any__ obj, cstring obj2) {");
+        sampleP.line("        return -2147483648;");
+        sampleP.line("    }");
+        sampleP.line("    ");
+        sampleP.line("}");
+        
+        t.prepare("my::simple::Sample");
+        
+        return this.runTest(t);
+    }
+
+    [TestStorage] newTestStorage(cstring name) {
+        this.start(name);
+        TestStorage storage = this.rt().createInstance(TestStorage:CLASSNAME);
+        return storage.setName(name);
+    }
+    
+    [int] runTest(TestStorage storage) {
+        NullLogger l = this.rt().createInstance(NullLogger:CLASSNAME);
+        Compiler c = this.rt().createInstance(Compiler:CLASSNAME);
+        c.initLogger(l.logger())
+            .addClassPath(storage.poolStorage())
+            .setPrettyOutput(storage.poolStorage())
+        ;
+        if (c.hasErrors()) { return this.fail("Compiler initialization"); }
+        
+        {
+            AnyIterator it = storage.prepares();
+            while (it.hasNext()) { c.prepare(it.next()); }
+            it.destroy();
+        }
+        if (c.hasErrors()) { return this.fail("Compiler preparation"); }
+        
+        c.compilePrepared();
+        if (c.hasErrors()) { return this.fail("Compiler compilation"); }
+        
+        if (!storage.validatePretty()) { return this.fail("Pretty validation"); }
+
+        c.destroy();
+        l.destroy();
+        return this.success();
+    }
+
+}

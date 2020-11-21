@@ -1,0 +1,84 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler;
+
+use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::utils::PropertyContainer;
+use sys::store::StorageElement;
+use sys::stream::OStream;
+
+class TestStorage extends pool::storage::PoolStorage {
+
+    String name;
+    String tmp;
+    AnyList prepare; // HashList<fqn>
+    AnyMap in;       // HashMap<fqn+mime, StringStorageElement>
+    AnyMap out;      // HashMap<fqn+mime, StringStorageElement>
+    AnyMap pretty;   // HashMap<fqn+mime, StringStorageElement>
+    
+    [] __init() {
+        this.name = this.createOwn(String:CLASSNAME);
+        this.tmp = this.createOwn(String:CLASSNAME);
+        this.prepare = this.createOwn(AnyList:CLASSNAME);
+        this.in = this.createOwn(AnyMap:CLASSNAME);
+        this.out = this.createOwn(AnyMap:CLASSNAME);
+        this.pretty = this.createOwn(AnyMap:CLASSNAME);
+    }
+    
+    [TestStorage] setName(cstring name) { this.name.assignCString(name); return this; }
+    [TestStorage] prepare(cstring fqn) {
+        String s = prepare.createOwn(String:CLASSNAME);
+        s.assignCString(fqn);
+        prepare.add(s);
+    }
+    [AnyIterator] prepares() { return prepare.iterator(); }
+    
+    [StringStorageElement] in(cstring fqn, int mimeType) {
+        String key = in.createOwn(String:CLASSNAME);
+        key.assignCString(fqn).printChar('#').printInt(mimeType);
+        StringStorageElement e = in.createOwn(StringStorageElement:CLASSNAME);
+        in.set(key, e);
+        return e;
+    }
+    [StringStorageElement] pretty(cstring fqn, int mimeType) {
+        String key = pretty.createOwn(String:CLASSNAME);
+        key.assignCString(fqn).printChar('#').printInt(mimeType);
+        StringStorageElement e = pretty.createOwn(StringStorageElement:CLASSNAME);
+        pretty.set(key, e);
+        return e;
+    }
+    
+    [int] validatePretty() {
+        int ret = true;
+        AnyMapEntryIterator pit = pretty.entries();
+        while (ret && pit.hasNext()) {
+            [String key, StringStorageElement p] = pit.nextPair();
+            ret = p.equals(out.get(key));
+        }
+        pit.destroy();
+        return ret;
+    }
+
+    // PoolStorage
+    [StorageElement] getElement(String fullQualifiedName, int mimeType) {
+        tmp.assignString(fullQualifiedName).printChar('#').printInt(mimeType);
+        StringStorageElement e = in.get(tmp);
+        if (e) { return e.storageElement(); }
+        return null;
+    }
+    [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
+        String key = out.createOwn(String:CLASSNAME);
+        key.assignString(fullQualifiedName).printChar('#').printInt(mimeType);
+        StringStorageElement e = out.createOwn(StringStorageElement:CLASSNAME);
+        out.set(key, e);
+        return e.ostream();
+    }
+    [int] removeElement(String fullQualifiedName, int mimeType) { return false; }
+}

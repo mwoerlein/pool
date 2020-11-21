@@ -17,7 +17,7 @@ class BlockInstNode extends InstructionNode {
         _instructions = this.createOwn(NodeList:CLASSNAME);
     }
     
-    [BlockInstNode] addInstruction(InstructionNode inst) { _instructions.add(inst); return this; }
+    [BlockInstNode] addInstruction(InstructionNode inst) { _instructions.add(this.own(inst)); return this; }
     [NodeList] getInstructions() { return _instructions; }
     
     // NODE
