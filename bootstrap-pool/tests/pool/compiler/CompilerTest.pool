@@ -13,6 +13,7 @@ class CompilerTest extends test::TestCase {
 
     [] runAll() {
         this.testSimpleClass();
+        this.testStructs();
     }
     
     [int] testSimpleClass() {
@@ -57,6 +58,69 @@ class CompilerTest extends test::TestCase {
         ;
         
         t.prepare("my::simple::Sample");
+        
+        return this.runTest(t);
+    }
+
+    [int] testStructs() {
+        TestStorage t = this.newTestStorage("testStructs");
+        
+        t.in("structs::A", Mimetype:POOL_SRC)
+            .line("namespace structs;")
+            .line("use other::A as C;")
+            .line("use other::D;")
+            .line("struct A {")
+            .line("    global int CONST := 1;")
+            .line("    global cstring CSTRING := \"const\";")
+            .line("    A a;")
+            .line("    other::B b;")
+            .line("    C c;")
+            .line("    D d;")
+            .line("    int x;")
+            .line("    cstring y;")
+            .line("}")
+        ;
+        t.in("other::A", Mimetype:POOL_SRC)
+            .line("namespace other;")
+            .line("struct A {")
+            .line("    global int CONST := 1+1;")
+            .line("    A a;")
+            .line("}")
+        ;
+        t.in("other::B", Mimetype:POOL_SRC)
+            .line("namespace other;")
+            .line("struct B {")
+            .line("}")
+        ;
+        t.in("other::D", Mimetype:POOL_SRC)
+            .line("namespace other;")
+            .line("class D {")
+            .line("}")
+        ;
+        
+        t.expect("structs::A", Mimetype:POOL_SRC)
+            .line("namespace structs;")
+            .line("")
+            .line("use other::A as C;")
+            .line("use other::D;")
+            .line("")
+            .line("struct A {")
+            .line("    ")
+            .line("    // constants")
+            .line("    global int CONST := 1;")
+            .line("    global cstring CSTRING := \"const\";")
+            .line("    ")
+            .line("    // variables")
+            .line("    A a;")
+            .line("    other::B b;")
+            .line("    C c;")
+            .line("    D d;")
+            .line("    int x;")
+            .line("    cstring y;")
+            .line("}")
+        ;
+        
+        t.prepare("structs::A");
         
         return this.runTest(t);
     }

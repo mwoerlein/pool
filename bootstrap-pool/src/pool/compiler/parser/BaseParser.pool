@@ -303,7 +303,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     [ReturnInstNode] returnExprInst(Token first, ExpressionNode value) {
         ReturnInstNode node = this.rt().createInstance(ReturnInstNode:CLASSNAME);
         NodeList values = this.nodeList();
-        values.add(value);
+        values.add(values.own(value));
         node.setValues(values);
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), value.getLastLine(), value.getLastColumn());
         return node;
@@ -312,7 +312,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     [VariableInitInstNode] variableInit(VariableDeclNode var, ExpressionNode init) {
         VariableInitInstNode node = this.rt().createInstance(VariableInitInstNode:CLASSNAME);
         NodeList vars = this.nodeList();
-        vars.add(var);
+        vars.add(vars.own(var));
         node.setVariables(vars).setInitializer(init);
         node.setLocation(var.getFirstLine(), var.getFirstColumn(), init.getLastLine(), init.getLastColumn());
         return node;
