@@ -296,7 +296,12 @@ class MemoryManager extends Allocator {
                 stream.printCString("used:\n");
                 MemoryInfo cur = used.next;
                 while (Address:compare(cur, used)) {
-                    this._dumpInfo(cur, stream).printNewline();
+                    this._dumpInfo(cur, stream);
+                    sys::core::Object o = this.rt()._asObject(cur.buf);
+                    if (o) {
+                        stream.printChar(' ').print(o.getClass().getName());
+                    } 
+                    stream.printNewline();
                     cur = cur.next;
                 }
             }

@@ -102,6 +102,16 @@ class Runtime extends Object {
         return cl;
     }
     
+    [Object] _asObject(int mem) {
+        {
+            InstanceHandle h = Address:cast(mem + InstanceDescriptor:SIZEOF);
+            if (h.inst_desc && h.inst_desc.class_desc && h.inst_desc.class_desc.magic == ClassDescriptor:MAGIC) {
+                return this.cast(Object:CLASSNAME, h);
+            }
+        }
+        return null;
+    }
+    
     // TODO #9: use generic method instead of __any__
     [] destroyInstance(__any__ obj) {
         InstanceHandle curHandle = Address:convert(obj);
