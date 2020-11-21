@@ -23,19 +23,21 @@ class String extends OStream {
     MemoryInfo _buffer;
     
     // TODO #7: move to constructor with (implicit) parent calls
-    [] __init() {
+    [] __init() { this._initString(); }
+    [] _initString() {
         _first = _last = null;
         _length = _hash = 0;
     }
 
     // TODO: move to destructor with implicit destruction instead of manual one
-    [] __destruct() {
+    [] __destruct() { this._destructString(); }
+    [] _destructString() {
         this.clear();
     }
     
     // methods
-    [] assignCString(cstring s) { this.clear(); this.printCString(s); }
-    [] assignString(String s) { this.clear(); this.print(s); }
+    [String] assignCString(cstring s) { this.clear(); this.printCString(s); return this; }
+    [String] assignString(String s) { this.clear(); this.print(s); return this; }
 
     [int] length() { return _length; }
     

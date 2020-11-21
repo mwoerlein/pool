@@ -10,9 +10,11 @@ use sys::stream::IStream;
 
 class StorageElement extends PropertyContainer {
     
+    [] __init() { this._initStorageElement(); }
     [] _initStorageElement() {
         this._initPropertyContainer();
     }
+    [] __destruct() { this._destructStorageElement(); }
     [] _destructStorageElement() {
         this._destructPropertyContainer();
     }
