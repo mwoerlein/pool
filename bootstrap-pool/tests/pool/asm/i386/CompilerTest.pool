@@ -102,6 +102,7 @@ class CompilerTest extends pool::asm::test::TestCase {
     [int] testCodeAddrData() {
         pool::asm::test::TestData t = this.newTestData("testCodeAddrData");
         // TODO: activate with .addr and .data support in parser
+        t.destroy();
         return this.skip();
         
         t.in(".code16");

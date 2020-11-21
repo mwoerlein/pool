@@ -61,7 +61,7 @@ class TestSuite extends sys::core::Object {
         
         int availableBytes = testRt.getAllocator().getAvailableBytes();
         test.setOutput(output).runAll();
-        int success = test.getResult();// && test.checkMemory(availableBytes);
+        int success = test.getResult() && test.checkMemory(availableBytes);
         
         test.destroy();
         testRt.destroy();
