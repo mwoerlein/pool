@@ -18,41 +18,43 @@ class CompilerTest extends test::TestCase {
     [int] testSimpleClass() {
         TestStorage t = this.newTestStorage("testSimpleClass");
         
-        StringStorageElement sampleIn = t.in("my::simple::Sample", Mimetype:POOL_SRC);
-        sampleIn.line("namespace my::simple;");
-        sampleIn.line("class Sample {");
-        sampleIn.line("");
-        sampleIn.line("    [int] one() { return 1; }");
-        sampleIn.line("    [int] two(__any__ obj) {");
-        sampleIn.line("        return '\\n';");
-        sampleIn.line("    }");
-        sampleIn.line("");
-        sampleIn.line("    [int] three(__any__ obj, cstring obj2) {");
-        sampleIn.line("        //return two(obj);");
-        sampleIn.line("        return 0x80000000;");
-        sampleIn.line("    }");
-        sampleIn.line("}");
+        t.in("my::simple::Sample", Mimetype:POOL_SRC)
+            .line("namespace my::simple;")
+            .line("class Sample {")
+            .line("")
+            .line("    [int] one() { return 1; }")
+            .line("    [int] two(__any__ obj) {")
+            .line("        return '\\n';")
+            .line("    }")
+            .line("")
+            .line("    [int] three(__any__ obj, cstring obj2) {")
+            .line("        //return two(obj);")
+            .line("        return 0x80000000;")
+            .line("    }")
+            .line("}")
+        ;
         
-        StringStorageElement sampleP = t.pretty("my::simple::Sample", Mimetype:POOL_SRC);
-        sampleP.line("namespace my::simple;");
-        sampleP.line("");
-        sampleP.line("");
-        sampleP.line("class Sample {");
-        sampleP.line("    ");
-        sampleP.line("    // methods");
-        sampleP.line("    [int] one() {");
-        sampleP.line("        return 1;");
-        sampleP.line("    }");
-        sampleP.line("    ");
-        sampleP.line("    [int] two(__any__ obj) {");
-        sampleP.line("        return 10;");
-        sampleP.line("    }");
-        sampleP.line("    ");
-        sampleP.line("    [int] three(__any__ obj, cstring obj2) {");
-        sampleP.line("        return -2147483648;");
-        sampleP.line("    }");
-        sampleP.line("    ");
-        sampleP.line("}");
+        t.expect("my::simple::Sample", Mimetype:POOL_SRC)
+            .line("namespace my::simple;")
+            .line("")
+            .line("")
+            .line("class Sample {")
+            .line("    ")
+            .line("    // methods")
+            .line("    [int] one() {")
+            .line("        return 1;")
+            .line("    }")
+            .line("    ")
+            .line("    [int] two(__any__ obj) {")
+            .line("        return 10;")
+            .line("    }")
+            .line("    ")
+            .line("    [int] three(__any__ obj, cstring obj2) {")
+            .line("        return -2147483648;")
+            .line("    }")
+            .line("    ")
+            .line("}")
+        ;
         
         t.prepare("my::simple::Sample");
         
@@ -84,7 +86,7 @@ class CompilerTest extends test::TestCase {
         c.compilePrepared();
         if (c.hasErrors()) { return this.fail("Compiler compilation"); }
         
-        if (!storage.validatePretty()) { return this.fail("Pretty validation"); }
+        if (!storage.validateExpected()) { return this.fail("Pretty validation"); }
 
         c.destroy();
         l.destroy();

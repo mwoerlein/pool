@@ -21,7 +21,7 @@ class TestStorage extends pool::storage::PoolStorage {
     AnyList prepare; // HashList<fqn>
     AnyMap in;       // HashMap<fqn+mime, StringStorageElement>
     AnyMap out;      // HashMap<fqn+mime, StringStorageElement>
-    AnyMap pretty;   // HashMap<fqn+mime, StringStorageElement>
+    AnyMap expect;   // HashMap<fqn+mime, StringStorageElement>
     
     [] __init() {
         this.name = this.createOwn(String:CLASSNAME);
@@ -29,7 +29,7 @@ class TestStorage extends pool::storage::PoolStorage {
         this.prepare = this.createOwn(AnyList:CLASSNAME);
         this.in = this.createOwn(AnyMap:CLASSNAME);
         this.out = this.createOwn(AnyMap:CLASSNAME);
-        this.pretty = this.createOwn(AnyMap:CLASSNAME);
+        this.expect = this.createOwn(AnyMap:CLASSNAME);
     }
     
     [TestStorage] setName(cstring name) { this.name.assignCString(name); return this; }
@@ -47,22 +47,22 @@ class TestStorage extends pool::storage::PoolStorage {
         in.set(key, e);
         return e;
     }
-    [StringStorageElement] pretty(cstring fqn, int mimeType) {
-        String key = pretty.createOwn(String:CLASSNAME);
+    [StringStorageElement] expect(cstring fqn, int mimeType) {
+        String key = expect.createOwn(String:CLASSNAME);
         key.assignCString(fqn).printChar('#').printInt(mimeType);
-        StringStorageElement e = pretty.createOwn(StringStorageElement:CLASSNAME);
-        pretty.set(key, e);
+        StringStorageElement e = expect.createOwn(StringStorageElement:CLASSNAME);
+        expect.set(key, e);
         return e;
     }
     
-    [int] validatePretty() {
+    [int] validateExpected() {
         int ret = true;
-        AnyMapEntryIterator pit = pretty.entries();
-        while (ret && pit.hasNext()) {
-            [String key, StringStorageElement p] = pit.nextPair();
-            ret = p.equals(out.get(key));
+        AnyMapEntryIterator it = expect.entries();
+        while (ret && it.hasNext()) {
+            [String key, StringStorageElement e] = it.nextPair();
+            ret = e.equals(out.get(key));
         }
-        pit.destroy();
+        it.destroy();
         return ret;
     }
 
