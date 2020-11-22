@@ -37,6 +37,7 @@ class TestStorage extends pool::storage::PoolStorage {
         String s = prepare.createOwn(String:CLASSNAME);
         s.assignCString(fqn);
         prepare.add(s);
+        return this;
     }
     [AnyIterator] prepares() { return prepare.iterator(); }
     

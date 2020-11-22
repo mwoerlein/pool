@@ -14,6 +14,7 @@ class CompilerTest extends test::TestCase {
     [] runAll() {
         this.testSimpleClass();
         this.testStructs();
+        this.testClasses();
     }
     
     [int] testSimpleClass() {
@@ -121,6 +122,83 @@ class CompilerTest extends test::TestCase {
         ;
         
         t.prepare("structs::A");
+        
+        return this.runTest(t);
+    }
+    
+    [int] testClasses() {
+        TestStorage t = this.newTestStorage("testClasses");
+        
+        t.in("my::A", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("use other::C;")
+            .line("class A extends B, C, other::D {")
+            .line("    global cstring CSTRING := \"const\";")
+            .line("    int a := 1;")
+            .line("    int b = 1;")
+            .line("    A a;")
+            .line("    my::C c;")
+            .line("    other::D d;")
+            .line("    __any__ e;")
+            .line("    __all__ f;")
+            .line("}")
+        ;
+        t.in("my::B", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class B extends my::C {")
+            .line("}")
+        ;
+        t.in("my::C", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class C {")
+            .line("}")
+        ;
+        t.in("other::C", Mimetype:POOL_SRC)
+            .line("namespace other;")
+            .line("class C {")
+            .line("}")
+        ;
+        t.in("other::D", Mimetype:POOL_SRC)
+            .line("namespace other;")
+            .line("class D {")
+            .line("}")
+        ;
+        
+        t.expect("my::A", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("")
+            .line("use other::C;")
+            .line("")
+            .line("class A extends B, C, other::D {")
+            .line("    ")
+            .line("    // constants")
+            .line("    global cstring CSTRING := \"const\";")
+            .line("    int a := 1;")
+            .line("    int b = 1;")
+            .line("    ")
+            .line("    // variables")
+            .line("    A a;")
+            .line("    my::C c;")
+            .line("    other::D d;")
+            .line("    __any__ e;")
+            .line("    __all__ f;")
+            .line("}")
+        ;
+        t.expect("my::B", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("")
+            .line("")
+            .line("class B extends my::C {")
+            .line("}")
+        ;        
+        t.expect("my::C", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("")
+            .line("")
+            .line("class C {")
+            .line("}")
+        ;        
+        t.prepare("my::A").prepare("my::B").prepare("my::C");
         
         return this.runTest(t);
     }
