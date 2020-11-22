@@ -114,6 +114,7 @@ variable_expr: ID                                                               
 variable_expr: expression '.' ID                                                                                { $$ = this.variableExpr($3, $1); }
 variable_expr: class_ref ':' ID                                                                                 { $$ = this.variableExpr($3, this.asExpr($1)); }
 
+method_call_expr: ID '(' expression_list_empty ')'                                                              { $$ = this.methodCallExpr($1, null, $4).setParameters($3); }
 method_call_expr: expression '.' ID '(' expression_list_empty ')'                                               { $$ = this.methodCallExpr($3, $1, $6).setParameters($5); }
 method_call_expr: class_ref ':' ID '(' expression_list_empty ')'                                                { $$ = this.methodCallExpr($3, this.asExpr($1), $6).setParameters($5); }
 
