@@ -137,14 +137,14 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     [ExpressionNode] asExpr(__any__ node) { return this.rt().cast(ExpressionNode:CLASSNAME, node); }
     
     [ConstCStringExprNode] slStringExpr(Token t) { 
-        ConstCStringExprNode node = this.createOwn(ConstCStringExprNode:CLASSNAME);
+        ConstCStringExprNode node = this.rt().createInstance(ConstCStringExprNode:CLASSNAME);
         t.getValue().unescapeToStream(node.getValue().ostream());
         node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
         return node;
     }
     
     [ConstCStringExprNode] mlStringExpr(Token t) { 
-        ConstCStringExprNode node = this.createOwn(ConstCStringExprNode:CLASSNAME);
+        ConstCStringExprNode node = this.rt().createInstance(ConstCStringExprNode:CLASSNAME);
         String v = node.getValue();
         {
             IStream in = t.getValue().toIStream();
@@ -165,7 +165,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
     
     [ConstIntExprNode] intExpr(Token t, Token sign) { 
-        ConstIntExprNode node = this.createOwn(ConstIntExprNode:CLASSNAME);
+        ConstIntExprNode node = this.rt().createInstance(ConstIntExprNode:CLASSNAME);
         
         String v = t.getValue();
         int val = 0;
@@ -195,19 +195,19 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
 
     [ThisExprNode] thisExpr(Token t) { 
-        ThisExprNode node = this.createOwn(ThisExprNode:CLASSNAME);
+        ThisExprNode node = this.rt().createInstance(ThisExprNode:CLASSNAME);
         node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
         return node;
     }
 
     [NullExprNode] nullExpr(Token t) { 
-        NullExprNode node = this.createOwn(NullExprNode:CLASSNAME);
+        NullExprNode node = this.rt().createInstance(NullExprNode:CLASSNAME);
         node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
         return node;
     }
 
     [VariableExprNode] variableExpr(Token name, ExpressionNode context) { 
-        VariableExprNode node = this.createOwn(VariableExprNode:CLASSNAME);
+        VariableExprNode node = this.rt().createInstance(VariableExprNode:CLASSNAME);
         node.setName(name.getValue());
         node.setLocation(name.getFirstLine(), name.getFirstColumn(), name.getLastLine(), name.getLastColumn());
         if (context) {
@@ -218,7 +218,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
 
     [MethodCallExprNode] methodCallExpr(Token name, ExpressionNode context, Token last) { 
-        MethodCallExprNode node = this.createOwn(MethodCallExprNode:CLASSNAME);
+        MethodCallExprNode node = this.rt().createInstance(MethodCallExprNode:CLASSNAME);
         node.setName(name.getValue());
         node.setLocation(name.getFirstLine(), name.getFirstColumn(), last.getLastLine(), last.getLastColumn());
         if (context) {
@@ -229,21 +229,21 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
     
     [SignExprNode] signExpr(ExpressionNode expr, Token first) {
-        SignExprNode node = this.createOwn(SignExprNode:CLASSNAME);
+        SignExprNode node = this.rt().createInstance(SignExprNode:CLASSNAME);
         node.setExpression(expr);
         node.setLocation(first.getFirstLine(), first.getFirstColumn(), expr.getLastLine(), expr.getLastColumn());
         return node;
     }
     
     [ArithBinaryExprNode] arithBinaryExpr(ExpressionNode left, ExpressionNode right) {
-        ArithBinaryExprNode node = this.createOwn(ArithBinaryExprNode:CLASSNAME);
+        ArithBinaryExprNode node = this.rt().createInstance(ArithBinaryExprNode:CLASSNAME);
         node.setLeft(left).setRight(right);
         node.setLocation(left.getFirstLine(), left.getFirstColumn(), right.getLastLine(), right.getLastColumn());
         return node;
     }
     
     [ArithUnaryExprNode] arithUnaryExpr(VariableExprNode var, Token first, Token last) {
-        ArithUnaryExprNode node = this.createOwn(ArithUnaryExprNode:CLASSNAME);
+        ArithUnaryExprNode node = this.rt().createInstance(ArithUnaryExprNode:CLASSNAME);
         node.setVariable(var);
         node.setLocation(var.getFirstLine(), var.getFirstColumn(), var.getLastLine(), var.getLastColumn());
         if (first) { node.setFirstLocation(first.getFirstLine(), first.getFirstColumn()); }
@@ -252,14 +252,14 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
     
     [LogicalBinaryExprNode] logicalBinaryExpr(ExpressionNode left, ExpressionNode right) {
-        LogicalBinaryExprNode node = this.createOwn(LogicalBinaryExprNode:CLASSNAME);
+        LogicalBinaryExprNode node = this.rt().createInstance(LogicalBinaryExprNode:CLASSNAME);
         node.setLeft(left).setRight(right);
         node.setLocation(left.getFirstLine(), left.getFirstColumn(), right.getLastLine(), right.getLastColumn());
         return node;
     }
     
     [LogicalUnaryExprNode] logicalUnaryExpr(ExpressionNode expr, Token first, Token last) {
-        LogicalUnaryExprNode node = this.createOwn(LogicalUnaryExprNode:CLASSNAME);
+        LogicalUnaryExprNode node = this.rt().createInstance(LogicalUnaryExprNode:CLASSNAME);
         node.setExpression(expr);
         node.setLocation(expr.getFirstLine(), expr.getFirstColumn(), expr.getLastLine(), expr.getLastColumn());
         if (first) { node.setFirstLocation(first.getFirstLine(), first.getFirstColumn()); }
@@ -268,14 +268,14 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
     
     [AssignmentExprNode] assignmentExpr(VariableExprNode var, ExpressionNode value) {
-        AssignmentExprNode node = this.createOwn(AssignmentExprNode:CLASSNAME);
+        AssignmentExprNode node = this.rt().createInstance(AssignmentExprNode:CLASSNAME);
         node.setVariable(var).setValue(value);  
         node.setLocation(var.getFirstLine(), var.getFirstColumn(), value.getLastLine(), value.getLastColumn());
         return node;
     }
     
     [ArithAssignmentExprNode] arithAssignmentExpr(VariableExprNode var, ExpressionNode value) {
-        ArithAssignmentExprNode node = this.createOwn(ArithAssignmentExprNode:CLASSNAME);
+        ArithAssignmentExprNode node = this.rt().createInstance(ArithAssignmentExprNode:CLASSNAME);
         node.setVariable(var).setValue(value);
         node.setLocation(var.getFirstLine(), var.getFirstColumn(), value.getLastLine(), value.getLastColumn());
         return node;
@@ -370,7 +370,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     }
     
     [ClassRefNode] classRef(Token id) {
-        ClassRefNode node = this.createOwn(ClassRefNode:CLASSNAME);
+        ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);
         node.setName(id.getValue());
         node.setLocation(id.getFirstLine(), id.getFirstColumn(), id.getLastLine(), id.getLastColumn());
         return node;
