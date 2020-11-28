@@ -1,0 +1,22 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast;
+
+use sys::stream::OStream;
+
+class Type extends sys::core::Object {
+
+    abstract [OStream] printDebugName(OStream stream);
+    
+    [int] isBool() { return true; }
+    
+    [OStream] printToStream(OStream stream) {
+        return this.printDebugName(stream);
+    }
+    
+    // TODO: remove with implicit cast
+    [Type] type() { return this; }
+}

@@ -1,0 +1,26 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::scope;
+
+use pool::compiler::ast::NamedType;
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use sys::stream::OStream;
+
+class ClassScope extends NamedType, Scope {
+
+    ClassDeclNode _classDecl;
+    
+    [ClassScope] setClassDeclNode(ClassDeclNode classDecl) { _classDecl = classDecl; return this; }
+    [ClassDeclNode] getClassDeclNode() { return _classDecl; }
+    
+    [int] isBool() { return false; }
+    
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("ClassScope of ").print(_classDecl);
+    }
+
+}

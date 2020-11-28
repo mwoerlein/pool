@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::scope;
+
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use sys::stream::OStream;
+
+class MethodScope extends Scope {
+
+    MethodDeclNode _methodDecl;
+    
+    [MethodScope] setMethodDeclNode(MethodDeclNode methodDecl) { _methodDecl = methodDecl; return this; }
+    [MethodDeclNode] getMethodDeclNode() { return _methodDecl; }
+    
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("MethodScope of ").print(_methodDecl);
+    }
+
+}

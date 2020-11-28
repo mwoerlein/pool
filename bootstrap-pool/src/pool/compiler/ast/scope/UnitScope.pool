@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::scope;
+
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use sys::stream::OStream;
+
+class UnitScope extends Scope {
+
+    TranslationUnitNode _unit;
+    
+    [UnitScope] setUnitNode(TranslationUnitNode unit) { _unit = unit; return this; }
+    [TranslationUnitNode] getUnitNode() { return _unit; }
+
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("UnitScope of ").print(_unit);
+    }
+
+}

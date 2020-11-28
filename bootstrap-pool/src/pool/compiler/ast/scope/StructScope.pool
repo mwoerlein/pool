@@ -1,0 +1,24 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::scope;
+
+use pool::compiler::ast::NamedType;
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use sys::stream::OStream;
+
+class StructScope extends NamedType, Scope {
+
+    StructDeclNode _structDecl;
+    
+    [StructScope] setStructDeclNode(StructDeclNode structDecl) { _structDecl = structDecl; return this; }
+    [StructDeclNode] getStructDeclNode() { return _structDecl; }
+    
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("StructScope of ").print(_structDecl);
+    }
+
+}

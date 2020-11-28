@@ -1,0 +1,49 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast;
+
+use pool::compiler::ast::scope::AllType;
+use pool::compiler::ast::scope::AnyType;
+use pool::compiler::ast::scope::CStringType;
+use pool::compiler::ast::scope::IntType;
+use sys::core::String;
+use sys::core::anycollection::AnyMap;
+
+class TypeManager extends sys::log::LoggerAware {
+
+    AllType _all;
+    AnyType _any;
+    CStringType _cstring;
+    IntType _int;
+    AnyMap _namedTypes; // HashMap<String, NamedType>
+    
+    [] __init() { this._initTypeManager(); }
+    [] _initTypeManager() {
+        _all = this.createOwn(AllType:CLASSNAME);
+        _any = this.createOwn(AnyType:CLASSNAME);
+        _cstring = this.createOwn(CStringType:CLASSNAME);
+        _int = this.createOwn(IntType:CLASSNAME);
+        _namedTypes = this.createOwn(AnyMap:CLASSNAME);
+    }
+    
+    [AllType] getAllType() { return _all; }
+    [AnyType] getAnyType() { return _any; }
+    [CStringType] getCStringType() { return _cstring; }
+    [IntType] getIntType() { return _int; }
+    
+    [int] addNamedType(String fqn, NamedType type) {
+        if (_namedTypes.has(fqn)) {
+            this.error().printCString("type for '").print(fqn).printCString("' already registered!");
+            return false;
+        }
+        _namedTypes.set(fqn, type);
+        return true;        
+    }
+    [NamedType] getNamedType(String fqn) { return _namedTypes.get(fqn); }
+    
+    // TODO: remove with implicit cast
+    [TypeManager] typeManager() { return this; }
+}

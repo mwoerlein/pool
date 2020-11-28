@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::scope;
+
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::instruction::BlockInstNode;
+use sys::stream::OStream;
+
+class BlockScope extends Scope {
+
+    BlockInstNode _block;
+    
+    [BlockScope] setBlockInstNode(BlockInstNode block) { _block = block; return this; }
+    [BlockInstNode] getBlockInstNode() { return _block; }
+    
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("BlockScope in ").print(this.getMethodDeclNode());
+    }
+
+}

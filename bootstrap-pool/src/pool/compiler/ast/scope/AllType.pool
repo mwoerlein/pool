@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::scope;
+
+use pool::compiler::ast::Type;
+use sys::stream::OStream;
+
+class AllType extends Type {
+
+    [OStream] printDebugName(OStream stream) {
+        return stream.printCString("type-<ALL>");
+    }
+
+}

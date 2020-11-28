@@ -1,0 +1,113 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+use pool::compiler::ast::node::instruction::BlockInstNode;
+
+use pool::compiler::ast::scope::BlockScope;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::StructScope;
+use pool::compiler::ast::scope::UnitScope;
+use pool::compiler::ast::scope::VariableScope;
+
+use sys::core::String;
+use sys::core::anycollection::AnyMap;
+use sys::stream::OStream;
+
+class Scope extends sys::core::Object {
+
+    abstract [OStream] printDebugName(OStream stream);
+    
+    Scope _parent;
+
+    AnyMap _types;     // HashMap<String, StructScope|ClassScope as Type>
+    AnyMap _methods;   // HashMap<String, MethodScope>
+    AnyMap _variables; // HashMap<String, VariableScope>
+
+    [] __init() { this._initScope(); }
+    [] _initScope() {
+        _types = this.createOwn(AnyMap:CLASSNAME);
+        _methods = this.createOwn(AnyMap:CLASSNAME);
+        _variables = this.createOwn(AnyMap:CLASSNAME);
+    }
+    
+    [Scope] setParent(Scope parent) { _parent = parent; return this; }
+
+    [TranslationUnitNode] getUnitNode() { if (_parent) { return _parent.getUnitNode(); } return null; }
+    [StructDeclNode] getStructDeclNode() { if (_parent) { return _parent.getStructDeclNode(); } return null; }
+    [ClassDeclNode] getClassDeclNode() { if (_parent) { return _parent.getClassDeclNode(); } return null; }
+    [MethodDeclNode] getMethodDeclNode() { if (_parent) { return _parent.getMethodDeclNode(); } return null; }
+    [BlockInstNode] getBlockInstNode() { if (_parent) { return _parent.getBlockInstNode(); } return null; }
+    [VariableDeclNode] getVariableDeclNode() { if (_parent) { return _parent.getVariableDeclNode(); } return null; }
+    
+    [ClassScope, InstanceScope] registerClass(ClassDeclNode node, String alias) {
+        ClassScope classScope = _types.createOwn(ClassScope:CLASSNAME);
+        classScope.setClassDeclNode(node).setParent(this);
+        InstanceScope instanceScope = classScope.createOwn(InstanceScope:CLASSNAME);
+        instanceScope.setClassDeclNode(node).setParent(classScope.scope());
+        this.registerNamedType(classScope.namedType(), alias);
+        return [classScope, instanceScope];
+    }
+    [StructScope] registerStruct(StructDeclNode node, String alias) {
+        StructScope scope = _types.createOwn(StructScope:CLASSNAME);
+        scope.setStructDeclNode(node).setParent(this);
+        this.registerNamedType(scope.namedType(), alias);
+        return scope;
+    }
+    
+    [NamedType] registerNamedType(NamedType type, String alias) {
+        NamedType old = _types.set(alias, type);
+        if (old) { old.destroy(); }
+        return type;
+    }
+    [NamedType] getNamedType(String name) { return _types.get(name); }
+    
+    [MethodScope] registerMethod(MethodDeclNode node) {
+        MethodScope scope = _methods.createOwn(MethodScope:CLASSNAME);
+        scope.setMethodDeclNode(node).setParent(this);
+        // TODO #7: generate method id from name and parameter types
+        MethodScope old = _methods.set(node.getName(), scope);
+        if (old) { old.destroy(); }
+        return scope;
+    }
+    [MethodScope] getMethod(String name) { return _methods.get(name); }
+    
+    [VariableScope] registerVariable(VariableDeclNode node) {
+        VariableScope scope = _variables.createOwn(VariableScope:CLASSNAME);
+        scope.setVariableDeclNode(node).setParent(this);
+        VariableScope old = _variables.set(node.getName(), scope);
+        if (old) { old.destroy(); }
+        return scope;
+    }
+    [VariableScope] getVariable(String name) { return _variables.get(name); }
+
+    [BlockScope] createBlockScope(BlockInstNode node) {
+        BlockScope scope = this.createOwn(BlockScope:CLASSNAME);
+        scope.setBlockInstNode(node).setParent(this);
+        return scope;
+    }
+    
+    global [UnitScope] createUnitScope(TranslationUnitNode node) {
+        UnitScope scope = node.createOwn(UnitScope:CLASSNAME);
+        scope.setUnitNode(node);
+        return scope;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return this.printDebugName(stream);
+    }
+    
+    // TODO: remove with implicit cast
+    [Scope] scope() { return this; }
+}
