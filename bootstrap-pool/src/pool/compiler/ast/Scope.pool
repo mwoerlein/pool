@@ -31,13 +31,13 @@ class Scope extends sys::core::Object {
     
     Scope _parent;
 
-    AnyMap _types;     // HashMap<String, StructScope|ClassScope as Type>
-    AnyMap _methods;   // HashMap<String, MethodScope>
-    AnyMap _variables; // HashMap<String, VariableScope>
+    AnyMap _namedTypes; // HashMap<String, NamedType>
+    AnyMap _methods;    // HashMap<String, MethodScope>
+    AnyMap _variables;  // HashMap<String, VariableScope>
 
     [] __init() { this._initScope(); }
     [] _initScope() {
-        _types = this.createOwn(AnyMap:CLASSNAME);
+        _namedTypes = this.createOwn(AnyMap:CLASSNAME);
         _methods = this.createOwn(AnyMap:CLASSNAME);
         _variables = this.createOwn(AnyMap:CLASSNAME);
     }
@@ -52,7 +52,7 @@ class Scope extends sys::core::Object {
     [VariableDeclNode] getVariableDeclNode() { if (_parent) { return _parent.getVariableDeclNode(); } return null; }
     
     [ClassScope, InstanceScope] registerClass(ClassDeclNode node, String alias) {
-        ClassScope classScope = _types.createOwn(ClassScope:CLASSNAME);
+        ClassScope classScope = _namedTypes.createOwn(ClassScope:CLASSNAME);
         classScope.setClassDeclNode(node).setParent(this);
         InstanceScope instanceScope = classScope.createOwn(InstanceScope:CLASSNAME);
         instanceScope.setClassDeclNode(node).setParent(classScope.scope());
@@ -60,18 +60,18 @@ class Scope extends sys::core::Object {
         return [classScope, instanceScope];
     }
     [StructScope] registerStruct(StructDeclNode node, String alias) {
-        StructScope scope = _types.createOwn(StructScope:CLASSNAME);
+        StructScope scope = _namedTypes.createOwn(StructScope:CLASSNAME);
         scope.setStructDeclNode(node).setParent(this);
         this.registerNamedType(scope.namedType(), alias);
         return scope;
     }
     
     [NamedType] registerNamedType(NamedType type, String alias) {
-        NamedType old = _types.set(alias, type);
+        NamedType old = _namedTypes.set(alias, type);
         if (old) { old.destroy(); }
         return type;
     }
-    [NamedType] getNamedType(String name) { return _types.get(name); }
+    [NamedType] getNamedType(String name) { return _namedTypes.get(name); }
     
     [MethodScope] registerMethod(MethodDeclNode node) {
         MethodScope scope = _methods.createOwn(MethodScope:CLASSNAME);
