@@ -371,7 +371,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     
     [ClassRefNode] classRef(Token id) {
         ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);
-        node.setName(id.getValue());
+        node.initName(id.getValue());
         node.setLocation(id.getFirstLine(), id.getFirstColumn(), id.getLastLine(), id.getLastColumn());
         return node;
     }
@@ -379,7 +379,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     [ClassRefNode] appendToClassRef(ClassRefNode node, Token id) {
         int line = node.getLastLine(); 
         int end = node.getLastColumn();
-        node.getName().printChar(':').printChar(':').print(id.getValue());
+        node.appendName(id.getValue());
         node.setLastLocation(id.getLastLine(), id.getLastColumn());
         if ((id.getFirstLine() != line) || (id.getFirstColumn() != end + 3)) {
             node.debugToStream(this.newError().printCString("non-consecutive full qualified name: "));

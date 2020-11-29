@@ -14,13 +14,25 @@ use sys::stream::OStream;
 class ClassRefNode extends TypeRefNode, ExpressionNode {
 
     String _name;
+    String _lastPart;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
+        _lastPart = this.createOwn(String:CLASSNAME);
     }
     
-    [ClassRefNode] setName(String name) { _name.assignString(name); return this; }
+    [ClassRefNode] initName(String part) {
+        _name.assignString(part);
+        _lastPart.assignString(part);
+        return this;
+    }
+    [ClassRefNode] appendName(String part) {
+        _name.printChar(':').printChar(':').print(part);
+        _lastPart.assignString(part);
+        return this;
+    }
     [String] getName() { return _name; }
+    [String] getLastPart() { return _lastPart; }
     
     // TYPE_REF_NODE
     [ClassRefNode] asClassRef() { return this; }
