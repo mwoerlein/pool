@@ -29,7 +29,8 @@ MLCOMMENT   := /\/\*([^\*]*\*+)([^\/\*][^\*]*\*+)*\//
 --- STRUCTURE ---
 -----------------
 
-translation_unit: namespace_decl                                                                                { $$ = this.unit.setNamespace($1); }
+translation_unit:                                                                                               { $$ = this.unit; }
+translation_unit: translation_unit namespace_decl                                                               { $$ = this.unit.setNamespace($2); }
 translation_unit: translation_unit use_stmt                                                                     { $$ = this.unit.addUseStatement($2); }
 translation_unit: translation_unit class_decl                                                                   { $$ = this.unit.addClassDecl($2); }
 translation_unit: translation_unit struct_decl                                                                  { $$ = this.unit.addStructDecl($2); }
