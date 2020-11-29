@@ -1,0 +1,299 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::visitor;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+
+use pool::compiler::ast::node::expression::ArithAssignmentExprNode;
+use pool::compiler::ast::node::expression::ArithBinaryExprNode;
+use pool::compiler::ast::node::expression::ArithUnaryExprNode;
+use pool::compiler::ast::node::expression::AssignmentExprNode;
+use pool::compiler::ast::node::expression::ConstCStringExprNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
+use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
+use pool::compiler::ast::node::expression::MethodCallExprNode;
+use pool::compiler::ast::node::expression::NullExprNode;
+use pool::compiler::ast::node::expression::SignExprNode;
+use pool::compiler::ast::node::expression::ThisExprNode;
+use pool::compiler::ast::node::expression::VariableExprNode;
+
+use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
+
+use pool::compiler::ast::node::reference::AllRefNode;
+use pool::compiler::ast::node::reference::AnyRefNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::IntRefNode;
+use pool::compiler::ast::node::reference::TypeRefNode;
+
+use pool::compiler::ast::NamedType;
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::TypeManager;
+use pool::compiler::ast::scope::BlockScope;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::StructScope;
+use pool::compiler::ast::scope::UnitScope;
+use pool::compiler::ast::scope::VariableScope;
+
+use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::String;
+use sys::runtime::Runtime;
+use sys::stream::OStream;
+
+class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
+
+    TypeManager _typeManager;
+    Scope _curScope;
+    
+    [TypeReferenceResolver] setTypeManager(TypeManager manager) { _typeManager = manager; return this; }
+    
+    // declarations
+    [int] visitTranslationUnit(TranslationUnitNode node) {
+        Scope tmpScope := _curScope;
+        UnitScope us := Scope:createUnitScope(node);
+        node.setUnitScope(us);
+        _curScope = us.scope();
+        
+        if (!node.getNamespace()) {
+            this.error().print(node.getName()).printCString(": missing namespace");
+            _curScope = tmpScope;
+            return false;
+        }
+        
+        node.getNamespace().accept(this.visitor());
+        
+        {
+            AnyIterator it = node.getClasses().iterator();
+            while (it.hasNext()) { this.registerClass(it.next()); }
+            it.destroy();
+        }
+        {
+            AnyIterator it = node.getStructs().iterator();
+            while (it.hasNext()) { this.registerStruct(it.next()); }
+            it.destroy();
+        }
+        
+        node.getUses().acceptAll(this.visitor());
+        node.getClasses().acceptAll(this.visitor());
+        node.getStructs().acceptAll(this.visitor());
+        
+        _curScope = tmpScope;
+        return true;
+    }
+    
+    [int] visitNamespaceDecl(NamespaceDeclNode node) {
+        return true;
+    }
+    
+    [int] visitUseStatement(UseStatementNode node) {
+        // node.setScope(_curScope);
+        NamedType t = _typeManager.getNamedType(node.getName().getName());
+        if (!t) {
+            return false;
+        }
+        if (node.hasAlias()) {
+            _curScope.registerNamedType(t, node.getAlias());
+        } else {
+            _curScope.registerNamedType(t, node.getName().getLastPart());
+        }
+        //node.setResolvedType(t.type());
+        return true;
+    }
+    
+    [int] visitClassDecl(ClassDeclNode node) {
+        return true;
+    }
+    
+    [int] visitStructDecl(StructDeclNode node) {
+        return true;
+    }
+    
+    [int] visitMethodDecl(MethodDeclNode node) {
+        return true;
+    }
+    
+    [int] visitVariableDecl(VariableDeclNode node) {
+        return true;
+    }
+    
+    // instructions
+    [int] visitBlockInst(BlockInstNode node) {
+        return true;
+    }
+    
+    [int] visitExpressionInst(ExpressionInstNode node) {
+        return true;
+    }
+    
+    [int] visitIfInst(IfInstNode node) {
+        return true;
+    }
+    
+    [int] visitInlinePasmInst(InlinePasmInstNode node) {
+        return true;
+    }
+    
+    [int] visitReturnInst(ReturnInstNode node) {
+        return true;
+    }
+
+    [int] visitVariableInitInst(VariableInitInstNode node) {
+        return true;
+    }
+
+    [int] visitWhileInst(WhileInstNode node) {
+        return true;
+    }
+    
+    // expressions
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
+        return true;
+    }
+    
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
+        return true;
+    }
+    
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
+        return true;
+    }
+    
+    [int] visitAssignmentExpr(AssignmentExprNode node) {
+        return true;
+    }
+    
+    [int] visitConstCStringExpr(ConstCStringExprNode node) {
+        return true;
+    }
+    
+    [int] visitConstIntExpr(ConstIntExprNode node) {
+        return true;
+    }
+    
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
+        return true;
+    }
+    
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
+        return true;
+    }
+    
+    [int] visitMethodCallExpr(MethodCallExprNode node) {
+        return true;
+    }
+    
+    [int] visitNullExpr(NullExprNode node) {
+        return true;
+    }
+    
+    [int] visitSignExpr(SignExprNode node) {
+        return true;
+    }
+    
+    [int] visitThisExpr(ThisExprNode node) {
+        return true;
+    }
+    
+    [int] visitVariableExpr(VariableExprNode node) {
+        return true;
+    }
+    
+    // references
+    [int] visitAllRef(AllRefNode node) {
+        return true;
+    }
+    
+    [int] visitAnyRef(AnyRefNode node) {
+        return true;
+    }
+    
+    [int] visitClassRef(ClassRefNode node) {
+        return true;
+    }
+    
+    [int] visitCStringRef(CStringRefNode node) {
+        return true;
+    }
+    
+    [int] visitIntRef(IntRefNode node) {
+        return true;
+    }
+    
+    // helper
+    [int] registerClass(ClassDeclNode node) {
+        if (node.getClassScope()) {
+            this.crit().print(node.getName()).printCString(": already resolved");
+            return false;
+        }
+        
+        TranslationUnitNode curUnit = _curScope.getUnitNode();
+        String fqn = node.createOwn(String:CLASSNAME);
+        fqn.print(curUnit.getNamespace().getName().getName()).printChar(':').printChar(':').print(node.getName());
+        if (!fqn.equals(curUnit.getName())) {
+            this.crit().print(node.getName())
+                .printCString(": class name '").print(fqn).printCString("' does not match compilation unit");
+        }
+        
+        [ClassScope cs, InstanceScope is] := _curScope.registerClass(node, node.getName());
+        node.setClassScope(cs).setInstanceScope(is);
+        _typeManager.addNamedType(fqn, cs.namedType());
+        
+        /* TODO: inject CLASSNAME constant
+        classDecl.addStringConstant(env().create<String, const char*>(CLASSNAME_ID), classDecl.fullQualifiedName);
+        */
+        
+        return true;
+    }
+    
+    [int] registerStruct(StructDeclNode node) {
+        if (node.getStructScope()) {
+            this.crit().print(node.getName()).printCString(": already resolved");
+            return false;
+        }
+        
+        TranslationUnitNode curUnit = _curScope.getUnitNode();
+        String fqn = node.createOwn(String:CLASSNAME);
+        fqn.print(curUnit.getNamespace().getName().getName()).printChar(':').printChar(':').print(node.getName());
+        if (!fqn.equals(curUnit.getName())) {
+            this.crit().print(node.getName())
+                .printCString(": struct name '").print(fqn).printCString("' does not match compilation unit");
+        }
+        
+        StructScope ss := _curScope.registerStruct(node, node.getName());
+        node.setStructScope(ss);
+        _typeManager.addNamedType(fqn, ss.namedType());
+        
+        /* TODO: inject SIZEOF constant
+        scope->sizeExpr = structDecl.addIntConstant(env().create<String, const char*>(SIZEOF_ID), -1).initializer.isConstInt();
+        */
+        
+        return true;
+    }
+}

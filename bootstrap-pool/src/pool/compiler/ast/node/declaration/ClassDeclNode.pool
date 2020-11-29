@@ -6,15 +6,21 @@ version = 0.1.0
 namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::NodeList;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
 
 use sys::core::String;
 use sys::stream::OStream;
 
 class ClassDeclNode extends Node {
 
+    ClassScope _classScope;
+    InstanceScope _instanceScope;
+    
     String _name;
     
     NodeList _extends; // NodeList<TypeRefNode>
@@ -29,6 +35,12 @@ class ClassDeclNode extends Node {
         _variables = this.createOwn(NodeList:CLASSNAME);
         _methods = this.createOwn(NodeList:CLASSNAME);
     }
+    
+    [ClassDeclNode] setClassScope(ClassScope scope) { _classScope = scope; return this; }
+    [ClassDeclNode] setInstanceScope(InstanceScope scope) { _instanceScope = scope; return this; }
+    [ClassScope] getClassScope() { return _classScope; }
+    [InstanceScope] getInstanceScope() { return _instanceScope; }
+    [Scope] getScope() { if (_classScope) { return _classScope.scope(); } return null; }
     
     [ClassDeclNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }

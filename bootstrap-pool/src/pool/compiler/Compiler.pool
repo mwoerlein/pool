@@ -5,11 +5,12 @@ version = 0.1.0
 */
 namespace pool::compiler;
 
-use pool::compiler::ast::Node;
+use pool::compiler::ast::NamedType;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::visitor::PrettyPrinter;
+use pool::compiler::ast::visitor::TypeReferenceResolver;
 use pool::compiler::parser::Parser;
 use pool::storage::ClassPathStorage;
 use pool::storage::PoolStorage;
@@ -17,31 +18,32 @@ use pool::storage::PoolStorage;
 use sys::core::String;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
 use sys::log::Logger;
-use sys::log::LoggerAware;
 use sys::store::StorageElement;
 use sys::stream::OStream;
 
-class Compiler extends LoggerAware {
+class Compiler extends pool::compiler::ast::TypeManager {
 
     ClassPathStorage classPath;
     PoolStorage out;
     Parser parser;
     PrettyPrinter pp;
-    AnyList units; // LinkedList<TranslationUnitNode>
-    AnyList classes; // LinkedList<ClassDeclNode>
-    AnyList structs; // LinkedList<StructDeclNode>
+    TypeReferenceResolver resolveTypeRefs;
+    AnyList preparedUnits; // LinkedList<TranslationUnitNode>
     
     [] __init() {
+        this._initTypeManager();
         parser = this.createOwn(Parser:CLASSNAME);
         classPath = this.createOwn(ClassPathStorage:CLASSNAME);
-        units = this.createOwn(AnyList:CLASSNAME);
-        classes = this.createOwn(AnyList:CLASSNAME);
-        structs = this.createOwn(AnyList:CLASSNAME);
+        preparedUnits = this.createOwn(AnyList:CLASSNAME);
+        resolveTypeRefs = this.createOwn(TypeReferenceResolver:CLASSNAME);
+        resolveTypeRefs.setTypeManager(this.typeManager());
     }
     [Compiler] initLogger(Logger logger) {
         this.setLogger(logger);
         parser.setLogger(logger);
+        resolveTypeRefs.setLogger(logger);
         return this;
     }
     
@@ -56,8 +58,14 @@ class Compiler extends LoggerAware {
     [int] hasErrors() { return logger.has(Logger:ERROR); }
     
     [] prepare(String fqn) {
-        TranslationUnitNode unit = this._initialize(fqn);
-        if (unit) { units.add(units.own(unit)); } else { this._failUnit(fqn); }
+        NamedType type = _namedTypes.get(fqn);
+        if (type) {
+            // reuse already initialized unit
+            preparedUnits.add(type.getUnitNode());
+        } else {
+            TranslationUnitNode unit = this._initialize(fqn);
+            if (unit) { preparedUnits.add(unit); } else { this._failUnit(fqn); }
+        }
     }
     
     [] skip(String fqn) {
@@ -65,23 +73,35 @@ class Compiler extends LoggerAware {
     }
     
     [] compilePrepared() {
-        AnyIterator it = units.iterator();
+        AnyIterator it = preparedUnits.iterator();
         while (!this.hasErrors() && it.hasNext()) {
             TranslationUnitNode unit = it.next();
-            if (!this._compile(unit.getName(), unit.node())) { this._failUnit(unit.getName()); }
+            AnyIterator cit = unit.getClasses().iterator();
+            while (!this.hasErrors() && cit.hasNext()) {
+                ClassDeclNode cd = cit.next();
+                if (!this._compile(unit.getName(), cd)) { this._failUnit(unit.getName()); }
+            }
+            cit.destroy();
         }
         it.destroy();
     }
     
     [] compileAll() {
         int success = true;
-        AnyIterator it = classes.iterator();
+        AnyMapEntryIterator it = _namedTypes.entries();
         while (!this.hasErrors() && it.hasNext()) {
-            ClassDeclNode cd = it.next();
-            // TODO: use full qualified name of class
-            if (!this._compile(cd.getName(), cd.node())) { this._failUnit(cd.getName()); }
+            [String fqn, NamedType t] := it.nextPair();
+            ClassDeclNode cd = t.getClassDeclNode();
+            if (cd && !this._compile(fqn, cd)) { this._failUnit(cd.getName()); }
         }
         it.destroy();
+    }
+    
+    [NamedType] getNamedType(String fqn) {
+        if (!_namedTypes.has(fqn) && !this._initialize(fqn)) {
+            return null;
+        }
+        return _namedTypes.get(fqn);
     }
     
     [TranslationUnitNode] _initialize(String fqn) {
@@ -91,21 +111,23 @@ class Compiler extends LoggerAware {
             this.error().printCString("declaration of '").print(fqn).printCString("' not found!");
             return null;
         }
-        TranslationUnitNode unit = this.rt().createInstance(TranslationUnitNode:CLASSNAME);
+        TranslationUnitNode unit = this.createOwn(TranslationUnitNode:CLASSNAME);
         this._debugStep(fqn, "parse");
         parser.parse(unit.init(elem, fqn));
         if (this.hasErrors()) { unit.destroy(); return null; }
         
-        this._debugStep(fqn, "pretty print");
-        if (pp) { pp.visit(unit.node()); }
-/*        
+        if (pp) {
+            this._debugStep(fqn, "pretty print");
+            pp.visit(unit.node());
+        }
+        
         this._debugStep(fqn, "resolve type references");
         resolveTypeRefs.visit(unit.node());
-*/
+        
         return unit;
     }
     
-    [int] _compile(String fqn, Node node) {
+    [int] _compile(String fqn, ClassDeclNode node) {
         this.note().printCString("compile ").print(fqn);
 /*        
         this._debugStep(fqn, "resolve methods");

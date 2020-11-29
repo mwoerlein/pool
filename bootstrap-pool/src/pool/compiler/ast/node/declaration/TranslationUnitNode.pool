@@ -6,8 +6,10 @@ version = 0.1.0
 namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::scope::UnitScope;
 
 use sys::core::String;
 use sys::store::StorageElement;
@@ -15,6 +17,8 @@ use sys::stream::OStream;
 
 class TranslationUnitNode extends Node {
 
+    UnitScope _scope;
+    
     StorageElement _element;
     String _name;
 
@@ -36,6 +40,10 @@ class TranslationUnitNode extends Node {
         _name.assignString(fqn);
         return this;
     }
+    
+    [TranslationUnitNode] setUnitScope(UnitScope scope) { _scope = scope; return this; }
+    [UnitScope] getUnitScope() { return _scope; }
+    [Scope] getScope() { if (_scope) { return _scope.scope(); } return null; }
     
     [StorageElement] getElement() { return _element; }
     [String] getName() { return _name; }

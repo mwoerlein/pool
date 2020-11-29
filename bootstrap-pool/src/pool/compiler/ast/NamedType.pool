@@ -7,11 +7,13 @@ namespace pool::compiler::ast;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
 
 class NamedType extends Type { // TODO: solve cyclic error in compiler if NamedType extends Scope, too 
 
-    [ClassDeclNode] getClassDeclNode() { return null; }
-    [StructDeclNode] getStructDeclNode() { return null; }
+    abstract [TranslationUnitNode] getUnitNode();
+    abstract [ClassDeclNode] getClassDeclNode();
+    abstract [StructDeclNode] getStructDeclNode();
     
     // TODO: remove with implicit cast
     [NamedType] namedType() { return this; }
