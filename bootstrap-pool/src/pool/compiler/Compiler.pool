@@ -63,7 +63,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
             // reuse already initialized unit
             preparedUnits.add(type.getUnitNode());
         } else {
-            TranslationUnitNode unit = this._initialize(fqn);
+            TranslationUnitNode unit = this._initializeUnit(fqn);
             if (unit) { preparedUnits.add(unit); } else { this._failUnit(fqn); }
         }
     }
@@ -79,7 +79,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
             AnyIterator cit = unit.getClasses().iterator();
             while (!this.hasErrors() && cit.hasNext()) {
                 ClassDeclNode cd = cit.next();
-                if (!this._compile(unit.getName(), cd)) { this._failUnit(unit.getName()); }
+                if (!this._compileClass(unit.getName(), cd)) { this._failUnit(unit.getName()); }
             }
             cit.destroy();
         }
@@ -92,19 +92,19 @@ class Compiler extends pool::compiler::ast::TypeManager {
         while (!this.hasErrors() && it.hasNext()) {
             [String fqn, NamedType t] := it.nextPair();
             ClassDeclNode cd = t.getClassDeclNode();
-            if (cd && !this._compile(fqn, cd)) { this._failUnit(cd.getName()); }
+            if (cd && !this._compileClass(fqn, cd)) { this._failUnit(cd.getName()); }
         }
         it.destroy();
     }
     
     [NamedType] getNamedType(String fqn) {
-        if (!_namedTypes.has(fqn) && !this._initialize(fqn)) {
+        if (!_namedTypes.has(fqn) && !this._initializeUnit(fqn)) {
             return null;
         }
         return _namedTypes.get(fqn);
     }
     
-    [TranslationUnitNode] _initialize(String fqn) {
+    [TranslationUnitNode] _initializeUnit(String fqn) {
         this.info().printCString("initialize ").print(fqn);
         StorageElement elem = classPath.getSourceClass(fqn);
         if (!elem) {
@@ -117,7 +117,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
         if (this.hasErrors()) { unit.destroy(); return null; }
         
         if (pp) {
-            this._debugStep(fqn, "pretty print");
+            this._debugStep(fqn, "pretty print parsed");
             pp.visit(unit.node());
         }
         
@@ -127,9 +127,13 @@ class Compiler extends pool::compiler::ast::TypeManager {
         return unit;
     }
     
-    [int] _compile(String fqn, ClassDeclNode node) {
+    [int] _compileClass(String fqn, ClassDeclNode node) {
         this.note().printCString("compile ").print(fqn);
 /*        
+        this._debugStep(fqn, "resolve hierarchy");
+        resolveHierarchy.visit(node);
+        if (this.hasErrors()) { return false; }
+        
         this._debugStep(fqn, "resolve methods");
         resolveMethods.visit(node);
         if (this.hasErrors()) { return false; }
@@ -140,12 +144,16 @@ class Compiler extends pool::compiler::ast::TypeManager {
         
         this._debugStep(fqn, "generate PIR");
         generatePIR.visit(node);
+        if (this.hasErrors()) { return false; }
+        
         this._debugStep(fqn, "generate binary");
         generatePASM.visit(node);
         if (this.hasErrors()) { return false; }
         
-        this._debugStep(fqn, "pretty print");
-        if (pp) { pp.visit(node.getUnitNode()); }
+        if (pp) {
+            this._debugStep(fqn, "pretty print compiled");
+            pp.visit(node.getUnitNode());
+        }
 */
         if (this.hasErrors()) { return false; }
         return true;
