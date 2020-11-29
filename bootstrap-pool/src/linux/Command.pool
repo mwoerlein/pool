@@ -16,6 +16,9 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::CommandLine;
 use sys::core::utils::CommandLineParser;
 use sys::core::utils::CommandLineParserTarget;
+
+use sys::log::Logger;
+use sys::log::LoggerAware;
 use sys::memory::Address;
 use sys::runtime::Runtime;
 use sys::store::Store;
@@ -48,7 +51,19 @@ class Command extends CommandLine {
     [int] execute(int argc, int argv) {
         this.configure();
         if (this._parseArgv(argc, argv)) {
-            return this.run();
+            LoggerAware la = this.rt().cast(LoggerAware:CLASSNAME, this);
+            if (la) {
+                Logger logger = this.createOwn(Logger:CLASSNAME);
+                if (this.hasOption("verbose")) { logger.setLevel(Logger:INFO); }
+                if (this.hasOption("debug")) { logger.setLevel(Logger:DEBUG); }
+                if (this.hasOption("warning")) { logger.setLevel(Logger:WARNING); }
+                if (this.hasOption("error")) { logger.setLevel(Logger:ERROR); }
+                if (this.hasOption("critical")) { logger.setLevel(Logger:CRITICAL); }
+                la.setLogger(logger);                
+            }
+            int ret = this.run();
+            if (la) { la.getLogger().flush(); }
+            return ret;
         }
         return -1;
     }

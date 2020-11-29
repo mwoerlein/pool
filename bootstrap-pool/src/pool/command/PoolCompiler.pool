@@ -8,17 +8,9 @@ namespace pool::command;
 use pool::compiler::Compiler;
 
 use sys::core::anycollection::AnyIterator;
-use sys::log::Logger;
 use sys::stream::OStream;
 
-class PoolCompiler extends linux::Command {
-
-    Compiler compiler;
-
-    [] __init() {
-        this._initCommand();
-        compiler = this.createOwn(Compiler:CLASSNAME);
-    }
+class PoolCompiler extends sys::log::LoggerAware, linux::Command {
     
     [] configure() {
         this.setName("poolbc")
@@ -32,12 +24,19 @@ Pool Bootstrap Compiler.
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
+      -d --debug                    Maximize verbosity.
+      -v --verbose                  Increase verbosity.
+      --warning                     Display warnings and errors, only.
+      --error                       Display errors, only.
+      --critical                    Display critical errors, only.
       -o <dir> --output <dir>       Place the (pasm) outputs into <dir>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
       -p <dir> --prettyprint <dir>  Dump classes into <dir>.
       -r --recursive                Generate output for all required classes.
 ">);
         this.registerOptionAlias('h', "help")
+            .registerOptionAlias('d', "debug")
+            .registerOptionAlias('v', "verbose")
             .registerOptionAlias('o', "output")
             .registerOptionAlias('p', "prettyprint")
             .registerOptionAlias('c', "classpath").registerOptionList("classpath")
@@ -60,18 +59,9 @@ Pool Bootstrap Compiler.
             return -1;
         }
         
-        Logger logger = this.createOwn(Logger:CLASSNAME);
-        // TODO: init log-level via options
-        //logger.setLevel(Logger:DEBUG);
-        
-        int ret = this._run(logger);
-        logger.flush();
-        return ret;
-    }
-    
-    [int] _run(Logger logger) {
         // setup compiler
-        compiler.initLogger(logger);
+        Compiler compiler = this.createOwn(Compiler:CLASSNAME);
+        compiler.initLogger(this.getLogger());
         {
             AnyIterator it = this.getListOption("classpath");
             while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).poolStorage()); }
