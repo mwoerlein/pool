@@ -14,7 +14,7 @@ use sys::stream::OStream;
 class VariableDeclNode extends Node {
 
     String _name;
-    TypeRefNode _type;
+    TypeRefNode _typeRef;
     int _global;
 
     [] __init() {
@@ -24,8 +24,8 @@ class VariableDeclNode extends Node {
     [VariableDeclNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
     
-    [VariableDeclNode] setType(TypeRefNode type) { _type = this.own(type); return this; }
-    [TypeRefNode] getType() { return _type; }
+    [VariableDeclNode] setTypeRef(TypeRefNode type) { _typeRef = this.own(type); return this; }
+    [TypeRefNode] getTypeRef() { return _typeRef; }
     
     [VariableDeclNode] setGlobal() { _global = true; return this; }
     [int] isGlobal() { return _global; }

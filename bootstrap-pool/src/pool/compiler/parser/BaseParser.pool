@@ -128,7 +128,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
     
     [VariableDeclNode] variableDecl(Token name, TypeRefNode type) {
         VariableDeclNode node = this.rt().createInstance(VariableDeclNode:CLASSNAME);
-        node.setName(name.getValue()).setType(type);
+        node.setName(name.getValue()).setTypeRef(type);
         node.setLocation(type.getFirstLine(), type.getFirstColumn(), name.getLastLine(), name.getLastColumn());
         return node;
     }

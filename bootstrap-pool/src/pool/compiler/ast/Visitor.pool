@@ -48,44 +48,133 @@ class Visitor extends sys::core::Object {
     [int] visit(Node node) { return node.accept(this); }
 
     // declarations
-    [int] visitTranslationUnit(TranslationUnitNode node) { return false; }
-    [int] visitNamespaceDecl(NamespaceDeclNode node) { return false; }
-    [int] visitUseStatement(UseStatementNode node) { return false; }
-    [int] visitClassDecl(ClassDeclNode node) { return false; }
-    [int] visitStructDecl(StructDeclNode node) { return false; }
-    [int] visitMethodDecl(MethodDeclNode node) { return false; }
-    [int] visitVariableDecl(VariableDeclNode node) { return false; }
+    [int] visitTranslationUnit(TranslationUnitNode node) {
+        int success = true;
+        success = node.getNamespace().accept(this.visitor()) && success;
+        success = node.getUses().acceptAll(this.visitor()) && success;
+        success = node.getClasses().acceptAll(this.visitor()) && success;
+        success = node.getStructs().acceptAll(this.visitor()) && success;
+        return success;
+    }
+    [int] visitNamespaceDecl(NamespaceDeclNode node) { return true; }
+    [int] visitUseStatement(UseStatementNode node) {
+        return node.getName().accept(this);
+    }
+    [int] visitClassDecl(ClassDeclNode node) {
+        int success = true;
+        success = node.getExtends().acceptAll(this.visitor()) && success;
+        success = node.getConsts().acceptAll(this.visitor()) && success;
+        success = node.getVariables().acceptAll(this.visitor()) && success;
+        success = node.getMethods().acceptAll(this.visitor()) && success;
+        return success;
+    }
+    [int] visitStructDecl(StructDeclNode node) {
+        int success = true;
+        success = node.getConsts().acceptAll(this.visitor()) && success;
+        success = node.getVariables().acceptAll(this.visitor()) && success;
+        return success;
+    }
+    [int] visitMethodDecl(MethodDeclNode node) {
+        int success = true;
+        success = node.getReturnTypes().acceptAll(this) && success;
+        success = node.getParameters().acceptAll(this) && success;
+        if (!node.isAbstract()) { success = node.getBody().accept(this) && success; }
+        return success;
+    }
+    [int] visitVariableDecl(VariableDeclNode node) {
+        return node.getTypeRef().accept(this);
+    }
     
     // instructions
-    [int] visitBlockInst(BlockInstNode node) { return false; }
-    [int] visitExpressionInst(ExpressionInstNode node) { return false; }
-    [int] visitIfInst(IfInstNode node) { return false; }
-    [int] visitInlinePasmInst(InlinePasmInstNode node) { return false; }
-    [int] visitReturnInst(ReturnInstNode node) { return false; }
-    [int] visitVariableInitInst(VariableInitInstNode node) { return false; }
-    [int] visitWhileInst(WhileInstNode node) { return false; }
+    [int] visitBlockInst(BlockInstNode node) {
+        return node.getInstructions().acceptAll(this);
+    }
+    [int] visitExpressionInst(ExpressionInstNode node) {
+        return node.getExpression().accept(this);
+    }
+    [int] visitIfInst(IfInstNode node) {
+        int success = true;
+        success = node.getCondition().accept(this) && success;
+        if (node.hasTrueBlock()) { success = node.getTrueBlock().accept(this) && success; }
+        if (node.hasFalseBlock()) { success = node.getFalseBlock().accept(this) && success; }
+        return success;
+    }
+    [int] visitInlinePasmInst(InlinePasmInstNode node) {
+        int success = true;
+        if (node.hasIn()) { success = node.getIn().acceptAll(this) && success; }
+        if (node.hasOut()) { success = node.getOut().acceptAll(this) && success; }
+        return success;
+    }
+    [int] visitReturnInst(ReturnInstNode node) {
+        return !node.hasValues() || node.getValues().acceptAll(this);
+    }
+    [int] visitVariableInitInst(VariableInitInstNode node) {
+        int success = true;
+        success = node.getVariables().acceptAll(this) && success;
+        success = node.getInitializer().accept(this) && success;
+        return success;
+    }
+    [int] visitWhileInst(WhileInstNode node) {
+        int success = true;
+        success = node.getCondition().accept(this) && success;
+        success = node.getBlock().accept(this) && success;
+        return success;
+    }
     
     // expressions
-    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) { return false; }
-    [int] visitArithBinaryExpr(ArithBinaryExprNode node) { return false; }
-    [int] visitArithUnaryExpr(ArithUnaryExprNode node) { return false; }
-    [int] visitAssignmentExpr(AssignmentExprNode node) { return false; }
-    [int] visitConstCStringExpr(ConstCStringExprNode node) { return false; }
-    [int] visitConstIntExpr(ConstIntExprNode node) { return false; }
-    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) { return false; }
-    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) { return false; }
-    [int] visitMethodCallExpr(MethodCallExprNode node) { return false; }
-    [int] visitNullExpr(NullExprNode node) { return false; }
-    [int] visitSignExpr(SignExprNode node) { return false; }
-    [int] visitThisExpr(ThisExprNode node) { return false; }
-    [int] visitVariableExpr(VariableExprNode node) { return false; }
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
+        int success = true;
+        success = node.getVariable().accept(this) && success;
+        success = node.getValue().accept(this) && success;
+        return success;
+    }
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
+        int success = true;
+        success = node.getLeft().accept(this) && success;
+        success = node.getRight().accept(this) && success;
+        return success;
+    }
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
+        return node.getVariable().accept(this);
+    }
+    [int] visitAssignmentExpr(AssignmentExprNode node) {
+        int success = true;
+        success = node.getVariable().accept(this) && success;
+        success = node.getValue().accept(this) && success;
+        return success;
+    }
+    [int] visitConstCStringExpr(ConstCStringExprNode node) { return true; }
+    [int] visitConstIntExpr(ConstIntExprNode node) { return true; }
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
+        int success = true;
+        success = node.getLeft().accept(this) && success;
+        success = node.getRight().accept(this) && success;
+        return success;
+    }
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
+        return node.getExpression().accept(this);
+    }
+    [int] visitMethodCallExpr(MethodCallExprNode node) {
+        int success = true;
+        if (node.hasContext()) { success = node.getContext().accept(this) && success; }
+        if (node.hasParameters()) { success = node.getParameters().acceptAll(this) && success; }
+        return success;
+    }
+    [int] visitNullExpr(NullExprNode node) { return true; }
+    [int] visitSignExpr(SignExprNode node) {
+        return node.getExpression().accept(this);
+    }
+    [int] visitThisExpr(ThisExprNode node) { return true; }
+    [int] visitVariableExpr(VariableExprNode node) {
+        return !node.hasContext() || node.getContext().accept(this);
+    }
     
     // references
-    [int] visitAllRef(AllRefNode node) { return false; }
-    [int] visitAnyRef(AnyRefNode node) { return false; }
-    [int] visitClassRef(ClassRefNode node) { return false; }
-    [int] visitCStringRef(CStringRefNode node) { return false; }
-    [int] visitIntRef(IntRefNode node) { return false; }
+    [int] visitAllRef(AllRefNode node) { return true; }
+    [int] visitAnyRef(AnyRefNode node) { return true; }
+    [int] visitClassRef(ClassRefNode node) { return true; }
+    [int] visitCStringRef(CStringRefNode node) { return true; }
+    [int] visitIntRef(IntRefNode node) { return true; }
     
     // TODO: remove with implicit cast
     [Visitor] visitor() { return this; }

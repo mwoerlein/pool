@@ -539,7 +539,7 @@ class PrettyPrinter extends Visitor {
     
     // helper
     [OStream] printVariableDecl(VariableDeclNode node) {
-        node.getType().accept(this.visitor());
+        node.getTypeRef().accept(this.visitor());
         return this.elem().printChar(' ').print(node.getName());
     }
     
