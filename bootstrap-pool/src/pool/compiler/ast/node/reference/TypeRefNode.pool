@@ -6,9 +6,15 @@ version = 0.1.0
 namespace pool::compiler::ast::node::reference;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Type;
 
 class TypeRefNode extends Node {
 
+    Type _resolvedType;
+    [TypeRefNode] setResolvedType(Type type) { _resolvedType = type; return this; }
+    [Type] getResolvedType() { return _resolvedType; }
+    [int] isResolved() { return !!_resolvedType; }
+    
     [AllRefNode] asAllRef() { return null; }
     [AnyRefNode] asAnyRef() { return null; }
     [ClassRefNode] asClassRef() { return null; }

@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::ast::node::expression;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Type;
 use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
@@ -37,6 +38,11 @@ class ExpressionNode extends Node {
     
     int UNARY_NOT       := 0x41;
 
+    Type _resolvedType;
+    [ExpressionNode] setResolvedType(Type type) { _resolvedType = type; return this; }
+    [Type] getResolvedType() { return _resolvedType; }
+    [int] isResolved() { return !!_resolvedType; }
+    
     // TODO: remove with implicit cast
     [ExpressionNode] expression() { return this; }
 }

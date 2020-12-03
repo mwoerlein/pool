@@ -34,6 +34,8 @@ class ClassRefNode extends TypeRefNode, ExpressionNode {
     [String] getName() { return _name; }
     [String] getLastPart() { return _lastPart; }
     
+    [int] isFullQualified() { return !_name.equals(_lastPart); }
+    
     // TYPE_REF_NODE
     [ClassRefNode] asClassRef() { return this; }
     

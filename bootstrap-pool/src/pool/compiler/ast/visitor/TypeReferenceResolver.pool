@@ -108,155 +108,130 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         return true;
     }
     
-    [int] visitNamespaceDecl(NamespaceDeclNode node) {
-        return true;
-    }
-    
     [int] visitUseStatement(UseStatementNode node) {
-        // node.setScope(_curScope);
-        NamedType t = _typeManager.getNamedType(node.getName().getName());
-        if (!t) {
-            return false;
-        }
+        NamedType t := _typeManager.getNamedType(node.getName().getName());
+        if (!t) { return false; }
+        
         if (node.hasAlias()) {
             _curScope.registerNamedType(t, node.getAlias());
         } else {
             _curScope.registerNamedType(t, node.getName().getLastPart());
         }
-        //node.setResolvedType(t.type());
         return true;
     }
     
     [int] visitClassDecl(ClassDeclNode node) {
+        Scope tmpScope := _curScope;
+        _curScope = node.getScope();
+        if (!_curScope) {
+            this.error().print(node.getName()).printCString(": classes must be registered before resolving!");
+            _curScope = tmpScope;
+            return false;
+        }
+        
+        node.getExtends().acceptAll(this.visitor());
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        node.getMethods().acceptAll(this.visitor());
+        
+        _curScope = tmpScope;
         return true;
     }
     
     [int] visitStructDecl(StructDeclNode node) {
-        return true;
-    }
-    
-    [int] visitMethodDecl(MethodDeclNode node) {
-        return true;
-    }
-    
-    [int] visitVariableDecl(VariableDeclNode node) {
+        Scope tmpScope := _curScope;
+        _curScope = node.getScope();
+        if (!_curScope) {
+            this.error().print(node.getName()).printCString(": structs must be registered before resolving!");
+            _curScope = tmpScope;
+            return false;
+        }
+        
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        
+        _curScope = tmpScope;
         return true;
     }
     
     // instructions
-    [int] visitBlockInst(BlockInstNode node) {
-        return true;
-    }
-    
-    [int] visitExpressionInst(ExpressionInstNode node) {
-        return true;
-    }
-    
-    [int] visitIfInst(IfInstNode node) {
-        return true;
-    }
-    
-    [int] visitInlinePasmInst(InlinePasmInstNode node) {
-        return true;
-    }
-    
-    [int] visitReturnInst(ReturnInstNode node) {
-        return true;
-    }
-
-    [int] visitVariableInitInst(VariableInitInstNode node) {
-        return true;
-    }
-
-    [int] visitWhileInst(WhileInstNode node) {
-        return true;
-    }
     
     // expressions
-    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
-        return true;
-    }
-    
-    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
-        return true;
-    }
-    
-    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
-        return true;
-    }
-    
-    [int] visitAssignmentExpr(AssignmentExprNode node) {
-        return true;
-    }
-    
     [int] visitConstCStringExpr(ConstCStringExprNode node) {
+        node.setResolvedType(_typeManager.getCStringType().type());
         return true;
     }
     
     [int] visitConstIntExpr(ConstIntExprNode node) {
+        node.setResolvedType(_typeManager.getIntType().type());
         return true;
     }
     
     [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
-        return true;
+        node.setResolvedType(_typeManager.getIntType().type());
+        int success = true;
+        success = node.getLeft().accept(this.visitor()) && success;
+        success = node.getRight().accept(this.visitor()) && success;
+        return success;
     }
     
     [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
-        return true;
-    }
-    
-    [int] visitMethodCallExpr(MethodCallExprNode node) {
-        return true;
+        node.setResolvedType(_typeManager.getIntType().type());
+        return node.getExpression().accept(this.visitor());
     }
     
     [int] visitNullExpr(NullExprNode node) {
-        return true;
-    }
-    
-    [int] visitSignExpr(SignExprNode node) {
-        return true;
-    }
-    
-    [int] visitThisExpr(ThisExprNode node) {
-        return true;
-    }
-    
-    [int] visitVariableExpr(VariableExprNode node) {
+        node.setResolvedType(_typeManager.getAllType().type());
         return true;
     }
     
     // references
     [int] visitAllRef(AllRefNode node) {
+        node.setResolvedType(_typeManager.getAllType().type());
         return true;
     }
     
     [int] visitAnyRef(AnyRefNode node) {
+        node.setResolvedType(_typeManager.getAnyType().type());
         return true;
     }
     
     [int] visitClassRef(ClassRefNode node) {
+        String name := node.getName();
+        NamedType resolvedType = null;
+        if (node.isFullQualified()) {
+            resolvedType = _typeManager.getNamedType(name);
+        } else if (!(resolvedType = _curScope.getNamedType(name))) {
+            resolvedType = _typeManager.getNamedType(this._buildFullQualifiedName(name));
+            if (resolvedType) {
+                // register implicit "use" in unit scope
+                _curScope.getUnitNode().getUnitScope().registerNamedType(resolvedType, name);
+            }
+        }
+        if (!resolvedType) { return false; }
+        node.setResolvedType(resolvedType.type());
         return true;
     }
     
     [int] visitCStringRef(CStringRefNode node) {
+        node.setResolvedType(_typeManager.getCStringType().type());
         return true;
     }
     
     [int] visitIntRef(IntRefNode node) {
+        node.setResolvedType(_typeManager.getIntType().type());
         return true;
     }
     
     // helper
     [int] registerClass(ClassDeclNode node) {
         if (node.getClassScope()) {
-            this.crit().print(node.getName()).printCString(": already resolved");
+            this.crit().print(node.getName()).printCString(": already registered");
             return false;
         }
         
-        TranslationUnitNode curUnit = _curScope.getUnitNode();
-        String fqn = node.createOwn(String:CLASSNAME);
-        fqn.print(curUnit.getNamespace().getName().getName()).printChar(':').printChar(':').print(node.getName());
-        if (!fqn.equals(curUnit.getName())) {
+        String fqn := this._buildFullQualifiedName(node.getName());
+        if (!fqn.equals(_curScope.getUnitNode().getName())) {
             this.crit().print(node.getName())
                 .printCString(": class name '").print(fqn).printCString("' does not match compilation unit");
         }
@@ -274,14 +249,12 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
     
     [int] registerStruct(StructDeclNode node) {
         if (node.getStructScope()) {
-            this.crit().print(node.getName()).printCString(": already resolved");
+            this.crit().print(node.getName()).printCString(": already registered");
             return false;
         }
         
-        TranslationUnitNode curUnit = _curScope.getUnitNode();
-        String fqn = node.createOwn(String:CLASSNAME);
-        fqn.print(curUnit.getNamespace().getName().getName()).printChar(':').printChar(':').print(node.getName());
-        if (!fqn.equals(curUnit.getName())) {
+        String fqn := this._buildFullQualifiedName(node.getName());
+        if (!fqn.equals(_curScope.getUnitNode().getName())) {
             this.crit().print(node.getName())
                 .printCString(": struct name '").print(fqn).printCString("' does not match compilation unit");
         }
@@ -295,5 +268,12 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         */
         
         return true;
+    }
+    
+    [String] _buildFullQualifiedName(String name) {
+        TranslationUnitNode curUnit := _curScope.getUnitNode();
+        String fqn = curUnit.createOwn(String:CLASSNAME);
+        fqn.print(curUnit.getNamespace().getName().getName()).printChar(':').printChar(':').print(name);
+        return fqn;        
     }
 }
