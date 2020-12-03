@@ -71,7 +71,11 @@ class Scope extends sys::core::Object {
         if (old) { old.destroy(); }
         return type;
     }
-    [NamedType] getNamedType(String name) { return _namedTypes.get(name); }
+    [NamedType] getNamedType(String name) {
+        if (_namedTypes.has(name)) { return _namedTypes.get(name); }
+        if (_parent) { return _parent.getNamedType(name); }
+        return null;
+    }
     
     [MethodScope] registerMethod(MethodDeclNode node) {
         MethodScope scope = _methods.createOwn(MethodScope:CLASSNAME);
@@ -81,7 +85,11 @@ class Scope extends sys::core::Object {
         if (old) { old.destroy(); }
         return scope;
     }
-    [MethodScope] getMethod(String name) { return _methods.get(name); }
+    [MethodScope] getMethod(String name) {
+        if (_methods.has(name)) { return _methods.get(name); }
+        if (_parent) { return _parent.getMethod(name); }
+        return null;
+    }
     
     [VariableScope] registerVariable(VariableDeclNode node) {
         VariableScope scope = _variables.createOwn(VariableScope:CLASSNAME);
@@ -90,7 +98,11 @@ class Scope extends sys::core::Object {
         if (old) { old.destroy(); }
         return scope;
     }
-    [VariableScope] getVariable(String name) { return _variables.get(name); }
+    [VariableScope] getVariable(String name) {
+        if (_variables.has(name)) { return _variables.get(name); }
+        if (_parent) { return _parent.getVariable(name); }
+        return null;
+    }
 
     [BlockScope] createBlockScope(BlockInstNode node) {
         BlockScope scope = this.createOwn(BlockScope:CLASSNAME);
