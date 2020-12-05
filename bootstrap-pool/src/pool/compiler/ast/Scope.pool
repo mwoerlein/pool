@@ -9,7 +9,6 @@ use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
-use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 use pool::compiler::ast::node::instruction::BlockInstNode;
 

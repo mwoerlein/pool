@@ -78,6 +78,8 @@ class PrettyPrinter extends Visitor {
         node.getClasses().acceptAll(this.visitor());
         node.getStructs().acceptAll(this.visitor());
         
+        _element.destroy();
+        _element = null;
         return true;
     }
     

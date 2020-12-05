@@ -25,7 +25,10 @@ class UseStatementNode extends Node {
     
     [UseStatementNode] setAlias(String alias) { _alias.assignString(alias); return this; }
     [int] hasAlias() { return _alias.length() > 0; }
-    [String] getAlias() { return _alias; }
+    [String] getAlias() {
+        if (_alias.length() == 0) { return _name.getLastPart(); }
+        return _alias;
+    }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitUseStatement(this); }

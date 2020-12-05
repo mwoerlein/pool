@@ -112,10 +112,12 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         NamedType t := _typeManager.getNamedType(node.getName().getName());
         if (!t) { return false; }
         
-        if (node.hasAlias()) {
-            _curScope.registerNamedType(t, node.getAlias());
+        String alias := node.getAlias();
+        if (_curScope.getNamedType(alias)) {
+            this.warn().print(_curScope.getUnitNode().getName())
+                .printCString(": ignoring duplicate use of '").print(alias).printChar('\'');
         } else {
-            _curScope.registerNamedType(t, node.getName().getLastPart());
+            _curScope.registerNamedType(t, alias);
         }
         return true;
     }
