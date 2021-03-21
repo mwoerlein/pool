@@ -52,7 +52,6 @@ use pool::storage::PoolStorage;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
-use sys::runtime::Runtime;
 use sys::stream::OStream;
 
 class PrettyPrinter extends Visitor {
@@ -98,7 +97,6 @@ class PrettyPrinter extends Visitor {
     }
     
     [int] visitClassDecl(ClassDeclNode node) {
-        Runtime rt = this.rt();
         OStream line = this.indent().printCString("class ").print(node.getName());
 
         if (!node.getExtends().isEmpty()) {

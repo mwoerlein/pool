@@ -64,7 +64,6 @@ use pool::storage::PoolStorage;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
-use sys::runtime::Runtime;
 use sys::stream::OStream;
 
 class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
