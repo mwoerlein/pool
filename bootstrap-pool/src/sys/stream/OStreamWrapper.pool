@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::stream;
+
+class OStreamWrapper extends OStream {
+
+    OStream _inner;
+    
+    [OStream] initOStream(OStream stream) {
+        this._inner = stream;
+        return this.ostream();
+    }
+    
+    [OStream] printChar(int c) { return _inner.printChar(c); }
+}

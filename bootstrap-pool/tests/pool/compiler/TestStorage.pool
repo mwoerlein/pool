@@ -13,6 +13,7 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
 use sys::store::StorageElement;
 use sys::stream::OStream;
+use sys::stream::OStreamWrapper;
 
 class TestStorage extends pool::storage::PoolStorage {
 
@@ -79,7 +80,10 @@ class TestStorage extends pool::storage::PoolStorage {
         key.assignString(fullQualifiedName).printChar('#').printInt(mimeType);
         StringStorageElement e = out.createOwn(StringStorageElement:CLASSNAME);
         out.set(key, e);
-        return e.ostream();
+        
+        // return wrapper to keep storage element persisted in memory/map  
+        OStreamWrapper ret = this.rt().createInstance(OStreamWrapper:CLASSNAME);
+        return ret.initOStream(e.ostream());
     }
     [int] removeElement(String fullQualifiedName, int mimeType) { return false; }
 }
