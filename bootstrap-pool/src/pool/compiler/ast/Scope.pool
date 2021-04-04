@@ -28,7 +28,18 @@ class Scope extends sys::core::Object {
 
     abstract [OStream] printDebugName(OStream stream);
     
+    int STATE_REGISTERED                :=  5;
+    int STATE_RESOLVING_TYPE_REFERENCES := 10;
+    int STATE_TYPE_REFERENCES_RESOLVED  := 15;
+    int STATE_RESOLVING_HIERARCHY       := 20;
+    int STATE_HIERARCHY_RESOLVED        := 25;
+    int STATE_RESOLVING_METHODS         := 30;
+    int STATE_METHODS_RESOLVED          := 35;
+    int STATE_RESOLVING_INSTRUCTIONS    := 40;
+    int STATE_INSTRUCTIONS_RESOLVED     := 45;
+    
     Scope _parent;
+    int _state;
 
     AnyMap _namedTypes; // HashMap<String, NamedType>
     AnyMap _methods;    // HashMap<String, MethodScope>
@@ -42,6 +53,8 @@ class Scope extends sys::core::Object {
     }
     
     [Scope] setParent(Scope parent) { _parent = parent; return this; }
+    [Scope] setState(int state) { _state = state; return this; }
+    [int] getState() { return _state; }
 
     [TranslationUnitNode] getUnitNode() { if (_parent) { return _parent.getUnitNode(); } return null; }
     [StructDeclNode] getStructDeclNode() { if (_parent) { return _parent.getStructDeclNode(); } return null; }
@@ -52,7 +65,7 @@ class Scope extends sys::core::Object {
     
     [ClassScope, InstanceScope] registerClass(ClassDeclNode node, String alias) {
         ClassScope classScope = _namedTypes.createOwn(ClassScope:CLASSNAME);
-        classScope.setClassDeclNode(node).setParent(this);
+        classScope.setClassDeclNode(node).setParent(this).setState(Scope:STATE_REGISTERED);
         InstanceScope instanceScope = classScope.createOwn(InstanceScope:CLASSNAME);
         instanceScope.setClassDeclNode(node).setParent(classScope.scope());
         this.registerNamedType(classScope.namedType(), alias);
@@ -60,7 +73,7 @@ class Scope extends sys::core::Object {
     }
     [StructScope] registerStruct(StructDeclNode node, String alias) {
         StructScope scope = _namedTypes.createOwn(StructScope:CLASSNAME);
-        scope.setStructDeclNode(node).setParent(this);
+        scope.setStructDeclNode(node).setParent(this).setState(Scope:STATE_REGISTERED);
         this.registerNamedType(scope.namedType(), alias);
         return scope;
     }

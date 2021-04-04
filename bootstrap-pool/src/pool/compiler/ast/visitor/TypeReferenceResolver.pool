@@ -123,34 +123,40 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
     
     [int] visitClassDecl(ClassDeclNode node) {
         Scope tmpScope := _curScope;
-        _curScope = node.getScope();
-        if (!_curScope) {
+        ClassScope cs := node.getClassScope();
+        if (!cs || cs.getState() < Scope:STATE_REGISTERED) {
             this.error().print(node.getName()).printCString(": classes must be registered before resolving!");
             _curScope = tmpScope;
             return false;
         }
+        _curScope = cs.scope();
+        cs.setState(Scope:STATE_RESOLVING_TYPE_REFERENCES);
         
         node.getExtends().acceptAll(this.visitor());
         node.getConsts().acceptAll(this.visitor());
         node.getVariables().acceptAll(this.visitor());
         node.getMethods().acceptAll(this.visitor());
         
+        cs.setState(Scope:STATE_TYPE_REFERENCES_RESOLVED);
         _curScope = tmpScope;
         return true;
     }
     
     [int] visitStructDecl(StructDeclNode node) {
         Scope tmpScope := _curScope;
-        _curScope = node.getScope();
-        if (!_curScope) {
+        StructScope ss := node.getStructScope();
+        if (!ss || ss.getState() < Scope:STATE_REGISTERED) {
             this.error().print(node.getName()).printCString(": structs must be registered before resolving!");
             _curScope = tmpScope;
             return false;
         }
+        _curScope = ss.scope();
+        ss.setState(Scope:STATE_RESOLVING_TYPE_REFERENCES);
         
         node.getConsts().acceptAll(this.visitor());
         node.getVariables().acceptAll(this.visitor());
         
+        ss.setState(Scope:STATE_TYPE_REFERENCES_RESOLVED);
         _curScope = tmpScope;
         return true;
     }
