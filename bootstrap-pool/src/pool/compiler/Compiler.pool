@@ -11,6 +11,7 @@ use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::ast::visitor::TypeReferenceResolver;
+use pool::compiler::ast::visitor::HierarchyResolver;
 use pool::compiler::parser::Parser;
 use pool::storage::ClassPathStorage;
 use pool::storage::PoolStorage;
@@ -30,6 +31,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     Parser parser;
     PrettyPrinter pp;
     TypeReferenceResolver resolveTypeRefs;
+    HierarchyResolver resolveHierarchy;
     AnyList preparedUnits; // LinkedList<TranslationUnitNode>
     
     [] __init() {
@@ -39,11 +41,13 @@ class Compiler extends pool::compiler::ast::TypeManager {
         preparedUnits = this.createOwn(AnyList:CLASSNAME);
         resolveTypeRefs = this.createOwn(TypeReferenceResolver:CLASSNAME);
         resolveTypeRefs.setTypeManager(this.typeManager());
+        resolveHierarchy = this.createOwn(HierarchyResolver:CLASSNAME);
     }
     [Compiler] initLogger(Logger logger) {
         this.setLogger(logger);
         parser.setLogger(logger);
         resolveTypeRefs.setLogger(logger);
+        resolveHierarchy.setLogger(logger);
         return this;
     }
     
@@ -129,30 +133,30 @@ class Compiler extends pool::compiler::ast::TypeManager {
     
     [int] _compileClass(String fqn, ClassDeclNode node) {
         this.note().printCString("compile ").print(fqn);
-/*        
-        this._debugStep(fqn, "resolve hierarchy");
-        resolveHierarchy.visit(node);
-        if (this.hasErrors()) { return false; }
         
+        this._debugStep(fqn, "resolve hierarchy");
+        resolveHierarchy.visit(node.node());
+        if (this.hasErrors()) { return false; }
+/*        
         this._debugStep(fqn, "resolve methods");
-        resolveMethods.visit(node);
+        resolveMethods.visit(node.node());
         if (this.hasErrors()) { return false; }
         
         this._debugStep(fqn, "resolve instructions");
-        resolveInstructions.visit(node);
+        resolveInstructions.visit(node.node());
         if (this.hasErrors()) { return false; }
         
         this._debugStep(fqn, "generate PIR");
-        generatePIR.visit(node);
+        generatePIR.visit(node.node());
         if (this.hasErrors()) { return false; }
         
         this._debugStep(fqn, "generate binary");
-        generatePASM.visit(node);
+        generatePASM.visit(node.node());
         if (this.hasErrors()) { return false; }
         
         if (pp) {
             this._debugStep(fqn, "pretty print compiled");
-            pp.visit(node.getUnitNode());
+            pp.visit(node.getScope().getUnitNode().node());
         }
 */
         if (this.hasErrors()) { return false; }
