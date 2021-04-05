@@ -89,15 +89,40 @@ class HierarchyResolver extends Visitor, sys::log::LoggerAware {
         }
         _curScope = cs.scope();
         cs.setState(Scope:STATE_RESOLVING_HIERARCHY);
-        //this.debug().print(node.getName()).printCString(": resolving class hierarchy!");
         
-        node.getExtends().acceptAll(this.visitor());
-        // TODO: collect supers
+        {
+            AnyIterator it = node.getExtends().iterator();
+            while (it.hasNext()) {
+                TypeRefNode typeNode = it.next();
+                typeNode.accept(this.visitor());
+                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                if (extendedClassScope) {
+                    if (extendedClassScope.getState() < Scope:STATE_RESOLVING_HIERARCHY) {
+                        this.error().print(cs.getFullQualifiedName()).printCString(": cyclic class hierarchy detected! (unfinished ").print(typeNode).printChar(')');
+                    } else {
+                        AnyIterator sit = extendedClassScope.getSupers();
+                        while (sit.hasNext()) { cs.addSuper(sit.next()); }
+                        sit.destroy();
+                    }
+                } else {
+                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid super type '").print(typeNode).printChar('"');
+                }
+            }
+            it.destroy();
+        }
+        cs.addSuper(cs);
+        
         node.getConsts().acceptAll(this.visitor());
         node.getVariables().acceptAll(this.visitor());
         node.getMethods().acceptAll(this.visitor());
         
         cs.setState(Scope:STATE_HIERARCHY_RESOLVED);
+        /*{
+            AnyIterator sit = cs.getSupers();
+            this.debug().print(cs.getFullQualifiedName()).printCString(": found supers");
+            while (sit.hasNext()) { this.debug().printCString("   ").print(sit.next()); }
+            sit.destroy();
+        }*/
         _curScope = tmpScope;
         return true;
     }

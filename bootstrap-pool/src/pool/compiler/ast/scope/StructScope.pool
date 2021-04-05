@@ -14,6 +14,14 @@ class StructScope extends NamedType, Scope {
 
     StructDeclNode _structDecl;
     
+    [] __init() {
+        this._initScope();
+        this._initStructScope();
+    }
+    
+    [] _initStructScope() {
+    }
+    
     [StructScope] setStructDeclNode(StructDeclNode structDecl) { _structDecl = structDecl; return this; }
     [StructDeclNode] getStructDeclNode() { return _structDecl; }
     

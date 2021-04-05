@@ -8,14 +8,37 @@ namespace pool::compiler::ast::scope;
 use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Scope;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
+
+use sys::core::String;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 
 class ClassScope extends NamedType, Scope {
 
     ClassDeclNode _classDecl;
     
+    String _fullQualifiedName;
+    AnyMap _supers;  // HashMap<String, ClassScope>
+
+    [] __init() {
+        this._initScope();
+        this._initClassScope();
+    }
+    
+    [] _initClassScope() {
+        _supers = this.createOwn(AnyMap:CLASSNAME);
+    }
+    
     [ClassScope] setClassDeclNode(ClassDeclNode classDecl) { _classDecl = classDecl; return this; }
     [ClassDeclNode] getClassDeclNode() { return _classDecl; }
+
+    [ClassScope] setFullQualifiedName(String fqn) { _fullQualifiedName = fqn; return this; }
+    [String] getFullQualifiedName() { return _fullQualifiedName; }
+    
+    [] addSuper(ClassScope super) { _supers.set(super.getFullQualifiedName(), super); }
+    [int] hasSuper(ClassScope super) { return _supers.has(super.getFullQualifiedName()); }
+    [AnyIterator] getSupers() { return _supers.values(); }
     
     [int] isBool() { return false; }
     

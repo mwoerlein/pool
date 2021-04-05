@@ -245,6 +245,7 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         
         [ClassScope cs, InstanceScope is] := _curScope.registerClass(node, node.getName());
         node.setClassScope(cs).setInstanceScope(is);
+        cs.setFullQualifiedName(fqn);
         _typeManager.addNamedType(fqn, cs.namedType());
         
         /* TODO: inject CLASSNAME constant
