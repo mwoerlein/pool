@@ -48,6 +48,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
         parser.setLogger(logger);
         resolveTypeRefs.setLogger(logger);
         resolveHierarchy.setLogger(logger);
+        if (pp) { pp.setLogger(logger); }
         return this;
     }
     
@@ -56,6 +57,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     [Compiler] setPrettyOutput(PoolStorage pool) {
         pp = this.createOwn(PrettyPrinter:CLASSNAME);
         pp.setStorage(pool);
+        if (this.getLogger()) { pp.setLogger(this.getLogger()); }
         return this;
     }
     

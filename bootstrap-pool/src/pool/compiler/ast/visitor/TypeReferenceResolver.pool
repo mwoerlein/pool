@@ -66,7 +66,7 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
 
-class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
+class TypeReferenceResolver extends Visitor {
 
     TypeManager _typeManager;
     Scope _curScope;
@@ -131,6 +131,7 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         }
         _curScope = cs.scope();
         cs.setState(Scope:STATE_RESOLVING_TYPE_REFERENCES);
+        this._traceStart(cs.getFullQualifiedName(), "resolving type references");
         
         node.getExtends().acceptAll(this.visitor());
         node.getConsts().acceptAll(this.visitor());
@@ -138,6 +139,7 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         node.getMethods().acceptAll(this.visitor());
         
         cs.setState(Scope:STATE_TYPE_REFERENCES_RESOLVED);
+        this._traceStop(cs.getFullQualifiedName(), "resolved type references");
         _curScope = tmpScope;
         return true;
     }
@@ -152,11 +154,13 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         }
         _curScope = ss.scope();
         ss.setState(Scope:STATE_RESOLVING_TYPE_REFERENCES);
+        this._traceStart(ss.getFullQualifiedName(), "resolving type references");
         
         node.getConsts().acceptAll(this.visitor());
         node.getVariables().acceptAll(this.visitor());
         
         ss.setState(Scope:STATE_TYPE_REFERENCES_RESOLVED);
+        this._traceStop(ss.getFullQualifiedName(), "resolved type references");
         _curScope = tmpScope;
         return true;
     }

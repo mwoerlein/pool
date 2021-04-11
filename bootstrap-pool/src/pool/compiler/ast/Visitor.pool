@@ -41,9 +41,12 @@ use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::CStringRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
 
+use sys::core::String;
 use sys::stream::OStream;
 
-class Visitor extends sys::core::Object {
+class Visitor extends sys::log::LoggerAware {
+
+    int indent; // = 0
 
     [int] visit(Node node) { return node.accept(this); }
 
@@ -175,6 +178,22 @@ class Visitor extends sys::core::Object {
     [int] visitClassRef(ClassRefNode node) { return true; }
     [int] visitCStringRef(CStringRefNode node) { return true; }
     [int] visitIntRef(IntRefNode node) { return true; }
+
+    [] _traceStart(String fqn, cstring step) {
+        OStream line = this.trace().printCString("    ");
+        int i = 0;
+        while (i++ < indent) { line.printChar('#'); }
+        line.print(fqn).printChar(':').printChar(' ').printCString(step);
+        indent++;
+    }
+
+    [] _traceStop(String fqn, cstring step) {
+        indent--;
+        OStream line = this.trace().printCString("    ");
+        int i = 0;
+        while (i++ < indent) { line.printChar('#'); }
+        line.print(fqn).printChar(':').printChar(' ').printCString(step);
+    }
     
     // TODO: remove with implicit cast
     [Visitor] visitor() { return this; }

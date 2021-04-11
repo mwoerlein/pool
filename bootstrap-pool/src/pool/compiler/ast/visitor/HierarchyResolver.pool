@@ -20,7 +20,7 @@ use pool::compiler::ast::scope::StructScope;
 
 use sys::core::anycollection::AnyIterator;
 
-class HierarchyResolver extends Visitor, sys::log::LoggerAware {
+class HierarchyResolver extends Visitor {
 
     Scope _curScope;
     
@@ -43,6 +43,7 @@ class HierarchyResolver extends Visitor, sys::log::LoggerAware {
         }
         _curScope = cs.scope();
         cs.setState(Scope:STATE_RESOLVING_HIERARCHY);
+        this._traceStart(cs.getFullQualifiedName(), "resolving class hierarchy");
         
         {
             AnyIterator it = node.getExtends().iterator();
@@ -65,12 +66,15 @@ class HierarchyResolver extends Visitor, sys::log::LoggerAware {
             it.destroy();
         }
         cs.addSuper(cs);
+
+        cs.setState(Scope:STATE_HIERARCHY_RESOLVED);
+        this._traceStop(cs.getFullQualifiedName(), "resolved class hierarchy");
         
+        // descent into referenced classes/structs
         node.getConsts().acceptAll(this.visitor());
         node.getVariables().acceptAll(this.visitor());
         node.getMethods().acceptAll(this.visitor());
         
-        cs.setState(Scope:STATE_HIERARCHY_RESOLVED);
         /*{
             AnyIterator sit = cs.getSupers();
             this.debug().print(cs.getFullQualifiedName()).printCString(": found supers");
@@ -93,13 +97,15 @@ class HierarchyResolver extends Visitor, sys::log::LoggerAware {
             return true;
         }
         _curScope = ss.scope();
-        ss.setState(Scope:STATE_RESOLVING_HIERARCHY);
-        //this.debug().print(node.getName()).printCString(": resolving struct hierarchy!");
         
+        //this._traceStart(ss.getFullQualifiedName(), "resolving struct hierarchy");
+        ss.setState(Scope:STATE_HIERARCHY_RESOLVED);
+        //this._traceStop(ss.getFullQualifiedName(), "resolved struct hierarchy");
+        
+        // descent into referenced classes/structs
         node.getConsts().acceptAll(this.visitor());
         node.getVariables().acceptAll(this.visitor());
         
-        ss.setState(Scope:STATE_HIERARCHY_RESOLVED);
         _curScope = tmpScope;
         return true;
     }

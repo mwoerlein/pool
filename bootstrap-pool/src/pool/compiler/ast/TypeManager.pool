@@ -40,6 +40,7 @@ class TypeManager extends sys::log::LoggerAware {
             this.error().printCString("type for '").print(fqn).printCString("' already registered!");
             return false;
         }
+        this.trace().printCString("    ADD named type '").print(fqn).printChar('\'');
         _namedTypes.set(fqn, type);
         return true;        
     }
