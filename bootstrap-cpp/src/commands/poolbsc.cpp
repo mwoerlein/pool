@@ -31,6 +31,7 @@ R"(Pool Bootstrap Static Compiler.
       --warning                     Set warning.
       --error                       Set error.
       -b <fqn> --binding <fqn>      Use header/footer from <fqn>.
+      -t <org>                      Locates code in the output file at the absolute address given by org.
       -o <file> --output <file>     Place the output into <file>.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
 )";

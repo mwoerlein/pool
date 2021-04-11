@@ -150,9 +150,14 @@ class Compiler extends pool::compiler::ast::TypeManager {
         generatePIR.visit(node.node());
         if (this.hasErrors()) { return false; }
         
-        this._debugStep(fqn, "generate binary");
-        generatePASM.visit(node.node());
+        this._debugStep(fqn, "generate PASM");
+        generatePASMUnit.visit(node.node());
         if (this.hasErrors()) { return false; }
+        
+        // TODO: print PASM
+        // or
+        // TODO: compile PASM
+        // TODO: print binary
         
         if (pp) {
             this._debugStep(fqn, "pretty print compiled");
