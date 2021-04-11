@@ -13,12 +13,12 @@ class LoggerAware extends sys::core::Object {
     [LoggerAware] setLogger(Logger logger) { this.logger = logger; return this; }
     [Logger] getLogger() { return this.logger; }
     
-    [OStream] crit()  { return logger.crit(); }
-    [OStream] error() { return logger.error(); }
-    [OStream] warn()  { return logger.warn(); }
-    [OStream] note()  { return logger.note(); }
-    [OStream] info()  { return logger.info(); }
-    [OStream] debug() { return logger.debug(); }
-    [OStream] trace() { return logger.trace(); }
+    [OStream] crit()   { return logger.crit(); }
+    [OStream] error()  { return logger.error(); }
+    [OStream] warn()   { return logger.warn(); }
+    [OStream] notice() { return logger.notice(); }
+    [OStream] info()   { return logger.info(); }
+    [OStream] debug()  { return logger.debug(); }
+    [OStream] trace()  { return logger.trace(); }
     
 }

@@ -75,7 +75,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] skip(String fqn) {
-        this.note().print(fqn).printCString(" skipped");
+        this.notice().print(fqn).printCString(" skipped");
     }
     
     [] compilePrepared() {
@@ -134,7 +134,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [int] _compileClass(String fqn, ClassDeclNode node) {
-        this.note().printCString("compile ").print(fqn);
+        this.notice().printCString("compile ").print(fqn);
         
         this._debugStep(fqn, "resolve hierarchy");
         resolveHierarchy.visit(node.node());

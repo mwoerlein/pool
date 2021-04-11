@@ -14,7 +14,7 @@ class Logger extends sys::core::Object {
     int CRITICAL := 7;
     int ERROR    := 6;
     int WARNING  := 5;
-    int NOTE     := 4;
+    int NOTICE   := 4;
     int INFO     := 3;
     int DEBUG    := 2;
     int TRACE    := 1;
@@ -26,7 +26,7 @@ class Logger extends sys::core::Object {
     [] __init() { this._initLogger(); }
     [] _initLogger() {
         _entries = this.createOwn(AnyList:CLASSNAME);
-        _minLevel = Logger:NOTE;
+        _minLevel = Logger:NOTICE;
         _lastMax = 0;
     }
 
@@ -37,13 +37,13 @@ class Logger extends sys::core::Object {
     
     [Logger] setLevel(int level) { _minLevel = level; return this; }
     
-    [OStream] crit()  { return this.log(Logger:CRITICAL).ostream(); }
-    [OStream] error() { return this.log(Logger:ERROR).ostream(); }
-    [OStream] warn()  { return this.log(Logger:WARNING).ostream(); }
-    [OStream] note()  { return this.log(Logger:NOTE).ostream(); }
-    [OStream] info()  { return this.log(Logger:INFO).ostream(); }
-    [OStream] debug() { return this.log(Logger:DEBUG).ostream(); }
-    [OStream] trace() { return this.log(Logger:TRACE).ostream(); }
+    [OStream] crit()   { return this.log(Logger:CRITICAL).ostream(); }
+    [OStream] error()  { return this.log(Logger:ERROR).ostream(); }
+    [OStream] warn()   { return this.log(Logger:WARNING).ostream(); }
+    [OStream] notice() { return this.log(Logger:NOTICE).ostream(); }
+    [OStream] info()   { return this.log(Logger:INFO).ostream(); }
+    [OStream] debug()  { return this.log(Logger:DEBUG).ostream(); }
+    [OStream] trace()  { return this.log(Logger:TRACE).ostream(); }
     
     [LogEntry] log(int level) {
         LogEntry e = this.rt().createInstance(LogEntry:CLASSNAME);
