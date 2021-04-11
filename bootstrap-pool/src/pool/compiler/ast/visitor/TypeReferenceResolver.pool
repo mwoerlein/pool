@@ -245,8 +245,7 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         
         [ClassScope cs, InstanceScope is] := _curScope.registerClass(node, node.getName());
         node.setClassScope(cs).setInstanceScope(is);
-        cs.setFullQualifiedName(fqn);
-        _typeManager.addNamedType(fqn, cs.namedType());
+        _typeManager.addNamedType(cs.setFullQualifiedName(fqn));
         
         /* TODO: inject CLASSNAME constant
         classDecl.addStringConstant(env().create<String, const char*>(CLASSNAME_ID), classDecl.fullQualifiedName);
@@ -269,7 +268,7 @@ class TypeReferenceResolver extends Visitor, sys::log::LoggerAware {
         
         StructScope ss := _curScope.registerStruct(node, node.getName());
         node.setStructScope(ss);
-        _typeManager.addNamedType(fqn, ss.namedType());
+        _typeManager.addNamedType(ss.setFullQualifiedName(fqn));
         
         /* TODO: inject SIZEOF constant
         scope->sizeExpr = structDecl.addIntConstant(env().create<String, const char*>(SIZEOF_ID), -1).initializer.isConstInt();

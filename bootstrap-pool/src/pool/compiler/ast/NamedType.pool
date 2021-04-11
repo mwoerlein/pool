@@ -8,12 +8,18 @@ namespace pool::compiler::ast;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use sys::core::String;
 
 class NamedType extends Type { // TODO: solve cyclic error in compiler if NamedType extends Scope, too 
 
     abstract [TranslationUnitNode] getUnitNode();
     abstract [ClassDeclNode] getClassDeclNode();
     abstract [StructDeclNode] getStructDeclNode();
+
+    String _fullQualifiedName;
+    
+    [NamedType] setFullQualifiedName(String fqn) { _fullQualifiedName = fqn; return this; }
+    [String] getFullQualifiedName() { return _fullQualifiedName; }
     
     // TODO: remove with implicit cast
     [NamedType] namedType() { return this; }
