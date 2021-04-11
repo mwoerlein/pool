@@ -11,12 +11,13 @@ use sys::stream::OStream;
 
 class Logger extends sys::core::Object {
 
-    int CRITICAL := 6;
-    int ERROR    := 5;
-    int WARNING  := 4;
-    int NOTE     := 3;
-    int INFO     := 2;
-    int DEBUG    := 1;
+    int CRITICAL := 7;
+    int ERROR    := 6;
+    int WARNING  := 5;
+    int NOTE     := 4;
+    int INFO     := 3;
+    int DEBUG    := 2;
+    int TRACE    := 1;
     
     AnyList _entries; // LinkedList<LogEntry>
     int _minLevel;
@@ -42,6 +43,7 @@ class Logger extends sys::core::Object {
     [OStream] note()  { return this.log(Logger:NOTE).ostream(); }
     [OStream] info()  { return this.log(Logger:INFO).ostream(); }
     [OStream] debug() { return this.log(Logger:DEBUG).ostream(); }
+    [OStream] trace() { return this.log(Logger:TRACE).ostream(); }
     
     [LogEntry] log(int level) {
         LogEntry e = this.rt().createInstance(LogEntry:CLASSNAME);

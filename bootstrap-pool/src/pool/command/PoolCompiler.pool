@@ -24,7 +24,8 @@ Pool Bootstrap Compiler.
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
-      -d --debug                    Maximize verbosity.
+      --trace                       Maximize verbosity.
+      -d --debug                    More increased verbosity.
       -v --verbose                  Increase verbosity.
       --warning                     Display warnings and errors, only.
       --error                       Display errors, only.

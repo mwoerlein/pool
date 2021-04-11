@@ -56,6 +56,7 @@ class Command extends CommandLine {
                 Logger logger = this.createOwn(Logger:CLASSNAME);
                 if (this.hasOption("verbose")) { logger.setLevel(Logger:INFO); }
                 if (this.hasOption("debug")) { logger.setLevel(Logger:DEBUG); }
+                if (this.hasOption("trace")) { logger.setLevel(Logger:TRACE); }
                 if (this.hasOption("warning")) { logger.setLevel(Logger:WARNING); }
                 if (this.hasOption("error")) { logger.setLevel(Logger:ERROR); }
                 if (this.hasOption("critical")) { logger.setLevel(Logger:CRITICAL); }
