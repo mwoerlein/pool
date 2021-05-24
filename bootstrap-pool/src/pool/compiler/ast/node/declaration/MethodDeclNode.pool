@@ -26,9 +26,12 @@ class MethodDeclNode extends Node {
     
     int _kind;
     int _global;
+    /* method ID for global method calls on class descriptors */
+    int _index;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
+        _index = -1;
     }
     
     [MethodDeclNode] setName(String name) { _name.assignString(name); return this; }
@@ -54,6 +57,9 @@ class MethodDeclNode extends Node {
     
     [MethodDeclNode] setGlobal() { _global = true; return this; }
     [int] isGlobal() { return _global; }
+    
+    [MethodDeclNode] setIndex(int i) { _index = i; return this; }
+    [int] getIndex() { return _index; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitMethodDecl(this); }

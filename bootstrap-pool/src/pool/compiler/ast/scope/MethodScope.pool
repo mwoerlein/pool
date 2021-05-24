@@ -12,9 +12,23 @@ use sys::stream::OStream;
 class MethodScope extends Scope {
 
     MethodDeclNode _methodDecl;
+    /* method ID for virtual method calls */
+    int _index;
+
+    [] __init() {
+        this._initScope();
+        this._initMethodScope();
+    }
+    
+    [] _initMethodScope() {
+        _index = -1;
+    }
     
     [MethodScope] setMethodDeclNode(MethodDeclNode methodDecl) { _methodDecl = methodDecl; return this; }
     [MethodDeclNode] getMethodDeclNode() { return _methodDecl; }
+    
+    [MethodScope] setIndex(int i) { _index = i; return this; }
+    [int] getIndex() { return _index; }
     
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("MethodScope of ").print(_methodDecl);
