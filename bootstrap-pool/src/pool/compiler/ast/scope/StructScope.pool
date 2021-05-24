@@ -8,11 +8,13 @@ namespace pool::compiler::ast::scope;
 use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Scope;
 use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
 use sys::stream::OStream;
 
 class StructScope extends NamedType, Scope {
 
     StructDeclNode _structDecl;
+    ConstIntExprNode _sizeof;
     
     [] __init() {
         this._initScope();
@@ -20,10 +22,16 @@ class StructScope extends NamedType, Scope {
     }
     
     [] _initStructScope() {
+        _sizeof = this.createOwn(ConstIntExprNode:CLASSNAME);
+        _sizeof.setValue(-1);
     }
     
     [StructScope] setStructDeclNode(StructDeclNode structDecl) { _structDecl = structDecl; return this; }
     [StructDeclNode] getStructDeclNode() { return _structDecl; }
+    
+    [ConstIntExprNode] getSizeofExprNode() { return _sizeof; }
+    [StructScope] setSizeof(int value) { _sizeof.setValue(value); return this; }
+    [int] getSizeof() { return _sizeof.getValue(); }
     
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("StructScope of ").print(_structDecl);

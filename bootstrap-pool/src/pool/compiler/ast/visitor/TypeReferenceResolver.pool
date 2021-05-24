@@ -248,12 +248,10 @@ class TypeReferenceResolver extends Visitor {
         }
         
         [ClassScope cs, InstanceScope is] := _curScope.registerClass(node, node.getName());
+        // inject CLASSNAME constant
+        node.addVariableInitInst(this._buildStringConstant("CLASSNAME", fqn));
         node.setClassScope(cs).setInstanceScope(is);
         _typeManager.addNamedType(cs.setFullQualifiedName(fqn));
-        
-        /* TODO: inject CLASSNAME constant
-        classDecl.addStringConstant(env().create<String, const char*>(CLASSNAME_ID), classDecl.fullQualifiedName);
-        */
         
         return true;
     }
@@ -271,12 +269,10 @@ class TypeReferenceResolver extends Visitor {
         }
         
         StructScope ss := _curScope.registerStruct(node, node.getName());
+        // inject SIZEOF constant
+        node.addVariableInitInst(this._buildIntConstant("SIZEOF", ss.getSizeofExprNode()));
         node.setStructScope(ss);
         _typeManager.addNamedType(ss.setFullQualifiedName(fqn));
-        
-        /* TODO: inject SIZEOF constant
-        scope->sizeExpr = structDecl.addIntConstant(env().create<String, const char*>(SIZEOF_ID), -1).initializer.isConstInt();
-        */
         
         return true;
     }
@@ -286,5 +282,36 @@ class TypeReferenceResolver extends Visitor {
         String fqn = curUnit.createOwn(String:CLASSNAME);
         fqn.print(curUnit.getNamespace().getName().getName()).printChar(':').printChar(':').print(name);
         return fqn;        
+    }
+    
+    [VariableInitInstNode] _buildStringConstant(cstring name, String value) {
+        VariableInitInstNode init := this.createOwn(VariableInitInstNode:CLASSNAME);
+        
+        CStringRefNode type := init.createOwn(CStringRefNode:CLASSNAME);
+        VariableDeclNode decl := init.createOwn(VariableDeclNode:CLASSNAME);
+        decl.setCName(name).setTypeRef(type.typeRef());
+        
+        ConstCStringExprNode val := init.createOwn(ConstCStringExprNode:CLASSNAME);
+        val.setValue(value);
+        
+        NodeList vars := init.createOwn(NodeList:CLASSNAME);
+        vars.add(decl);
+        
+        init.setVariables(vars).setInitializer(val.expression()).setFinal().setGlobal();
+        return init;
+    }
+    
+    [VariableInitInstNode] _buildIntConstant(cstring name, ConstIntExprNode val) {
+        VariableInitInstNode init := this.createOwn(VariableInitInstNode:CLASSNAME);
+        
+        IntRefNode type := init.createOwn(IntRefNode:CLASSNAME);
+        VariableDeclNode decl := init.createOwn(VariableDeclNode:CLASSNAME);
+        decl.setCName(name).setTypeRef(type.typeRef());
+        
+        NodeList vars := init.createOwn(NodeList:CLASSNAME);
+        vars.add(decl);
+        
+        init.setVariables(vars).setInitializer(val.expression()).setFinal().setGlobal();
+        return init;
     }
 }

@@ -15,20 +15,17 @@ class VariableDeclNode extends Node {
 
     String _name;
     TypeRefNode _typeRef;
-    int _global;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
     }
     
     [VariableDeclNode] setName(String name) { _name.assignString(name); return this; }
+    [VariableDeclNode] setCName(cstring name) { _name.assignCString(name); return this; }
     [String] getName() { return _name; }
     
     [VariableDeclNode] setTypeRef(TypeRefNode type) { _typeRef = this.own(type); return this; }
     [TypeRefNode] getTypeRef() { return _typeRef; }
-    
-    [VariableDeclNode] setGlobal() { _global = true; return this; }
-    [int] isGlobal() { return _global; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitVariableDecl(this); }

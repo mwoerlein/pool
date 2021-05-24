@@ -13,6 +13,11 @@ class Type extends sys::core::Object {
     
     [int] isBool() { return true; }
     
+    [int] getSizeOfVariable() {
+        // currently every variable is stored as 32bit; may change in the future 
+        return 4;
+    }
+    
     [OStream] printToStream(OStream stream) {
         return this.printDebugName(stream);
     }
