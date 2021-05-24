@@ -83,11 +83,13 @@ class SignatureResolver extends Visitor {
         ClassScope cs := node.getClassScope();
         if (!cs || cs.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
             this.error().print(node.getName()).printCString(": references must be resolved before resolving signature!");
-            _curScope = tmpScope;
             return false;
         }
         if (cs.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
             return true;
+        }
+        if (!this._hasValidateHierarchy(cs)) {
+            return false;
         }
         _curScope = cs.scope();
         cs.setState(Scope:STATE_RESOLVING_SIGNATURE);
@@ -101,10 +103,9 @@ class SignatureResolver extends Visitor {
                 TypeRefNode typeNode = it.next();
                 typeNode.accept(this.visitor()); // ensure complete signature of extended class
                 ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                // hierarchy validation should ensures that extendedClassScope is always set correctly
                 if (!extendedClassScope) { 
-                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
-                } else if (extendedClassScope.getState() < Scope:STATE_SIGNATURE_RESOLVED) {
-                    this.error().print(cs.getFullQualifiedName()).printCString(": cyclic class hierarchy detected! (unfinished ").print(typeNode).printChar(')');
+                    this.crit().print(cs.getFullQualifiedName()).printCString(": internal error - invalid extend type '").print(typeNode).printChar('"');
                 } else {
                     InstanceScope extendedInstanceScope := extendedClassScope.getInstanceScope();
                     is.registerMethodsFromScope(extendedInstanceScope.scope());
@@ -229,7 +230,6 @@ class SignatureResolver extends Visitor {
         StructScope ss := node.getStructScope();
         if (!ss || ss.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
             this.error().print(node.getName()).printCString(": references must be resolved before resolving signature!");
-            _curScope = tmpScope;
             return false;
         }
         if (ss.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
@@ -305,4 +305,44 @@ class SignatureResolver extends Visitor {
     }
     
     // helper
+    [int] _hasValidateHierarchy(ClassScope cs) {
+        if (cs.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
+            this.error().print(cs.getFullQualifiedName()).printCString(": references must be resolved before validating class hierarchy!");
+            return false;
+        }
+        if (cs.getState() >= Scope:STATE_HIERARCHY_VALIDATED) {
+            return true;
+        }
+        if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
+            return false;
+        }
+        if (cs.getState() == Scope:STATE_VALIDATING_HIERARCHY) {
+            this.error().print(cs.getFullQualifiedName()).printCString(": cyclic class hierarchy detected!");
+            return false;
+        }
+        
+        this._traceStart(cs.getFullQualifiedName(), "validating class hierarchy");
+        cs.setState(Scope:STATE_VALIDATING_HIERARCHY);
+        {
+            AnyIterator it = cs.getClassDeclNode().getExtends().iterator();
+            while (it.hasNext()) {
+                TypeRefNode typeNode = it.next();
+                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                if (!extendedClassScope) { 
+                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
+                    cs.setState(Scope:STATE_HIERARCHY_INVALID);
+                } else if (!this._hasValidateHierarchy(extendedClassScope)) {
+                    cs.setState(Scope:STATE_HIERARCHY_INVALID);
+                }
+            }
+            it.destroy();
+        }
+        
+        this._traceStop(cs.getFullQualifiedName(), "validated class hierarchy");
+        if (cs.getState() == Scope:STATE_VALIDATING_HIERARCHY) {
+            cs.setState(Scope:STATE_HIERARCHY_VALIDATED);
+            return true;
+        }
+        return false;
+    }
 }
