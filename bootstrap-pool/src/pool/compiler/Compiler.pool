@@ -11,7 +11,6 @@ use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::ast::visitor::TypeReferenceResolver;
-use pool::compiler::ast::visitor::HierarchyResolver;
 use pool::compiler::ast::visitor::SignatureResolver;
 use pool::compiler::parser::Parser;
 use pool::storage::ClassPathStorage;
@@ -32,7 +31,6 @@ class Compiler extends pool::compiler::ast::TypeManager {
     Parser parser;
     PrettyPrinter pp;
     TypeReferenceResolver resolveTypeRefs;
-    HierarchyResolver resolveHierarchy;
     SignatureResolver resolveSignature;
     AnyList preparedUnits; // LinkedList<TranslationUnitNode>
     
@@ -43,14 +41,12 @@ class Compiler extends pool::compiler::ast::TypeManager {
         preparedUnits = this.createOwn(AnyList:CLASSNAME);
         resolveTypeRefs = this.createOwn(TypeReferenceResolver:CLASSNAME);
         resolveTypeRefs.setTypeManager(this.typeManager());
-        resolveHierarchy = this.createOwn(HierarchyResolver:CLASSNAME);
         resolveSignature = this.createOwn(SignatureResolver:CLASSNAME);
     }
     [Compiler] initLogger(Logger logger) {
         this.setLogger(logger);
         parser.setLogger(logger);
         resolveTypeRefs.setLogger(logger);
-        resolveHierarchy.setLogger(logger);
         resolveSignature.setLogger(logger);
         if (pp) { pp.setLogger(logger); }
         return this;
@@ -139,10 +135,6 @@ class Compiler extends pool::compiler::ast::TypeManager {
     
     [int] _compileClass(String fqn, ClassDeclNode node) {
         this.notice().printCString("compile ").print(fqn);
-        
-        this._debugStep(fqn, "resolve hierarchy");
-        resolveHierarchy.visit(node.node());
-        if (this.hasErrors()) { return false; }
         
         this._debugStep(fqn, "resolve signature");
         resolveSignature.visit(node.node());

@@ -81,8 +81,8 @@ class SignatureResolver extends Visitor {
     [int] visitClassDecl(ClassDeclNode node) {
         Scope tmpScope := _curScope;
         ClassScope cs := node.getClassScope();
-        if (!cs || cs.getState() < Scope:STATE_HIERARCHY_RESOLVED) {
-            this.error().print(node.getName()).printCString(": hierarchy must be resolved before resolving signature!");
+        if (!cs || cs.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
+            this.error().print(node.getName()).printCString(": references must be resolved before resolving signature!");
             _curScope = tmpScope;
             return false;
         }
@@ -94,26 +94,30 @@ class SignatureResolver extends Visitor {
         this._traceStart(cs.getFullQualifiedName(), "resolving class signature");
         InstanceScope is := cs.getInstanceScope();
         
-        // collect super methods/variables/constants
+        // collect inherited classes/methods/variables/constants
         {
             AnyIterator it = node.getExtends().iterator();
             while (it.hasNext()) {
                 TypeRefNode typeNode = it.next();
                 typeNode.accept(this.visitor()); // ensure complete signature of extended class
                 ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
-                if (extendedClassScope) {
+                if (!extendedClassScope) { 
+                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
+                } else if (extendedClassScope.getState() < Scope:STATE_SIGNATURE_RESOLVED) {
+                    this.error().print(cs.getFullQualifiedName()).printCString(": cyclic class hierarchy detected! (unfinished ").print(typeNode).printChar(')');
+                } else {
                     InstanceScope extendedInstanceScope := extendedClassScope.getInstanceScope();
                     is.registerMethodsFromScope(extendedInstanceScope.scope());
                     is.registerVariablesFromScope(extendedInstanceScope.scope());
 
+                    cs.registerSupersFromScope(extendedClassScope);
                     cs.registerMethodsFromScope(extendedClassScope.scope());
                     cs.registerVariablesFromScope(extendedClassScope.scope());
-                } else {
-                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
                 }
             }
             it.destroy();
         }
+        cs.addSuper(cs);
 
         // register own methods at last, to overwrite super methods if required
         // and generate global method ID
@@ -183,7 +187,13 @@ class SignatureResolver extends Visitor {
         node.getMethods().acceptAll(this.visitor());
         
         // DEBUG
-        {
+        /*{
+            {
+                AnyIterator sit = cs.getSupers();
+                this.debug().print(cs.getFullQualifiedName()).printCString(": supers");
+                while (sit.hasNext()) { this.debug().printCString("   ").print(sit.next()); }
+                sit.destroy();
+            }
             {
                 AnyIterator it = cs.getMethods();
                 this.debug().print(cs.getFullQualifiedName()).printCString(": global methods");
@@ -208,7 +218,7 @@ class SignatureResolver extends Visitor {
                 while (it.hasNext()) { this.debug().printCString("   ").print(it.next()); }
                 it.destroy();
             }
-        }
+        }*/
         
         _curScope = tmpScope;
         return true;
@@ -217,8 +227,8 @@ class SignatureResolver extends Visitor {
     [int] visitStructDecl(StructDeclNode node) {
         Scope tmpScope := _curScope;
         StructScope ss := node.getStructScope();
-        if (!ss || ss.getState() < Scope:STATE_HIERARCHY_RESOLVED) {
-            this.error().print(node.getName()).printCString(": hierarchy must be resolved before resolving signature!");
+        if (!ss || ss.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
+            this.error().print(node.getName()).printCString(": references must be resolved before resolving signature!");
             _curScope = tmpScope;
             return false;
         }

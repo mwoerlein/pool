@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::ast::scope;
 
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use sys::stream::OStream;
 
@@ -31,7 +32,10 @@ class MethodScope extends Scope {
     [int] getIndex() { return _index; }
     
     [OStream] printDebugName(OStream stream) {
-        return stream.printCString("MethodScope of ").print(_methodDecl);
+        stream.printCString("MethodScope of ").print(_methodDecl);
+        ClassDeclNode c = this.getClassDeclNode();
+        if (c) { stream.printCString(" in ").print(c); }
+        return stream;
     }
 
 }

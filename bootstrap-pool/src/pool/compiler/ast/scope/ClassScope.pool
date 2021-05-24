@@ -9,8 +9,10 @@ use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Scope;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 
-use sys::core::anycollection::AnyMap;
+use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::OStream;
 
 class ClassScope extends NamedType, Scope {
@@ -33,6 +35,14 @@ class ClassScope extends NamedType, Scope {
     [InstanceScope] getInstanceScope() { return _classDecl.getInstanceScope(); }
     
     [] addSuper(ClassScope super) { _supers.set(super.getFullQualifiedName(), super); }
+    [] registerSupersFromScope(ClassScope source) {
+        AnyMapEntryIterator it := source._supers.entries();
+        while (it.hasNext()) {
+            [String id, ClassScope cs] := it.nextPair();
+            _supers.set(id, cs);
+        }
+        it.destroy();
+    }
     [int] hasSuper(ClassScope super) { return _supers.has(super.getFullQualifiedName()); }
     [AnyIterator] getSupers() { return _supers.values(); }
     
