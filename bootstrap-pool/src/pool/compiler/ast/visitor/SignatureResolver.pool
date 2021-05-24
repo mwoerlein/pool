@@ -66,8 +66,6 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
 
-// TODO: merge with HierarchyResolver?
-
 class SignatureResolver extends Visitor {
 
     Scope _curScope;
@@ -88,7 +86,7 @@ class SignatureResolver extends Visitor {
         if (cs.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
             return true;
         }
-        if (!this._hasValidateHierarchy(cs)) {
+        if (!this._hasValidHierarchy(cs)) {
             return false;
         }
         _curScope = cs.scope();
@@ -305,7 +303,7 @@ class SignatureResolver extends Visitor {
     }
     
     // helper
-    [int] _hasValidateHierarchy(ClassScope cs) {
+    [int] _hasValidHierarchy(ClassScope cs) {
         if (cs.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
             this.error().print(cs.getFullQualifiedName()).printCString(": references must be resolved before validating class hierarchy!");
             return false;
@@ -331,7 +329,7 @@ class SignatureResolver extends Visitor {
                 if (!extendedClassScope) { 
                     this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
                     cs.setState(Scope:STATE_HIERARCHY_INVALID);
-                } else if (!this._hasValidateHierarchy(extendedClassScope)) {
+                } else if (!this._hasValidHierarchy(extendedClassScope)) {
                     cs.setState(Scope:STATE_HIERARCHY_INVALID);
                 }
             }
@@ -339,10 +337,10 @@ class SignatureResolver extends Visitor {
         }
         
         this._traceStop(cs.getFullQualifiedName(), "validated class hierarchy");
-        if (cs.getState() == Scope:STATE_VALIDATING_HIERARCHY) {
-            cs.setState(Scope:STATE_HIERARCHY_VALIDATED);
-            return true;
+        if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
+            return false;
         }
-        return false;
+        cs.setState(Scope:STATE_HIERARCHY_VALIDATED);
+        return true;
     }
 }
