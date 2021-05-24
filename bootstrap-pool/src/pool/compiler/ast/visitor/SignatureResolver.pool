@@ -1,0 +1,280 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::visitor;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+
+use pool::compiler::ast::node::expression::ArithAssignmentExprNode;
+use pool::compiler::ast::node::expression::ArithBinaryExprNode;
+use pool::compiler::ast::node::expression::ArithUnaryExprNode;
+use pool::compiler::ast::node::expression::AssignmentExprNode;
+use pool::compiler::ast::node::expression::ConstCStringExprNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
+use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
+use pool::compiler::ast::node::expression::MethodCallExprNode;
+use pool::compiler::ast::node::expression::NullExprNode;
+use pool::compiler::ast::node::expression::SignExprNode;
+use pool::compiler::ast::node::expression::ThisExprNode;
+use pool::compiler::ast::node::expression::VariableExprNode;
+
+use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
+
+use pool::compiler::ast::node::reference::AllRefNode;
+use pool::compiler::ast::node::reference::AnyRefNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::IntRefNode;
+use pool::compiler::ast::node::reference::TypeRefNode;
+
+use pool::compiler::ast::NamedType;
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::TypeManager;
+use pool::compiler::ast::scope::BlockScope;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::StructScope;
+use pool::compiler::ast::scope::UnitScope;
+use pool::compiler::ast::scope::VariableScope;
+
+use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::String;
+use sys::stream::OStream;
+
+// TODO: merge with HierarchyResolver?
+
+class SignatureResolver extends Visitor {
+
+    Scope _curScope;
+    
+    // declarations
+    [int] visitTranslationUnit(TranslationUnitNode node) {
+        this.crit().print(node.getName()).printCString(": SignatureResolver only works for classes/structs, not for translation units!");
+        return false;
+    }
+    
+    [int] visitClassDecl(ClassDeclNode node) {
+        Scope tmpScope := _curScope;
+        ClassScope cs := node.getClassScope();
+        if (!cs || cs.getState() < Scope:STATE_HIERARCHY_RESOLVED) {
+            this.error().print(node.getName()).printCString(": hierarchy must be resolved before resolving signature!");
+            _curScope = tmpScope;
+            return false;
+        }
+        if (cs.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
+            return true;
+        }
+        _curScope = cs.scope();
+        cs.setState(Scope:STATE_RESOLVING_SIGNATURE);
+        this._traceStart(cs.getFullQualifiedName(), "resolving class signature");
+        InstanceScope is := cs.getInstanceScope();
+        
+        // collect super methods/variables/constants
+        {
+            AnyIterator it = node.getExtends().iterator();
+            while (it.hasNext()) {
+                TypeRefNode typeNode = it.next();
+                typeNode.accept(this.visitor()); // ensure complete signature of extended class
+                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                if (extendedClassScope) {
+                    InstanceScope extendedInstanceScope := extendedClassScope.getInstanceScope();
+                    is.registerMethodsFromScope(extendedInstanceScope.scope());
+                    is.registerVariablesFromScope(extendedInstanceScope.scope());
+
+                    cs.registerMethodsFromScope(extendedClassScope.scope());
+                    cs.registerVariablesFromScope(extendedClassScope.scope());
+                } else {
+                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
+                }
+            }
+            it.destroy();
+        }
+
+        // register own methods at last, to overwrite super methods if required
+        {
+            //int index = 0;
+            AnyIterator it := node.getMethods().iterator();
+            while (it.hasNext()) {
+                MethodDeclNode methodDecl := it.next();
+                if (methodDecl.isGlobal()) {
+                    cs.registerMethod(methodDecl);
+                } else {
+                    is.registerMethod(methodDecl);
+                }
+                //methodDecl.index = index++;
+            }
+            it.destroy();
+        }
+        
+        // register own constants
+        {
+            AnyIterator viit := node.getConsts().iterator();
+            while (viit.hasNext()) {
+                VariableInitInstNode vi = viit.next();
+                AnyIterator it := vi.getVariables().iterator();
+                while (it.hasNext()) {
+                    cs.registerVariable(it.next());
+                }
+                it.destroy();
+            }
+            viit.destroy();
+        }
+        
+        // register own variables
+        {
+            AnyIterator it := node.getVariables().iterator();
+            while (it.hasNext()) {
+                is.registerVariable(it.next());
+            }
+            it.destroy();
+        }
+        
+        // TODO: generate method-indexes
+        
+        cs.setState(Scope:STATE_SIGNATURE_RESOLVED);
+        this._traceStop(cs.getFullQualifiedName(), "resolved class signature");
+        
+        // descent into referenced classes/structs
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        node.getMethods().acceptAll(this.visitor());
+        
+        // DEBUG
+        /*{
+            {
+                AnyIterator it = cs.getMethods();
+                this.debug().print(cs.getFullQualifiedName()).printCString(": global methods");
+                while (it.hasNext()) { this.debug().printCString("   ").print(it.next()); }
+                it.destroy();
+            }
+            {
+                AnyIterator it = is.getMethods();
+                this.debug().print(cs.getFullQualifiedName()).printCString(": methods");
+                while (it.hasNext()) { this.debug().printCString("   ").print(it.next()); }
+                it.destroy();
+            }
+            {
+                AnyIterator it = cs.getVariables();
+                this.debug().print(cs.getFullQualifiedName()).printCString(": constants");
+                while (it.hasNext()) { this.debug().printCString("   ").print(it.next()); }
+                it.destroy();
+            }
+            {
+                AnyIterator it = is.getVariables();
+                this.debug().print(cs.getFullQualifiedName()).printCString(": variables");
+                while (it.hasNext()) { this.debug().printCString("   ").print(it.next()); }
+                it.destroy();
+            }
+        }*/
+        
+        _curScope = tmpScope;
+        return true;
+    }
+    
+    [int] visitStructDecl(StructDeclNode node) {
+        Scope tmpScope := _curScope;
+        StructScope ss := node.getStructScope();
+        if (!ss || ss.getState() < Scope:STATE_HIERARCHY_RESOLVED) {
+            this.error().print(node.getName()).printCString(": hierarchy must be resolved before resolving signature!");
+            _curScope = tmpScope;
+            return false;
+        }
+        if (ss.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
+            return true;
+        }
+        _curScope = ss.scope();
+        
+        this._traceStart(ss.getFullQualifiedName(), "resolving struct signature");
+        
+        // register own constants
+        {
+            AnyIterator viit := node.getConsts().iterator();
+            while (viit.hasNext()) {
+                VariableInitInstNode vi = viit.next();
+                AnyIterator it := vi.getVariables().iterator();
+                while (it.hasNext()) {
+                    ss.registerVariable(it.next());
+                }
+                it.destroy();
+            }
+            viit.destroy();
+        }
+        
+        // register own variables
+        {
+            int sizeOf = 0;
+            AnyIterator it := node.getVariables().iterator();
+            while (it.hasNext()) {
+                VariableDeclNode vn := it.next();
+                ss.registerVariable(vn);
+                sizeOf += vn.getTypeRef().getResolvedType().getSizeOfVariable(); 
+            }
+            it.destroy();
+            ss.setSizeof(sizeOf);
+        }
+        
+        ss.setState(Scope:STATE_SIGNATURE_RESOLVED);
+        this._traceStop(ss.getFullQualifiedName(), "resolved struct signature");
+        
+        // descent into referenced classes/structs
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        
+        // DEBUG
+        /*{
+            {
+                AnyIterator it = ss.getVariables();
+                this.debug().print(ss.getFullQualifiedName()).printCString(": variables");
+                while (it.hasNext()) { this.debug().printCString("   ").print(it.next()); }
+                it.destroy();
+            }
+            this.debug().print(ss.getFullQualifiedName()).printCString(": sizeof ").printInt(ss.getSizeof());
+        }*/
+        
+        _curScope = tmpScope;
+        return true;
+    }
+    // instructions
+    
+    // expressions
+    
+    // references
+    [int] visitClassRef(ClassRefNode node) {
+        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
+        if (cs && cs.getState() < Scope:STATE_RESOLVING_SIGNATURE) {
+            return cs.getClassDeclNode().accept(this.visitor());
+        }
+        StructScope ss := this.rt().cast(StructScope:CLASSNAME, node.getResolvedType());
+        if (ss && ss.getState() < Scope:STATE_RESOLVING_SIGNATURE) {
+            return ss.getStructDeclNode().accept(this.visitor());
+        }
+        return false;
+    }
+    
+    // helper
+}

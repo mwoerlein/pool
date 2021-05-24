@@ -26,7 +26,7 @@ class HierarchyResolver extends Visitor {
     
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
-        this.crit().print(node.getName()).printCString(": HierarchyResolver only works for classes, not for translation units!");
+        this.crit().print(node.getName()).printCString(": HierarchyResolver only works for classes/structs, not for translation units!");
         return false;
     }
     
@@ -49,7 +49,7 @@ class HierarchyResolver extends Visitor {
             AnyIterator it = node.getExtends().iterator();
             while (it.hasNext()) {
                 TypeRefNode typeNode = it.next();
-                typeNode.accept(this.visitor());
+                typeNode.accept(this.visitor()); // ensure complete hierarchy of extended class
                 ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
                 if (extendedClassScope) {
                     if (extendedClassScope.getState() < Scope:STATE_RESOLVING_HIERARCHY) {

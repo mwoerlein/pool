@@ -21,7 +21,9 @@ use pool::compiler::ast::scope::UnitScope;
 use pool::compiler::ast::scope::VariableScope;
 
 use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::OStream;
 
 class Scope extends sys::core::Object {
@@ -33,8 +35,8 @@ class Scope extends sys::core::Object {
     int STATE_TYPE_REFERENCES_RESOLVED  := 15;
     int STATE_RESOLVING_HIERARCHY       := 20;
     int STATE_HIERARCHY_RESOLVED        := 25;
-    int STATE_RESOLVING_METHODS         := 30;
-    int STATE_METHODS_RESOLVED          := 35;
+    int STATE_RESOLVING_SIGNATURE       := 30;
+    int STATE_SIGNATURE_RESOLVED        := 35;
     int STATE_RESOLVING_INSTRUCTIONS    := 40;
     int STATE_INSTRUCTIONS_RESOLVED     := 45;
     
@@ -94,26 +96,50 @@ class Scope extends sys::core::Object {
         scope.setMethodDeclNode(node).setParent(this);
         // TODO #7: generate method id from name and parameter types
         MethodScope old = _methods.set(node.getName(), scope);
-        if (old) { old.destroy(); }
+        if (old && this.isSameAs(old._parent)) { old.destroy(); }
         return scope;
+    }
+    [] registerMethodsFromScope(Scope source) {
+        AnyMapEntryIterator it := source._methods.entries();
+        while (it.hasNext()) {
+            [String id, MethodScope ms] := it.nextPair();
+            MethodScope old := _methods.set(id, ms);
+            if (old && this.isSameAs(old._parent)) { old.destroy(); }
+        }
+        it.destroy();
     }
     [MethodScope] getMethod(String name) {
         if (_methods.has(name)) { return _methods.get(name); }
         if (_parent) { return _parent.getMethod(name); }
         return null;
     }
+    [AnyIterator] getMethods() {
+        return _methods.iterator();
+    }
     
     [VariableScope] registerVariable(VariableDeclNode node) {
         VariableScope scope = _variables.createOwn(VariableScope:CLASSNAME);
         scope.setVariableDeclNode(node).setParent(this);
         VariableScope old = _variables.set(node.getName(), scope);
-        if (old) { old.destroy(); }
+        if (old && this.isSameAs(old._parent)) { old.destroy(); }
         return scope;
+    }
+    [] registerVariablesFromScope(Scope source) {
+        AnyMapEntryIterator it := source._variables.entries();
+        while (it.hasNext()) {
+            [String id, VariableScope vs] := it.nextPair();
+            VariableScope old := _variables.set(id, vs);
+            if (old && this.isSameAs(old._parent)) { old.destroy(); }
+        }
+        it.destroy();
     }
     [VariableScope] getVariable(String name) {
         if (_variables.has(name)) { return _variables.get(name); }
         if (_parent) { return _parent.getVariable(name); }
         return null;
+    }
+    [AnyIterator] getVariables() {
+        return _variables.iterator();
     }
 
     [BlockScope] createBlockScope(BlockInstNode node) {

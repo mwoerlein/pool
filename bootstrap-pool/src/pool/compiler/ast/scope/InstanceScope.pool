@@ -14,6 +14,14 @@ class InstanceScope extends Scope, Type {
 
     ClassDeclNode _classDecl;
     
+    [] __init() {
+        this._initScope();
+        this._initInstanceScope();
+    }
+    
+    [] _initInstanceScope() {
+    }
+    
     [InstanceScope] setClassDeclNode(ClassDeclNode classDecl) { _classDecl = classDecl; return this; }
     [ClassDeclNode] getClassDeclNode() { return _classDecl; }
     
