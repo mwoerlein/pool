@@ -66,6 +66,17 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
 
+/**
+ * Prepare signatures of classes/structs (recursively)
+ * - determine and connect class hierarchy
+ * - collect inherited and own constants
+ * - collect inherited and own variables
+ * - collect inherited and own methods
+ *
+ * error detection:
+ * - cyclic class structures
+ * (- invalid method overwrites, in future version)
+ */
 class SignatureResolver extends Visitor {
 
     Scope _curScope;
@@ -314,29 +325,30 @@ class SignatureResolver extends Visitor {
         if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
             return false;
         }
+        
         if (cs.getState() == Scope:STATE_VALIDATING_HIERARCHY) {
             this.error().print(cs.getFullQualifiedName()).printCString(": cyclic class hierarchy detected!");
-            return false;
-        }
-        
-        this._traceStart(cs.getFullQualifiedName(), "validating class hierarchy");
-        cs.setState(Scope:STATE_VALIDATING_HIERARCHY);
-        {
-            AnyIterator it = cs.getClassDeclNode().getExtends().iterator();
-            while (it.hasNext()) {
-                TypeRefNode typeNode = it.next();
-                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
-                if (!extendedClassScope) { 
-                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
-                    cs.setState(Scope:STATE_HIERARCHY_INVALID);
-                } else if (!this._hasValidHierarchy(extendedClassScope)) {
-                    cs.setState(Scope:STATE_HIERARCHY_INVALID);
+            cs.setState(Scope:STATE_HIERARCHY_INVALID);
+        } else {
+            this._traceStart(cs.getFullQualifiedName(), "validating class hierarchy");
+            cs.setState(Scope:STATE_VALIDATING_HIERARCHY);
+            {
+                AnyIterator it = cs.getClassDeclNode().getExtends().iterator();
+                while (it.hasNext()) {
+                    TypeRefNode typeNode = it.next();
+                    ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                    if (!extendedClassScope) { 
+                        this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
+                        cs.setState(Scope:STATE_HIERARCHY_INVALID);
+                    } else if (!this._hasValidHierarchy(extendedClassScope)) {
+                        cs.setState(Scope:STATE_HIERARCHY_INVALID);
+                    }
                 }
+                it.destroy();
             }
-            it.destroy();
+            this._traceStop(cs.getFullQualifiedName(), "validated class hierarchy");
         }
         
-        this._traceStop(cs.getFullQualifiedName(), "validated class hierarchy");
         if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
             return false;
         }

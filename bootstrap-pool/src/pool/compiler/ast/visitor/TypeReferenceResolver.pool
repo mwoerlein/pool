@@ -66,6 +66,13 @@ use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
 
+/**
+ * Load and register referenced classes/structs via type manager
+ *
+ * error detection:
+ * - missing/unknown classes/structs
+ * - missing/invalid namespace or class/struct names
+ */
 class TypeReferenceResolver extends Visitor {
 
     TypeManager _typeManager;
