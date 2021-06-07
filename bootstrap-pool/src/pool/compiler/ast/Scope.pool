@@ -37,6 +37,7 @@ class Scope extends sys::core::Object {
     int STATE_HIERARCHY_INVALID         := 23;
     int STATE_HIERARCHY_VALIDATED       := 25;
     int STATE_RESOLVING_SIGNATURE       := 30;
+    int STATE_RESOLVING_SCOPES          := 33;
     int STATE_SIGNATURE_RESOLVED        := 35;
     int STATE_RESOLVING_INSTRUCTIONS    := 40;
     int STATE_INSTRUCTIONS_RESOLVED     := 45;
@@ -72,12 +73,16 @@ class Scope extends sys::core::Object {
         InstanceScope instanceScope = classScope.createOwn(InstanceScope:CLASSNAME);
         instanceScope.setClassDeclNode(node).setParent(classScope.scope());
         this.registerNamedType(classScope.namedType(), alias);
+        
+        node.setClassScope(classScope).setInstanceScope(instanceScope);
         return [classScope, instanceScope];
     }
     [StructScope] registerStruct(StructDeclNode node, String alias) {
         StructScope scope = _namedTypes.createOwn(StructScope:CLASSNAME);
         scope.setStructDeclNode(node).setParent(this).setState(Scope:STATE_REGISTERED);
         this.registerNamedType(scope.namedType(), alias);
+        
+        node.setStructScope(scope);
         return scope;
     }
     
@@ -98,6 +103,8 @@ class Scope extends sys::core::Object {
         // TODO #7: generate method id from name and parameter types
         MethodScope old = _methods.set(node.getName(), scope);
         if (old && this.isSameAs(old._parent)) { old.destroy(); }
+        
+        node.setMethodScope(scope);
         return scope;
     }
     [] registerMethodsFromScope(Scope source) {
@@ -123,6 +130,8 @@ class Scope extends sys::core::Object {
         scope.setVariableDeclNode(node).setParent(this);
         VariableScope old = _variables.set(node.getName(), scope);
         if (old && this.isSameAs(old._parent)) { old.destroy(); }
+        
+        node.setVariableScope(scope);
         return scope;
     }
     [] registerVariablesFromScope(Scope source) {
@@ -146,12 +155,16 @@ class Scope extends sys::core::Object {
     [BlockScope] createBlockScope(BlockInstNode node) {
         BlockScope scope = this.createOwn(BlockScope:CLASSNAME);
         scope.setBlockInstNode(node).setParent(this);
+        
+        node.setBlockScope(scope);
         return scope;
     }
     
     global [UnitScope] createUnitScope(TranslationUnitNode node) {
         UnitScope scope = node.createOwn(UnitScope:CLASSNAME);
         scope.setUnitNode(node);
+        
+        node.setUnitScope(scope);
         return scope;
     }
     

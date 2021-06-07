@@ -6,19 +6,28 @@ version = 0.1.0
 namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::reference::TypeRefNode;
+use pool::compiler::ast::scope::VariableScope;
+
 use sys::core::String;
 use sys::stream::OStream;
 
 class VariableDeclNode extends Node {
 
+    VariableScope _scope;
+    
     String _name;
     TypeRefNode _typeRef;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
     }
+    
+    [VariableDeclNode] setVariableScope(VariableScope scope) { _scope = scope; return this; }
+    [VariableScope] getVariableScope() { return _scope; }
+    [Scope] getScope() { if (_scope) { return _scope.scope(); } return null; }
     
     [VariableDeclNode] setName(String name) { _name.assignString(name); return this; }
     [VariableDeclNode] setCName(cstring name) { _name.assignCString(name); return this; }

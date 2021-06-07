@@ -84,7 +84,6 @@ class TypeReferenceResolver extends Visitor {
     [int] visitTranslationUnit(TranslationUnitNode node) {
         Scope tmpScope := _curScope;
         UnitScope us := Scope:createUnitScope(node);
-        node.setUnitScope(us);
         _curScope = us.scope();
         
         if (!node.getNamespace()) {
@@ -257,7 +256,6 @@ class TypeReferenceResolver extends Visitor {
         [ClassScope cs, InstanceScope is] := _curScope.registerClass(node, node.getName());
         // inject CLASSNAME constant
         node.addVariableInitInst(this._buildStringConstant("CLASSNAME", fqn));
-        node.setClassScope(cs).setInstanceScope(is);
         _typeManager.addNamedType(cs.setFullQualifiedName(fqn));
         
         return true;
@@ -278,7 +276,6 @@ class TypeReferenceResolver extends Visitor {
         StructScope ss := _curScope.registerStruct(node, node.getName());
         // inject SIZEOF constant
         node.addVariableInitInst(this._buildIntConstant("SIZEOF", ss.getSizeofExprNode()));
-        node.setStructScope(ss);
         _typeManager.addNamedType(ss.setFullQualifiedName(fqn));
         
         return true;

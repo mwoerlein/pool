@@ -72,6 +72,7 @@ use sys::stream::OStream;
  * - collect inherited and own constants
  * - collect inherited and own variables
  * - collect inherited and own methods
+ * - build scope hierarchy
  *
  * error detection:
  * - cyclic class structures
@@ -100,7 +101,7 @@ class SignatureResolver extends Visitor {
         if (!this._hasValidHierarchy(cs)) {
             return false;
         }
-        _curScope = cs.scope();
+        
         cs.setState(Scope:STATE_RESOLVING_SIGNATURE);
         this._traceStart(cs.getFullQualifiedName(), "resolving class signature");
         InstanceScope is := cs.getInstanceScope();
@@ -146,29 +147,6 @@ class SignatureResolver extends Visitor {
             it.destroy();
         }
         
-        // register own constants
-        {
-            AnyIterator viit := node.getConsts().iterator();
-            while (viit.hasNext()) {
-                VariableInitInstNode vi = viit.next();
-                AnyIterator it := vi.getVariables().iterator();
-                while (it.hasNext()) {
-                    cs.registerVariable(it.next());
-                }
-                it.destroy();
-            }
-            viit.destroy();
-        }
-        
-        // register own variables
-        {
-            AnyIterator it := node.getVariables().iterator();
-            while (it.hasNext()) {
-                is.registerVariable(it.next());
-            }
-            it.destroy();
-        }
-        
         // generate virtual method IDs
         int index = 0;
         {
@@ -188,13 +166,18 @@ class SignatureResolver extends Visitor {
             it.destroy();
         }
         
-        cs.setState(Scope:STATE_SIGNATURE_RESOLVED);
-        this._traceStop(cs.getFullQualifiedName(), "resolved class signature");
+        // descent into referenced classes/structs and register own constants/variables
+        cs.setState(Scope:STATE_RESOLVING_SCOPES);
         
-        // descent into referenced classes/structs
+        _curScope = cs.scope();
         node.getConsts().acceptAll(this.visitor());
+        
+        _curScope = is.scope();
         node.getVariables().acceptAll(this.visitor());
         node.getMethods().acceptAll(this.visitor());
+        
+        cs.setState(Scope:STATE_SIGNATURE_RESOLVED);
+        this._traceStop(cs.getFullQualifiedName(), "resolved class signature");
         
         // DEBUG
         /*{
@@ -244,31 +227,21 @@ class SignatureResolver extends Visitor {
         if (ss.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
             return true;
         }
-        _curScope = ss.scope();
         
+        ss.setState(Scope:STATE_RESOLVING_SIGNATURE);
         this._traceStart(ss.getFullQualifiedName(), "resolving struct signature");
         
-        // register own constants
-        {
-            AnyIterator viit := node.getConsts().iterator();
-            while (viit.hasNext()) {
-                VariableInitInstNode vi = viit.next();
-                AnyIterator it := vi.getVariables().iterator();
-                while (it.hasNext()) {
-                    ss.registerVariable(it.next());
-                }
-                it.destroy();
-            }
-            viit.destroy();
-        }
+        ss.setState(Scope:STATE_RESOLVING_SCOPES);
         
-        // register own variables
+        // descent into referenced classes/structs and register own constants/variables
+        _curScope = ss.scope();
+        node.getConsts().acceptAll(this.visitor());
         {
             int sizeOf = 0;
             AnyIterator it := node.getVariables().iterator();
             while (it.hasNext()) {
                 VariableDeclNode vn := it.next();
-                ss.registerVariable(vn);
+                vn.accept(this.visitor());
                 sizeOf += vn.getTypeRef().getResolvedType().getSizeOfVariable(); 
             }
             it.destroy();
@@ -277,10 +250,6 @@ class SignatureResolver extends Visitor {
         
         ss.setState(Scope:STATE_SIGNATURE_RESOLVED);
         this._traceStop(ss.getFullQualifiedName(), "resolved struct signature");
-        
-        // descent into referenced classes/structs
-        node.getConsts().acceptAll(this.visitor());
-        node.getVariables().acceptAll(this.visitor());
         
         // DEBUG
         /*{
@@ -296,12 +265,54 @@ class SignatureResolver extends Visitor {
         _curScope = tmpScope;
         return true;
     }
+
+    [int] visitMethodDecl(MethodDeclNode node) {
+        Scope tmpScope := _curScope;
+        _curScope = node.getScope();
+        
+        int success = true;
+        success = node.getReturnTypes().acceptAll(this.visitor()) && success;
+        success = node.getParameters().acceptAll(this.visitor()) && success;
+        if (!node.isAbstract()) { success = node.getBody().accept(this.visitor()) && success; }
+        
+        _curScope = tmpScope;
+        return success;
+    }
+    
+    [int] visitVariableDecl(VariableDeclNode node) {
+        _curScope.registerVariable(node);
+        if (this.rt().cast(BlockScope:CLASSNAME, _curScope)) {
+            // Dive into variable declarations scopes only within methods/blocks.
+            // Do not change scope for const/instance variables. 
+            _curScope = node.getScope();
+        }
+        return node.getTypeRef().accept(this.visitor());
+    }
+    
     // instructions
+    [int] visitBlockInst(BlockInstNode node) {
+        Scope tmpScope := _curScope;
+        _curScope = _curScope.createBlockScope(node).scope();
+        
+        int success = true;
+        success = node.getInstructions().acceptAll(this.visitor()) && success;
+        
+        _curScope = tmpScope;
+        return success;
+    }
     
     // expressions
+    [int] visitVariableInitInst(VariableInitInstNode node) {
+        int success = true;
+        success = node.getInitializer().accept(this.visitor()) && success;
+        // variable declarations *after* initializers to make them not accessible *in* initializers
+        success = node.getVariables().acceptAll(this.visitor()) && success;
+        return success;
+    }
     
     // references
     [int] visitClassRef(ClassRefNode node) {
+        // descent into referenced classes/structs
         ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
         if (cs && cs.getState() < Scope:STATE_RESOLVING_SIGNATURE) {
             return cs.getClassDeclNode().accept(this.visitor());

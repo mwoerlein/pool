@@ -5,17 +5,26 @@ version = 0.1.0
 */
 namespace pool::compiler::ast::node::instruction;
 
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::NodeList;
+use pool::compiler::ast::scope::BlockScope;
+
 use sys::stream::OStream;
 
 class BlockInstNode extends InstructionNode {
 
+    BlockScope _scope;
+    
     NodeList _instructions; //NodeList<InstructionNode>
 
     [] __init() {
         _instructions = this.createOwn(NodeList:CLASSNAME);
     }
+    
+    [BlockInstNode] setBlockScope(BlockScope scope) { _scope = scope; return this; }
+    [BlockScope] getBlockScope() { return _scope; }
+    [Scope] getScope() { if (_scope) { return _scope.scope(); } return null; }
     
     [BlockInstNode] addInstruction(InstructionNode inst) { _instructions.add(this.own(inst)); return this; }
     [NodeList] getInstructions() { return _instructions; }

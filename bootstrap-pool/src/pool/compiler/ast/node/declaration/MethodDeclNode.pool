@@ -6,9 +6,12 @@ version = 0.1.0
 namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::NodeList;
 use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::scope::MethodScope;
+
 use sys::core::String;
 use sys::stream::OStream;
 
@@ -18,6 +21,8 @@ class MethodDeclNode extends Node {
     int KIND_ABSTRACT   := 1;
     int KIND_NAKED      := 2;
     int KIND_ENTRY      := 3;
+    
+    MethodScope _scope;
     
     String _name;
     NodeList _parameters; //NodeList<VariableDeclNode>
@@ -33,6 +38,10 @@ class MethodDeclNode extends Node {
         _name = this.createOwn(String:CLASSNAME);
         _index = -1;
     }
+    
+    [MethodDeclNode] setMethodScope(MethodScope scope) { _scope = scope; return this; }
+    [MethodScope] getMethodScope() { return _scope; }
+    [Scope] getScope() { if (_scope) { return _scope.scope(); } return null; }
     
     [MethodDeclNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
