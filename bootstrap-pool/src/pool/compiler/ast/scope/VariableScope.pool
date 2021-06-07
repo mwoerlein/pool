@@ -14,9 +14,13 @@ use sys::stream::OStream;
 class VariableScope extends Scope {
 
     VariableDeclNode _variableDecl;
+    int _structOffset;
     
     [VariableScope] setVariableDeclNode(VariableDeclNode variableDecl) { _variableDecl = variableDecl; return this; }
     [VariableDeclNode] getVariableDeclNode() { return _variableDecl; }
+    
+    [VariableScope] setStructOffset(int offset) { _structOffset = offset; return this; }
+    [int] getStructOffset() { return _structOffset; }
 
     [OStream] printDebugName(OStream stream) {
         stream.printCString("VariableScope of ").print(_variableDecl);

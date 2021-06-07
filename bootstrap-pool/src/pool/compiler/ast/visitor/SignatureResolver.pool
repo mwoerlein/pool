@@ -242,6 +242,7 @@ class SignatureResolver extends Visitor {
             while (it.hasNext()) {
                 VariableDeclNode vn := it.next();
                 vn.accept(this.visitor());
+                vn.getVariableScope().setStructOffset(sizeOf);
                 sizeOf += vn.getTypeRef().getResolvedType().getSizeOfVariable(); 
             }
             it.destroy();
