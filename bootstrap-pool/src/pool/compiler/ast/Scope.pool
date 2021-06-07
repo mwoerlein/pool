@@ -33,6 +33,9 @@ class Scope extends sys::core::Object {
     int STATE_REGISTERED                :=  5;
     int STATE_RESOLVING_TYPE_REFERENCES := 10;
     int STATE_TYPE_REFERENCES_RESOLVED  := 15;
+    int STATE_VALIDATING_HIERARCHY      := 20;
+    int STATE_HIERARCHY_INVALID         := 23;
+    int STATE_HIERARCHY_VALIDATED       := 25;
     int STATE_RESOLVING_SIGNATURE       := 30;
     int STATE_SIGNATURE_RESOLVED        := 35;
     int STATE_RESOLVING_INSTRUCTIONS    := 40;
