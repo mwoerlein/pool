@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::ast::node::expression;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Type;
 use pool::compiler::ast::Visitor;
 use sys::core::String;
@@ -38,6 +39,10 @@ class ExpressionNode extends Node {
     
     int UNARY_NOT       := 0x41;
 
+    Scope _scope;
+    [ExpressionNode] setScope(Scope scope) { _scope = scope; return this; }
+    [Scope] getScope() { return _scope; }
+    
     Type _resolvedType;
     [ExpressionNode] setResolvedType(Type type) { _resolvedType = type; return this; }
     [Type] getResolvedType() { return _resolvedType; }

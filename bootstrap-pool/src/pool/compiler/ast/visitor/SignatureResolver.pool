@@ -301,18 +301,141 @@ class SignatureResolver extends Visitor {
         _curScope = tmpScope;
         return success;
     }
-    
-    // expressions
+    [int] visitExpressionInst(ExpressionInstNode node) {
+        node.setScope(_curScope);
+        
+        return node.getExpression().accept(this.visitor());
+    }
+    [int] visitIfInst(IfInstNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        success = node.getCondition().accept(this.visitor()) && success;
+        if (node.hasTrueBlock()) { success = node.getTrueBlock().accept(this.visitor()) && success; }
+        if (node.hasFalseBlock()) { success = node.getFalseBlock().accept(this.visitor()) && success; }
+        return success;
+    }
+    [int] visitInlinePasmInst(InlinePasmInstNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        if (node.hasIn()) { success = node.getIn().acceptAll(this.visitor()) && success; }
+        if (node.hasOut()) { success = node.getOut().acceptAll(this.visitor()) && success; }
+        return success;
+    }
+    [int] visitReturnInst(ReturnInstNode node) {
+        node.setScope(_curScope);
+        
+        return !node.hasValues() || node.getValues().acceptAll(this.visitor());
+    }
     [int] visitVariableInitInst(VariableInitInstNode node) {
+        node.setScope(_curScope);
+        
         int success = true;
         success = node.getInitializer().accept(this.visitor()) && success;
         // variable declarations *after* initializers to make them not accessible *in* initializers
         success = node.getVariables().acceptAll(this.visitor()) && success;
         return success;
     }
+    [int] visitWhileInst(WhileInstNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        success = node.getCondition().accept(this.visitor()) && success;
+        success = node.getBlock().accept(this.visitor()) && success;
+        return success;
+    }
+    
+    // expressions
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        success = node.getVariable().accept(this.visitor()) && success;
+        success = node.getValue().accept(this.visitor()) && success;
+        return success;
+    }
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        success = node.getLeft().accept(this.visitor()) && success;
+        success = node.getRight().accept(this.visitor()) && success;
+        return success;
+    }
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
+        node.setScope(_curScope);
+        
+        return node.getVariable().accept(this.visitor());
+    }
+    [int] visitAssignmentExpr(AssignmentExprNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        success = node.getVariable().accept(this.visitor()) && success;
+        success = node.getValue().accept(this.visitor()) && success;
+        return success;
+    }
+    [int] visitConstCStringExpr(ConstCStringExprNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
+    [int] visitConstIntExpr(ConstIntExprNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        success = node.getLeft().accept(this.visitor()) && success;
+        success = node.getRight().accept(this.visitor()) && success;
+        return success;
+    }
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
+        node.setScope(_curScope);
+        
+        return node.getExpression().accept(this.visitor());
+    }
+    [int] visitMethodCallExpr(MethodCallExprNode node) {
+        node.setScope(_curScope);
+        
+        int success = true;
+        if (node.hasContext()) { success = node.getContext().accept(this.visitor()) && success; }
+        if (node.hasParameters()) { success = node.getParameters().acceptAll(this.visitor()) && success; }
+        return success;
+    }
+    [int] visitNullExpr(NullExprNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
+    [int] visitSignExpr(SignExprNode node) {
+        node.setScope(_curScope);
+        
+        return node.getExpression().accept(this.visitor());
+    }
+    [int] visitThisExpr(ThisExprNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
+    [int] visitVariableExpr(VariableExprNode node) {
+        node.setScope(_curScope);
+        
+        return !node.hasContext() || node.getContext().accept(this.visitor());
+    }
     
     // references
+    [int] visitAllRef(AllRefNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
+    [int] visitAnyRef(AnyRefNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
     [int] visitClassRef(ClassRefNode node) {
+        node.setScope(_curScope);
+        
         // descent into referenced classes/structs
         ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
         if (cs && cs.getState() < Scope:STATE_RESOLVING_SIGNATURE) {
@@ -323,6 +446,14 @@ class SignatureResolver extends Visitor {
             return ss.getStructDeclNode().accept(this.visitor());
         }
         return false;
+    }
+    [int] visitCStringRef(CStringRefNode node) {
+        node.setScope(_curScope);
+        return true;
+    }
+    [int] visitIntRef(IntRefNode node) {
+        node.setScope(_curScope);
+        return true;
     }
     
     // helper

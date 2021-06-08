@@ -6,12 +6,17 @@ version = 0.1.0
 namespace pool::compiler::ast::node::instruction;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Visitor;
 use sys::core::String;
 use sys::stream::OStream;
 
 class InstructionNode extends Node {
 
+    Scope _scope;
+    [InstructionNode] setScope(Scope scope) { _scope = scope; return this; }
+    [Scope] getScope() { return _scope; }
+    
     // TODO: remove with implicit cast
     [InstructionNode] instruction() { return this; }
 }

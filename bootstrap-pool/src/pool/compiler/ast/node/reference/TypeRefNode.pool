@@ -6,10 +6,15 @@ version = 0.1.0
 namespace pool::compiler::ast::node::reference;
 
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Type;
 
 class TypeRefNode extends Node {
 
+    Scope _scope;
+    [TypeRefNode] setScope(Scope scope) { _scope = scope; return this; }
+    [Scope] getScope() { return _scope; }
+    
     Type _resolvedType;
     [TypeRefNode] setResolvedType(Type type) { _resolvedType = type; return this; }
     [Type] getResolvedType() { return _resolvedType; }
