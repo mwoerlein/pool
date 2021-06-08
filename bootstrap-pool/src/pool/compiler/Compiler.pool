@@ -9,9 +9,10 @@ use pool::compiler::ast::NamedType;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::visitor::InstructionResolver;
 use pool::compiler::ast::visitor::PrettyPrinter;
-use pool::compiler::ast::visitor::TypeReferenceResolver;
 use pool::compiler::ast::visitor::SignatureResolver;
+use pool::compiler::ast::visitor::TypeReferenceResolver;
 use pool::compiler::parser::Parser;
 use pool::storage::ClassPathStorage;
 use pool::storage::PoolStorage;
@@ -32,6 +33,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     PrettyPrinter pp;
     TypeReferenceResolver resolveTypeRefs;
     SignatureResolver resolveSignature;
+    InstructionResolver resolveInstructions;
     AnyList preparedUnits; // LinkedList<TranslationUnitNode>
     
     [] __init() {
@@ -42,12 +44,14 @@ class Compiler extends pool::compiler::ast::TypeManager {
         resolveTypeRefs = this.createOwn(TypeReferenceResolver:CLASSNAME);
         resolveTypeRefs.setTypeManager(this.typeManager());
         resolveSignature = this.createOwn(SignatureResolver:CLASSNAME);
+        resolveInstructions = this.createOwn(InstructionResolver:CLASSNAME);
     }
     [Compiler] initLogger(Logger logger) {
         this.setLogger(logger);
         parser.setLogger(logger);
         resolveTypeRefs.setLogger(logger);
         resolveSignature.setLogger(logger);
+        resolveInstructions.setLogger(logger);
         if (pp) { pp.setLogger(logger); }
         return this;
     }
@@ -139,11 +143,11 @@ class Compiler extends pool::compiler::ast::TypeManager {
         this._debugStep(fqn, "resolve signature");
         resolveSignature.visit(node.node());
         if (this.hasErrors()) { return false; }
-/*        
+        
         this._debugStep(fqn, "resolve instructions");
         resolveInstructions.visit(node.node());
         if (this.hasErrors()) { return false; }
-        
+/*        
         this._debugStep(fqn, "generate PIR");
         generatePIR.visit(node.node());
         if (this.hasErrors()) { return false; }

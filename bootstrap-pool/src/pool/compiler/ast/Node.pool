@@ -40,12 +40,18 @@ class Node extends sys::core::Object {
     [int] getLastLine() { return lastLine; }
     [int] getLastColumn() { return lastColumn; }
     
+    [Scope] getScope() { return null; }
+    
     [OStream] printToStream(OStream stream) {
         return this.printDebugName(stream);
     }
     
     [OStream] debugToStream(OStream stream) {
-        return this.printDebugName(stream)
+        return this.debugInfoToStream(this.printDebugName(stream));
+    }
+    
+    [OStream] debugInfoToStream(OStream stream) {
+        return stream
             .printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)
             .printChar('-')

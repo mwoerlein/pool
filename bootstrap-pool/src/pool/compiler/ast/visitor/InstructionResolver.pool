@@ -1,0 +1,172 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::visitor;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Type;
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+
+use pool::compiler::ast::node::expression::ArithAssignmentExprNode;
+use pool::compiler::ast::node::expression::ArithBinaryExprNode;
+use pool::compiler::ast::node::expression::ArithUnaryExprNode;
+use pool::compiler::ast::node::expression::AssignmentExprNode;
+use pool::compiler::ast::node::expression::ConstCStringExprNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
+use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
+use pool::compiler::ast::node::expression::MethodCallExprNode;
+use pool::compiler::ast::node::expression::NullExprNode;
+use pool::compiler::ast::node::expression::SignExprNode;
+use pool::compiler::ast::node::expression::ThisExprNode;
+use pool::compiler::ast::node::expression::VariableExprNode;
+
+use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
+
+use pool::compiler::ast::node::reference::AllRefNode;
+use pool::compiler::ast::node::reference::AnyRefNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::IntRefNode;
+use pool::compiler::ast::node::reference::TypeRefNode;
+
+use pool::compiler::ast::NamedType;
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::TypeManager;
+use pool::compiler::ast::scope::BlockScope;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::StructScope;
+use pool::compiler::ast::scope::UnitScope;
+use pool::compiler::ast::scope::VariableScope;
+use pool::compiler::ast::scope::IntType;
+
+use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::String;
+use sys::stream::OStream;
+
+/**
+ * TODO
+ * error detection:
+ * - TODO
+ */
+class InstructionResolver extends Visitor {
+
+    Scope _curScope;
+    
+    // declarations
+    [int] visitTranslationUnit(TranslationUnitNode node) {
+        this.crit().print(node.getName()).printCString(": InstructionResolver only works for classes/structs, not for translation units!");
+        return false;
+    }
+    
+    [int] visitClassDecl(ClassDeclNode node) {
+        Scope tmpScope := _curScope;
+        ClassScope cs := node.getClassScope();
+        if (!cs || cs.getState() < Scope:STATE_SIGNATURE_RESOLVED) {
+            this.error().print(node.getName()).printCString(": signature must be resolved before instructions!");
+            return false;
+        }
+        if (cs.getState() >= Scope:STATE_INSTRUCTIONS_RESOLVED) {
+            return true;
+        }
+        
+        cs.setState(Scope:STATE_RESOLVING_INSTRUCTIONS);
+        this._traceStart(cs.getFullQualifiedName(), "resolving instructions");
+        
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        node.getMethods().acceptAll(this.visitor());
+        
+        cs.setState(Scope:STATE_INSTRUCTIONS_RESOLVED);
+        this._traceStop(cs.getFullQualifiedName(), "resolved instructions");
+        
+        return true;
+    }
+    
+    [int] visitStructDecl(StructDeclNode node) {
+        Scope tmpScope := _curScope;
+        StructScope ss := node.getStructScope();
+        if (!ss || ss.getState() < Scope:STATE_SIGNATURE_RESOLVED) {
+            this.error().print(node.getName()).printCString(": signature must be resolved before instructions!");
+            return false;
+        }
+        if (ss.getState() >= Scope:STATE_INSTRUCTIONS_RESOLVED) {
+            return true;
+        }
+        
+        ss.setState(Scope:STATE_RESOLVING_INSTRUCTIONS);
+        this._traceStart(ss.getFullQualifiedName(), "resolving instructions");
+        
+        node.getConsts().acceptAll(this.visitor());
+        node.getVariables().acceptAll(this.visitor());
+        
+        ss.setState(Scope:STATE_SIGNATURE_RESOLVED);
+        this._traceStop(ss.getFullQualifiedName(), "resolved instructions");
+        
+        return true;
+    }
+
+    // instructions
+    
+    // expressions
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
+        int success = node.getExpression().accept(this.visitor());
+        Type rt = node.getExpression().getResolvedType();
+        if (!rt || !rt.isBool()) {
+            this.validationError(node.node())
+                .printCString("invalid expression type '").print(rt).printCString("' in ").print(node);
+            return false;
+        }
+        return success;
+    }
+    
+    // references
+    [int] visitClassRef(ClassRefNode node) {
+        // descent into referenced classes/structs
+        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
+        if (cs && cs.getState() < Scope:STATE_RESOLVING_INSTRUCTIONS) {
+            return cs.getClassDeclNode().accept(this.visitor());
+        }
+        StructScope ss := this.rt().cast(StructScope:CLASSNAME, node.getResolvedType());
+        if (ss && ss.getState() < Scope:STATE_RESOLVING_INSTRUCTIONS) {
+            return ss.getStructDeclNode().accept(this.visitor());
+        }
+        return false;
+    }
+    
+    // helper
+    [OStream] validationError(Node node) {
+        OStream stream = this.error();
+        if (node.getScope()) {
+            node.debugInfoToStream(stream.print(node.getScope().getClassDeclNode().getName()));
+        } else {
+            node.debugToStream(stream);
+        }
+        return stream.printCString(": ");
+    }
+    
+}
