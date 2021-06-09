@@ -50,6 +50,7 @@ use pool::compiler::ast::node::reference::TypeRefNode;
 
 use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::Type;
 use pool::compiler::ast::TypeManager;
 use pool::compiler::ast::scope::BlockScope;
 use pool::compiler::ast::scope::ClassScope;
@@ -64,12 +65,14 @@ use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
 
 /**
- * TODO
+ * Resolve and validate instructions/expressions
+ *
  * error detection:
  * - TODO
  */
@@ -129,19 +132,212 @@ class InstructionResolver extends Visitor {
         
         return true;
     }
+    [int] visitVariableDecl(VariableDeclNode node) {
+        int success = node.getTypeRef().accept(this.visitor());
+        if (!node.isResolved()) {
+            node.setResolvedType(this._classToInstance(node.getTypeRef().getResolvedType()));
+        }
+        return success;
+    }
 
     // instructions
+    [int] visitIfInst(IfInstNode node) {
+        int success = true;
+        success = node.getCondition().accept(this.visitor()) && success;
+        Type rt = node.getCondition().getResolvedType();
+        if (!rt || !rt.isBool()) {
+            return this.invalidTypeError(node.node(), rt, "condition");
+        }
+        if (node.hasTrueBlock()) { success = node.getTrueBlock().accept(this.visitor()) && success; }
+        if (node.hasFalseBlock()) { success = node.getFalseBlock().accept(this.visitor()) && success; }
+        return success;
+    }
+    [int] visitReturnInst(ReturnInstNode node) {
+        // TODO: compare values.resolvedTypes with method resultTypes
+        return !node.hasValues() || node.getValues().acceptAll(this.visitor());
+    }
+    [int] visitVariableInitInst(VariableInitInstNode node) {
+        int success = true;
+        success = node.getVariables().acceptAll(this.visitor()) && success;
+        success = node.getInitializer().accept(this.visitor()) && success;
+        // TODO: compare initializer.resolvedType with variables.resolvedType
+        return success;
+    }
+    [int] visitWhileInst(WhileInstNode node) {
+        int success = true;
+        success = node.getCondition().accept(this.visitor()) && success;
+        Type rt = node.getCondition().getResolvedType();
+        if (!rt || !rt.isBool()) {
+            return this.invalidTypeError(node.node(), rt, "condition");
+        }
+        success = node.getBlock().accept(this.visitor()) && success;
+        return success;
+    }
     
     // expressions
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
+        int success = true;
+        success = node.getVariable().accept(this.visitor()) && success;
+        Type varRT = node.getVariable().getResolvedType();
+        if (!this.rt().cast(IntType:CLASSNAME, varRT)) {
+            return this.invalidTypeError(node.node(), varRT, "variable");
+        }
+        success = node.getValue().accept(this.visitor()) && success;
+        Type valRT = node.getValue().getResolvedType();
+        if (!this.rt().cast(IntType:CLASSNAME, valRT)) {
+            return this.invalidTypeError(node.node(), valRT, "value");
+        }
+        node.setResolvedType(varRT);
+        return success;
+    }
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
+        int success = true;
+        success = node.getLeft().accept(this.visitor()) && success;
+        Type leftRT = node.getLeft().getResolvedType();
+        if (!this.rt().cast(IntType:CLASSNAME, leftRT)) {
+            return this.invalidTypeError(node.node(), leftRT, "left");
+        }
+        success = node.getRight().accept(this.visitor()) && success;
+        Type rightRT = node.getRight().getResolvedType();
+        if (!this.rt().cast(IntType:CLASSNAME, rightRT)) {
+            return this.invalidTypeError(node.node(), rightRT, "right");
+        }
+        node.setResolvedType(leftRT);
+        return success;
+    }
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
+        int success = true;
+        success = node.getVariable().accept(this.visitor()) && success;
+        Type varRT = node.getVariable().getResolvedType();
+        if (!this.rt().cast(IntType:CLASSNAME, varRT)) {
+            return this.invalidTypeError(node.node(), varRT, "variable");
+        }
+        node.setResolvedType(varRT);
+        return success;
+    }
+    [int] visitAssignmentExpr(AssignmentExprNode node) {
+        int success = true;
+        success = node.getVariable().accept(this.visitor()) && success;
+        success = node.getValue().accept(this.visitor()) && success;
+        // TODO: compare variable.resolvedType with value.resolvedType
+        Type varRT = node.getVariable().getResolvedType();
+        node.setResolvedType(varRT);
+        return success;
+    }
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
+        int success = true;
+        success = node.getLeft().accept(this.visitor()) && success;
+        success = node.getRight().accept(this.visitor()) && success;
+        Type leftRT = node.getLeft().getResolvedType();
+        Type rightRT = node.getRight().getResolvedType();
+        if (node.isAnd() || node.isOr()) {
+            if (!leftRT || !leftRT.isBool()) {
+                return this.invalidTypeError(node.node(), leftRT, "left");
+            }
+            if (!rightRT || !rightRT.isBool()) {
+                return this.invalidTypeError(node.node(), rightRT, "right");
+            }
+        } else {
+            if (!this.rt().cast(IntType:CLASSNAME, leftRT)) {
+                return this.invalidTypeError(node.node(), leftRT, "left");
+            }
+            if (!this.rt().cast(IntType:CLASSNAME, rightRT)) {
+                return this.invalidTypeError(node.node(), rightRT, "right");
+            }
+        }
+        // already resolved in TypeReferenceResolver
+        //node.setResolvedType(leftRT);
+        return success;
+    }
     [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
         int success = node.getExpression().accept(this.visitor());
         Type rt = node.getExpression().getResolvedType();
         if (!rt || !rt.isBool()) {
-            this.validationError(node.node())
-                .printCString("invalid expression type '").print(rt).printCString("' in ").print(node);
+            return this.invalidTypeError(node.node(), rt, "expression");
+        }
+        // already resolved in TypeReferenceResolver
+        //node.setResolvedType(leftRT);
+        return success;
+    }
+    [int] visitMethodCallExpr(MethodCallExprNode node) {
+        Scope contextScope = node.getScope();
+        if (node.hasContext()) {
+            node.getContext().accept(this.visitor());
+            Type cRT = node.getContext().getResolvedType();
+            if (
+                !this.rt().cast(InstanceScope:CLASSNAME, cRT)
+                && !this.rt().cast(ClassScope:CLASSNAME, cRT)
+            ) {
+                //return this.invalidTypeError(node.node(), cRT, "method call context");
+                this.validationError(node.node())
+                    .printCString("invalid method call context '").print(node.getContext()).printChar('\'');
+                return false;
+            }
+            contextScope = this.rt().cast(Scope:CLASSNAME, cRT);
+        }
+        if (node.hasParameters() && !node.getParameters().acceptAll(this.visitor())) {
             return false;
         }
+        MethodScope ms = contextScope.getMethod(node.getName());
+        if (!ms) {
+            this.validationError(node.node())
+                .printCString("unknown method '").print(node.getName())
+                .printCString("' in ").print(contextScope);
+            return false;
+        }
+        // TODO: handle global method calls
+        // TODO: handle multi return types
+        // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
+        // TODO: convert implicit "this" to explicit "this"
+        AnyList returns = ms.getReturnTypes();
+        if (returns.size() == 1) {
+            node.setResolvedType(returns.first());
+        }
+        return true;
+    }
+    [int] visitSignExpr(SignExprNode node) {
+        int success = node.getExpression().accept(this.visitor());
+        Type rt = node.getExpression().getResolvedType();
+        if (!this.rt().cast(IntType:CLASSNAME, rt)) {
+            return this.invalidTypeError(node.node(), rt, "expression");
+        }
+        node.setResolvedType(rt);
         return success;
+    }
+    [int] visitThisExpr(ThisExprNode node) {
+        node.setResolvedType(node.getScope().getClassDeclNode().getInstanceScope().type());
+        return true;
+    }
+    [int] visitVariableExpr(VariableExprNode node) {
+        Scope contextScope = node.getScope();
+        if (node.hasContext()) {
+            node.getContext().accept(this.visitor());
+            Type cRT = node.getContext().getResolvedType();
+            contextScope = this.rt().cast(Scope:CLASSNAME, cRT);
+            if (!contextScope) {
+                return this.invalidTypeError(node.node(), cRT, "variable access context");
+            }
+        }
+        VariableScope rv = contextScope.getVariable(node.getName());
+        if (!rv) {
+            this.validationError(node.node())
+                .printCString("unknown variable '").print(node.getName())
+                .printCString("' in ").print(contextScope);
+            return false;
+        }
+        VariableDeclNode decl = rv.getVariableDeclNode();
+        // ensure variable decl to be resolved
+        decl.accept(this.visitor());
+        node.setResolvedType(decl.getResolvedType());
+    /* TODO
+        // convert implicit "this" to explicit "this"
+        if (!variable.context && decl.scope->parent->isInstance()) {
+            variable.context = &env().create<ThisExprNode>();
+            variable.context->scope = variable.scope;
+            variable.context->accept(*this);
+        }
+    */
+        return true;
     }
     
     // references
@@ -169,4 +365,18 @@ class InstructionResolver extends Visitor {
         return stream.printCString(": ");
     }
     
+    [int] invalidTypeError(Node node, Type type, cstring msg) {
+        this.validationError(node)
+            .printCString("invalid ").printCString(msg).printCString(" type '").print(type)
+            .printCString("' in ").print(node);
+        return false;
+    }
+    
+    [Type] _classToInstance(Type t) {
+        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, t);
+        if (cs) {
+            return cs.getInstanceScope().type();
+        }
+        return t;
+    }
 }

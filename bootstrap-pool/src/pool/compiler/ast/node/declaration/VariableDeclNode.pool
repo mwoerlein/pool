@@ -7,6 +7,7 @@ namespace pool::compiler::ast::node::declaration;
 
 use pool::compiler::ast::Node;
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::Type;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::reference::TypeRefNode;
 use pool::compiler::ast::scope::VariableScope;
@@ -28,6 +29,11 @@ class VariableDeclNode extends Node {
     [VariableDeclNode] setVariableScope(VariableScope scope) { _scope = scope; return this; }
     [VariableScope] getVariableScope() { return _scope; }
     [Scope] getScope() { if (_scope) { return _scope.scope(); } return null; }
+    
+    Type _resolvedType;
+    [VariableDeclNode] setResolvedType(Type type) { _resolvedType = type; return this; }
+    [Type] getResolvedType() { return _resolvedType; }
+    [int] isResolved() { return !!_resolvedType; }
     
     [VariableDeclNode] setName(String name) { _name.assignString(name); return this; }
     [VariableDeclNode] setCName(cstring name) { _name.assignCString(name); return this; }
