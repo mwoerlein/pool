@@ -6,8 +6,11 @@ version = 0.1.0
 namespace pool::compiler::ast::scope;
 
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::Type;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
+
+use sys::core::anycollection::AnyList;
 use sys::stream::OStream;
 
 class MethodScope extends Scope {
@@ -15,6 +18,8 @@ class MethodScope extends Scope {
     MethodDeclNode _methodDecl;
     /* method ID for virtual method calls */
     int _index;
+    AnyList _parameterTypes; //AnyList<Type>
+    AnyList _returnTypes; //AnyList<Type>
 
     [] __init() {
         this._initScope();
@@ -23,6 +28,8 @@ class MethodScope extends Scope {
     
     [] _initMethodScope() {
         _index = -1;
+        _parameterTypes = this.createOwn(AnyList:CLASSNAME);
+        _returnTypes = this.createOwn(AnyList:CLASSNAME);
     }
     
     [MethodScope] setMethodDeclNode(MethodDeclNode methodDecl) { _methodDecl = methodDecl; return this; }
@@ -31,6 +38,12 @@ class MethodScope extends Scope {
     [MethodScope] setIndex(int i) { _index = i; return this; }
     [int] getIndex() { return _index; }
     
+    [MethodScope] addParameterType(Type type) { _parameterTypes.add(type); return this; }
+    [AnyList] getParameterTypes() { return _parameterTypes; }
+    
+    [MethodScope] addReturnType(Type type) { _returnTypes.add(type); return this; }
+    [AnyList] getReturnTypes() { return _returnTypes; }
+
     [OStream] printDebugName(OStream stream) {
         stream.printCString("MethodScope of ").print(_methodDecl);
         ClassDeclNode c = this.getClassDeclNode();

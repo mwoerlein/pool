@@ -49,6 +49,7 @@ use pool::compiler::ast::node::reference::TypeRefNode;
 
 use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::Type;
 use pool::compiler::ast::TypeManager;
 use pool::compiler::ast::scope::BlockScope;
 use pool::compiler::ast::scope::ClassScope;
@@ -72,6 +73,7 @@ use sys::stream::OStream;
  * - collect inherited and own constants
  * - collect inherited and own variables
  * - collect inherited and own methods
+ * - collect parameter/return types of methods
  * - build scope hierarchy
  *
  * error detection:
@@ -270,11 +272,29 @@ class SignatureResolver extends Visitor {
     [int] visitMethodDecl(MethodDeclNode node) {
         Scope tmpScope := _curScope;
         _curScope = node.getScope();
-        
+        MethodScope ms = node.getMethodScope();
+        Visitor me = this.visitor();
         int success = true;
-        success = node.getReturnTypes().acceptAll(this.visitor()) && success;
-        success = node.getParameters().acceptAll(this.visitor()) && success;
-        if (!node.isAbstract()) { success = node.getBody().accept(this.visitor()) && success; }
+        
+        {
+            AnyIterator it = node.getReturnTypes().iterator();
+            while (it.hasNext()) {
+                TypeRefNode ref = it.next();
+                success = ref.accept(me) && success;
+                ms.addReturnType(this._classToInstance(ref.getResolvedType()));
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = node.getParameters().iterator();
+            while (it.hasNext()) {
+                VariableDeclNode varDeclNode = it.next();
+                success = varDeclNode.accept(me) && success;
+                ms.addParameterType(this._classToInstance(varDeclNode.getTypeRef().getResolvedType()));
+            }
+            it.destroy();
+        }
+        if (!node.isAbstract()) { success = node.getBody().accept(me) && success; }
         
         _curScope = tmpScope;
         return success;
@@ -497,5 +517,13 @@ class SignatureResolver extends Visitor {
         }
         cs.setState(Scope:STATE_HIERARCHY_VALIDATED);
         return true;
+    }
+    
+    [Type] _classToInstance(Type t) {
+        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, t);
+        if (cs) {
+            return cs.getInstanceScope().type();
+        }
+        return t;
     }
 }
