@@ -48,7 +48,7 @@ class Visitor extends sys::log::LoggerAware {
 
     int indent; // = 0
 
-    [int] visit(Node node) { return node.accept(this); }
+    [int] visit(Node node) { return node.accept(this.visitor()); }
 
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
@@ -61,7 +61,7 @@ class Visitor extends sys::log::LoggerAware {
     }
     [int] visitNamespaceDecl(NamespaceDeclNode node) { return true; }
     [int] visitUseStatement(UseStatementNode node) {
-        return node.getName().accept(this);
+        return node.getName().accept(this.visitor());
     }
     [int] visitClassDecl(ClassDeclNode node) {
         int success = true;
@@ -79,97 +79,97 @@ class Visitor extends sys::log::LoggerAware {
     }
     [int] visitMethodDecl(MethodDeclNode node) {
         int success = true;
-        success = node.getReturnTypes().acceptAll(this) && success;
-        success = node.getParameters().acceptAll(this) && success;
-        if (!node.isAbstract()) { success = node.getBody().accept(this) && success; }
+        success = node.getReturnTypes().acceptAll(this.visitor()) && success;
+        success = node.getParameters().acceptAll(this.visitor()) && success;
+        if (!node.isAbstract()) { success = node.getBody().accept(this.visitor()) && success; }
         return success;
     }
     [int] visitVariableDecl(VariableDeclNode node) {
-        return node.getTypeRef().accept(this);
+        return node.getTypeRef().accept(this.visitor());
     }
     
     // instructions
     [int] visitBlockInst(BlockInstNode node) {
-        return node.getInstructions().acceptAll(this);
+        return node.getInstructions().acceptAll(this.visitor());
     }
     [int] visitExpressionInst(ExpressionInstNode node) {
-        return node.getExpression().accept(this);
+        return node.getExpression().accept(this.visitor());
     }
     [int] visitIfInst(IfInstNode node) {
         int success = true;
-        success = node.getCondition().accept(this) && success;
-        if (node.hasTrueBlock()) { success = node.getTrueBlock().accept(this) && success; }
-        if (node.hasFalseBlock()) { success = node.getFalseBlock().accept(this) && success; }
+        success = node.getCondition().accept(this.visitor()) && success;
+        if (node.hasTrueBlock()) { success = node.getTrueBlock().accept(this.visitor()) && success; }
+        if (node.hasFalseBlock()) { success = node.getFalseBlock().accept(this.visitor()) && success; }
         return success;
     }
     [int] visitInlinePasmInst(InlinePasmInstNode node) {
         int success = true;
-        if (node.hasIn()) { success = node.getIn().acceptAll(this) && success; }
-        if (node.hasOut()) { success = node.getOut().acceptAll(this) && success; }
+        if (node.hasIn()) { success = node.getIn().acceptAll(this.visitor()) && success; }
+        if (node.hasOut()) { success = node.getOut().acceptAll(this.visitor()) && success; }
         return success;
     }
     [int] visitReturnInst(ReturnInstNode node) {
-        return !node.hasValues() || node.getValues().acceptAll(this);
+        return !node.hasValues() || node.getValues().acceptAll(this.visitor());
     }
     [int] visitVariableInitInst(VariableInitInstNode node) {
         int success = true;
-        success = node.getVariables().acceptAll(this) && success;
-        success = node.getInitializer().accept(this) && success;
+        success = node.getVariables().acceptAll(this.visitor()) && success;
+        success = node.getInitializer().accept(this.visitor()) && success;
         return success;
     }
     [int] visitWhileInst(WhileInstNode node) {
         int success = true;
-        success = node.getCondition().accept(this) && success;
-        success = node.getBlock().accept(this) && success;
+        success = node.getCondition().accept(this.visitor()) && success;
+        success = node.getBlock().accept(this.visitor()) && success;
         return success;
     }
     
     // expressions
     [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
         int success = true;
-        success = node.getVariable().accept(this) && success;
-        success = node.getValue().accept(this) && success;
+        success = node.getVariable().accept(this.visitor()) && success;
+        success = node.getValue().accept(this.visitor()) && success;
         return success;
     }
     [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
         int success = true;
-        success = node.getLeft().accept(this) && success;
-        success = node.getRight().accept(this) && success;
+        success = node.getLeft().accept(this.visitor()) && success;
+        success = node.getRight().accept(this.visitor()) && success;
         return success;
     }
     [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
-        return node.getVariable().accept(this);
+        return node.getVariable().accept(this.visitor());
     }
     [int] visitAssignmentExpr(AssignmentExprNode node) {
         int success = true;
-        success = node.getVariable().accept(this) && success;
-        success = node.getValue().accept(this) && success;
+        success = node.getVariable().accept(this.visitor()) && success;
+        success = node.getValue().accept(this.visitor()) && success;
         return success;
     }
     [int] visitConstCStringExpr(ConstCStringExprNode node) { return true; }
     [int] visitConstIntExpr(ConstIntExprNode node) { return true; }
     [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
         int success = true;
-        success = node.getLeft().accept(this) && success;
-        success = node.getRight().accept(this) && success;
+        success = node.getLeft().accept(this.visitor()) && success;
+        success = node.getRight().accept(this.visitor()) && success;
         return success;
     }
     [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
-        return node.getExpression().accept(this);
+        return node.getExpression().accept(this.visitor());
     }
     [int] visitMethodCallExpr(MethodCallExprNode node) {
         int success = true;
-        if (node.hasContext()) { success = node.getContext().accept(this) && success; }
-        if (node.hasParameters()) { success = node.getParameters().acceptAll(this) && success; }
+        if (node.hasContext()) { success = node.getContext().accept(this.visitor()) && success; }
+        if (node.hasParameters()) { success = node.getParameters().acceptAll(this.visitor()) && success; }
         return success;
     }
     [int] visitNullExpr(NullExprNode node) { return true; }
     [int] visitSignExpr(SignExprNode node) {
-        return node.getExpression().accept(this);
+        return node.getExpression().accept(this.visitor());
     }
     [int] visitThisExpr(ThisExprNode node) { return true; }
     [int] visitVariableExpr(VariableExprNode node) {
-        return !node.hasContext() || node.getContext().accept(this);
+        return !node.hasContext() || node.getContext().accept(this.visitor());
     }
     
     // references
