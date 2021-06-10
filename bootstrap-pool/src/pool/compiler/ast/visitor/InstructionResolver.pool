@@ -288,10 +288,14 @@ class InstructionResolver extends Visitor {
         // TODO: handle global method calls
         // TODO: handle multi return types
         // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
-        // TODO: convert implicit "this" to explicit "this"
         AnyList returns = ms.getReturnTypes();
         if (returns.size() == 1) {
             node.setResolvedType(returns.first());
+        }
+        
+        // convert implicit access to explicit access
+        if (!node.hasContext()) {
+            node.setContext(this._createResolvedContext(ms.scope(), contextScope));
         }
         return true;
     }
@@ -318,25 +322,22 @@ class InstructionResolver extends Visitor {
                 return this.invalidTypeError(node.node(), cRT, "variable access context");
             }
         }
-        VariableScope rv = contextScope.getVariable(node.getName());
-        if (!rv) {
+        VariableScope vs = contextScope.getVariable(node.getName());
+        if (!vs) {
             this.validationError(node.node())
                 .printCString("unknown variable '").print(node.getName())
                 .printCString("' in ").print(contextScope);
             return false;
         }
-        VariableDeclNode decl = rv.getVariableDeclNode();
+        VariableDeclNode decl = vs.getVariableDeclNode();
         // ensure variable decl to be resolved
         decl.accept(this.visitor());
         node.setResolvedType(decl.getResolvedType());
-    /* TODO
-        // convert implicit "this" to explicit "this"
-        if (!variable.context && decl.scope->parent->isInstance()) {
-            variable.context = &env().create<ThisExprNode>();
-            variable.context->scope = variable.scope;
-            variable.context->accept(*this);
+        
+        // convert implicit access to explicit access
+        if (!node.hasContext()) {
+            node.setContext(this._createResolvedContext(vs.scope(), contextScope));
         }
-    */
         return true;
     }
     
@@ -378,5 +379,26 @@ class InstructionResolver extends Visitor {
             return cs.getInstanceScope().type();
         }
         return t;
+    }
+    
+    [ExpressionNode] _createResolvedContext(Scope declScope, Scope refScope) {
+        Scope parent = declScope.getParent();
+        if (this.rt().cast(InstanceScope:CLASSNAME, parent)) {
+            // create this expression
+            ThisExprNode node = this.rt().createInstance(ThisExprNode:CLASSNAME);
+            node.setScope(refScope);
+            node.accept(this.visitor());
+            return node.expression();
+        }
+        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, parent);
+        if (cs) {
+            // create class reference
+            ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);
+            node.initName(cs.getClassDeclNode().getName());
+            node.setScope(refScope);
+            node.accept(this.visitor());
+            return node.expression();
+        }
+        return null;
     }
 }

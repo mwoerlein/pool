@@ -57,6 +57,7 @@ class Scope extends sys::core::Object {
     }
     
     [Scope] setParent(Scope parent) { _parent = parent; return this; }
+    [Scope] getParent() { return _parent; }
     [Scope] setState(int state) { _state = state; return this; }
     [int] getState() { return _state; }
 
