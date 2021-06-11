@@ -20,6 +20,7 @@ class ClassScope extends NamedType, Scope {
     ClassDeclNode _classDecl;
     
     AnyMap _supers;  // HashMap<String, ClassScope>
+    AnyMap _required;  // HashMap<String, ClassScope>
 
     [] __init() {
         this._initScope();
@@ -28,6 +29,7 @@ class ClassScope extends NamedType, Scope {
     
     [] _initClassScope() {
         _supers = this.createOwn(AnyMap:CLASSNAME);
+        _required = this.createOwn(AnyMap:CLASSNAME);
     }
     
     [ClassScope] setClassDeclNode(ClassDeclNode classDecl) { _classDecl = classDecl; return this; }
@@ -45,6 +47,10 @@ class ClassScope extends NamedType, Scope {
     }
     [int] hasSuper(ClassScope super) { return _supers.has(super.getFullQualifiedName()); }
     [AnyIterator] getSupers() { return _supers.values(); }
+    
+    [] markAsGloballyRequired(ClassScope required) { _required.set(required.getFullQualifiedName(), required); }
+    [int] hasGloballyRequiredClass(ClassScope scope) { return _required.has(scope.getFullQualifiedName()); }
+    [AnyIterator] getGloballyRequiredClasses() { return _required.values(); }
     
     [int] isBool() { return false; }
     

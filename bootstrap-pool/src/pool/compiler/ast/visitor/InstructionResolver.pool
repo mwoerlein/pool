@@ -153,8 +153,24 @@ class InstructionResolver extends Visitor {
         return success;
     }
     [int] visitReturnInst(ReturnInstNode node) {
+        MethodDeclNode method = node.getScope().getMethodDeclNode();
+        NodeList returnTypes = method.getReturnTypes();
+        if (!node.hasValues()) {
+            if (!returnTypes.isEmpty()) {
+                this.validationError(node.node())
+                    .printCString("missing return values for ").print(method);
+                return false;
+            }
+            return true;
+        }
+        NodeList values = node.getValues();
+        if (values.size() != returnTypes.size()) {
+            this.validationError(node.node())
+                .printCString("invalid return cardinality in ").print(method);
+            return false;
+        }
         // TODO: compare values.resolvedTypes with method resultTypes
-        return !node.hasValues() || node.getValues().acceptAll(this.visitor());
+        return values.acceptAll(this.visitor());
     }
     [int] visitVariableInitInst(VariableInitInstNode node) {
         int success = true;
@@ -280,17 +296,26 @@ class InstructionResolver extends Visitor {
         }
         MethodScope ms = contextScope.getMethod(node.getName());
         if (!ms) {
-            this.validationError(node.node())
-                .printCString("unknown method '").print(node.getName())
-                .printCString("' in ").print(contextScope);
+            if (this.rt().cast(ClassScope:CLASSNAME, contextScope)) {
+                this.validationError(node.node())
+                    .printCString("unknown global method '").print(node.getName())
+                    .printCString("' in ").print(contextScope);
+            } else {
+                this.validationError(node.node())
+                    .printCString("unknown method '").print(node.getName())
+                    .printCString("' in ").print(contextScope);
+            }
             return false;
         }
-        // TODO: handle global method calls
         // TODO: handle multi return types
         // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
         AnyList returns = ms.getReturnTypes();
         if (returns.size() == 1) {
             node.setResolvedType(returns.first());
+        }
+        ClassScope cs = this.rt().cast(ClassScope:CLASSNAME, ms.getParent());
+        if (cs) {
+            node.getScope().getClassDeclNode().getClassScope().markAsGloballyRequired(cs);
         }
         
         // convert implicit access to explicit access
