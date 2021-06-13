@@ -1,0 +1,46 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler;
+
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyIterator;
+
+class TestLogger extends sys::log::Logger {
+
+    [] __init() {
+        this._initLogger();
+    }
+    
+    [int] validate(AnyMap expectedMessages) {
+        // TODO: print all errors after test suite
+        sys::stream::OStream err = this.rt().err();
+        int ret = true;
+        {
+            AnyIterator it = _entries.iterator();
+            while (it.hasNext()) {
+                sys::log::LogEntry e = it.next();
+                if (e.getLevel() < _minLevel) { /* ignore non errors */ }
+                else if (expectedMessages.unset(e)) { /* ignore expected errors */ }
+                else {
+                    err.printCString("unexpected error: '").print(e).printChar('\'').printNewline();
+                    ret = false;
+                }
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = expectedMessages.keys();
+            while (it.hasNext()) {
+                err.printCString("missing expected error: '").print(it.next()).printChar('\'').printNewline();
+                ret = false;
+            }
+            it.destroy();
+        }
+        this.clear();
+        return ret;
+    }
+    
+}

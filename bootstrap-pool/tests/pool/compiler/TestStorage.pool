@@ -11,26 +11,37 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
+use sys::log::Logger;
 use sys::store::StorageElement;
 use sys::stream::OStream;
 use sys::stream::OStreamWrapper;
 
-class TestStorage extends pool::storage::PoolStorage {
+class TestStorage extends sys::log::LoggerAware, sys::core::utils::Owner, pool::storage::PoolStorage {
 
+    TestLogger logger;
     String name;
     String tmp;
     AnyList prepare; // HashList<fqn>
     AnyMap in;       // HashMap<fqn+mime, StringStorageElement>
     AnyMap out;      // HashMap<fqn+mime, StringStorageElement>
     AnyMap expect;   // HashMap<fqn+mime, StringStorageElement>
+    AnyMap expectInitErrors;    // HashList<message>
+    AnyMap expectPrepareErrors; // HashList<message>
+    AnyMap expectCompileErrors; // HashList<message>
     
     [] __init() {
+        this.logger = this.createOwn(TestLogger:CLASSNAME);
+        this.setLogger(logger.setLevel(Logger:ERROR));
+        
         this.name = this.createOwn(String:CLASSNAME);
         this.tmp = this.createOwn(String:CLASSNAME);
         this.prepare = this.createOwn(AnyList:CLASSNAME);
         this.in = this.createOwn(AnyMap:CLASSNAME);
         this.out = this.createOwn(AnyMap:CLASSNAME);
         this.expect = this.createOwn(AnyMap:CLASSNAME);
+        this.expectInitErrors = this.createOwn(AnyMap:CLASSNAME);
+        this.expectPrepareErrors = this.createOwn(AnyMap:CLASSNAME);
+        this.expectCompileErrors = this.createOwn(AnyMap:CLASSNAME);
     }
     
     [TestStorage] setName(cstring name) { this.name.assignCString(name); return this; }
@@ -67,6 +78,26 @@ class TestStorage extends pool::storage::PoolStorage {
         it.destroy();
         return ret;
     }
+    
+    [TestStorage] expectInitError(cstring message) {
+        String msg = this.createOwnStringFromCString(message);
+        this.expectInitErrors.set(msg, msg);
+        return this;
+    }
+    [TestStorage] expectPrepareError(cstring message) {
+        String msg = this.createOwnStringFromCString(message);
+        this.expectPrepareErrors.set(msg, msg);
+        return this;
+    }
+    [TestStorage] expectCompileError(cstring message) {
+        String msg = this.createOwnStringFromCString(message);
+        this.expectCompileErrors.set(msg, msg);
+        return this;
+    }
+    
+    [int] validateInitErrors() { return logger.validate(this.expectInitErrors); }
+    [int] validatePrepareErrors() { return logger.validate(this.expectPrepareErrors); }
+    [int] validateCompileErrors() { return logger.validate(this.expectCompileErrors); }
 
     // PoolStorage
     [StorageElement] getElement(String fullQualifiedName, int mimeType) {
