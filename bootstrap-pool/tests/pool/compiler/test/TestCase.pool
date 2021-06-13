@@ -1,0 +1,42 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::test;
+
+use pool::compiler::Compiler;
+use sys::core::anycollection::AnyIterator;
+
+class TestCase extends test::TestCase {
+    
+    [TestStorage] newTestStorage(cstring name) {
+        this.start(name);
+        TestStorage storage = this.rt().createInstance(TestStorage:CLASSNAME);
+        return storage.setName(name);
+    }
+    
+    [int] runTest(TestStorage storage) {
+        Compiler c = this.rt().createInstance(Compiler:CLASSNAME);
+        c.initLogger(storage.getLogger())
+            .addClassPath(storage.poolStorage())
+            .setPrettyOutput(storage.poolStorage())
+        ;
+        if (!storage.validateInitErrors()) { return this.fail("Compiler initialization"); }
+        
+        {
+            AnyIterator it = storage.prepares();
+            while (it.hasNext()) { c.prepare(it.next()); }
+            it.destroy();
+        }
+        if (!storage.validatePrepareErrors()) { return this.fail("Compiler preparation"); }
+        
+        c.compilePrepared();
+        if (!storage.validateCompileErrors()) { return this.fail("Compiler compilation"); }
+        
+        if (!storage.validateExpected()) { return this.fail("Pretty validation"); }
+
+        c.destroy();
+        return this.success();
+    }
+}

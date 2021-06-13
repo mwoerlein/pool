@@ -1,0 +1,66 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::visitor;
+
+use pool::compiler::test::TestStorage;
+use pool::storage::Mimetype;
+
+class TypeReferenceResolverTest extends pool::compiler::test::TestCase {
+
+    [] runAll() {
+        this.testDirectCyclicClassHierarchyValidation();
+        this.testIndirectCyclicClassHierarchyValidation();
+        this.testValidCyclicClassDependencies();
+    }
+    
+    [int] testDirectCyclicClassHierarchyValidation() {
+        TestStorage t = this.newTestStorage("testDirectCyclicClassHierarchyValidation");
+        t.in("my::A", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class A extends A { }");
+        
+        t.expectCompileError("my::A: cyclic class hierarchy detected!")
+            .expectCompileError("my::A failed");
+        t.prepare("my::A");
+        
+        return this.runTest(t);
+    }
+    
+    [int] testIndirectCyclicClassHierarchyValidation() {
+        TestStorage t = this.newTestStorage("testIndirectCyclicClassHierarchyValidation");
+        t.in("my::A", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class A extends B { }");
+        t.in("my::B", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class B extends A { }");
+        
+        t.expectCompileError("my::A: cyclic class hierarchy detected!")
+            .expectCompileError("my::A failed");
+        t.prepare("my::A");
+        
+        return this.runTest(t);
+    }
+    
+    [int] testValidCyclicClassDependencies() {
+        TestStorage t = this.newTestStorage("testValidCyclicClassDependencies");
+        t.in("my::A", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class A extends B {")
+            .line("  int active := true;")
+            .line("}");
+        t.in("my::B", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("use my::A as Sub;")
+            .line("class B {")
+            .line("  [Sub] useSub(A a) { if (Sub:active) { return a; } else { return null; } }")
+            .line("}");
+            
+        t.prepare("my::A").prepare("my::B");
+        
+        return this.runTest(t);
+    }
+}

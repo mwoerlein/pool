@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::compiler;
+namespace pool::compiler::test;
 
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyIterator;

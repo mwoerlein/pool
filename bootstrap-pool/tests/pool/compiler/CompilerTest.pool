@@ -9,16 +9,13 @@ use sys::core::anycollection::AnyIterator;
 use sys::log::NullLogger;
 use pool::storage::Mimetype;
 
-class CompilerTest extends test::TestCase {
+class CompilerTest extends pool::compiler::test::TestCase {
 
     [] runAll() {
         this.testSimpleClass();
         this.testStructs();
         this.testClasses();
         this.testMethodsInstructionsExpressions();
-        this.testDirectCyclicClassHierachyValidation();
-        this.testIndirectCyclicClassHierachyValidation();
-        this.testValidCyclicClassDependencies();
     }
     
     [int] testSimpleClass() {
