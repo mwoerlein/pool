@@ -10,8 +10,8 @@ class __Tests__ {
     global [] setup(test::TestSuite suite) {
         suite.register(pool::compiler::Compiler:CLASSNAME, pool::compiler::CompilerTest:CLASSNAME);
         suite.register(
-            pool::compiler::ast::visitor::TypeReferenceResolver:CLASSNAME,
-            pool::compiler::ast::visitor::TypeReferenceResolverTest:CLASSNAME
+            pool::compiler::ast::visitor::SignatureResolver:CLASSNAME,
+            pool::compiler::ast::visitor::SignatureResolverTest:CLASSNAME
         );
         suite.register(pool::generator::sample::Parser:CLASSNAME, pool::generator::sample::ParserTest:CLASSNAME);
         

@@ -8,7 +8,7 @@ namespace pool::compiler::ast::visitor;
 use pool::compiler::test::TestStorage;
 use pool::storage::Mimetype;
 
-class TypeReferenceResolverTest extends pool::compiler::test::TestCase {
+class SignatureResolverTest extends pool::compiler::test::TestCase {
 
     [] runAll() {
         this.testDirectCyclicClassHierarchyValidation();
