@@ -89,6 +89,13 @@ class File extends SeekableIOStream {
         [int c, int eof] = SysCall:readChar(fd);
         return c;
     }
+
+    [SeekableIOStream] fillBuffer(sys::memory::MemoryIOStream buffer) {
+        int first := buffer.pos();
+        int free := buffer.length() - first;
+        [int done, int eof] = SysCall:readMany(fd, buffer.startAddr() + first, free);
+        return buffer.getView(first, done);
+    }
     
     [OStream] printChar(int c) {
         SysCall:writeChar(fd, c);

@@ -16,6 +16,17 @@ class SeekableIOStream extends OStream, IStream {
     
     [] rewind() { this.seek(0); }
 
+    [SeekableIOStream] fillBuffer(sys::memory::MemoryIOStream buffer) {
+        int first := buffer.pos();
+        int free := buffer.length() - first;
+        int done = 0;
+        while ((done < free) && !this.isEmpty()) {
+            buffer.printChar(this.readChar());
+            done++;
+        }
+        return buffer.getView(first, done);
+    }
+
     // TODO: remove with implicit cast
     [SeekableIOStream] iostream() { return this; }
 }

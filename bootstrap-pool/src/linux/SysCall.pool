@@ -24,6 +24,16 @@ class SysCall {
         return [ret, (read == 0)];
     }
     
+    global [int, int] readMany(int fd, int buffer, int size) {
+        int read = 0;
+        __pasm__(
+            "int 0x80",
+            {"%eax": 3, "%ebx": fd, "%ecx": buffer, "%edx": size},
+            {"%eax": read}
+        );
+        return [read, (read < size)];
+    }
+    
     global [] writeChar(int fd, int c) {
         __pasm__(<"
             subl 4, %esp

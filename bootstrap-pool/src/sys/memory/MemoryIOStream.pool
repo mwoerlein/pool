@@ -18,7 +18,7 @@ class MemoryIOStream extends SeekableIOStream {
     
     [MemoryIOStream] _init(int size) {
         _owned = this.rt().getAllocator().allocate(size);
-        return this._initBuf(_owned.buf, _owned.len);
+        return this._initBuf(_owned.buf, size);
     }
     
     [MemoryIOStream] _initMem(MemoryInfo mem) {

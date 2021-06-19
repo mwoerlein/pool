@@ -1,0 +1,46 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::stream;
+
+use sys::memory::MemoryIOStream;
+
+class BufferedIStreamWrapper extends IStream {
+
+    SeekableIOStream _inner;
+    MemoryIOStream _buffer;
+    SeekableIOStream _currentView;
+    
+    [IStream] initIStream(SeekableIOStream stream, int bufferSize) {
+        this._inner = stream;
+        this._buffer = this.createOwn(MemoryIOStream:CLASSNAME);
+        this._buffer._init(bufferSize);
+        return this.istream();
+    }
+
+    [int] isEmpty() {
+        if (_currentView && !_currentView.isEmpty()) {
+            return false;
+        }
+        return _inner.isEmpty();
+    }
+    
+    [int] peekChar() {
+        this._ensureView();
+        return _currentView.peekChar();
+    }
+    
+    [int] readChar() {
+        this._ensureView();
+        return _currentView.readChar();
+    }
+    
+    [] _ensureView() {
+        if (!_currentView || _currentView.isEmpty()) {
+            _buffer.seek(0);
+            _currentView = this.own(_inner.fillBuffer(_buffer));
+        }
+    }
+}

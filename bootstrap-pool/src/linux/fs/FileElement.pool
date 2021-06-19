@@ -7,6 +7,7 @@ namespace linux::fs;
 
 use pool::storage::PropertiesMarshaller;
 use sys::core::String;
+use sys::stream::BufferedIStreamWrapper;
 use sys::stream::SeekableIOStream;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -41,14 +42,15 @@ class FileElement extends StorageElement {
     }
     
     [IStream] getContent() {
-        File file = this.rt().createInstance(File:CLASSNAME);
+        BufferedIStreamWrapper fileWrapper = this.rt().createInstance(BufferedIStreamWrapper:CLASSNAME);
+        File file = fileWrapper.createOwn(File:CLASSNAME);
         
         if (file._init(filename.toCString(), File:MODE_READ, offset) < 0) {
             file.destroy();
             return null;
         }
         
-        return file.istream();
+        return fileWrapper.initIStream(file.iostream(), 0x1000);
     }
     
     [int] getContentSize() { return contentSize; }
