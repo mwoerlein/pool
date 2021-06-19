@@ -31,7 +31,7 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         
         PageAllocator bsPA := bsRt.createInstanceAs(LinuxPageAllocator:CLASSNAME, PageAllocator:CLASSNAME);
         PagedMemoryManager bsPMM := bsRt.createInstance(PagedMemoryManager:CLASSNAME);
-        bsPMM.initFromPageAllocator(bsPA, 10);
+        bsPMM.setMinimalPageAllocation(0x40).initFromPageAllocator(bsPA, 1);
         
         bsRt.setAllocator(bsPMM.allocator());
         SysRuntime rt = bsRt.createInstance(SysRuntime:CLASSNAME);

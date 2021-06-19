@@ -8,9 +8,16 @@ namespace sys::memory;
 class PagedMemoryManager extends MemoryManager {
     
     PageAllocator pageAllocator;
+    int _minPages;
+    
+    [PagedMemoryManager] setMinimalPageAllocation(int pages) { _minPages = pages; return this; }
     
     [MemoryInfo] outOfAvailable(int size) {
-        MemoryInfo newAvailable = pageAllocator.allocatePages(1 + size / PageAllocator:PAGESIZE);
+        int pages = 1 + size / PageAllocator:PAGESIZE;
+        if (pages < _minPages) {
+            pages = _minPages;
+        }
+        MemoryInfo newAvailable = pageAllocator.allocatePages(pages);
         if (Address:from(newAvailable) == MemoryInfo:NONE) {
             // TODO #7: return "parent":outOfAvailable(size);
             this.rt().err().printCString("bad allocate ").printPtr(size).printNewline();
@@ -21,7 +28,11 @@ class PagedMemoryManager extends MemoryManager {
     }
     
     [] initFromPageAllocator(PageAllocator pageAllocator, int initialPages) {
-        MemoryInfo initial = pageAllocator.allocatePages(initialPages);
+        int pages = initialPages;
+        if (pages < _minPages) {
+            pages = _minPages;
+        }
+        MemoryInfo initial = pageAllocator.allocatePages(pages);
         if (Address:from(initial) == MemoryInfo:NONE) {
             // bail out
             this.rt().err().printCString("cannot allocate initial pages\n");
@@ -33,6 +44,7 @@ class PagedMemoryManager extends MemoryManager {
     
     [] initFromPagedMemoryManager(PageAllocator pageAllocator, PagedMemoryManager src) {
         this.pageAllocator = pageAllocator;
+        this._minPages = src._minPages;
         this.initFromMemoryManager(src.rt().cast(MemoryManager:CLASSNAME, src));
     }
     
