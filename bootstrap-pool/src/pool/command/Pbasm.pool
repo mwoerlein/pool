@@ -146,20 +146,7 @@ Pool Bootstrap Assembler.
     [] writeOutput(OStream out) {
         // generate module infos
         if (!this.hasOption("binary")) {
-            out.printCString("/*[meta]").printNewline();
-            out.printCString("mimetype = application/x-bin-x86").printNewline();
-            
-            out.printCString("[pool]").printNewline();
-            out.printCString("version = ").printCString(version).printNewline();
-            if (classProperties) {
-                out.printCString("class = true").printNewline();
-                if (classProperties.hasCStringProperty("pool.name")) {
-                    out.printCString("name = ").print(classProperties.getCStringProperty("pool.name")).printNewline();
-                } else if (classProperties.hasCStringProperty("pool_source.unit")) {
-                    out.printCString("name = ").print(classProperties.getCStringProperty("pool_source.unit")).printNewline();
-                }
-            }
-            out.printCString("*/").printNewline();
+            unit.printHeadersToStream(out, version, classProperties);
         }
         unit.rawToStream(out);
     }

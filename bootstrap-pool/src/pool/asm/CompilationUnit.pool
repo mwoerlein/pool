@@ -20,11 +20,14 @@ use pool::asm::value::PositionValue;
 use pool::asm::value::StringValue;
 use pool::asm::value::TextOperation;
 
+use pool::storage::Mimetype;
+
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
 use sys::core::String;
 use sys::core::utils::Owner;
+use sys::core::utils::PropertyContainer;
 use sys::log::Logger;
 use sys::stream::OStream;
 
@@ -123,6 +126,24 @@ class CompilationUnit extends Owner, Logger {
             }
             bit.destroy();
         }
+        return stream;
+    }
+    
+    [OStream] printHeadersToStream(OStream stream, cstring version, PropertyContainer classProperties) {
+        stream.printCString("/*[meta]").printNewline();
+        stream.printCString("mimetype = ").printCString(Mimetype:TYPE_BIN_X86).printNewline();
+        
+        stream.printCString("[pool]").printNewline();
+        stream.printCString("version = ").printCString(version).printNewline();
+        if (classProperties) {
+            stream.printCString("class = true").printNewline();
+            if (classProperties.hasCStringProperty("pool.name")) {
+                stream.printCString("name = ").print(classProperties.getCStringProperty("pool.name")).printNewline();
+            } else if (classProperties.hasCStringProperty("pool_source.unit")) {
+                stream.printCString("name = ").print(classProperties.getCStringProperty("pool_source.unit")).printNewline();
+            }
+        }
+        stream.printCString("*/").printNewline();
         return stream;
     }
     
