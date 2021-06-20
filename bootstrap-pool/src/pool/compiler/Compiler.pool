@@ -175,6 +175,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] _debugStep(String fqn, cstring step) {
+        if (!this.hasLogLevel(sys::log::Logger:DEBUG)) { return; }
         this.debug().printChar(' ').printChar(' ').print(fqn).printChar(':').printChar(' ').printCString(step);
     }
 }

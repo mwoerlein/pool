@@ -180,6 +180,7 @@ class Visitor extends sys::log::LoggerAware {
     [int] visitIntRef(IntRefNode node) { return true; }
 
     [] _traceStart(String fqn, cstring step) {
+        if (!this.hasLogLevel(sys::log::Logger:TRACE)) { return; }
         OStream line = this.trace().printCString("    ");
         int i = 0;
         while (i++ < indent) { line.printChar('#'); }
@@ -188,6 +189,7 @@ class Visitor extends sys::log::LoggerAware {
     }
 
     [] _traceStop(String fqn, cstring step) {
+        if (!this.hasLogLevel(sys::log::Logger:TRACE)) { return; }
         indent--;
         OStream line = this.trace().printCString("    ");
         int i = 0;

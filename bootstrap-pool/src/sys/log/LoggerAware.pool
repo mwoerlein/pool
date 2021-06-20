@@ -20,5 +20,7 @@ class LoggerAware extends sys::core::Object {
     [OStream] info()   { return logger.info(); }
     [OStream] debug()  { return logger.debug(); }
     [OStream] trace()  { return logger.trace(); }
+
+    [int] hasLogLevel(int level) { return logger.hasLevel(level); }
     
 }

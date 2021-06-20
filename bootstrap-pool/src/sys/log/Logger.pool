@@ -36,6 +36,7 @@ class Logger extends sys::core::Object {
     }
     
     [Logger] setLevel(int level) { _minLevel = level; return this; }
+    [int] hasLevel(int level) { return level >= _minLevel; }
     
     [OStream] crit()   { return this.log(Logger:CRITICAL).ostream(); }
     [OStream] error()  { return this.log(Logger:ERROR).ostream(); }
