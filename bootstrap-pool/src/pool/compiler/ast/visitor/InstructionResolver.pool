@@ -5,9 +5,13 @@ version = 0.1.0
 */
 namespace pool::compiler::ast::visitor;
 
+use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Node;
+use pool::compiler::ast::Scope;
 use pool::compiler::ast::Type;
+use pool::compiler::ast::TypeManager;
 use pool::compiler::ast::Visitor;
+
 use pool::compiler::ast::node::NodeList;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
@@ -48,10 +52,6 @@ use pool::compiler::ast::node::reference::CStringRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
 use pool::compiler::ast::node::reference::TypeRefNode;
 
-use pool::compiler::ast::NamedType;
-use pool::compiler::ast::Scope;
-use pool::compiler::ast::Type;
-use pool::compiler::ast::TypeManager;
 use pool::compiler::ast::scope::BlockScope;
 use pool::compiler::ast::scope::ClassScope;
 use pool::compiler::ast::scope::InstanceScope;
@@ -367,18 +367,6 @@ class InstructionResolver extends Visitor {
     }
     
     // references
-    [int] visitClassRef(ClassRefNode node) {
-        // descent into referenced classes/structs
-        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
-        if (cs && cs.getState() < Scope:STATE_RESOLVING_INSTRUCTIONS) {
-            return cs.getClassDeclNode().accept(this.visitor());
-        }
-        StructScope ss := this.rt().cast(StructScope:CLASSNAME, node.getResolvedType());
-        if (ss && ss.getState() < Scope:STATE_RESOLVING_INSTRUCTIONS) {
-            return ss.getStructDeclNode().accept(this.visitor());
-        }
-        return false;
-    }
     
     // helper
     [OStream] validationError(Node node) {

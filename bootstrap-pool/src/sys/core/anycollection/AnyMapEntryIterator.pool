@@ -29,7 +29,7 @@ class AnyMapEntryIterator extends AnyIterator {
     
     [__all__, __all__] nextPair() {
         if (!_next) {
-            return null;
+            return [null, null];
         }
         AnyMapEntry entry = _next.entry();
         _next = _next.getOrderedNext();

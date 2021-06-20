@@ -5,8 +5,7 @@ version = 0.1.0
 */
 namespace pool::compiler;
 
-use sys::core::anycollection::AnyIterator;
-use sys::log::NullLogger;
+use pool::compiler::test::TestStorage;
 use pool::storage::Mimetype;
 
 class CompilerTest extends pool::compiler::test::TestCase {
@@ -391,84 +390,4 @@ class CompilerTest extends pool::compiler::test::TestCase {
         
         return this.runTest(t);
     }
-    
-    [int] testDirectCyclicClassHierachyValidation() {
-        TestStorage t = this.newTestStorage("testDirectCyclicClassHierachyValidation");
-        t.in("my::A", Mimetype:POOL_SRC)
-            .line("namespace my;")
-            .line("class A extends A { }");
-        
-        t.expectCompileError("my::A: cyclic class hierarchy detected!")
-            .expectCompileError("my::A failed");
-        t.prepare("my::A");
-        
-        return this.runTest(t);
-    }
-    
-    [int] testIndirectCyclicClassHierachyValidation() {
-        TestStorage t = this.newTestStorage("testIndirectCyclicClassHierachyValidation");
-        t.in("my::A", Mimetype:POOL_SRC)
-            .line("namespace my;")
-            .line("class A extends B { }");
-        t.in("my::B", Mimetype:POOL_SRC)
-            .line("namespace my;")
-            .line("class B extends A { }");
-        
-        t.expectCompileError("my::A: cyclic class hierarchy detected!")
-            .expectCompileError("my::A failed");
-        t.prepare("my::A");
-        
-        return this.runTest(t);
-    }
-    
-    [int] testValidCyclicClassDependencies() {
-        TestStorage t = this.newTestStorage("testValidCyclicClassDependencies");
-        t.in("my::A", Mimetype:POOL_SRC)
-            .line("namespace my;")
-            .line("class A extends B {")
-            .line("  int active := true;")
-            .line("}");
-        t.in("my::B", Mimetype:POOL_SRC)
-            .line("namespace my;")
-            .line("use my::A as Sub;")
-            .line("class B {")
-            .line("  [Sub] useSub(A a) { if (Sub:active) { return a; } else { return null; } }")
-            .line("}");
-            
-        t.prepare("my::A").prepare("my::B");
-        
-        return this.runTest(t);
-    }
-    
-    [TestStorage] newTestStorage(cstring name) {
-        this.start(name);
-        TestStorage storage = this.rt().createInstance(TestStorage:CLASSNAME);
-        return storage.setName(name);
-    }
-    
-    [int] runTest(TestStorage storage) {
-        NullLogger l = this.rt().createInstance(NullLogger:CLASSNAME);
-        Compiler c = this.rt().createInstance(Compiler:CLASSNAME);
-        c.initLogger(storage.getLogger())
-            .addClassPath(storage.poolStorage())
-            .setPrettyOutput(storage.poolStorage())
-        ;
-        if (!storage.validateInitErrors()) { return this.fail("Compiler initialization"); }
-        
-        {
-            AnyIterator it = storage.prepares();
-            while (it.hasNext()) { c.prepare(it.next()); }
-            it.destroy();
-        }
-        if (!storage.validatePrepareErrors()) { return this.fail("Compiler preparation"); }
-        
-        c.compilePrepared();
-        if (!storage.validateCompileErrors()) { return this.fail("Compiler compilation"); }
-        
-        if (!storage.validateExpected()) { return this.fail("Pretty validation"); }
-
-        c.destroy();
-        return this.success();
-    }
-
 }
