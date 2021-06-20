@@ -11,9 +11,59 @@ use pool::storage::Mimetype;
 class SignatureResolverTest extends pool::compiler::test::TestCase {
 
     [] runAll() {
+        this.testMultiInheritage();
         this.testDirectCyclicClassHierarchyValidation();
         this.testIndirectCyclicClassHierarchyValidation();
         this.testValidCyclicClassDependencies();
+    }
+    
+    [int] testMultiInheritage() {
+        TestStorage t = this.newTestStorage("testMultiInheritage");
+        t.in("my::A", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class A extends B {")
+            .line("  [] methA() {")
+            .line("     this.methB();")
+            .line("     this.methC();")
+            .line("     this.methD();")
+            .line("     this.methE();")
+            .line("  }")
+            .line("}");
+        t.in("my::B", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class B extends C, D {")
+            .line("  [] methB() {")
+            .line("     this.methC();")
+            .line("     this.methD();")
+            .line("     this.methE();")
+            .line("  }")
+            .line("}");
+        t.in("my::C", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("use my::A;")
+            .line("class C extends E {")
+            .line("  [] methC() {")
+            .line("     A a = null;")
+            .line("     if (a) { a.methB(); }")
+            .line("     this.methE();")
+            .line("  }")
+            .line("}");
+        t.in("my::D", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class D extends E {")
+            .line("  [] methD() {")
+            .line("     this.methE();")
+            .line("  }")
+            .line("}");
+        t.in("my::E", Mimetype:POOL_SRC)
+            .line("namespace my;")
+            .line("class E {")
+            .line("  [] methE() { }")
+            .line("}");
+        
+        t.prepare("my::C");
+        
+        return this.runTest(t);
     }
     
     [int] testDirectCyclicClassHierarchyValidation() {

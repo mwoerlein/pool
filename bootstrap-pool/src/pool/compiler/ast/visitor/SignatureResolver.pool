@@ -97,84 +97,23 @@ class SignatureResolver extends Visitor {
             this.error().print(node.getName()).printCString(": references must be resolved before resolving signature!");
             return false;
         }
-        if (cs.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
+        if (cs.getState() >= Scope:STATE_SIGNATURE_RESOLVED) {
             return true;
         }
-        if (!this._hasValidHierarchy(cs)) {
+        // validate hierarchy and collect inherited classes/methods/variables/constants
+        if (cs.getState() < Scope:STATE_SIGNATURE_COLLECTED && !this._collectSignature(cs)) {
             return false;
         }
         
-        cs.setState(Scope:STATE_RESOLVING_SIGNATURE);
+        // descent into referenced classes/structs and finalize scope hierarchy
         this._traceStart(cs.getFullQualifiedName(), "resolving class signature");
-        InstanceScope is := cs.getInstanceScope();
-        
-        // collect inherited classes/methods/variables/constants
-        {
-            AnyIterator it = node.getExtends().iterator();
-            while (it.hasNext()) {
-                TypeRefNode typeNode = it.next();
-                typeNode.accept(this.visitor()); // ensure complete signature of extended class
-                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
-                // hierarchy validation should ensures that extendedClassScope is always set correctly
-                if (!extendedClassScope) { 
-                    this.crit().print(cs.getFullQualifiedName()).printCString(": internal error - invalid extend type '").print(typeNode).printChar('"');
-                } else {
-                    InstanceScope extendedInstanceScope := extendedClassScope.getInstanceScope();
-                    is.registerMethodsFromScope(extendedInstanceScope.scope());
-                    is.registerVariablesFromScope(extendedInstanceScope.scope());
-
-                    cs.registerSupersFromScope(extendedClassScope);
-                    cs.registerMethodsFromScope(extendedClassScope.scope());
-                    cs.registerVariablesFromScope(extendedClassScope.scope());
-                }
-            }
-            it.destroy();
-        }
-        cs.addSuper(cs);
-
-        // register own methods at last, to overwrite super methods if required
-        // and generate global method ID
-        {
-            int index = 0;
-            AnyIterator it := node.getMethods().iterator();
-            while (it.hasNext()) {
-                MethodDeclNode methodDecl := it.next();
-                if (methodDecl.isGlobal()) {
-                    cs.registerMethod(methodDecl);
-                } else {
-                    is.registerMethod(methodDecl);
-                }
-                methodDecl.setIndex(index++);
-            }
-            it.destroy();
-        }
-        
-        // generate virtual method IDs
-        int index = 0;
-        {
-            AnyIterator it = is.getMethods();
-            while (it.hasNext()) {
-                MethodScope ms = it.next();
-                ms.setIndex(index++);
-            }
-            it.destroy();
-        }
-        {
-            AnyIterator it = cs.getMethods();
-            while (it.hasNext()) {
-                MethodScope ms = it.next();
-                ms.setIndex(index++);
-            }
-            it.destroy();
-        }
-        
-        // descent into referenced classes/structs and register own constants/variables
         cs.setState(Scope:STATE_RESOLVING_SCOPES);
         
         _curScope = cs.scope();
+        node.getExtends().acceptAll(this.visitor());
         node.getConsts().acceptAll(this.visitor());
         
-        _curScope = is.scope();
+        _curScope = cs.getInstanceScope().scope();
         node.getVariables().acceptAll(this.visitor());
         node.getMethods().acceptAll(this.visitor());
         
@@ -226,11 +165,10 @@ class SignatureResolver extends Visitor {
             this.error().print(node.getName()).printCString(": references must be resolved before resolving signature!");
             return false;
         }
-        if (ss.getState() >= Scope:STATE_RESOLVING_SIGNATURE) {
+        if (ss.getState() >= Scope:STATE_RESOLVING_SCOPES) {
             return true;
         }
         
-        ss.setState(Scope:STATE_RESOLVING_SIGNATURE);
         this._traceStart(ss.getFullQualifiedName(), "resolving struct signature");
         
         ss.setState(Scope:STATE_RESOLVING_SCOPES);
@@ -301,7 +239,9 @@ class SignatureResolver extends Visitor {
     }
     
     [int] visitVariableDecl(VariableDeclNode node) {
-        _curScope.registerVariable(node);
+        if (!node.getScope()) {
+            _curScope.registerVariable(node);
+        }
         if (this.rt().cast(BlockScope:CLASSNAME, _curScope)) {
             // Dive into variable declarations scopes only within methods/blocks.
             // Do not change scope for const/instance variables. 
@@ -458,11 +398,11 @@ class SignatureResolver extends Visitor {
         
         // descent into referenced classes/structs
         ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
-        if (cs && cs.getState() < Scope:STATE_RESOLVING_SIGNATURE) {
+        if (cs && cs.getState() < Scope:STATE_RESOLVING_SCOPES) {
             return cs.getClassDeclNode().accept(this.visitor());
         }
         StructScope ss := this.rt().cast(StructScope:CLASSNAME, node.getResolvedType());
-        if (ss && ss.getState() < Scope:STATE_RESOLVING_SIGNATURE) {
+        if (ss && ss.getState() < Scope:STATE_RESOLVING_SCOPES) {
             return ss.getStructDeclNode().accept(this.visitor());
         }
         return false;
@@ -477,45 +417,120 @@ class SignatureResolver extends Visitor {
     }
     
     // helper
-    [int] _hasValidHierarchy(ClassScope cs) {
+    [int] _collectSignature(ClassScope cs) {
         if (cs.getState() < Scope:STATE_TYPE_REFERENCES_RESOLVED) {
             this.error().print(cs.getFullQualifiedName()).printCString(": references must be resolved before validating class hierarchy!");
             return false;
         }
-        if (cs.getState() >= Scope:STATE_HIERARCHY_VALIDATED) {
+        if (cs.getState() >= Scope:STATE_SIGNATURE_COLLECTED) {
             return true;
         }
-        if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
-            return false;
-        }
         
-        if (cs.getState() == Scope:STATE_VALIDATING_HIERARCHY) {
+        if (cs.getState() == Scope:STATE_COLLECTING_SIGNATURE) {
             this.error().print(cs.getFullQualifiedName()).printCString(": cyclic class hierarchy detected!");
             cs.setState(Scope:STATE_HIERARCHY_INVALID);
-        } else {
-            this._traceStart(cs.getFullQualifiedName(), "validating class hierarchy");
-            cs.setState(Scope:STATE_VALIDATING_HIERARCHY);
-            {
-                AnyIterator it = cs.getClassDeclNode().getExtends().iterator();
-                while (it.hasNext()) {
-                    TypeRefNode typeNode = it.next();
-                    ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
-                    if (!extendedClassScope) { 
-                        this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
-                        cs.setState(Scope:STATE_HIERARCHY_INVALID);
-                    } else if (!this._hasValidHierarchy(extendedClassScope)) {
-                        cs.setState(Scope:STATE_HIERARCHY_INVALID);
-                    }
-                }
-                it.destroy();
-            }
-            this._traceStop(cs.getFullQualifiedName(), "validated class hierarchy");
         }
         
         if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
             return false;
         }
-        cs.setState(Scope:STATE_HIERARCHY_VALIDATED);
+        
+        ClassDeclNode node := cs.getClassDeclNode();
+        InstanceScope is := cs.getInstanceScope();
+        
+        this._traceStart(cs.getFullQualifiedName(), "collecting signature from class hierarchy");
+        cs.setState(Scope:STATE_COLLECTING_SIGNATURE);
+        {
+            AnyIterator it = node.getExtends().iterator();
+            while (it.hasNext()) {
+                TypeRefNode typeNode = it.next();
+                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                if (!extendedClassScope) { 
+                    this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
+                    cs.setState(Scope:STATE_HIERARCHY_INVALID);
+                } else if (!this._collectSignature(extendedClassScope)) {
+                    cs.setState(Scope:STATE_HIERARCHY_INVALID);
+                } else {
+                    InstanceScope extendedInstanceScope := extendedClassScope.getInstanceScope();
+                    is.registerMethodsFromScope(extendedInstanceScope.scope());
+                    is.registerVariablesFromScope(extendedInstanceScope.scope());
+
+                    cs.registerSupersFromScope(extendedClassScope);
+                    cs.registerMethodsFromScope(extendedClassScope.scope());
+                    cs.registerVariablesFromScope(extendedClassScope.scope());
+                }
+            }
+            it.destroy();
+        }
+        cs.addSuper(cs);
+        
+        if (cs.getState() == Scope:STATE_HIERARCHY_INVALID) {
+            this._traceStop(cs.getFullQualifiedName(), "collected signature from class hierarchy");
+            return false;
+        }
+
+        // register own constants at last, to overwrite super constants if required
+        {
+            int index = 0;
+            AnyIterator it := node.getConsts().iterator();
+            while (it.hasNext()) {
+                VariableInitInstNode variableInitDecl := it.next();
+                AnyIterator vit := variableInitDecl.getVariables().iterator();
+                while (vit.hasNext()) {
+                    cs.registerVariable(vit.next());
+                }
+                vit.destroy();
+            }
+            it.destroy();
+        }
+        // register own variables at last, to overwrite super variables if required
+        {
+            int index = 0;
+            AnyIterator it := node.getVariables().iterator();
+            while (it.hasNext()) {
+                is.registerVariable(it.next());
+            }
+            it.destroy();
+        }
+
+        // register own methods at last, to overwrite super methods if required
+        // and generate global method ID
+        {
+            int index = 0;
+            AnyIterator it := node.getMethods().iterator();
+            while (it.hasNext()) {
+                MethodDeclNode methodDecl := it.next();
+                if (methodDecl.isGlobal()) {
+                    cs.registerMethod(methodDecl);
+                } else {
+                    is.registerMethod(methodDecl);
+                }
+                methodDecl.setIndex(index++);
+            }
+            it.destroy();
+        }
+        
+        // generate virtual method IDs
+        int index = 0;
+        {
+            AnyIterator it = is.getMethods();
+            while (it.hasNext()) {
+                MethodScope ms = it.next();
+                ms.setIndex(index++);
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = cs.getMethods();
+            while (it.hasNext()) {
+                MethodScope ms = it.next();
+                ms.setIndex(index++);
+            }
+            it.destroy();
+        }
+        
+        this._traceStop(cs.getFullQualifiedName(), "collected signature from class hierarchy");
+        cs.setState(Scope:STATE_SIGNATURE_COLLECTED);
         return true;
     }
     
