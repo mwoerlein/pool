@@ -237,7 +237,7 @@ class String extends OStream {
         Runtime rt = this.rt();
         StringIStream s = rt.createInstance(StringIStream:CLASSNAME);
         s.setNext(_first);
-        return rt.cast(IStream:CLASSNAME, s);
+        return s.istream();
     }
     
     [String] toLower() {

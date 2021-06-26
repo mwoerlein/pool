@@ -39,7 +39,7 @@ class StdIn extends IStream {
     
     [int] _fillBuffer() {
         if ((buf == -1) && notEof) {
-            [int c, int eof] = SysCall:readChar(0);
+            [int c, int eof] = SysCall:readChar(SysCall:FD_STDIN);
             buf = c;
             notEof = !eof;
         }

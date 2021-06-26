@@ -24,7 +24,7 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         SysRuntime bsRt := this.rt();
         LinuxOStream bsLOut := this.rt().createInstance(LinuxOStream:CLASSNAME);
         bsLOut.setForeground(LinuxOStream:BRIGHT_WHITE);
-        OStream debug := bsLOut.initOStream(1);
+        OStream debug := bsLOut.initOStream(SysCall:FD_STDOUT);
         bsRt.setOut(debug);
         bsRt.setErr(debug);
         Allocator bsAllocator := bsRt.getAllocator();
@@ -51,10 +51,10 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         rt.setAllocator(pmm.allocator());
 
         LinuxOStream ls1 = rt.createInstance(LinuxOStream:CLASSNAME);
-        rt.setOut(ls1.initOStream(1));
+        rt.setOut(ls1.initOStream(SysCall:FD_STDOUT));
         LinuxOStream ls2 = rt.createInstance(LinuxOStream:CLASSNAME);
         ls2.setForeground(LinuxOStream:BRIGHT_RED);
-        rt.setErr(ls2.initOStream(2));
+        rt.setErr(ls2.initOStream(SysCall:FD_STDERR));
         
         bsLOut.destroy();
         bsPA.destroy();

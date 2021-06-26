@@ -12,7 +12,7 @@ use sys::stream::OStream;
 
 class File extends SeekableIOStream {
     
-    int MODE_READ   := 00002; // O_RDWR
+    int MODE_READ   := 00000; // O_RDONLY
     int MODE_WRITE  := 01102; // O_RDWR + O_CREAT + O_TRUNC
     int MODE_APPEND := 02102; // O_RDWR + O_CREAT + O_APPEND
 /*        

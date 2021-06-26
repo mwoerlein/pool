@@ -9,6 +9,10 @@ use sys::memory::PageAllocator;
 
 class SysCall {
     
+    int FD_STDIN  := 0;  /* file descriptor of stdin */
+    int FD_STDOUT := 1;  /* file descriptor of stdout */
+    int FD_STDERR := 2;  /* file descriptor of stderr */
+    
     int SEEK_SET := 0;   /* set file offset to offset */
     int SEEK_CUR := 1;   /* set file offset to current plus offset */
     int SEEK_END := 2;   /* set file offset to EOF plus offset */
