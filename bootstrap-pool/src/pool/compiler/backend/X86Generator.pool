@@ -1,0 +1,374 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::backend;
+
+use pool::asm::CompilationUnit;
+use pool::asm::ast::CommentNode;
+use pool::asm::ast::DefinitionNode;
+use pool::asm::ast::EmptyNode;
+use pool::asm::ast::InstructionNode;
+use pool::asm::ast::LabelNode;
+use pool::asm::ast::NodeList;
+use pool::asm::ast::OperandNode;
+use pool::asm::ast::operand::FormulaNode;
+use pool::asm::ast::operand::NumberNode;
+use pool::asm::ast::operand::StringNode;
+use pool::asm::ast::operand::IdentifierNode;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+
+use pool::compiler::ast::scope::ClassScope;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::OStream;
+
+class X86Generator extends sys::core::Object {
+    ClassScope _classScope;
+    ClassDeclNode _class;
+    CompilationUnit _unit;
+    NodeList _nodes;
+    String _minus;
+    int _resolveClasses;
+    
+    [] __init() {
+        _minus = this.createOwn(String:CLASSNAME);
+        _minus.printChar('-');
+    }
+    [X86Generator] setResolveClasses(int resolve) { _resolveClasses = resolve; return this; }
+
+    [] generateClass(ClassDeclNode node, CompilationUnit unit) {
+        _class = node;
+        _unit = unit;
+        _nodes = unit.getNodeList();
+        _classScope = node.getClassScope();
+
+        // header
+        this._newline();
+        this._comment().printCString(" class ").print(_class.getName());
+        this._label().print(this._classStart());
+        this._long(this._number(sys::runtime::ClassDescriptor:MAGIC));
+        this._long0();
+        this._long(this._constStringOffset(_classScope.stringId(_classScope.getFullQualifiedName(), null)));
+        this._long(this._classOffset(this._classTabs()));               // class tabs offset
+        this._long(this._classOffset(this._virtMethodTabs()));          // virt method tabs offset
+        this._long(this._classOffset(this._methodDeclTab()));           // method decl tab offset
+        this._long(this._classOffset(this._instanceStart()));           // instance template offset
+        this._long(this._instanceOffset(this._instanceEnd()));          // instance size
+        this._long(this._instanceOffset(                                // Object handle offset in instance
+            this._instanceHandle(_classScope.getFirstSuper())
+        ));
+        this._long(this._instanceOffset(                                // <class> handle offset in instance
+            this._instanceHandle(_classScope)
+        ));
+        this._long(this._classOffset(this._classEnd()));                // <class> size
+        this._long(this._number(_resolveClasses));                      // resolved
+
+        this._long(this._number(sys::memory::MemoryInfo:NONE));         // dynamic memory info "NONE"
+        this._long0();                                                  // dynamic next class desc
+        this._long0();                                                  // reserved
+        this._long0();                                                  // reserved
+        this._newline();
+
+        // dependent classes
+        this._comment().printCString(" class tab");
+        this._label().print(this._classTabs());
+        {
+            AnyIterator it = _classScope.getSupers();
+            while (it.hasNext()) {
+                ClassScope super = it.next();
+                this._local(
+                    this._classTabOffset(super),
+                    this._classOffset(this._classTab(super))
+                );
+                this._label().print(this._classTab(super));
+                if (_resolveClasses) {
+                    this._long(this._classTabDesc(super));
+                } else {
+                    this._long0();  // @class-desc filled on class loading
+                }
+                this._long(this._constStringOffset(_classScope.stringId(super.getFullQualifiedName(), null)));
+                this._long(this._classOffset(this._virtMethodTab(super)));     // virt method tab offset in description
+                this._long(this._instanceOffset(this._instanceHandle(super))); // handle offset in instance
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = _classScope.getGloballyRequiredClasses();
+            while (it.hasNext()) {
+                ClassScope scope = it.next();
+                if (!_classScope.hasSuper(scope)) {
+                    this._local(
+                        this._classTabOffset(scope),
+                        this._classOffset(this._classTab(scope))
+                    );
+                    this._label().print(this._classTab(scope));
+                    if (_resolveClasses) {
+                        this._long(this._classTabDesc(scope));
+                    } else {
+                        this._long0();  // @class-desc filled on class loading
+                    }
+                    this._long(this._constStringOffset(_classScope.stringId(scope.getFullQualifiedName(), null)));
+                    this._long0(); // no vtab offset in description
+                    this._long0(); // no handle offset in instance
+                }
+            }
+            it.destroy();
+        }
+        this._comment().printCString(" class tab end");
+        this._long0();                                                  // dynamic next class desc
+        this._long0();                                                  // dynamic next class desc
+        this._long0();                                                  // dynamic next class desc
+        this._long0();                                                  // dynamic next class desc
+        this._newline();
+    
+        // vtabs
+        this._comment().printCString(" virtual method tabs");
+        this._label().print(this._virtMethodTabs());
+        // TODO: generate method tabs
+        this._newline();
+
+        // methods tab
+        this._comment().printCString(" method decl tab");
+        this._label().print(this._methodDeclTab());
+        // TODO: generate method tabs
+        this._newline();
+
+        // constants
+        this._comment().printCString(" constants");
+        // generate constants
+        {
+            AnyIterator it = _classScope.getClassDeclNode().getConsts().iterator();
+            while (it.hasNext()) {
+                VariableInitInstNode node = it.next();
+                ConstIntExprNode constInt = this.rt().cast(ConstIntExprNode:CLASSNAME, node.getInitializer());
+                if (constInt) {
+                    VariableDeclNode decl = node.getVariables().first();
+                    this._newline();
+                    this._comment().printCString(" int ").print(decl.getName());
+                    this._local(
+                        this._constInt(decl),
+                        this._number(constInt.getValue())
+                    );
+                }
+            }
+            it.destroy();
+        }
+        // inject strings
+        {
+            AnyMapEntryIterator it = _classScope.strings();
+            while (it.hasNext()) {
+                [String string, String id] = it.nextPair();
+                this._newline();
+                this._comment().printCString(" string ").print(id);
+                this._local(this._constStringOffset(id), this._classOffset(this._constString(id)));
+                this._label().print(this._constString(id));
+                this._asciz(string);
+            }
+            it.destroy();
+        }
+        this._newline();
+
+        // instance template and variables
+        this._comment().printCString(" instance template");
+        this._label().print(this._instanceStart());
+        this._long0(); // @class-desc
+        this._long0(); // @meminfo
+        // TODO: generate instance handles
+        // TODO: generate instance vars
+        this._label().print(this._instanceEnd());
+        this._newline();
+    
+        // methods
+        this._comment().printCString(" method definitions");
+        // TODO: generate methods
+        
+        this._label().print(this._classEnd());
+        this._newline();
+    }
+    
+    // HELPER
+    [OperandNode] _classStart() { return this._id1(_classScope.getGlobalPrefix()); }
+    [OperandNode] _classEnd() { return this._id2(_classScope.getLocalPrefix(), "_end"); }
+    [OperandNode] _classTabs() { return this._id2(_classScope.getLocalPrefix(), "_cts"); }
+    [OperandNode] _classTab(ClassScope cs) {
+        return this._id3(_classScope.getLocalPrefix(), "_ct", cs.getLocalPrefix());
+    }
+    [OperandNode] _classTabDesc(ClassScope cs) { return this._id1(cs.getGlobalPrefix()); }
+    [OperandNode] _classTabOffset(ClassScope cs) {
+        return this._id3(_classScope.getLocalPrefix(), "_cto", cs.getLocalPrefix());
+    }
+
+    [OperandNode] _constInt(VariableDeclNode decl) {
+        return this._id3(_classScope.getGlobalPrefix(), "_coi_", decl.getName());
+    }
+    [OperandNode] _constString(String stringId) {
+        return this._id3(_classScope.getLocalPrefix(), "_cos_", stringId);
+    }
+    [OperandNode] _constStringOffset(String stringId) {
+        return this._id3(_classScope.getGlobalPrefix(), "_coso_", stringId);
+    }
+    
+    [OperandNode] _methodDeclTab() { return this._id2(_classScope.getLocalPrefix(), "_mdt"); }
+    [OperandNode] _methodDecl(MethodDeclNode decl) {
+        return this._id3(decl.getScope().getClassDeclNode().getClassScope().getLocalPrefix(), "_md_", decl.getName());
+    }
+    [OperandNode] _methodDeclOffset(MethodDeclNode decl) {
+        return this._id3(decl.getScope().getClassDeclNode().getClassScope().getGlobalPrefix(), "_mdo_", decl.getName());
+    }
+    /*
+    [OperandNode] _methodDeclBlock(MethodDeclNode decl, PIRBasicBlock block) {
+        IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+        idNode.getIdentifier().print(_classScope.getLocalPrefix())
+            .printCString("_md_").print(decl.getName());
+            .printCString("_bb_").printInt(block.getIndex());
+        return idNode.operand();
+    }
+    */
+    [OperandNode] _virtMethodTabs() { return this._id2(_classScope.getLocalPrefix(), "_mts"); }
+    [OperandNode] _virtMethodTab(ClassScope cs) {
+        return this._id3(_classScope.getLocalPrefix(), "_mt", cs.getLocalPrefix());
+    }
+
+    [OperandNode] _instanceStart() { return this._id2(_classScope.getLocalPrefix(), "_tpl"); }
+    [OperandNode] _instanceEnd() { return this._id2(_classScope.getLocalPrefix(), "_tpl_end"); }
+    [OperandNode] _instanceHandle(ClassScope cs) {
+        return this._id3(_classScope.getLocalPrefix(), "_tpl_h", cs.getLocalPrefix());
+    }
+    [OperandNode] _instanceHandleVars(ClassScope cs) {
+        return this._id3(_classScope.getLocalPrefix(), "_tpl_hv", cs.getLocalPrefix());
+    }
+    [OperandNode] _instanceHandleVarsOffset(ClassScope cs) {
+        return this._id3(_classScope.getGlobalPrefix(), "_tpl_hvo", cs.getGlobalPrefix());
+    }
+    [OperandNode] _instanceVars(ClassScope cs) {
+        return this._id3(_classScope.getLocalPrefix(), "_tpl_vs", cs.getLocalPrefix());
+    }
+    [OperandNode] _instanceVar(ClassScope cs, VariableDeclNode decl) {
+        return this._id5(_classScope.getLocalPrefix(), "_tpl_v", cs.getLocalPrefix(), "_", decl.getName());
+    }
+    [OperandNode] _instanceVarOffset(ClassScope cs, VariableDeclNode decl) {
+        return this._id5(_classScope.getLocalPrefix(), "_i", cs.getLocalPrefix(), "_", decl.getName());
+    }
+
+    [OperandNode] _classOffset(OperandNode end) { return this._offset(this._classStart(), end); }
+    [OperandNode] _instanceOffset(OperandNode end) { return this._offset(this._instanceStart(), end); }
+
+    [OStream] _comment() {
+        CommentNode commentNode = this.rt().createInstance(CommentNode:CLASSNAME);
+        _nodes.add(commentNode.node());
+        return commentNode.getComment().ostream();
+    }
+
+    [OStream] _label() {
+        LabelNode labelNode = this.rt().createInstance(LabelNode:CLASSNAME);
+        _nodes.add(labelNode.node());
+        return labelNode.getLabel().ostream();
+    }
+    
+    [] _long(OperandNode value) {
+        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        instNode.setCOperation(".long").setOperand1(value);
+        _nodes.add(instNode.node());
+    }
+    
+    [] _long0() {
+        this._long(this._number(0));
+    }
+    
+    [] _asciz(String value) {
+        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        StringNode stringNode = instNode.createOwn(StringNode:CLASSNAME);
+        stringNode.setOperand(value);
+        instNode.setCOperation(".asciz").setOperand1(stringNode.operand());
+        _nodes.add(instNode.node());
+    }
+    
+    [] _local(OperandNode id, OperandNode value) {
+        IdentifierNode idNode = this.rt().cast(IdentifierNode:CLASSNAME, id);
+        if (!idNode) { return; }
+        
+        DefinitionNode defNode = this.rt().createInstance(DefinitionNode:CLASSNAME);
+        defNode.initDefinition(idNode.getIdentifier(), value);
+        idNode.destroy();
+        _nodes.add(defNode.node());
+    }
+    
+    [] _newline() {
+        EmptyNode emptyNode = this.rt().createInstance(EmptyNode:CLASSNAME);
+        _nodes.add(emptyNode.node());
+    }
+    
+    [OperandNode] _number(int value) {
+         NumberNode numberNode = this.rt().createInstance(NumberNode:CLASSNAME);
+         numberNode.setOperand(value);
+         return numberNode.operand();
+    }
+    
+    [OperandNode] _offset(OperandNode start, OperandNode end) {
+         FormulaNode formulaNode = this.rt().createInstance(FormulaNode:CLASSNAME);
+         formulaNode.initFormula(end, _minus, start);
+         return formulaNode.operand();
+    }
+    
+    [OperandNode] _id1(String prefix) {
+         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         idNode.getIdentifier().print(prefix);
+         return idNode.operand();
+    }
+    
+    [OperandNode] _id2(String prefix, cstring postfix) {
+         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         idNode.getIdentifier().print(prefix).printCString(postfix);
+         return idNode.operand();
+    }
+    
+    [OperandNode] _id3(String prefix, cstring sep, String postfix) {
+         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         idNode.getIdentifier().print(prefix).printCString(sep).print(postfix);
+         return idNode.operand();
+    }
+    
+    [OperandNode] _id5(String prefix, cstring sep1, String infix, cstring sep2, String postfix) {
+         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         idNode.getIdentifier().print(prefix)
+            .printCString(sep1).print(infix)
+            .printCString(sep2).print(postfix);
+         return idNode.operand();
+    }
+    
+    // TODO: remove after correct generation
+    [] __fakeAsmEntry(CompilationUnit unit) {
+        {
+            DefinitionNode entryClass = this.rt().createInstance(DefinitionNode:CLASSNAME);
+            NumberNode value = this.rt().createInstance(NumberNode:CLASSNAME);
+            String id = entryClass.createOwn(String:CLASSNAME);
+            id.assignCString("_entry_class_desc");
+            entryClass.initDefinition(id, value.operand());
+            unit.getNodeList().add(entryClass.node());
+        }
+        {
+            LabelNode entryLabel = this.rt().createInstance(LabelNode:CLASSNAME);
+            String label = entryLabel.createOwn(String:CLASSNAME);
+            label.assignCString("_entry_global_func");
+            entryLabel.setLabel(label);
+            unit.getNodeList().add(entryLabel.node());
+        }
+        {
+            InstructionNode retNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+            String ret = retNode.createOwn(String:CLASSNAME);
+            ret.assignCString("ret");
+            retNode.setOperation(ret);
+            unit.getNodeList().add(retNode.node());
+        }
+    }
+    
+}

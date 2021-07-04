@@ -17,6 +17,7 @@ use pool::compiler::ast::visitor::InstructionResolver;
 use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::ast::visitor::SignatureResolver;
 use pool::compiler::ast::visitor::TypeReferenceResolver;
+use pool::compiler::backend::X86Generator;
 use pool::compiler::parser::Parser;
 
 use pool::storage::ClassPathStorage;
@@ -40,15 +41,17 @@ class Compiler extends pool::compiler::ast::TypeManager {
     ClassPathStorage classPath;
     PoolStorage out;
     Parser parser;
+    AnyList preparedUnits; // LinkedList<TranslationUnitNode>
+    int outputMimetype;
+    
     PrettyPrinter pp;
     TypeReferenceResolver resolveTypeRefs;
     SignatureResolver resolveSignature;
     InstructionResolver resolveInstructions;
-    AnyList preparedUnits; // LinkedList<TranslationUnitNode>
+    X86Generator generatePASMUnit;
     
     AsmParser asmParser;
     AsmCompiler asmCompiler;
-    int outputMimetype;
     
     [] __init() {
         this._initTypeManager();
@@ -59,6 +62,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
         resolveTypeRefs.setTypeManager(this.typeManager());
         resolveSignature = this.createOwn(SignatureResolver:CLASSNAME);
         resolveInstructions = this.createOwn(InstructionResolver:CLASSNAME);
+        generatePASMUnit = this.createOwn(X86Generator:CLASSNAME);
         
         asmParser = this.createOwn(AsmParser:CLASSNAME);
         asmCompiler = this.createOwn(AsmCompiler:CLASSNAME);
@@ -103,7 +107,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compilePrepared() {
-        // TODO: tell pasm-generator to *not* resolve classes
+        generatePASMUnit.setResolveClasses(false);
         AnyIterator it = preparedUnits.iterator();
         while (!this.hasErrors() && it.hasNext()) {
             TranslationUnitNode unit = it.next();
@@ -118,7 +122,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compileAll() {
-        // TODO: tell pasm-generator to *not* resolve classes
+        generatePASMUnit.setResolveClasses(false);
         AnyMapEntryIterator it = _namedTypes.entries();
         while (!this.hasErrors() && it.hasNext()) {
             [String fqn, NamedType t] := it.nextPair();
@@ -129,7 +133,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compileStatic(OStream stream, String binding, int startAddress) {
-        // TODO: tell pasm-generator to resolve classes
+        generatePASMUnit.setResolveClasses(true);
         StorageElement header = classPath.getHeader(binding);
         if (!header) {
             this.error().printCString("invalid binding '").print(binding).printCString("'");
@@ -144,10 +148,6 @@ class Compiler extends pool::compiler::ast::TypeManager {
         
         AsmUnit unit = this.rt().createInstance(AsmUnit:CLASSNAME);
     
-        // TODO: remove after correct generation
-        this.__pushAsmComment(unit).printCString("binding: '").print(binding).printChar('\'');
-        this.__pushAsmComment(unit).printCString("startAddress: ").printPtr(startAddress);
-        
         { // parse header
             IStream in = header.getContent();
             asmParser.parse(in, binding, unit);
@@ -156,7 +156,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
         }
         
         // TODO: remove after correct generation
-        this.__fakeAsmEntry(unit);
+        generatePASMUnit.__fakeAsmEntry(unit);
         
         { // compile classes
             AnyMapEntryIterator it = _namedTypes.entries();
@@ -261,13 +261,11 @@ class Compiler extends pool::compiler::ast::TypeManager {
         this._debugStep(fqn, "generate PIR");
         generatePIR.visit(node.node());
         if (this.hasErrors()) { return false; }
+*/
         
         this._debugStep(fqn, "generate PASM");
-        generatePASMUnit.visit(node.node());
+        generatePASMUnit.generateClass(node, unit);
         if (this.hasErrors()) { return false; }
-*/
-        // TODO: remove after correct generation
-        this.__fakeAsmClass(unit, fqn);
 /*
         if (pp) {
             this._debugStep(fqn, "pretty print compiled");
@@ -306,40 +304,5 @@ class Compiler extends pool::compiler::ast::TypeManager {
     [] _debugStep(String fqn, cstring step) {
         if (!this.hasLogLevel(sys::log::Logger:DEBUG)) { return; }
         this.debug().printChar(' ').printChar(' ').print(fqn).printChar(':').printChar(' ').printCString(step);
-    }
-    
-    [OStream] __pushAsmComment(AsmUnit unit) {
-        pool::asm::ast::CommentNode comment = this.rt().createInstance(pool::asm::ast::CommentNode:CLASSNAME);
-        unit.getNodeList().add(comment.node());
-        return comment.getComment().ostream();
-    }
-    
-    [] __fakeAsmClass(AsmUnit unit, String fqn) {
-        this.__pushAsmComment(unit).printCString("TODO: generate asm for '").print(fqn).printCString("'");
-    }
-    
-    [] __fakeAsmEntry(AsmUnit unit) {
-        {
-            pool::asm::ast::DefinitionNode entryClass = this.rt().createInstance(pool::asm::ast::DefinitionNode:CLASSNAME);
-            pool::asm::ast::operand::NumberNode value = this.rt().createInstance(pool::asm::ast::operand::NumberNode:CLASSNAME);
-            String id = entryClass.createOwn(String:CLASSNAME);
-            id.assignCString("_entry_class_desc");
-            entryClass.initDefinition(id, value.operand());
-            unit.getNodeList().add(entryClass.node());
-        }
-        {
-            pool::asm::ast::LabelNode entryLabel = this.rt().createInstance(pool::asm::ast::LabelNode:CLASSNAME);
-            String label = entryLabel.createOwn(String:CLASSNAME);
-            label.assignCString("_entry_global_func");
-            entryLabel.setLabel(label);
-            unit.getNodeList().add(entryLabel.node());
-        }
-        {
-            pool::asm::ast::InstructionNode retNode = this.rt().createInstance(pool::asm::ast::InstructionNode:CLASSNAME);
-            String ret = retNode.createOwn(String:CLASSNAME);
-            ret.assignCString("ret");
-            retNode.setOperation(ret);
-            unit.getNodeList().add(retNode.node());
-        }
     }
 }

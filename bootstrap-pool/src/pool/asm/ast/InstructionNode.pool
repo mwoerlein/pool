@@ -24,6 +24,11 @@ class InstructionNode extends LineNode {
         operation.assignString(l);
         return this;
     }
+    [InstructionNode] setCOperation(cstring l) {
+        operation = this.createOwn(String:CLASSNAME);
+        operation.assignCString(l);
+        return this;
+    }
     
     [String] getOperation() { return operation; }
     

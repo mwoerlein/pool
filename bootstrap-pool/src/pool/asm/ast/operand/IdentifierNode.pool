@@ -13,8 +13,15 @@ class IdentifierNode extends OperandNode {
 
     String identifier;
 
-    [IdentifierNode] setIdentifier(String id) {
+    [] __init() {
+        this._initNode();
+        this._initIdentifierNode();
+    }
+    [] _initIdentifierNode() {
         identifier = this.createOwn(String:CLASSNAME);
+    }
+
+    [IdentifierNode] setIdentifier(String id) {
         identifier.assignString(id);
         return this;
     }
