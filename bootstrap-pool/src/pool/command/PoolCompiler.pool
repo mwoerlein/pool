@@ -55,7 +55,7 @@ Pool Bootstrap Compiler.
             out.printCString(name).printChar(' ').printCString(version).printNewline();
             return 0;
         }
-        if (!this.hasOption("output") || this.getArgumentsSize() < 1 || this.getListOptionSize("classpath") < 1) {
+        if (!this.hasValueOption("output") || this.getArgumentsSize() < 1 || this.getListOptionSize("classpath") < 1) {
             out.printCString(usage).printNewline();
             return -1;
         }

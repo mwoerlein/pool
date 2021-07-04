@@ -52,6 +52,10 @@ class CompilationUnit extends Owner, Logger {
     }
     
     [] addDefinition(String id, Value v) {
+        if (values.has(id)) {
+            this.newError().printCString("re-declaring '").print(id).printChar('\'');
+            return;
+        }
         values.set(this.createOwnStringFromString(id), v);
     }
     [int] hasDefinition(String id) { return values.has(id); }

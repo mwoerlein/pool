@@ -5,7 +5,6 @@ version = 0.1.0
 */
 namespace pool::command;
 
-use pool::asm::InstructionList;
 use pool::asm::Parser;
 use pool::asm::CompilationUnit;
 use pool::asm::i386::Compiler;
@@ -51,17 +50,18 @@ Pool Bootstrap Assembler.
       pasm [options] -o <file> <file>...
 
     Options:
-      -h --help                 Show this screen.
-      --version                 Show version.
-      -o <file> --output <file> Place the output into <file>.
-      -b --binary               Generate plain binary without module informations.
-      -c --class                Generate class module informations.
-      -t <org>                  Locates code in the output file at the absolute address given by org.
+      -h --help                        Show this screen.
+      --version                        Show version.
+      -o <file> --output <file>        Place the output into <file>.
+      -b --binary                      Generate plain binary without module information.
+      -c --class                       Generate class module information.
+      -t <org> --start-address <org>   Locates code in the output file at the absolute address given by org.
 ">);
         this.registerOptionAlias('h', "help")
             .registerOptionAlias('o', "output")
             .registerOptionAlias('b', "binary")
             .registerOptionAlias('c', "class")
+            .registerOptionAlias('t', "start-address")
         ;
     }
 
@@ -81,8 +81,8 @@ Pool Bootstrap Assembler.
         }
         
         int startAddress = 0;
-        if (this.hasValueOption("t")) {
-            startAddress = this.getValueOption("t").toInt();
+        if (this.hasValueOption("start-address")) {
+            startAddress = this.getValueOption("start-address").toInt();
         }
         if (this.hasOption("class")) {
             this.classProperties = this.createOwn(PropertyContainer:CLASSNAME);

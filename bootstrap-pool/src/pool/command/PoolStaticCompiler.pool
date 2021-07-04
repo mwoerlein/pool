@@ -1,0 +1,102 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::command;
+
+use pool::compiler::Compiler;
+
+use sys::core::anycollection::AnyIterator;
+use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
+
+class PoolStaticCompiler extends sys::log::LoggerAware, linux::Command {
+    
+    [] configure() {
+        this.setName("poolbsc")
+            .setVersion("0.3.0")
+            .setUsage(<"
+Pool Bootstrap Static Compiler.
+
+    Usage:
+      poolbsc [options] -o <file> -b <fqn> -c <dir> [-c <dir>]... <fqn>...
+
+    Options:
+      -h --help                        Show this screen.
+      --version                        Show version.
+      --trace                          Maximize verbosity.
+      -d --debug                       More increased verbosity.
+      -v --verbose                     Increase verbosity.
+      --warning                        Display warnings and errors, only.
+      --error                          Display errors, only.
+      --critical                       Display critical errors, only.
+      -b <fqn> --binding <fqn>         Use header/footer from <fqn>.
+      -t <org> --start-address <org>   Locates code in the output file at the absolute address given by org.
+      -o <file> --output <file>        Place the output into <file>.
+      -c <dir> --classpath <dir>       Search for classes in all of these directories.
+">);
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('d', "debug")
+            .registerOptionAlias('v', "verbose")
+            .registerOptionAlias('b', "binding")
+            .registerOptionAlias('t', "start-address")
+            .registerOptionAlias('o', "output")
+            .registerOptionAlias('c', "classpath").registerOptionList("classpath")
+        ;
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (!this.hasValueOption("output") || !this.hasValueOption("binding") || this.getArgumentsSize() < 1 || this.getListOptionSize("classpath") < 1) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+
+        // setup compiler
+        Compiler compiler = this.createOwn(Compiler:CLASSNAME);
+        compiler.initLogger(this.getLogger());
+        {
+            AnyIterator it = this.getListOption("classpath");
+            while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).poolStorage()); }
+            it.destroy();
+        }
+        
+        // prepare units
+        {
+            AnyIterator it = this.getArguments();
+            while (!compiler.hasErrors() && it.hasNext()) { compiler.prepare(it.next()); }
+            while (it.hasNext()) { compiler.skip(it.next()); }
+            it.destroy();
+        }
+        if (compiler.hasErrors()) { return -1; }
+
+        // compile units
+        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
+        if (!outfile) { return -1; }
+        
+        int startAddress = 0;
+        if (this.hasValueOption("start-address")) {
+            startAddress = this.getValueOption("start-address").toInt();
+        }
+        compiler.compileStatic(outfile.ostream(), this.getValueOption("binding"), startAddress);
+        outfile.destroy();
+        if (compiler.hasErrors()) { return -1; }
+        
+        return 0;
+    }
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        PoolStaticCompiler poolbsc = linux::Runtime:buildRuntime().createInstance(PoolStaticCompiler:CLASSNAME);
+        return poolbsc.execute(argc, argv);
+    }
+}

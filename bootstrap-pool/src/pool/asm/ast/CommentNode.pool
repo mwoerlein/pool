@@ -13,10 +13,17 @@ class CommentNode extends Node {
     String comment;
     int multiline;
 
-    [CommentNode] setComment(String c) {
+    [] __init() {
+        this._initNode();
+        this._initCommentNode();
+    }
+    [] _initCommentNode() {
+        multiline = false;
         comment = this.createOwn(String:CLASSNAME);
-        comment.assignString(c);
-        return this;
+    }
+
+    [String] getComment() {
+        return comment;
     }
     
     [CommentNode] setMultiline(int m) {

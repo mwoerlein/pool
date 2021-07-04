@@ -5,6 +5,10 @@ version = 0.1.0
 */
 namespace pool::compiler;
 
+use pool::asm::Parser as AsmParser;
+use pool::asm::CompilationUnit as AsmUnit;
+use pool::asm::i386::Compiler as AsmCompiler;
+
 use pool::compiler::ast::NamedType;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
@@ -23,6 +27,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::log::Logger;
 use sys::store::StorageElement;
+use sys::stream::IStream;
 use sys::stream::OStream;
 
 class Compiler extends pool::compiler::ast::TypeManager {
@@ -97,7 +102,6 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compileAll() {
-        int success = true;
         AnyMapEntryIterator it = _namedTypes.entries();
         while (!this.hasErrors() && it.hasNext()) {
             [String fqn, NamedType t] := it.nextPair();
@@ -105,6 +109,111 @@ class Compiler extends pool::compiler::ast::TypeManager {
             if (cd && !this._compileClass(fqn, cd)) { this._failUnit(cd.getName()); }
         }
         it.destroy();
+    }
+    
+    [] compileStatic(OStream stream, String binding, int startAddress) {
+        StorageElement header = classPath.getHeader(binding);
+        if (!header) {
+            this.error().printCString("invalid binding '").print(binding).printCString("'");
+            return;
+        }
+        StorageElement footer = classPath.getFooter(binding);
+        if (!footer) {
+            header.destroy();
+            this.error().printCString("invalid binding '").print(binding).printCString("'");
+            return;
+        }
+    
+        AsmParser parser = this.createOwn(AsmParser:CLASSNAME);
+        AsmCompiler compiler = this.createOwn(AsmCompiler:CLASSNAME);
+        AsmUnit unit = this.createOwn(AsmUnit:CLASSNAME);
+    
+        this.pushComment(unit).printCString("binding: '").print(binding).printChar('\'');
+        this.pushComment(unit).printCString("startAddress: ").printPtr(startAddress);
+        
+        { // parse header
+            IStream in = header.getContent();
+            parser.parse(in, binding, unit);
+            in.destroy();
+            header.destroy();
+        }
+        
+        { // compile classes
+            this.fakeEntry(unit);
+            AnyMapEntryIterator it = _namedTypes.entries();
+            while (!this.hasErrors() && it.hasNext()) {
+                [String fqn, NamedType t] := it.nextPair();
+                this.pushComment(unit).printCString("TODO: compile class '").print(fqn).printCString("'");
+                // TODO: compile class and append to unit/nodes
+            }
+            it.destroy();
+        }
+        
+        { // parse footer
+            IStream in = footer.getContent();
+            parser.parse(in, binding, unit);
+            in.destroy();
+            footer.destroy();
+        }
+        
+        // compile assembly
+        // TODO handle/display pasm errors
+        if (unit.hasErrors()) {
+            this.error().printCString("asm generation failed!");
+        } else {
+            compiler.prepare(unit);
+            if (unit.hasErrors()) {
+                this.error().printCString("asm preparation failed!");
+            } else {
+                compiler.compile(unit);
+                if (unit.hasErrors()) {
+                    this.error().printCString("asm compilation failed!");
+                } else {
+                    compiler.finalize(unit, startAddress);
+                    if (unit.hasErrors()) {
+                        this.error().printCString("asm finalization failed!");
+                    } else {
+                        //stream.print(nodes);
+                        unit.rawToStream(stream);
+                    }
+                }
+            }
+        }
+                
+        unit.destroy();
+        compiler.destroy();
+        parser.destroy();
+    }
+    
+    [OStream] pushComment(AsmUnit unit) {
+        pool::asm::ast::CommentNode comment = this.rt().createInstance(pool::asm::ast::CommentNode:CLASSNAME);
+        unit.getNodeList().add(comment.node());
+        return comment.getComment().ostream();
+    }
+    
+    [] fakeEntry(AsmUnit unit) {
+        {
+            pool::asm::ast::DefinitionNode entryClass = this.rt().createInstance(pool::asm::ast::DefinitionNode:CLASSNAME);
+            pool::asm::ast::operand::NumberNode value = this.rt().createInstance(pool::asm::ast::operand::NumberNode:CLASSNAME);
+            String id = entryClass.createOwn(String:CLASSNAME);
+            id.assignCString("_entry_class_desc");
+            entryClass.initDefinition(id, value.operand());
+            unit.getNodeList().add(entryClass.node());
+        }
+        {
+            pool::asm::ast::LabelNode entryLabel = this.rt().createInstance(pool::asm::ast::LabelNode:CLASSNAME);
+            String label = entryLabel.createOwn(String:CLASSNAME);
+            label.assignCString("_entry_global_func");
+            entryLabel.setLabel(label);
+            unit.getNodeList().add(entryLabel.node());
+        }
+        {
+            pool::asm::ast::InstructionNode retNode = this.rt().createInstance(pool::asm::ast::InstructionNode:CLASSNAME);
+            String ret = retNode.createOwn(String:CLASSNAME);
+            ret.assignCString("ret");
+            retNode.setOperation(ret);
+            unit.getNodeList().add(retNode.node());
+        }
     }
     
     [NamedType] getNamedType(String fqn) {

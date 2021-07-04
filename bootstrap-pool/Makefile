@@ -2,7 +2,7 @@ include ./Makefile.inc
 
 .PHONY: all clean regenerate-parsers tests clear-tests
 
-all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/pool $(BINDIR)/poolbc $(BINDIR)/parsergen
+all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/pool $(BINDIR)/poolbc $(BINDIR)/poolbsc $(BINDIR)/parsergen
 tests: clear-tests regenerate-test-parsers $(BINDIR)/pooltest
 	@$(BINDIR)/pooltest
 
@@ -27,6 +27,11 @@ $(BINDIR)/parsergen: $(SRCDIR)/pool/command/ParserGen.pool $(BINDIR) $(POOLSC)
 $(BINDIR)/poolbc: $(SRCDIR)/pool/command/PoolCompiler.pool $(BINDIR) $(POOLSC)
 	@echo "build poolbc (pool)"
 	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::PoolCompiler
+	@chmod a+x $@
+	
+$(BINDIR)/poolbsc: $(SRCDIR)/pool/command/PoolStaticCompiler.pool $(BINDIR) $(POOLSC)
+	@echo "build poolbsc (pool)"
+	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::PoolStaticCompiler
 	@chmod a+x $@
 	
 $(BINDIR)/pool: $(SRCDIR)/pool/command/PoolRuntime.pool $(BINDIR) $(POOLSC)
