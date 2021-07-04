@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::command;
 
 use pool::compiler::Compiler;
+use pool::storage::Mimetype;
 
 use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
@@ -14,7 +15,7 @@ class PoolCompiler extends sys::log::LoggerAware, linux::Command {
     
     [] configure() {
         this.setName("poolbc")
-            .setVersion("0.3.0")
+            .setVersion(Compiler:VERSION)
             .setUsage(<"
 Pool Bootstrap Compiler.
 
@@ -34,6 +35,8 @@ Pool Bootstrap Compiler.
       -c <dir> --classpath <dir>    Search for classes in all of these directories.
       -p <dir> --prettyprint <dir>  Dump classes into <dir>.
       -r --recursive                Generate output for all required classes.
+      -S --asm                      Compile only and generate assemble output. (default)
+      -B --binary                   Compile and assemble to generate binary outputs with class module information.
 ">);
         this.registerOptionAlias('h', "help")
             .registerOptionAlias('d', "debug")
@@ -42,6 +45,8 @@ Pool Bootstrap Compiler.
             .registerOptionAlias('p', "prettyprint")
             .registerOptionAlias('c', "classpath").registerOptionList("classpath")
             .registerOptionAlias('r', "recursive")
+            .registerOptionAlias('S', "asm")
+            .registerOptionAlias('B', "binary")
         ;
     }
 
@@ -59,6 +64,11 @@ Pool Bootstrap Compiler.
             out.printCString(usage).printNewline();
             return -1;
         }
+        if (this.hasOption("asm") && this.hasOption("binary")) {
+            this.rt().err().printCString("Only one of the following options are allowed: -S/--asm, -B/--binary").printNewline();
+            out.printCString(usage).printNewline();
+            return -1;
+        }
         
         // setup compiler
         Compiler compiler = this.createOwn(Compiler:CLASSNAME);
@@ -71,6 +81,11 @@ Pool Bootstrap Compiler.
         compiler.setOutput(this.openDirectory(this.getValueOption("output")).poolStorage());
         if (this.hasOption("prettyprint")) {
             compiler.setPrettyOutput(this.openDirectory(this.getValueOption("prettyprint")).poolStorage());
+        }
+        if (this.hasOption("binary")) {
+            compiler.setOutputMimetype(Mimetype:POOL_X86_CLASS);
+        } else {
+            compiler.setOutputMimetype(Mimetype:POOL_ASM);
         }
         
         // prepare units

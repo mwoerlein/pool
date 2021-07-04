@@ -16,8 +16,9 @@ class Mimetype {
     int POOL_SRC := 1;
     int POOL_ASM := 2;
     int POOL_GRAMMAR := 3;
-    int POOL_X86_CLASS := 4;
-    int GRID_STORE := 5;
+    int POOL_X86 := 4;
+    int POOL_X86_CLASS := 5;
+    int GRID_STORE := 6;
     
     cstring TYPE_UNKNOWN        := "application/octet-stream";
     
@@ -29,10 +30,11 @@ class Mimetype {
     cstring TYPE_GRID_STORE     := "application/x-grid-store";
     
     global [int] fromTypeString(String mimetype) {
-        if (mimetype.cequals(Mimetype:TYPE_POOL_SRC)) { return Mimetype:POOL_SRC; }
-        if (mimetype.cequals(Mimetype:TYPE_POOL_ASM)) { return Mimetype:POOL_ASM; }
-        if (mimetype.cequals(Mimetype:TYPE_POOL_GRAMMAR)) { return Mimetype:POOL_GRAMMAR; }
-        if (mimetype.cequals(Mimetype:TYPE_GRID_STORE)) { return Mimetype:GRID_STORE; }
+        if (mimetype.cequals(Mimetype:TYPE_POOL_SRC))       { return Mimetype:POOL_SRC; }
+        if (mimetype.cequals(Mimetype:TYPE_POOL_ASM))       { return Mimetype:POOL_ASM; }
+        if (mimetype.cequals(Mimetype:TYPE_POOL_GRAMMAR))   { return Mimetype:POOL_GRAMMAR; }
+        if (mimetype.cequals(Mimetype:TYPE_BIN_X86))        { return Mimetype:POOL_X86; }
+        if (mimetype.cequals(Mimetype:TYPE_GRID_STORE))     { return Mimetype:GRID_STORE; }
         return Mimetype:UNKNOWN;
     }
     
@@ -40,20 +42,19 @@ class Mimetype {
         if (!p.hasCStringProperty(Mimetype:PROPERTY)) { return Mimetype:UNKNOWN; }
         String mimetypeString = p.getCStringProperty(Mimetype:PROPERTY);
         int mimetype = Mimetype:fromTypeString(mimetypeString);
-        if (mimetype == Mimetype:UNKNOWN) {
-            if (mimetypeString.cequals(Mimetype:TYPE_BIN_X86) && p.isCStringProperty("pool.class", "true")) {
-                return Mimetype:POOL_X86_CLASS;
-            }
+        if (mimetype == Mimetype:POOL_X86 && p.isCStringProperty("pool.class", "true")) {
+            return Mimetype:POOL_X86_CLASS;
         }
         return mimetype;
     }
     
     global [cstring] toTypeCString(int id) {
-        if (id == Mimetype:POOL_SRC) { return Mimetype:TYPE_POOL_SRC; }
-        if (id == Mimetype:POOL_ASM) { return Mimetype:TYPE_POOL_ASM; }
-        if (id == Mimetype:POOL_GRAMMAR) { return Mimetype:TYPE_POOL_GRAMMAR; }
-        if (id == Mimetype:POOL_X86_CLASS) { return Mimetype:TYPE_BIN_X86; }
-        if (id == Mimetype:GRID_STORE) { return Mimetype:TYPE_GRID_STORE; }
+        if (id == Mimetype:POOL_SRC)        { return Mimetype:TYPE_POOL_SRC; }
+        if (id == Mimetype:POOL_ASM)        { return Mimetype:TYPE_POOL_ASM; }
+        if (id == Mimetype:POOL_GRAMMAR)    { return Mimetype:TYPE_POOL_GRAMMAR; }
+        if (id == Mimetype:POOL_X86)        { return Mimetype:TYPE_BIN_X86; }
+        if (id == Mimetype:POOL_X86_CLASS)  { return Mimetype:TYPE_BIN_X86; }
+        if (id == Mimetype:GRID_STORE)      { return Mimetype:TYPE_GRID_STORE; }
         return Mimetype:TYPE_UNKNOWN;
     }
 

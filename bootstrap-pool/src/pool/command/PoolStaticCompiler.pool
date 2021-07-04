@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::command;
 
 use pool::compiler::Compiler;
+use pool::storage::Mimetype;
 
 use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
@@ -15,7 +16,7 @@ class PoolStaticCompiler extends sys::log::LoggerAware, linux::Command {
     
     [] configure() {
         this.setName("poolbsc")
-            .setVersion("0.3.0")
+            .setVersion(Compiler:VERSION)
             .setUsage(<"
 Pool Bootstrap Static Compiler.
 
@@ -35,6 +36,8 @@ Pool Bootstrap Static Compiler.
       -t <org> --start-address <org>   Locates code in the output file at the absolute address given by org.
       -o <file> --output <file>        Place the output into <file>.
       -c <dir> --classpath <dir>       Search for classes in all of these directories.
+      -S --asm                         Compile only and generate resolved assemble output.
+      -B --binary                      Compile and assemble to generate binary output. (default)
 ">);
         this.registerOptionAlias('h', "help")
             .registerOptionAlias('d', "debug")
@@ -43,6 +46,8 @@ Pool Bootstrap Static Compiler.
             .registerOptionAlias('t', "start-address")
             .registerOptionAlias('o', "output")
             .registerOptionAlias('c', "classpath").registerOptionList("classpath")
+            .registerOptionAlias('S', "asm")
+            .registerOptionAlias('B', "binary")
         ;
     }
 
@@ -60,6 +65,11 @@ Pool Bootstrap Static Compiler.
             out.printCString(usage).printNewline();
             return -1;
         }
+        if (this.hasOption("asm") && this.hasOption("binary")) {
+            this.rt().err().printCString("Only one of the following options are allowed: -S/--asm, -B/--binary").printNewline();
+            out.printCString(usage).printNewline();
+            return -1;
+        }
 
         // setup compiler
         Compiler compiler = this.createOwn(Compiler:CLASSNAME);
@@ -68,6 +78,11 @@ Pool Bootstrap Static Compiler.
             AnyIterator it = this.getListOption("classpath");
             while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).poolStorage()); }
             it.destroy();
+        }
+        if (this.hasOption("asm")) {
+            compiler.setOutputMimetype(Mimetype:POOL_ASM);
+        } else {
+            compiler.setOutputMimetype(Mimetype:POOL_X86);
         }
         
         // prepare units

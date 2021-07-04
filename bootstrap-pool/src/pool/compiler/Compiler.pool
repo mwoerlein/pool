@@ -18,19 +18,24 @@ use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::ast::visitor::SignatureResolver;
 use pool::compiler::ast::visitor::TypeReferenceResolver;
 use pool::compiler::parser::Parser;
+
 use pool::storage::ClassPathStorage;
+use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
 use sys::core::String;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::utils::PropertyContainer;
 use sys::log::Logger;
 use sys::store::StorageElement;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
 class Compiler extends pool::compiler::ast::TypeManager {
+
+    cstring VERSION := "0.3.0";
 
     ClassPathStorage classPath;
     PoolStorage out;
@@ -41,6 +46,10 @@ class Compiler extends pool::compiler::ast::TypeManager {
     InstructionResolver resolveInstructions;
     AnyList preparedUnits; // LinkedList<TranslationUnitNode>
     
+    AsmParser asmParser;
+    AsmCompiler asmCompiler;
+    int outputMimetype;
+    
     [] __init() {
         this._initTypeManager();
         parser = this.createOwn(Parser:CLASSNAME);
@@ -50,6 +59,10 @@ class Compiler extends pool::compiler::ast::TypeManager {
         resolveTypeRefs.setTypeManager(this.typeManager());
         resolveSignature = this.createOwn(SignatureResolver:CLASSNAME);
         resolveInstructions = this.createOwn(InstructionResolver:CLASSNAME);
+        
+        asmParser = this.createOwn(AsmParser:CLASSNAME);
+        asmCompiler = this.createOwn(AsmCompiler:CLASSNAME);
+        outputMimetype = Mimetype:POOL_ASM;
     }
     [Compiler] initLogger(Logger logger) {
         this.setLogger(logger);
@@ -70,6 +83,8 @@ class Compiler extends pool::compiler::ast::TypeManager {
         return this;
     }
     
+    [Compiler] setOutputMimetype(int mimetype) { outputMimetype = mimetype; return this; }
+    
     [int] hasErrors() { return logger.has(Logger:ERROR); }
     
     [] prepare(String fqn) {
@@ -88,6 +103,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compilePrepared() {
+        // TODO: tell pasm-generator to *not* resolve classes
         AnyIterator it = preparedUnits.iterator();
         while (!this.hasErrors() && it.hasNext()) {
             TranslationUnitNode unit = it.next();
@@ -102,6 +118,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compileAll() {
+        // TODO: tell pasm-generator to *not* resolve classes
         AnyMapEntryIterator it = _namedTypes.entries();
         while (!this.hasErrors() && it.hasNext()) {
             [String fqn, NamedType t] := it.nextPair();
@@ -112,6 +129,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [] compileStatic(OStream stream, String binding, int startAddress) {
+        // TODO: tell pasm-generator to resolve classes
         StorageElement header = classPath.getHeader(binding);
         if (!header) {
             this.error().printCString("invalid binding '").print(binding).printCString("'");
@@ -123,97 +141,43 @@ class Compiler extends pool::compiler::ast::TypeManager {
             this.error().printCString("invalid binding '").print(binding).printCString("'");
             return;
         }
+        
+        AsmUnit unit = this.rt().createInstance(AsmUnit:CLASSNAME);
     
-        AsmParser parser = this.createOwn(AsmParser:CLASSNAME);
-        AsmCompiler compiler = this.createOwn(AsmCompiler:CLASSNAME);
-        AsmUnit unit = this.createOwn(AsmUnit:CLASSNAME);
-    
-        this.pushComment(unit).printCString("binding: '").print(binding).printChar('\'');
-        this.pushComment(unit).printCString("startAddress: ").printPtr(startAddress);
+        // TODO: remove after correct generation
+        this.__pushAsmComment(unit).printCString("binding: '").print(binding).printChar('\'');
+        this.__pushAsmComment(unit).printCString("startAddress: ").printPtr(startAddress);
         
         { // parse header
             IStream in = header.getContent();
-            parser.parse(in, binding, unit);
+            asmParser.parse(in, binding, unit);
             in.destroy();
             header.destroy();
         }
         
+        // TODO: remove after correct generation
+        this.__fakeAsmEntry(unit);
+        
         { // compile classes
-            this.fakeEntry(unit);
             AnyMapEntryIterator it = _namedTypes.entries();
             while (!this.hasErrors() && it.hasNext()) {
                 [String fqn, NamedType t] := it.nextPair();
-                this.pushComment(unit).printCString("TODO: compile class '").print(fqn).printCString("'");
-                // TODO: compile class and append to unit/nodes
+                ClassDeclNode cd = t.getClassDeclNode();
+                if (cd && !this._compileClassToAsmUnit(fqn, cd, unit)) { this._failUnit(cd.getName()); }
             }
             it.destroy();
         }
         
         { // parse footer
             IStream in = footer.getContent();
-            parser.parse(in, binding, unit);
+            asmParser.parse(in, binding, unit);
             in.destroy();
             footer.destroy();
         }
         
-        // compile assembly
-        // TODO handle/display pasm errors
-        if (unit.hasErrors()) {
-            this.error().printCString("asm generation failed!");
-        } else {
-            compiler.prepare(unit);
-            if (unit.hasErrors()) {
-                this.error().printCString("asm preparation failed!");
-            } else {
-                compiler.compile(unit);
-                if (unit.hasErrors()) {
-                    this.error().printCString("asm compilation failed!");
-                } else {
-                    compiler.finalize(unit, startAddress);
-                    if (unit.hasErrors()) {
-                        this.error().printCString("asm finalization failed!");
-                    } else {
-                        //stream.print(nodes);
-                        unit.rawToStream(stream);
-                    }
-                }
-            }
-        }
-                
+        // no headers/properties allowed/required for statically linked content
+        this._serializeAsmUnit(stream, unit, startAddress);
         unit.destroy();
-        compiler.destroy();
-        parser.destroy();
-    }
-    
-    [OStream] pushComment(AsmUnit unit) {
-        pool::asm::ast::CommentNode comment = this.rt().createInstance(pool::asm::ast::CommentNode:CLASSNAME);
-        unit.getNodeList().add(comment.node());
-        return comment.getComment().ostream();
-    }
-    
-    [] fakeEntry(AsmUnit unit) {
-        {
-            pool::asm::ast::DefinitionNode entryClass = this.rt().createInstance(pool::asm::ast::DefinitionNode:CLASSNAME);
-            pool::asm::ast::operand::NumberNode value = this.rt().createInstance(pool::asm::ast::operand::NumberNode:CLASSNAME);
-            String id = entryClass.createOwn(String:CLASSNAME);
-            id.assignCString("_entry_class_desc");
-            entryClass.initDefinition(id, value.operand());
-            unit.getNodeList().add(entryClass.node());
-        }
-        {
-            pool::asm::ast::LabelNode entryLabel = this.rt().createInstance(pool::asm::ast::LabelNode:CLASSNAME);
-            String label = entryLabel.createOwn(String:CLASSNAME);
-            label.assignCString("_entry_global_func");
-            entryLabel.setLabel(label);
-            unit.getNodeList().add(entryLabel.node());
-        }
-        {
-            pool::asm::ast::InstructionNode retNode = this.rt().createInstance(pool::asm::ast::InstructionNode:CLASSNAME);
-            String ret = retNode.createOwn(String:CLASSNAME);
-            ret.assignCString("ret");
-            retNode.setOperation(ret);
-            unit.getNodeList().add(retNode.node());
-        }
     }
     
     [NamedType] getNamedType(String fqn) {
@@ -247,6 +211,43 @@ class Compiler extends pool::compiler::ast::TypeManager {
     }
     
     [int] _compileClass(String fqn, ClassDeclNode node) {
+        
+        AsmUnit unit = this.rt().createInstance(AsmUnit:CLASSNAME);
+        if (!this._compileClassToAsmUnit(fqn, node, unit)) {
+            unit.destroy();
+            return false;
+        }
+        
+        PropertyContainer unitProps = unit.createOwn(PropertyContainer:CLASSNAME);
+        { // setup properties for compiled class
+            PropertyContainer srcProps = node.getScope().getUnitNode().getElement().propertyContainer();
+            unitProps.setCStringProperty("meta.mimetype", Mimetype:toTypeCString(outputMimetype));
+            unitProps.setCStringProperty("meta.description", "class");
+            unitProps.getCStringProperty("meta.description").printChar(' ').printChar('"').print(fqn).printChar('"');
+            
+            unitProps.setCStringProperty("pool.class", "true");
+            
+            unitProps.setCStringProperty("pool_source.unit", fqn.toCString());
+            String srcVersion = srcProps.getCStringProperty("meta.version");
+            if (srcVersion) {
+                unitProps.setCStringProperty("pool.version", srcVersion.toCString());
+                unitProps.setCStringProperty("pool_source.version", srcVersion.toCString());
+            }
+            String srcAuthor = srcProps.getCStringProperty("meta.author");
+            if (srcAuthor) { unitProps.setCStringProperty("pool_source.author", srcAuthor.toCString()); }
+        }
+        
+        OStream elem = out.writeElement(fqn, this.outputMimetype, unitProps);
+        this._serializeAsmUnit(elem, unit, 0);
+        elem.destroy();
+        
+        unit.destroy();
+        
+        if (this.hasErrors()) { return false; }
+        return true;
+    }
+    
+    [int] _compileClassToAsmUnit(String fqn, ClassDeclNode node, AsmUnit unit) {
         this.notice().printCString("compile ").print(fqn);
         
         this._debugStep(fqn, "resolve signature");
@@ -264,12 +265,10 @@ class Compiler extends pool::compiler::ast::TypeManager {
         this._debugStep(fqn, "generate PASM");
         generatePASMUnit.visit(node.node());
         if (this.hasErrors()) { return false; }
-        
-        // TODO: print PASM
-        // or
-        // TODO: compile PASM
-        // TODO: print binary
-        
+*/
+        // TODO: remove after correct generation
+        this.__fakeAsmClass(unit, fqn);
+/*
         if (pp) {
             this._debugStep(fqn, "pretty print compiled");
             pp.visit(node.getScope().getUnitNode().node());
@@ -279,6 +278,27 @@ class Compiler extends pool::compiler::ast::TypeManager {
         return true;
     }
     
+    [] _serializeAsmUnit(OStream stream, AsmUnit unit, int startAddress) {
+        // TODO handle/display pasm errors
+        if (unit.hasErrors()) { this.error().printCString("asm generation failed!"); return; }
+        
+        if (outputMimetype == Mimetype:POOL_ASM) {
+            stream.print(unit.getNodeList());
+        } else if (outputMimetype == Mimetype:POOL_X86 || outputMimetype == Mimetype:POOL_X86_CLASS) {
+            // compile assembly
+            asmCompiler.prepare(unit);
+            if (unit.hasErrors()) { this.error().printCString("asm preparation failed!"); return; }
+            asmCompiler.compile(unit);
+            if (unit.hasErrors()) { this.error().printCString("asm compilation failed!"); return; }
+            asmCompiler.finalize(unit, startAddress);
+            if (unit.hasErrors()) { this.error().printCString("asm finalization failed!"); return; }
+            
+            unit.rawToStream(stream);
+        } else {
+            this.error().printCString("unexpected output format ").printInt(outputMimetype);
+        }
+    }
+    
     [] _failUnit(String fqn) {
         this.error().print(fqn).printCString(" failed");
     }
@@ -286,5 +306,40 @@ class Compiler extends pool::compiler::ast::TypeManager {
     [] _debugStep(String fqn, cstring step) {
         if (!this.hasLogLevel(sys::log::Logger:DEBUG)) { return; }
         this.debug().printChar(' ').printChar(' ').print(fqn).printChar(':').printChar(' ').printCString(step);
+    }
+    
+    [OStream] __pushAsmComment(AsmUnit unit) {
+        pool::asm::ast::CommentNode comment = this.rt().createInstance(pool::asm::ast::CommentNode:CLASSNAME);
+        unit.getNodeList().add(comment.node());
+        return comment.getComment().ostream();
+    }
+    
+    [] __fakeAsmClass(AsmUnit unit, String fqn) {
+        this.__pushAsmComment(unit).printCString("TODO: generate asm for '").print(fqn).printCString("'");
+    }
+    
+    [] __fakeAsmEntry(AsmUnit unit) {
+        {
+            pool::asm::ast::DefinitionNode entryClass = this.rt().createInstance(pool::asm::ast::DefinitionNode:CLASSNAME);
+            pool::asm::ast::operand::NumberNode value = this.rt().createInstance(pool::asm::ast::operand::NumberNode:CLASSNAME);
+            String id = entryClass.createOwn(String:CLASSNAME);
+            id.assignCString("_entry_class_desc");
+            entryClass.initDefinition(id, value.operand());
+            unit.getNodeList().add(entryClass.node());
+        }
+        {
+            pool::asm::ast::LabelNode entryLabel = this.rt().createInstance(pool::asm::ast::LabelNode:CLASSNAME);
+            String label = entryLabel.createOwn(String:CLASSNAME);
+            label.assignCString("_entry_global_func");
+            entryLabel.setLabel(label);
+            unit.getNodeList().add(entryLabel.node());
+        }
+        {
+            pool::asm::ast::InstructionNode retNode = this.rt().createInstance(pool::asm::ast::InstructionNode:CLASSNAME);
+            String ret = retNode.createOwn(String:CLASSNAME);
+            ret.assignCString("ret");
+            retNode.setOperation(ret);
+            unit.getNodeList().add(retNode.node());
+        }
     }
 }
