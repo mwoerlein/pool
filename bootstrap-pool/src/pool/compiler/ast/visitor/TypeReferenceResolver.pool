@@ -256,7 +256,7 @@ class TypeReferenceResolver extends Visitor {
         [ClassScope cs, InstanceScope is] := _curScope.registerClass(node, node.getName());
         // inject CLASSNAME constant
         node.addVariableInitInst(this._buildStringConstant("CLASSNAME", fqn));
-        _typeManager.addNamedType(cs.setFullQualifiedName(fqn));
+        _typeManager.addNamedType(cs.initPrefixes(fqn));
         
         return true;
     }

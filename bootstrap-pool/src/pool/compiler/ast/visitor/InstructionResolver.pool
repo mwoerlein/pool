@@ -79,6 +79,7 @@ use sys::stream::OStream;
 class InstructionResolver extends Visitor {
 
     Scope _curScope;
+    VariableInitInstNode _curInitNode;
     
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
@@ -174,9 +175,11 @@ class InstructionResolver extends Visitor {
     }
     [int] visitVariableInitInst(VariableInitInstNode node) {
         int success = true;
+        _curInitNode = node;
         success = node.getVariables().acceptAll(this.visitor()) && success;
         success = node.getInitializer().accept(this.visitor()) && success;
         // TODO: compare initializer.resolvedType with variables.resolvedType
+        _curInitNode = null;
         return success;
     }
     [int] visitWhileInst(WhileInstNode node) {
@@ -239,6 +242,18 @@ class InstructionResolver extends Visitor {
         Type varRT = node.getVariable().getResolvedType();
         node.setResolvedType(varRT);
         return success;
+    }
+    [int] visitConstCStringExpr(ConstCStringExprNode node) {
+        // register constant strings in class with constant name as id-seed, if available
+        String id = null;
+        Scope s = node.getScope();
+        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, s);
+        if (cs && _curInitNode && _curInitNode.getVariables().size() == 1) {
+            VariableDeclNode decl = _curInitNode.getVariables().first();
+            id = decl.getName();
+        }
+        s.getClassDeclNode().getClassScope().stringId(node.getValue(), id);
+        return true;
     }
     [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
         int success = true;

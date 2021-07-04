@@ -15,8 +15,7 @@ class FullQualifiedNameIterator extends AnyIterator {
     String tmp;
     
     [] init(IStream in) {
-        this.in = in;
-        this.own(in);
+        this.in = this.own(in);
         tmp = this.createOwn(String:CLASSNAME);
         while (!in.isEmpty() && (in.peekChar() == ':')) { in.readChar(); }
         this.initNext();

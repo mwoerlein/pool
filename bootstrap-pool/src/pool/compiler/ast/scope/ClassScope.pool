@@ -13,6 +13,7 @@ use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::utils::FullQualifiedNameIterator;
 use sys::stream::OStream;
 
 class ClassScope extends NamedType, Scope {
@@ -21,6 +22,10 @@ class ClassScope extends NamedType, Scope {
     
     AnyMap _supers;  // HashMap<String, ClassScope>
     AnyMap _required;  // HashMap<String, ClassScope>
+    AnyMap _strings;  // HashMap<String, String>
+    
+    String _localPrefix;
+    String _globalPrefix;
 
     [] __init() {
         this._initScope();
@@ -30,7 +35,24 @@ class ClassScope extends NamedType, Scope {
     [] _initClassScope() {
         _supers = this.createOwn(AnyMap:CLASSNAME);
         _required = this.createOwn(AnyMap:CLASSNAME);
+        _strings = this.createOwn(AnyMap:CLASSNAME);
+        
+        _localPrefix = this.createOwn(String:CLASSNAME);
+        _globalPrefix = this.createOwn(String:CLASSNAME);
     }
+    
+    [NamedType] initPrefixes(String fqn) {
+        FullQualifiedNameIterator parts = this.rt().createInstance(FullQualifiedNameIterator:CLASSNAME);
+        parts.init(fqn.toIStream());
+        while (parts.hasNext()) {
+            _globalPrefix.printChar('_').print(parts.next());
+        }
+        parts.destroy();
+        _localPrefix.printChar('_')._printUInt(fqn.hash(), 16, 8);
+        return this.setFullQualifiedName(fqn);
+    }
+    [String] getLocalPrefix() { return _localPrefix; }
+    [String] getGlobalPrefix() { return _globalPrefix; }
     
     [ClassScope] setClassDeclNode(ClassDeclNode classDecl) { _classDecl = classDecl; return this; }
     [ClassDeclNode] getClassDeclNode() { return _classDecl; }
@@ -47,10 +69,26 @@ class ClassScope extends NamedType, Scope {
     }
     [int] hasSuper(ClassScope super) { return _supers.has(super.getFullQualifiedName()); }
     [AnyIterator] getSupers() { return _supers.values(); }
+    [ClassScope] getFirstSuper() { return _supers.first(); }
     
     [] markAsGloballyRequired(ClassScope required) { _required.set(required.getFullQualifiedName(), required); }
     [int] hasGloballyRequiredClass(ClassScope scope) { return _required.has(scope.getFullQualifiedName()); }
     [AnyIterator] getGloballyRequiredClasses() { return _required.values(); }
+    
+    [String] stringId(String value, String seed) {
+        String id = _strings.get(value);
+        if (!id) {
+            if (seed) {
+                id = seed;
+            } else {
+                id = this.createOwn(String:CLASSNAME);
+                id.printCString("string_").printInt(_strings.size());
+            }
+            _strings.set(value, id);
+        }
+        return id;
+    }
+    [AnyMapEntryIterator] strings() { return _strings.entries(); }
     
     [int] isBool() { return false; }
     
