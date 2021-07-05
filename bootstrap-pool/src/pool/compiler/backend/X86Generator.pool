@@ -25,6 +25,7 @@ use pool::compiler::ast::node::expression::ConstIntExprNode;
 use pool::compiler::ast::node::instruction::VariableInitInstNode;
 
 use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
@@ -50,6 +51,7 @@ class X86Generator extends sys::core::Object {
         _unit = unit;
         _nodes = unit.getNodeList();
         _classScope = node.getClassScope();
+        InstanceScope _instanceScope = node.getInstanceScope();
 
         // header
         this._newline();
@@ -133,13 +135,40 @@ class X86Generator extends sys::core::Object {
         // vtabs
         this._comment().printCString(" virtual method tabs");
         this._label().print(this._virtMethodTabs());
-        // TODO: generate method tabs
+        {
+            AnyIterator it = _classScope.getSupers();
+            while (it.hasNext()) {
+                ClassScope super = it.next();
+                this._label().print(this._virtMethodTab(super));
+                {
+                    AnyIterator mit = super.getInstanceScope().getMethods();
+                    while (mit.hasNext()) {
+                        MethodDeclNode methodDecl = _instanceScope.getOwnMethod(mit.next()).getMethodDeclNode();
+                        this._long(this._number(4 * methodDecl.getIndex()));
+                        this._long(this._classTabOffset(methodDecl.getScope().getClassDeclNode().getClassScope()));
+                    }
+                    mit.destroy();
+                }
+            }
+            it.destroy();
+        }
         this._newline();
 
         // methods tab
         this._comment().printCString(" method decl tab");
         this._label().print(this._methodDeclTab());
-        // TODO: generate method tabs
+        {
+            AnyIterator it = _class.getMethods().iterator();
+            while (it.hasNext()) {
+                MethodDeclNode method = it.next();
+                if (method.isAbstract() || method.isNaked()) {
+                    this._long0();
+                } else {
+                    this._long(this._classOffset(this._methodDecl(method)));
+                }
+            }
+            it.destroy();
+        }
         this._newline();
 
         // constants
@@ -177,22 +206,96 @@ class X86Generator extends sys::core::Object {
         }
         this._newline();
 
-        // instance template and variables
+        // instance template
         this._comment().printCString(" instance template");
         this._label().print(this._instanceStart());
         this._long0(); // @class-desc
         this._long0(); // @meminfo
-        // TODO: generate instance handles
-        // TODO: generate instance vars
+        
+        // generate handles
+        {
+            AnyIterator it = _classScope.getSupers();
+            while (it.hasNext()) {
+                ClassScope super = it.next();
+                int isSelf = _classScope.equals(super);
+                this._label().print(this._instanceHandle(super));
+                this._long0(); // _call_entry
+                this._long0(); // @inst
+                this._long0(); // vtab-offset
+                
+                AnyIterator sit = super.getSupers();
+                while (sit.hasNext()) {
+                    ClassScope ssuper = sit.next();
+                    if (isSelf) {
+                        this._local(
+                            this._instanceHandleVarsOffset(ssuper),
+                            this._offset(this._instanceHandle(super), this._instanceHandleVars(ssuper))
+                        );
+                        this._label().print(this._instanceHandleVars(ssuper));
+                    }
+                    this._long(this._instanceOffset(this._instanceVars(ssuper))); // @Super-Obj-Vars
+                }
+                sit.destroy();
+            }
+            it.destroy();
+        }
+        this._newline();
+        
+        // generate instance vars
+        {
+            AnyIterator it = _classScope.getSupers();
+            while (it.hasNext()) {
+                ClassScope super = it.next();
+                int isSelf = _classScope.equals(super);
+                this._label().print(this._instanceVars(super));
+                
+                AnyIterator vit = super.getClassDeclNode().getVariables().iterator();
+                while (vit.hasNext()) {
+                    VariableDeclNode var = vit.next();
+                    this._comment().printCString(" variable ").print(var.getName());
+                    //if (isSelf || !_resolveClasses) {
+                        this._local(
+                            this._instanceVarOffset(super, var),
+                            this._offset(this._instanceVars(super), this._instanceVar(super, var))
+                        );
+                    //}
+                    this._label().print(this._instanceVar(super, var));
+                    this._long0(); // TODO: prepare variable according to var.getResolvedType().getSizeOfVariable()
+                }
+                vit.destroy();
+            }
+            it.destroy();
+        }
         this._label().print(this._instanceEnd());
         this._newline();
     
         // methods
         this._comment().printCString(" method definitions");
-        // TODO: generate methods
+        {
+            AnyIterator it = _class.getMethods().iterator();
+            while (it.hasNext()) {
+                this.generateMethod(it.next());
+            }
+            it.destroy();
+        }
         
         this._label().print(this._classEnd());
         this._newline();
+    }
+
+    [] generateMethod(MethodDeclNode method) {
+        this._newline();
+        this._comment().printCString(" // method ").print(method.getName());
+        if (method.isAbstract()) { return; }
+        if (method.isEntry()) {
+            this._local(this._id("_entry_class_desc"), this._classStart());
+            this._local(this._id("_entry_global_func"), this._methodDecl(method));
+        }
+        if (!method.isNaked()) {
+            this._label().print(this._methodDecl(method));
+        }
+        // TODO: generate instructions from basic blocks
+        this._ret();
     }
     
     // HELPER
@@ -319,6 +422,12 @@ class X86Generator extends sys::core::Object {
          return formulaNode.operand();
     }
     
+    [OperandNode] _id(cstring identifier) {
+         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         idNode.getIdentifier().printCString(identifier);
+         return idNode.operand();
+    }
+    
     [OperandNode] _id1(String prefix) {
          IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
          idNode.getIdentifier().print(prefix);
@@ -346,29 +455,12 @@ class X86Generator extends sys::core::Object {
     }
     
     // TODO: remove after correct generation
-    [] __fakeAsmEntry(CompilationUnit unit) {
-        {
-            DefinitionNode entryClass = this.rt().createInstance(DefinitionNode:CLASSNAME);
-            NumberNode value = this.rt().createInstance(NumberNode:CLASSNAME);
-            String id = entryClass.createOwn(String:CLASSNAME);
-            id.assignCString("_entry_class_desc");
-            entryClass.initDefinition(id, value.operand());
-            unit.getNodeList().add(entryClass.node());
-        }
-        {
-            LabelNode entryLabel = this.rt().createInstance(LabelNode:CLASSNAME);
-            String label = entryLabel.createOwn(String:CLASSNAME);
-            label.assignCString("_entry_global_func");
-            entryLabel.setLabel(label);
-            unit.getNodeList().add(entryLabel.node());
-        }
-        {
-            InstructionNode retNode = this.rt().createInstance(InstructionNode:CLASSNAME);
-            String ret = retNode.createOwn(String:CLASSNAME);
-            ret.assignCString("ret");
-            retNode.setOperation(ret);
-            unit.getNodeList().add(retNode.node());
-        }
+    [] _ret() {
+        InstructionNode retNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        String ret = retNode.createOwn(String:CLASSNAME);
+        ret.assignCString("ret");
+        retNode.setOperation(ret);
+        _nodes.add(retNode.node());
     }
     
 }

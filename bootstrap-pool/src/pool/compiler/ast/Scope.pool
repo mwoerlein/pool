@@ -121,6 +121,9 @@ class Scope extends sys::core::Object {
         if (_parent) { return _parent.getMethod(name); }
         return null;
     }
+    [MethodScope] getOwnMethod(MethodScope scope) {
+        return this.getMethod(scope.getMethodDeclNode().getName());
+    }
     [AnyIterator] getMethods() {
         return _methods.iterator();
     }

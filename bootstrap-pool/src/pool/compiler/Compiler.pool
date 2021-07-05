@@ -155,9 +155,6 @@ class Compiler extends pool::compiler::ast::TypeManager {
             header.destroy();
         }
         
-        // TODO: remove after correct generation
-        generatePASMUnit.__fakeAsmEntry(unit);
-        
         { // compile classes
             AnyMapEntryIterator it = _namedTypes.entries();
             while (!this.hasErrors() && it.hasNext()) {
