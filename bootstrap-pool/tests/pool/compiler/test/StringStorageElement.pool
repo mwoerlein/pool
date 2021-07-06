@@ -14,7 +14,7 @@ class StringStorageElement extends StorageElement, String {
     
     [] __init() {
         this._initStorageElement();
-        this._initString();
+        this._initString(16);
     }
     [] __destruct() {
         this._destructString();
