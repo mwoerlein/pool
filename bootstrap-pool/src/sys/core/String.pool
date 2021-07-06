@@ -285,19 +285,21 @@ class String extends OStream {
     global [int] compareCStrings(cstring a, cstring b) {
         int ret = 0;
         __pasm__(<"
-            movl 0, %ecx
+            movl 0, %eax
         _scs_strcmp_loop:
-            movb (%ebx), %cl
-            cmpb 0, %cl;        je _scs_strcmp_ret_neg_a
-            cmpb 0, (%eax);     je _scs_strcmp_ret
-            subb (%eax), %cl;   jnz _scs_strcmp_ret
-            addl 1, %eax
+            movb (%ebx), %al
+            cmpb 0, %al;        je _scs_strcmp_ret_neg_a
+            cmpb 0, (%ecx);     je _scs_strcmp_ret
+            subb (%ecx), %al;   jnz _scs_strcmp_ret
+            addl 1, %ecx
             addl 1, %ebx
             jmp _scs_strcmp_loop
         _scs_strcmp_ret_neg_a:
-            subb (%eax), %cl
+            subb (%ecx), %al
         _scs_strcmp_ret:
-        ">, {"%eax": a, "%ebx": b}, {"%ecx": ret});
+            .byte 0x66; .byte 0x98; #// cbw
+            .byte 0x98              #// cwde
+        ">, {"%ebx": a, "%ecx": b}, {"%eax": ret});
         return ret;
     }
     

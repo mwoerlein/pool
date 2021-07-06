@@ -23,6 +23,7 @@ class StringTest extends test::TestCase {
         this.testOStream();
         this.testPrintToStream();
         this.testRawInt();
+        this.testCompareCStrings();
     }
     
     [int] testInitializationClearAndLength() {
@@ -379,6 +380,25 @@ class StringTest extends test::TestCase {
         in.destroy();
         
         testString.destroy();
+        return this.success();
+    }
+    
+    [int] testCompareCStrings() {
+        this.start("testCompareCStrings");
+
+        if (String:compareCStrings("", "") != 0) { return this.fail("Test '' == ''"); }
+        if (String:compareCStrings("", "ABC") == 0) { return this.fail("Test '' != 'ABC'"); }
+        if (String:compareCStrings("", "ABCDE") >= 0) { return this.fail("Test '' <  'ABCDE'"); }
+        if (String:compareCStrings("", "b") >  0) { return this.fail("Test '' <= 'b'"); }
+        if (String:compareCStrings("ABC", "ABCDE") >= 0) { return this.fail("Test 'ABC' <  'ABCDE'"); }
+        if (String:compareCStrings("ABC", "BCD") >  0) { return this.fail("Test 'ABC' <= 'BCD'"); }
+        if (String:compareCStrings("ABCDE", "ABCDE") >  0) { return this.fail("Test 'ABCDE' <= 'ABCDE'"); }
+        if (String:compareCStrings("ABCDE", "ABCDE") != 0) { return this.fail("Test 'ABCDE' == 'ABCDE'"); }
+        if (String:compareCStrings("ABCDE", "ABCDE") <  0) { return this.fail("Test 'ABCDE' >= 'ABCDE'"); }
+        if (String:compareCStrings("b", "ABC") <= 0) { return this.fail("Test 'b' >  'ABC'"); }
+        if (String:compareCStrings("b", "BCD") <  0) { return this.fail("Test 'b' >= 'BCD'"); }
+        if (String:compareCStrings("b", "ABCDE") == 0) { return this.fail("Test 'b' != 'ABCDE'"); }
+        
         return this.success();
     }
 }
