@@ -166,4 +166,11 @@ class Address {
              {"%ecx": bytes, "%esi": srcAddr, "%edi": destAddr}
         );
     }
+    
+    global [] setBytes(int destAddr, int bytes, int byte) {
+        __pasm__(
+            ".byte 0xf3; .byte 0xaa #// rep stosb",
+             {"%ecx": bytes, "%eax": byte, "%edi": destAddr}
+        );
+    }
 }
