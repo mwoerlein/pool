@@ -401,7 +401,6 @@ class X86Generator extends sys::core::Object {
         
         DefinitionNode defNode = this.rt().createInstance(DefinitionNode:CLASSNAME);
         defNode.initDefinition(idNode.getIdentifier(), value);
-        idNode.destroy();
         _nodes.add(defNode.node());
     }
     
@@ -411,43 +410,43 @@ class X86Generator extends sys::core::Object {
     }
     
     [OperandNode] _number(int value) {
-         NumberNode numberNode = this.rt().createInstance(NumberNode:CLASSNAME);
+         NumberNode numberNode = this.createOwn(NumberNode:CLASSNAME);
          numberNode.setOperand(value);
          return numberNode.operand();
     }
     
     [OperandNode] _offset(OperandNode start, OperandNode end) {
-         FormulaNode formulaNode = this.rt().createInstance(FormulaNode:CLASSNAME);
+         FormulaNode formulaNode = this.createOwn(FormulaNode:CLASSNAME);
          formulaNode.initFormula(end, _minus, start);
          return formulaNode.operand();
     }
     
     [OperandNode] _id(cstring identifier) {
-         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         IdentifierNode idNode = this.createOwn(IdentifierNode:CLASSNAME);
          idNode.getIdentifier().printCString(identifier);
          return idNode.operand();
     }
     
     [OperandNode] _id1(String prefix) {
-         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         IdentifierNode idNode = this.createOwn(IdentifierNode:CLASSNAME);
          idNode.getIdentifier().print(prefix);
          return idNode.operand();
     }
     
     [OperandNode] _id2(String prefix, cstring postfix) {
-         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         IdentifierNode idNode = this.createOwn(IdentifierNode:CLASSNAME);
          idNode.getIdentifier().print(prefix).printCString(postfix);
          return idNode.operand();
     }
     
     [OperandNode] _id3(String prefix, cstring sep, String postfix) {
-         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         IdentifierNode idNode = this.createOwn(IdentifierNode:CLASSNAME);
          idNode.getIdentifier().print(prefix).printCString(sep).print(postfix);
          return idNode.operand();
     }
     
     [OperandNode] _id5(String prefix, cstring sep1, String infix, cstring sep2, String postfix) {
-         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+         IdentifierNode idNode = this.createOwn(IdentifierNode:CLASSNAME);
          idNode.getIdentifier().print(prefix)
             .printCString(sep1).print(infix)
             .printCString(sep2).print(postfix);
