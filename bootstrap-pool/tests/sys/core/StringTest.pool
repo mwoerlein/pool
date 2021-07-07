@@ -19,6 +19,7 @@ class StringTest extends test::TestCase {
         this.testToInt();
         this.testToCString();
         this.testConversions();
+        this.testEscapeUnescape();
         this.testIStream();
         this.testOStream();
         this.testPrintToStream();
@@ -266,6 +267,36 @@ class StringTest extends test::TestCase {
         upper.destroy();
         lower.destroy();
         testString.destroy();
+        return this.success();
+    }
+    
+    [int] testEscapeUnescape() {
+        this.start("testEscapeUnescape");
+        
+        String unescaped = this.rt().createInstance(String:CLASSNAME);
+        unescaped.assignCString("\'\"abc\r\n\t");
+        String escaped = this.rt().createInstance(String:CLASSNAME);
+        escaped.assignCString("\"'\\\"abc\\r\\n\\t\"");
+        
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        unescaped.escapeToStream(testString.ostream());
+        if (!testString.equals(escaped)) {
+            this.rt().out()
+                .print(unescaped).printNewline()
+                .print(escaped).printNewline()
+                .print(testString).printNewline();
+            return this.fail("Test escapteToStream()");
+        }
+        
+        testString.clear();
+        escaped.unescapeToStream(testString.ostream());
+        if (!testString.equals(unescaped)) {
+            return this.fail("Test unescapteToStream()");
+        }
+        
+        testString.destroy();
+        escaped.destroy();
+        unescaped.destroy();
         return this.success();
     }
     

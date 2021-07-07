@@ -50,7 +50,11 @@ class String extends OStream {
 
     [OStream] printChar(int c) {
         if (_length+2 >= _buffer.len) {
-            this._resizeBufferTo(_length*2);
+            if (_length < 256) {
+                this._resizeBufferTo(_length*2);
+            } else {
+                this._resizeBufferTo(_length+128);
+            }
         }
         
         Address:storeChar(_buffer.buf+_length++, c);
@@ -149,7 +153,7 @@ class String extends OStream {
             int cur = Address:loadChar(pos++);
             if (cur == escape) {
                 cur = Address:loadChar(pos++);
-                if (pos < end) {
+                if (pos <= end) {
                     if (cur == 'n') {
                         stream.printChar('\n');
                     } else if (cur == 'r') {
