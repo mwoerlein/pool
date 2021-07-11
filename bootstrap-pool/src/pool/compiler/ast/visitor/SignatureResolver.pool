@@ -418,7 +418,7 @@ class SignatureResolver extends Visitor {
         if (ss && ss.getState() < Scope:STATE_RESOLVING_SCOPES) {
             return ss.getStructDeclNode().accept(this.visitor());
         }
-        return false;
+        return cs || ss;
     }
     [int] visitCStringRef(CStringRefNode node) {
         node.setScope(_curScope);
