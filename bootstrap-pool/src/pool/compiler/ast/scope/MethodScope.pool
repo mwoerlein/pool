@@ -25,6 +25,7 @@ class MethodScope extends Scope {
     AnyMap _parameters; //AnyMap<VariableScope, Type>
     AnyList _returnTypes; //AnyList<Type>
     PirMethod _pirMethod;
+    MethodScope _mainScope;
 
     [] __init() {
         this._initScope();
@@ -38,21 +39,25 @@ class MethodScope extends Scope {
         _returnTypes = this.createOwn(AnyList:CLASSNAME);
     }
     
+    [MethodScope] setMainMethodScope(MethodScope scope) { _mainScope = scope; return this; }
+    [MethodScope] getMainMethodScope() { if (_mainScope) { return _mainScope; } return this; }
     [MethodScope] setMethodDeclNode(MethodDeclNode methodDecl) { _methodDecl = methodDecl; return this; }
-    [MethodDeclNode] getMethodDeclNode() { return _methodDecl; }
+    [MethodDeclNode] getMethodDeclNode() {
+        if (_mainScope) { return _mainScope.getMethodDeclNode(); }
+        return _methodDecl;
+    }
     
     [MethodScope] setIndex(int i) { _index = i; return this; }
     [int] getIndex() { return _index; }
     
     [MethodScope] addParameter(VariableScope var, Type type) { _parameters.set(var, type); return this; }
-    [AnyMap] getParameters() { return _parameters; }
-    [AnyIterator] parameterTypes() { return _parameters.values(); }
+    [AnyMap] getParameters() { if (_mainScope) { return _mainScope.getParameters(); } return _parameters; }
     
     [MethodScope] addReturnType(Type type) { _returnTypes.add(type); return this; }
-    [AnyList] getReturnTypes() { return _returnTypes; }
+    [AnyList] getReturnTypes() { if (_mainScope) { return _mainScope.getReturnTypes(); } return _returnTypes; }
 
     [MethodScope] setPirMethod(PirMethod m) { _pirMethod = this.own(m); return this; }
-    [PirMethod] getPirMethod() { return _pirMethod; }
+    [PirMethod] getPirMethod() { if (_mainScope) { return _mainScope.getPirMethod(); } return _pirMethod; }
 
     [MethodScope] isMethod() { return this; }
     

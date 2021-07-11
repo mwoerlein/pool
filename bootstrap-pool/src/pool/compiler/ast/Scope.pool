@@ -121,7 +121,9 @@ class Scope extends sys::core::Object {
         AnyMapEntryIterator it := source._methods.entries();
         while (it.hasNext()) {
             [String id, MethodScope ms] := it.nextPair();
-            MethodScope old := _methods.set(id, ms);
+            MethodScope scope = _methods.createOwn(MethodScope:CLASSNAME);
+            scope.setMainMethodScope(ms.getMainMethodScope()).setParent(this);
+            MethodScope old := _methods.set(id, scope);
             if (old && this.isSameAs(old._parent)) { old.destroy(); }
         }
         it.destroy();
