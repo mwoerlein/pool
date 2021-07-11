@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::ast::scope;
 
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::node::expression::ExpressionNode;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
@@ -17,11 +18,14 @@ use sys::stream::OStream;
 class VariableScope extends Scope {
 
     VariableDeclNode _variableDecl;
+    ExpressionNode _finalInitializer;
     int _structOffset;
     PirLocation _pirLocation;
     
     [VariableScope] setVariableDeclNode(VariableDeclNode variableDecl) { _variableDecl = variableDecl; return this; }
     [VariableDeclNode] getVariableDeclNode() { return _variableDecl; }
+    [VariableScope] setFinalInitializer(ExpressionNode expr) { _finalInitializer = expr; return this; }
+    [ExpressionNode] getFinalInitializer() { return _finalInitializer; }
     
     [VariableScope] setStructOffset(int offset) { _structOffset = offset; return this; }
     [int] getStructOffset() { return _structOffset; }

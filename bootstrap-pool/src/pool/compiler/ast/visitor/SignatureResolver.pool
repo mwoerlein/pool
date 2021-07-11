@@ -301,6 +301,13 @@ class SignatureResolver extends Visitor {
         success = node.getInitializer().accept(this.visitor()) && success;
         // variable declarations *after* initializers to make them not accessible *in* initializers
         success = node.getVariables().acceptAll(this.visitor()) && success;
+        
+        // mark (first) variable scope as final
+        if (node.isFinal()) {
+            VariableDeclNode var = node.getVariables().first();
+            var.getVariableScope().setFinalInitializer(node.getInitializer());
+        }
+        
         return success;
     }
     [int] visitWhileInst(WhileInstNode node) {
