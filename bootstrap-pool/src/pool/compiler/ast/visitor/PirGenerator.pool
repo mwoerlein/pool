@@ -49,6 +49,7 @@ use pool::compiler::ast::node::reference::TypeRefNode;
 
 use pool::compiler::ast::NamedType;
 use pool::compiler::ast::Scope;
+use pool::compiler::ast::Type;
 use pool::compiler::ast::TypeManager;
 use pool::compiler::ast::scope::BlockScope;
 use pool::compiler::ast::scope::ClassScope;
@@ -60,13 +61,16 @@ use pool::compiler::ast::scope::UnitScope;
 use pool::compiler::ast::scope::VariableScope;
 
 use pool::compiler::pir::BasicBlock;
+use pool::compiler::pir::Location;
 use pool::compiler::pir::Method;
+use pool::compiler::pir::Value;
 use pool::compiler::pir::statement::CondStatement;
 
 use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
@@ -83,6 +87,12 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     
     Method _curMethod;
     BasicBlock _curBlock;
+    Value _lastValue;
+    AnyList _lastLocations;
+    
+    [] __init() {
+        _lastLocations = this.createOwn(AnyList:CLASSNAME);
+    }
     
     [PirGenerator] setTypeManager(TypeManager manager) { _typeManager = manager; return this; }
     
@@ -138,9 +148,98 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     }
     
     // instructions
+    [int] visitExpressionInst(ExpressionInstNode node) {
+        int success = node.getExpression().accept(this.visitor());
+        _lastLocations.clear();
+        _lastValue = null;
+        return success;
+    }
+
+    [int] visitReturnInst(ReturnInstNode node) {
+        if (!node.hasValues()) { return true; }
+        {
+            AnyIterator it = node.getValues().iterator();
+            int idx = 0;
+            while (it.hasNext()) {
+                Location tmp = this.exprAsTemp(it.next(), null);
+                if (!tmp) { return false; }
+                this.addMove(_curBlock, tmp, _curMethod.getRet(idx++), false);
+            }
+            it.destroy();
+        }
+        _curBlock.setNext(_curMethod.getExitBlock());
+        _curBlock = _curMethod.newBasicBlock();
+        return true;
+    }
     
     // expressions
+    [int] visitConstCStringExpr(ConstCStringExprNode node) {
+        _lastValue = _curMethod.getString(node.getValue());
+        return true;
+    }
+    [int] visitConstIntExpr(ConstIntExprNode node) {
+        _lastValue = _curMethod.getNumber(node.getValue());
+        return true;
+    }
+    [int] visitNullExpr(NullExprNode node) {
+        _lastValue = _curMethod.getNull();
+        return true;
+    }
+    [int] visitThisExpr(ThisExprNode node) {
+        _lastLocations.add(_curMethod.getThis());
+        return true;
+    }
     
     // references
     
+    // helper
+    [Location] exprAsTemp(ExpressionNode expr, Type interpretAs) {
+        /*
+        if (expr.isLogicalBinary() || expr.isLogicalUnary()) {
+            PIRBasicBlock *next = &curMethod->newBasicBlock();
+            PIRBasicBlock *trueBlock = &curMethod->newBasicBlock();
+            trueBlock->next = next;
+            
+            PIRLocation &loc = curMethod->newTemp(types.intType);
+            curBlock->addMove(*curMethod->getZeroTemp(types.intType), loc);
+            trueBlock->addMove(*curMethod->getOneTemp(types.intType), loc);
+            
+            branch(expr, *trueBlock, *next);
+            curBlock = next;
+            return &loc;
+        }
+        */
+        expr.accept(this.visitor());
+        
+        if (_lastLocations.size() == 1) {
+            Location loc = _lastLocations.first();
+            _lastLocations.clear();
+            if (interpretAs && !interpretAs.equals(loc.getType())) {
+                Location l = _curMethod.newTemp(interpretAs);
+                this.addMove(_curBlock, this.asTemp(loc), l, true);
+                return l;
+            } else {
+                return this.asTemp(loc);
+            }
+        }
+        if (_lastValue) {
+            Location loc = null;
+            if (interpretAs) {
+                loc = _curMethod.newTemp(interpretAs);
+            } else {
+                loc = _curMethod.newTemp(expr.getResolvedType());
+            }
+            this.addAssign(_curBlock, _lastValue, loc, !!interpretAs);
+            _lastValue = null;
+            return loc;
+        }
+        this.crit().printCString("unexpected ").print(expr);
+        return null;
+    }
+    
+    [Location] asTemp(Location src) {
+        // TODO #11: treat all locations as "temps" until register allocations separates frame and register locations
+        return src;
+    }
+        
 }
