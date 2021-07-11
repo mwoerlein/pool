@@ -10,6 +10,8 @@ use sys::stream::OStream;
 
 class IntType extends Type {
 
+    [IntType] isInt() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("type-<int>");
     }

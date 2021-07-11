@@ -10,6 +10,8 @@ use sys::stream::OStream;
 
 class CStringType extends Type {
 
+    [CStringType] isCString() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("type-<cstring>");
     }

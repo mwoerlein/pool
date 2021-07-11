@@ -16,6 +16,8 @@ class UnitScope extends Scope {
     [UnitScope] setUnitNode(TranslationUnitNode unit) { _unit = unit; return this; }
     [TranslationUnitNode] getUnitNode() { return _unit; }
 
+    [UnitScope] isUnit() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("UnitScope of ").print(_unit);
     }

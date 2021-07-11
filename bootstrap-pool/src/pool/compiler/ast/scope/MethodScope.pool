@@ -54,6 +54,8 @@ class MethodScope extends Scope {
     [MethodScope] setPirMethod(PirMethod m) { _pirMethod = this.own(m); return this; }
     [PirMethod] getPirMethod() { return _pirMethod; }
 
+    [MethodScope] isMethod() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         stream.printCString("MethodScope of ").print(_methodDecl);
         ClassDeclNode c = this.getClassDeclNode();

@@ -10,6 +10,8 @@ use sys::stream::OStream;
 
 class AnyType extends Type {
 
+    [AnyType] isAny() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("type-<ANY>");
     }

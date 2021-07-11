@@ -248,7 +248,7 @@ class SignatureResolver extends Visitor {
         if (!node.getScope()) {
             _curScope.registerVariable(node);
         }
-        if (this.rt().cast(BlockScope:CLASSNAME, _curScope)) {
+        if (_curScope.isBlock()) {
             // Dive into variable declarations scopes only within methods/blocks.
             // Do not change scope for const/instance variables. 
             _curScope = node.getScope();
@@ -403,11 +403,11 @@ class SignatureResolver extends Visitor {
         node.setScope(_curScope);
         
         // descent into referenced classes/structs
-        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, node.getResolvedType());
+        ClassScope cs := node.getResolvedType().isClass();
         if (cs && cs.getState() < Scope:STATE_RESOLVING_SCOPES) {
             return cs.getClassDeclNode().accept(this.visitor());
         }
-        StructScope ss := this.rt().cast(StructScope:CLASSNAME, node.getResolvedType());
+        StructScope ss := node.getResolvedType().isStruct();
         if (ss && ss.getState() < Scope:STATE_RESOLVING_SCOPES) {
             return ss.getStructDeclNode().accept(this.visitor());
         }
@@ -450,7 +450,7 @@ class SignatureResolver extends Visitor {
             AnyIterator it = node.getExtends().iterator();
             while (it.hasNext()) {
                 TypeRefNode typeNode = it.next();
-                ClassScope extendedClassScope := this.rt().cast(ClassScope:CLASSNAME, typeNode.getResolvedType());
+                ClassScope extendedClassScope := typeNode.getResolvedType().isClass();
                 if (!extendedClassScope) { 
                     this.error().print(cs.getFullQualifiedName()).printCString(": invalid extend type '").print(typeNode).printChar('"');
                     cs.setState(Scope:STATE_HIERARCHY_INVALID);
@@ -541,7 +541,7 @@ class SignatureResolver extends Visitor {
     }
     
     [Type] _classToInstance(Type t) {
-        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, t);
+        ClassScope cs := t.isClass();
         if (cs) {
             return cs.getInstanceScope().type();
         }

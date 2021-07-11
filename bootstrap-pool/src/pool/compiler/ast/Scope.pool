@@ -57,6 +57,14 @@ class Scope extends sys::core::Object {
         _variables = this.createOwn(AnyMap:CLASSNAME);
     }
     
+    [BlockScope] isBlock() { return null; }
+    [ClassScope] isClass() { return null; }
+    [InstanceScope] isInstance() { return null; }
+    [MethodScope] isMethod() { return null; }
+    [StructScope] isStruct() { return null; }
+    [UnitScope] isUnit() { return null; }
+    [VariableScope] isVariable() { return null; }
+    
     [Scope] setParent(Scope parent) { _parent = parent; return this; }
     [Scope] getParent() { return _parent; }
     [Scope] setState(int state) { _state = state; return this; }

@@ -198,12 +198,12 @@ class InstructionResolver extends Visitor {
         int success = true;
         success = node.getVariable().accept(this.visitor()) && success;
         Type varRT = node.getVariable().getResolvedType();
-        if (!this.rt().cast(IntType:CLASSNAME, varRT)) {
+        if (!varRT.isInt()) {
             return this.invalidTypeError(node.node(), varRT, "variable");
         }
         success = node.getValue().accept(this.visitor()) && success;
         Type valRT = node.getValue().getResolvedType();
-        if (!this.rt().cast(IntType:CLASSNAME, valRT)) {
+        if (!valRT.isInt()) {
             return this.invalidTypeError(node.node(), valRT, "value");
         }
         node.setResolvedType(varRT);
@@ -213,12 +213,12 @@ class InstructionResolver extends Visitor {
         int success = true;
         success = node.getLeft().accept(this.visitor()) && success;
         Type leftRT = node.getLeft().getResolvedType();
-        if (!this.rt().cast(IntType:CLASSNAME, leftRT)) {
+        if (!leftRT.isInt()) { 
             return this.invalidTypeError(node.node(), leftRT, "left");
         }
         success = node.getRight().accept(this.visitor()) && success;
         Type rightRT = node.getRight().getResolvedType();
-        if (!this.rt().cast(IntType:CLASSNAME, rightRT)) {
+        if (!rightRT.isInt()) { 
             return this.invalidTypeError(node.node(), rightRT, "right");
         }
         node.setResolvedType(leftRT);
@@ -228,7 +228,7 @@ class InstructionResolver extends Visitor {
         int success = true;
         success = node.getVariable().accept(this.visitor()) && success;
         Type varRT = node.getVariable().getResolvedType();
-        if (!this.rt().cast(IntType:CLASSNAME, varRT)) {
+        if (!varRT.isInt()) { 
             return this.invalidTypeError(node.node(), varRT, "variable");
         }
         node.setResolvedType(varRT);
@@ -247,8 +247,7 @@ class InstructionResolver extends Visitor {
         // register constant strings in class with constant name as id-seed, if available
         String id = null;
         Scope s = node.getScope();
-        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, s);
-        if (cs && _curInitNode && _curInitNode.getVariables().size() == 1) {
+        if (s.isClass() && _curInitNode && _curInitNode.getVariables().size() == 1) {
             VariableDeclNode decl = _curInitNode.getVariables().first();
             id = decl.getName();
         }
@@ -262,17 +261,17 @@ class InstructionResolver extends Visitor {
         Type leftRT = node.getLeft().getResolvedType();
         Type rightRT = node.getRight().getResolvedType();
         if (node.isAnd() || node.isOr()) {
-            if (!leftRT || !leftRT.isBool()) {
+            if (!leftRT.isBool()) {
                 return this.invalidTypeError(node.node(), leftRT, "left");
             }
-            if (!rightRT || !rightRT.isBool()) {
+            if (!rightRT.isBool()) {
                 return this.invalidTypeError(node.node(), rightRT, "right");
             }
         } else {
-            if (!this.rt().cast(IntType:CLASSNAME, leftRT)) {
+            if (!leftRT.isInt()) { 
                 return this.invalidTypeError(node.node(), leftRT, "left");
             }
-            if (!this.rt().cast(IntType:CLASSNAME, rightRT)) {
+            if (!rightRT.isInt()) { 
                 return this.invalidTypeError(node.node(), rightRT, "right");
             }
         }
@@ -295,10 +294,7 @@ class InstructionResolver extends Visitor {
         if (node.hasContext()) {
             node.getContext().accept(this.visitor());
             Type cRT = node.getContext().getResolvedType();
-            if (
-                !this.rt().cast(InstanceScope:CLASSNAME, cRT)
-                && !this.rt().cast(ClassScope:CLASSNAME, cRT)
-            ) {
+            if (!cRT.isInstance() && !cRT.isClass()) {
                 //return this.invalidTypeError(node.node(), cRT, "method call context");
                 this.validationError(node.node())
                     .printCString("invalid method call context '").print(node.getContext()).printChar('\'');
@@ -311,7 +307,7 @@ class InstructionResolver extends Visitor {
         }
         MethodScope ms = contextScope.getMethod(node.getName());
         if (!ms) {
-            if (this.rt().cast(ClassScope:CLASSNAME, contextScope)) {
+            if (contextScope.isClass()) {
                 this.validationError(node.node())
                     .printCString("unknown global method '").print(node.getName())
                     .printCString("' in ").print(contextScope);
@@ -328,7 +324,7 @@ class InstructionResolver extends Visitor {
         if (returns.size() == 1) {
             node.setResolvedType(returns.first());
         }
-        ClassScope cs = this.rt().cast(ClassScope:CLASSNAME, ms.getParent());
+        ClassScope cs = ms.getParent().isClass();
         if (cs) {
             node.getScope().getClassDeclNode().getClassScope().markAsGloballyRequired(cs);
         }
@@ -342,7 +338,7 @@ class InstructionResolver extends Visitor {
     [int] visitSignExpr(SignExprNode node) {
         int success = node.getExpression().accept(this.visitor());
         Type rt = node.getExpression().getResolvedType();
-        if (!this.rt().cast(IntType:CLASSNAME, rt)) {
+        if (!rt.isInt()) {
             return this.invalidTypeError(node.node(), rt, "expression");
         }
         node.setResolvedType(rt);
@@ -402,7 +398,7 @@ class InstructionResolver extends Visitor {
     }
     
     [Type] _classToInstance(Type t) {
-        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, t);
+        ClassScope cs := t.isClass();
         if (cs) {
             return cs.getInstanceScope().type();
         }
@@ -411,14 +407,14 @@ class InstructionResolver extends Visitor {
     
     [ExpressionNode] _createResolvedContext(Scope declScope, Scope refScope) {
         Scope parent = declScope.getParent();
-        if (this.rt().cast(InstanceScope:CLASSNAME, parent)) {
+        if (parent.isInstance()) {
             // create this expression
             ThisExprNode node = this.rt().createInstance(ThisExprNode:CLASSNAME);
             node.setScope(refScope);
             node.accept(this.visitor());
             return node.expression();
         }
-        ClassScope cs := this.rt().cast(ClassScope:CLASSNAME, parent);
+        ClassScope cs := parent.isClass();
         if (cs) {
             // create class reference
             ClassRefNode node = this.rt().createInstance(ClassRefNode:CLASSNAME);

@@ -90,6 +90,7 @@ class ClassScope extends NamedType, Scope {
     }
     [AnyMapEntryIterator] strings() { return _strings.entries(); }
     
+    [ClassScope] isClass() { return this; }
     [int] isBool() { return false; }
     
     [OStream] printDebugName(OStream stream) {

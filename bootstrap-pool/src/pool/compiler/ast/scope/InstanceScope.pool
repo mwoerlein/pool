@@ -26,6 +26,8 @@ class InstanceScope extends Scope, Type {
     [ClassDeclNode] getClassDeclNode() { return _classDecl; }
     [ClassScope] getClassScope() { return _classDecl.getClassScope(); }
     
+    [InstanceScope] isInstance() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("InstanceScope of ").print(_classDecl);
     }

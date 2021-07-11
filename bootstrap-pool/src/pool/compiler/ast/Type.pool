@@ -5,11 +5,27 @@ version = 0.1.0
 */
 namespace pool::compiler::ast;
 
+use pool::compiler::ast::scope::AllType;
+use pool::compiler::ast::scope::AnyType;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::CStringType;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::IntType;
+use pool::compiler::ast::scope::StructScope;
+
 use sys::stream::OStream;
 
 class Type extends sys::core::Object {
 
     abstract [OStream] printDebugName(OStream stream);
+    
+    [AllType] isAll() { return null; }
+    [AnyType] isAny() { return null; }
+    [ClassScope] isClass() { return null; }
+    [CStringType] isCString() { return null; }
+    [InstanceScope] isInstance() { return null; }
+    [IntType] isInt() { return null; }
+    [StructScope] isStruct() { return null; }
     
     [int] isBool() { return true; }
     

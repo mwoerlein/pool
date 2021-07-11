@@ -33,6 +33,8 @@ class StructScope extends NamedType, Scope {
     [StructScope] setSizeof(int value) { _sizeof.setValue(value); return this; }
     [int] getSizeof() { return _sizeof.getValue(); }
     
+    [StructScope] isStruct() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("StructScope of ").print(_structDecl);
     }

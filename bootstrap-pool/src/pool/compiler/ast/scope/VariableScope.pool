@@ -29,6 +29,8 @@ class VariableScope extends Scope {
     [VariableScope] setPirLocation(PirLocation l) { _pirLocation = l; return this; }
     [PirLocation] getPirLocation() { return _pirLocation; }
 
+    [VariableScope] isVariable() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         stream.printCString("VariableScope of ").print(_variableDecl);
         MethodDeclNode m = this.getMethodDeclNode();

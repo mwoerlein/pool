@@ -16,6 +16,8 @@ class BlockScope extends Scope {
     [BlockScope] setBlockInstNode(BlockInstNode block) { _block = block; return this; }
     [BlockInstNode] getBlockInstNode() { return _block; }
     
+    [BlockScope] isBlock() { return this; }
+    
     [OStream] printDebugName(OStream stream) {
         return stream.printCString("BlockScope in ").print(this.getMethodDeclNode());
     }
