@@ -1,0 +1,116 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir;
+
+use pool::compiler::ast::Type;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::VariableScope;
+
+use sys::core::String;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class Method extends sys::core::Object {
+
+    MethodScope _scope;
+    
+    AnyList _parameterLocations; // List<Location>
+    AnyList _returnLocations; // List<Location>
+    AnyList _tempLocations; // List<Location>
+    
+    AnyList _blocks; // List<BasicBlock>
+    
+    // caches
+    BasicBlock _entry;
+    BasicBlock _exit;
+    
+    Location _this;
+    Location _zeroTemp;
+    Location _oneTemp;
+    Value _null;
+    
+    [Method] init(MethodScope scope) {
+        scope.setPirMethod(this);
+        _scope = scope;
+        _null = this.createOwn(Value:CLASSNAME);
+        _null.initNull();
+        
+        _entry = this.newBasicBlock();
+        _exit = this.newBasicBlock();
+        
+        InstanceScope is = this.rt().cast(InstanceScope:CLASSNAME, scope.getParent());
+        if (is) {
+            _this = this.createOwn(Location:CLASSNAME);
+            _this.init(Location:KIND_THIS, 0, is.type());
+        }
+        {
+            AnyMapEntryIterator it = scope.getParameters().entries();
+            while (it.hasNext()) {
+                [VariableScope vs, Type type] := it.nextPair();
+                vs.setPirLocation(this._newLocation(Location:KIND_PARAM, type, _parameterLocations));
+            }
+            it.destroy();
+        }
+        {
+            AnyIterator it = scope.getReturnTypes().iterator();
+            while (it.hasNext()) {
+                Type type := it.next();
+                this._newLocation(Location:KIND_RETURN, type, _returnLocations);
+            }
+            it.destroy();
+        }
+    }
+    
+    [Location] getParam(int id) { return _parameterLocations.at(id); }
+    [Location] getRet(int id) { return _returnLocations.at(id); }
+    [Location] getTemp(int id) { return _tempLocations.at(id); }
+    [Location] newTemp(Type type) { return this._newLocation(Location:KIND_TEMP, type, _tempLocations); }
+    
+    [Location] getThis() { return _this; }
+    [Location] getZeroTemp(Factory f) {
+        if (!_zeroTemp) {
+            _zeroTemp = this.newTemp(f.getIntType().type());
+            _entry.addStmt(f.createAssign(this.getNumber(0), _zeroTemp, false).statement());
+        }
+        return _zeroTemp;
+    }
+    [Location] getOneTemp(Factory f) {
+        if (!_oneTemp) {
+            _oneTemp = this.newTemp(f.getIntType().type());
+            _entry.addStmt(f.createAssign(this.getNumber(1), _oneTemp, false).statement());
+        }
+        return _oneTemp;
+    }
+    
+    [Value] getNull() { return _null; }
+    
+    [Value] getNumber(int n) {
+        Value ret = this.createOwn(Value:CLASSNAME);
+        return ret.initNumber(n);
+    }
+    
+    [Value] getString(String value) {
+        Value ret = this.createOwn(Value:CLASSNAME);
+        return ret.initString(_scope.getClassDeclNode().getClassScope().stringId(value, null));
+    }
+    
+    [BasicBlock] newBasicBlock() {
+        BasicBlock bb = _blocks.createOwn(BasicBlock:CLASSNAME);
+        bb.init(this, _blocks.size());
+        _blocks.add(bb);
+        return bb;
+    }
+
+    [Location] _newLocation(int kind, Type type, AnyList list) {
+        Location loc = list.createOwn(Location:CLASSNAME);
+        loc.init(kind, list.size(), type);
+        list.add(loc);
+        return loc;
+    }
+}

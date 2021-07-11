@@ -1,0 +1,71 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir;
+
+use pool::compiler::ast::scope::IntType;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::VariableScope;
+
+use pool::compiler::pir::statement::ArithOpStatement;
+use pool::compiler::pir::statement::AsmStatement;
+use pool::compiler::pir::statement::AssignStatement;
+use pool::compiler::pir::statement::CallStatement;
+use pool::compiler::pir::statement::CondStatement;
+use pool::compiler::pir::statement::GlobalCallStatement;
+use pool::compiler::pir::statement::GetStatement;
+use pool::compiler::pir::statement::MoveStatement;
+use pool::compiler::pir::statement::SetStatement;
+
+use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+
+// TODO: validations
+class Factory extends sys::core::Object {
+
+    abstract [IntType] getIntType();
+    
+    [ArithOpStatement] createArithOp(int op, Location left, Location right, Location dest) {
+        ArithOpStatement stmt = this.rt().createInstance(ArithOpStatement:CLASSNAME);
+        return stmt.init(op, left, right, dest);
+    }
+    [AsmStatement] createAsm(String pasm, AnyMap in, AnyMap out) {
+        AsmStatement stmt = this.rt().createInstance(AsmStatement:CLASSNAME);
+        return stmt.init(pasm, in, out);
+    }
+    [AssignStatement] createAssign(Value value, Location dest, int reinterpret) {
+        AssignStatement stmt = this.rt().createInstance(AssignStatement:CLASSNAME);
+        return stmt.init(value, dest, reinterpret);
+    }
+    [CallStatement] createCall(Location context, MethodScope method, AnyList params, AnyList rets) {
+        CallStatement stmt = this.rt().createInstance(CallStatement:CLASSNAME);
+        return stmt.init(context, method, params, rets);
+    }
+    [CondStatement] createCond(int op, Location left, Location right) {
+        CondStatement stmt = this.rt().createInstance(CondStatement:CLASSNAME);
+        return stmt.init(op, left, right);
+    }
+    [GlobalCallStatement] createGlobalCall(MethodScope method, AnyList params, AnyList rets) {
+        GlobalCallStatement stmt = this.rt().createInstance(GlobalCallStatement:CLASSNAME);
+        return stmt.init(method, params, rets);
+    }
+    [GetStatement] createGet(Location context, VariableScope var, Location dest) {
+        GetStatement stmt = this.rt().createInstance(GetStatement:CLASSNAME);
+        return stmt.init(context, var, dest);
+    }
+    [MoveStatement] createMove(Location src, Location dest, int reinterpret) {
+        MoveStatement stmt = this.rt().createInstance(MoveStatement:CLASSNAME);
+        return stmt.init(src, dest, reinterpret);
+    }
+    [SetStatement] createSet(Location context, VariableScope var, Location src) {
+        SetStatement stmt = this.rt().createInstance(SetStatement:CLASSNAME);
+        return stmt.init(context, var, src);
+    }
+    
+    // TODO: remove with implicit cast
+    [Factory] factory() { return this; }
+    
+}

@@ -227,8 +227,14 @@ class SignatureResolver extends Visitor {
             AnyIterator it = node.getParameters().iterator();
             while (it.hasNext()) {
                 VariableDeclNode varDeclNode = it.next();
-                success = varDeclNode.accept(me) && success;
-                ms.addParameterType(this._classToInstance(varDeclNode.getTypeRef().getResolvedType()));
+                if (varDeclNode.accept(me)) {
+                    ms.addParameter(
+                        varDeclNode.getVariableScope(),
+                        this._classToInstance(varDeclNode.getTypeRef().getResolvedType())
+                    );
+                } else {
+                    success = false;
+                }
             }
             it.destroy();
         }

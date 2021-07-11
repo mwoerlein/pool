@@ -10,7 +10,11 @@ use pool::compiler::ast::Type;
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 
+use pool::compiler::pir::Method as PirMethod;
+
+use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
 use sys::stream::OStream;
 
 class MethodScope extends Scope {
@@ -18,8 +22,9 @@ class MethodScope extends Scope {
     MethodDeclNode _methodDecl;
     /* method ID for virtual method calls */
     int _index;
-    AnyList _parameterTypes; //AnyList<Type>
+    AnyMap _parameters; //AnyMap<VariableScope, Type>
     AnyList _returnTypes; //AnyList<Type>
+    PirMethod _pirMethod;
 
     [] __init() {
         this._initScope();
@@ -28,7 +33,8 @@ class MethodScope extends Scope {
     
     [] _initMethodScope() {
         _index = -1;
-        _parameterTypes = this.createOwn(AnyList:CLASSNAME);
+        _parameters = this.createOwn(AnyMap:CLASSNAME);
+        _parameters.init(5);
         _returnTypes = this.createOwn(AnyList:CLASSNAME);
     }
     
@@ -38,11 +44,15 @@ class MethodScope extends Scope {
     [MethodScope] setIndex(int i) { _index = i; return this; }
     [int] getIndex() { return _index; }
     
-    [MethodScope] addParameterType(Type type) { _parameterTypes.add(type); return this; }
-    [AnyList] getParameterTypes() { return _parameterTypes; }
+    [MethodScope] addParameter(VariableScope var, Type type) { _parameters.set(var, type); return this; }
+    [AnyMap] getParameters() { return _parameters; }
+    [AnyIterator] parameterTypes() { return _parameters.values(); }
     
     [MethodScope] addReturnType(Type type) { _returnTypes.add(type); return this; }
     [AnyList] getReturnTypes() { return _returnTypes; }
+
+    [MethodScope] setPirMethod(PirMethod m) { _pirMethod = m; return this; }
+    [PirMethod] getPirMethod() { return _pirMethod; }
 
     [OStream] printDebugName(OStream stream) {
         stream.printCString("MethodScope of ").print(_methodDecl);

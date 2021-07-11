@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+
+class Visitor extends sys::core::Object {
+
+    [] visitArithOp(ArithOpStatement stmt) {}
+    [] visitAsm(AsmStatement stmt) {}
+    [] visitAssign(AssignStatement stmt) {}
+    [] visitCall(CallStatement stmt) {}
+    [] visitCond(CondStatement stmt) {}
+    [] visitGlobalCall(GlobalCallStatement stmt) {}
+    [] visitGet(GetStatement stmt) {}
+    [] visitMove(MoveStatement stmt) {}
+    [] visitSet(SetStatement stmt) {}
+    
+    // TODO: remove with implicit cast
+    [Visitor] visitor() { return this; }
+}

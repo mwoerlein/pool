@@ -1,0 +1,57 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::pir::Location;
+
+use sys::core::String;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::OStream;
+
+class AsmStatement extends Statement {
+
+    String _pasm;
+    AnyMap _in;
+    AnyMap _out;
+
+    [AsmStatement] init(String pasm, AnyMap in, AnyMap out) {
+        _pasm = pasm; _in = in; _out = out;
+        return this;
+    }
+    
+    [String] getPasm() { return _pasm; }
+    [AnyMap] getIn() { return _in; }
+    [AnyMap] getOut() { return _out; }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.printCString("ASM(<\"").printNewline()
+            .print(_pasm).printNewline()
+            .printCString("\">, {");
+        {
+            AnyMapEntryIterator it = _in.entries();
+            while (it.hasNext()) {
+                [String reg, Location loc] = it.nextPair();
+                reg.escapeToStream(stream).printChar(':').printChar(' ').print(loc);
+                if (it.hasNext()) { stream.printChar(',').printChar(' '); }
+            }
+            it.destroy();
+        }
+        stream.printCString("}, {");
+        {
+            AnyMapEntryIterator it = _out.entries();
+            while (it.hasNext()) {
+                [String reg, Location loc] = it.nextPair();
+                reg.escapeToStream(stream).printChar(':').printChar(' ').print(loc);
+                if (it.hasNext()) { stream.printChar(',').printChar(' '); }
+            }
+            it.destroy();
+        }
+        return stream.printCString("})");
+    }
+    [] accept(Visitor visitor) { visitor.visitAsm(this); }
+    
+}

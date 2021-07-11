@@ -1,0 +1,37 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::ast::scope::VariableScope;
+use pool::compiler::pir::Location;
+
+use sys::stream::OStream;
+
+class SetStatement extends Statement {
+
+    VariableScope _var;
+    Location _context;
+    Location _src;
+
+    [SetStatement] init(Location context, VariableScope var, Location src) {
+        _var = var; _context = context; _src = src;
+        return this;
+    }
+    [VariableScope] getVariableContext() { return _var; }
+    [Location] getContext() { return _context; }
+    [Location] getSrc() { return _src; }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printCString("SET(")
+            .print(_context).printCString(", '")
+            .print(_var.getVariableDeclNode().getName())
+            .printCString("', ").print(_src)
+            .printChar(')');
+    }
+    
+    [] accept(Visitor visitor) { visitor.visitSet(this); }
+    
+}

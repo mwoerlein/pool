@@ -1,0 +1,58 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir;
+
+use pool::compiler::pir::statement::Statement;
+use pool::compiler::pir::statement::CondStatement;
+use pool::compiler::pir::statement::Visitor;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class BasicBlock extends AnyList {
+
+    int TYPE_ENTRY := 0;
+    int TYPE_EXIT  := 1;
+
+    int _id;
+    Method _method;
+    
+    BasicBlock _next;
+    CondStatement _cond;
+    BasicBlock _condNext;
+    
+    [BasicBlock] init(Method m, int id) { _id = id; _method = m; return this; }
+    [BasicBlock] setNext(BasicBlock next) { _next = next; return this; }
+    [BasicBlock] setCond(CondStatement cond, BasicBlock next) { _cond = this.own(cond); _condNext = next; return this; }
+    
+    [int] isEntry() { return _id == BasicBlock:TYPE_ENTRY; }
+    [int] isExit() { return _id == BasicBlock:TYPE_EXIT; }
+    [int] getId() { return _id; }
+    [Method] getMethod() { return _method; }
+    
+    [BasicBlock] getNext() { return _next; }
+    [int] hasCond() { return !!_cond; }
+    [CondStatement, BasicBlock] getCond() { return [_cond, _condNext]; }
+    
+    [BasicBlock] addStmt(Statement stmt) { this.add(this.own(stmt)); return this; }
+    [AnyIterator] statements() { return this.iterator(); }
+    [] accept(Visitor visitor) {
+        AnyIterator it = this.iterator();
+        while (it.hasNext()) {
+            Statement stmt = it.next();
+            stmt.accept(visitor);
+        }
+        it.destroy();
+    }
+
+    [OStream] printToStream(OStream stream) {
+        if (_id == BasicBlock:TYPE_ENTRY) { return stream.printCString("entry-block"); }
+        if (_id == BasicBlock:TYPE_EXIT)  { return stream.printCString("exit-block"); }
+        return stream.printCString("basic-block-").printInt(_id);
+    }
+    
+}

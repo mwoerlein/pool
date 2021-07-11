@@ -1,0 +1,45 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir;
+
+use pool::compiler::ast::Type;
+
+use sys::stream::OStream;
+
+class Location extends sys::core::Object {
+    
+    int KIND_THIS   := 0;
+    int KIND_PARAM  := 1;
+    int KIND_RETURN := 2;
+    int KIND_SPILL  := 3;
+    int KIND_TEMP   := 4;
+    
+    int _kind;
+    int _id;
+    Type _type;
+    
+    [Location] init(int kind, int id, Type type) {  _kind = kind; _type = type; _id = id; return this; }
+    
+    [OStream] printToStream(OStream stream) {
+        if (_kind == Location:KIND_THIS) {
+            return stream.printChar('<').print(_type).printCString(">this");
+        }
+        if (_kind == Location:KIND_PARAM) {
+            return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
+        }
+        if (_kind == Location:KIND_RETURN) {
+            return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
+        }
+        if (_kind == Location:KIND_SPILL) {
+            return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
+        }
+        if (_kind == Location:KIND_TEMP) {
+            return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
+        }
+        return stream.printCString("UNKNOWN LOCATION");
+    }
+
+}

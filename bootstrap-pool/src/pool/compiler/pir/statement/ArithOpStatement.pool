@@ -1,0 +1,46 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::pir::Location;
+
+use sys::stream::OStream;
+
+class ArithOpStatement extends Statement {
+
+    int _op;
+    Location _left;
+    Location _right;
+    Location _dest;
+
+    [ArithOpStatement] init(int op, Location left, Location right, Location dest) {
+        _op = op; _left = left; _right = right; _dest = dest;
+        return this;
+    }
+    
+    [Location] getLeft() { return _left; }
+    [Location] getRight() { return _right; }
+    [Location] getDest() { return _dest; }
+    
+    [int] isAdd() { return _op == ExpressionNode:OP_ADD; }
+    [int] isSub() { return _op == ExpressionNode:OP_SUB; }
+    [int] isMul() { return _op == ExpressionNode:OP_MUL; }
+    [int] isDiv() { return _op == ExpressionNode:OP_DIV; }
+    [int] isMod() { return _op == ExpressionNode:OP_MOD; }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.printCString("ARITHOP(").print(_dest).printCString(" = ").print(_left).printChar(' ');
+        if (this.isAdd()) { stream.printChar('+'); }
+        else if (this.isSub()) { stream.printChar('-'); }
+        else if (this.isMul()) { stream.printChar('*'); }
+        else if (this.isDiv()) { stream.printChar('/'); }
+        else if (this.isMod()) { stream.printChar('%'); }
+        return stream.printChar(' ').print(_right).printChar(')');
+    }
+    [] accept(Visitor visitor) { visitor.visitArithOp(this); }
+    
+}

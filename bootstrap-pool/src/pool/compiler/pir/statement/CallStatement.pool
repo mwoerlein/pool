@@ -1,0 +1,58 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::pir::Location;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::stream::OStream;
+
+class CallStatement extends Statement {
+
+    MethodScope _method;
+    Location _context;
+    AnyList _params;
+    AnyList _rets;
+
+    [CallStatement] init(Location context, MethodScope method, AnyList params, AnyList rets) {
+        _method = method; _context = context; _params = this.own(params); _rets = this.own(rets);
+        return this;
+    }
+    [MethodScope] getMethod() { return _method; }
+    [Location] getContext() { return _context; }
+    [AnyList] getParams() { return _params; }
+    [AnyList] getRets() { return _rets; }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.printCString("CALL(")
+            .print(_context).printCString(", '")
+            .print(_method.getMethodDeclNode().getName())
+            .printCString("', [");
+        {
+            AnyIterator it = _params.iterator();
+            while (it.hasNext()) {
+                stream.print(it.next());
+                if (it.hasNext()) { stream.printChar(',').printChar(' '); }
+            }
+            it.destroy();
+        }
+        stream.printCString("], [");
+        {
+            AnyIterator it = _rets.iterator();
+            while (it.hasNext()) {
+                stream.print(it.next());
+                if (it.hasNext()) { stream.printChar(',').printChar(' '); }
+            }
+            it.destroy();
+        }
+        return stream.printCString("])");
+    }
+    
+    [] accept(Visitor visitor) { visitor.visitCall(this); }
+    
+}

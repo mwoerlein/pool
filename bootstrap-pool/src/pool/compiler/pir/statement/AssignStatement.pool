@@ -1,0 +1,34 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::pir::Location;
+use pool::compiler::pir::Value;
+
+use sys::stream::OStream;
+
+class AssignStatement extends Statement {
+
+    Value _value;
+    Location _dest;
+    int _reinterpret;
+
+    [AssignStatement] init(Value value, Location dest, int reinterpret) {
+        _value = value; _dest = dest; _reinterpret = reinterpret;
+        return this;
+    }
+    
+    [Value] getValue() { return _value; }
+    [Location] getDest() { return _dest; }
+    [int] isReinterpret() { return _reinterpret; }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printCString("ASSIGN(").print(_value).printChar(',').printChar(' ').print(_dest).printChar(')');
+    }
+    
+    [] accept(Visitor visitor) { visitor.visitAssign(this); }
+    
+}

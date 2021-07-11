@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::pir::Location;
+
+use sys::stream::OStream;
+
+class MoveStatement extends Statement {
+
+    Location _src;
+    Location _dest;
+    int _reinterpret;
+
+    [MoveStatement] init(Location src, Location dest, int reinterpret) {
+        _src = src; _dest = dest; _reinterpret = reinterpret;
+        return this;
+    }
+    
+    [Location] getSrc() { return _src; }
+    [Location] getDest() { return _dest; }
+    [int] isReinterpret() { return _reinterpret; }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printCString("MOVE(").print(_src).printChar(',').printChar(' ').print(_dest).printChar(')');
+    }
+    
+    [] accept(Visitor visitor) { visitor.visitMove(this); }
+}

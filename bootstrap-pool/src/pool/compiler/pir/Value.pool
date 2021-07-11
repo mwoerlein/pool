@@ -1,0 +1,38 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class Value extends sys::core::Object {
+    
+    int TYPE_NULL   := 0;
+    int TYPE_NUMBER := 1;
+    int TYPE_STRING := 2;
+    
+    int _type;
+    int _number;
+    String _id;
+
+    [Value] initNull() { _type = Value:TYPE_NULL; return this; }
+    [Value] initNumber(int number) { _type = Value:TYPE_NUMBER; _number = number; return this; }
+    [Value] initString(String id) { _type = Value:TYPE_STRING; _id = id; return this; }
+    
+    [int] isNull() { return _type == Value:TYPE_NULL; }
+    [int] isNumber() { return _type == Value:TYPE_NUMBER; }
+    [int] isString() { return _type == Value:TYPE_NULL; }
+    
+    [int] getNumber() { return _number; }
+    [String] getString() { return _id; }
+    
+    [OStream] printToStream(OStream stream) {
+        if (_type == Value:TYPE_NUMBER) { return stream.printCString("const_n(").printInt(_number).printChar(')'); }
+        if (_type == Value:TYPE_STRING) { return stream.printCString("const_s(").print(_id).printChar(')'); }
+        return stream.printCString("null");
+    }
+
+}

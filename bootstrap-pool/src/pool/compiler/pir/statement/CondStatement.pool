@@ -1,0 +1,46 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::pir::Location;
+
+use sys::stream::OStream;
+
+class CondStatement extends Statement {
+
+    int _op;
+    Location _left;
+    Location _right;
+
+    [CondStatement] init(int op, Location left, Location right) {
+        _op = op; _left = left; _right = right;
+        return this;
+    }
+    
+    [Location] getLeft() { return _left; }
+    [Location] getRight() { return _right; }
+    
+    [int] isEq() { return _op == ExpressionNode:OP_EQ; }
+    [int] isNeq() { return _op == ExpressionNode:OP_NEQ; }
+    [int] isLt() { return _op == ExpressionNode:OP_LT; }
+    [int] isLe() { return _op == ExpressionNode:OP_LE; }
+    [int] isGt() { return _op == ExpressionNode:OP_GT; }
+    [int] isGe() { return _op == ExpressionNode:OP_GE; }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.printCString("CONDOP(").print(_left);
+        if (this.isEq()) { stream.printCString(" == "); }
+        else if (this.isNeq()) { stream.printCString(" != "); }
+        else if (this.isLt()) { stream.printCString(" < "); }
+        else if (this.isLe()) { stream.printCString(" <= "); }
+        else if (this.isGt()) { stream.printCString(" > "); }
+        else if (this.isGe()) { stream.printCString(" >= "); }
+        return stream.print(_right).printChar(')');
+    }
+    [] accept(Visitor visitor) { visitor.visitCond(this); }
+    
+}

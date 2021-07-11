@@ -1,0 +1,16 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::pir::statement;
+
+
+class Statement extends sys::core::Object {
+
+    abstract [] accept(Visitor visitor);
+    
+    // TODO: remove with implicit cast
+    [Statement] statement() { return this; }
+
+}
