@@ -5,6 +5,11 @@ version = 0.1.0
 */
 namespace pool::compiler::pir;
 
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::Type;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
 use pool::compiler::ast::scope::IntType;
 use pool::compiler::ast::scope::MethodScope;
 use pool::compiler::ast::scope::VariableScope;
@@ -20,54 +25,226 @@ use pool::compiler::pir::statement::MoveStatement;
 use pool::compiler::pir::statement::SetStatement;
 
 use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::OStream;
 
-// TODO: validations
 class Factory extends sys::core::Object {
 
     abstract [IntType] getIntType();
+    abstract [OStream] assert();
     
     [Method] createMethod(MethodScope scope) {
         Method method = this.rt().createInstance(Method:CLASSNAME);
         return method.init(scope);
     }
     
-    [ArithOpStatement] createArithOp(int op, Location left, Location right, Location dest) {
+    [ArithOpStatement] addArithOp(BasicBlock bb, int op, Location left, Location right, Location dest) {
+        if (!left.getType().isInt() || !right.getType().isInt() || !dest.getType().isInt()) {
+            this.assert().printCString("invalid types for arithmetic operation: ")
+                .print(dest).printCString(" = ").print(left).printCString(" <op> ").print(right);
+            return null;
+        }
         ArithOpStatement stmt = this.rt().createInstance(ArithOpStatement:CLASSNAME);
-        return stmt.init(op, left, right, dest);
+        bb.addStmt(stmt.init(op, left, right, dest).statement());
+        return stmt;
     }
-    [AsmStatement] createAsm(String pasm, AnyMap in, AnyMap out) {
+    
+    [AsmStatement] addAsm(BasicBlock bb, String pasm, AnyMap in, AnyMap out) {
         AsmStatement stmt = this.rt().createInstance(AsmStatement:CLASSNAME);
-        return stmt.init(pasm, in, out);
+        bb.addStmt(stmt.init(pasm, in, out).statement());
+        return stmt;
     }
-    [AssignStatement] createAssign(Value value, Location dest, int reinterpret) {
+    
+    [AssignStatement] addAssign(BasicBlock bb, Value value, Location dest, int reinterpret) {
+        if (!reinterpret) {
+            if (value.isNull()) {
+                if (!dest.getType().isInstance() && !dest.getType().isAll() && !dest.getType().isAny()) {
+                    this.assert().printCString("incompatible destination ").print(dest).printCString(" for null");
+                    return null;
+                }
+            } else if (value.isNumber()) {
+                if (!dest.getType().isInt()) {
+                    this.assert().printCString("incompatible destination ").print(dest).printCString(" for numeric constant");
+                    return null;
+                }
+            } else if (value.isString()) {
+                if (!dest.getType().isCString()) {
+                    this.assert().printCString("incompatible destination ").print(dest).printCString(" for string constant");
+                    return null;
+                }
+            }
+        }
         AssignStatement stmt = this.rt().createInstance(AssignStatement:CLASSNAME);
-        return stmt.init(value, dest, reinterpret);
+        bb.addStmt(stmt.init(value, dest, reinterpret).statement());
+        return stmt;
     }
-    [CallStatement] createCall(Location context, MethodScope method, AnyList params, AnyList rets) {
+    
+    [CallStatement] addCall(BasicBlock bb, Location context, MethodScope method, AnyList params, AnyList rets) {
+        Scope parent = method.getParent();
+        if (!parent.isInstance() || !parent.equals(context.getType())) {
+            this.assert().printCString("invalid context ").print(context).printCString(" of method ").print(method.getMethodDeclNode());
+            return null;
+        }
+        if (!this.isValidCall(method, params, rets)) { return null; }
         CallStatement stmt = this.rt().createInstance(CallStatement:CLASSNAME);
-        return stmt.init(context, method, params, rets);
+        bb.addStmt(stmt.init(context, method, params, rets).statement());
+        return stmt;
     }
-    [CondStatement] createCond(int op, Location left, Location right) {
+    
+    [CondStatement] addCond(BasicBlock bb, int op, Location left, Location right) {
+        if ((op == ExpressionNode:OP_AND) || (op == ExpressionNode:OP_OR)) {
+            this.assert().printCString("invalid operator for condition: ")
+                .print(left).printCString(" <op> ").print(right);
+            return null;
+        }
+        if (!left.getType().isInt() || !right.getType().isInt()) {
+            this.assert().printCString("invalid types for condition: ")
+                .print(left).printCString(" <op> ").print(right);
+            return null;
+        }
         CondStatement stmt = this.rt().createInstance(CondStatement:CLASSNAME);
-        return stmt.init(op, left, right);
+        bb.addStmt(stmt.init(op, left, right).statement());
+        return stmt;
     }
-    [GlobalCallStatement] createGlobalCall(MethodScope method, AnyList params, AnyList rets) {
+    
+    [GlobalCallStatement] addGlobalCall(BasicBlock bb, MethodScope method, AnyList params, AnyList rets) {
+        if (!this.isValidCall(method, params, rets)) { return null; }
         GlobalCallStatement stmt = this.rt().createInstance(GlobalCallStatement:CLASSNAME);
-        return stmt.init(method, params, rets);
+        bb.addStmt(stmt.init(method, params, rets).statement());
+        return stmt;
     }
-    [GetStatement] createGet(Location context, VariableScope var, Location dest) {
+    
+    [GetStatement] addGet(BasicBlock bb, Location context, VariableScope var, Location dest) {
+        VariableDeclNode decl = var.getVariableDeclNode();
+        Type ct = context.getType();
+        if (ct.isInstance()) {
+            if (!ct.isInstance().getClassScope().hasSuper(var.getClassDeclNode().getClassScope())) {
+                this.assert().printCString("incompatible context ")
+                    .print(context).printCString(" for variable ").print(decl);
+                return null;
+            }
+        } else if (ct.isStruct()) {
+            // TODO: check something?
+        } else {
+            this.assert().printCString("incompatible context ")
+                .print(context).printCString(" for variable ").print(decl);
+            return null;
+        }
+        // TODO: handle type conversion?
+        if (!this.isAssignable(decl.getResolvedType(), dest.getType())) {
+            this.assert().printCString("incompatible destination ")
+                .print(dest).printCString(" for variable ").print(decl);
+            return null;
+        }
         GetStatement stmt = this.rt().createInstance(GetStatement:CLASSNAME);
-        return stmt.init(context, var, dest);
+        bb.addStmt(stmt.init(context, var, dest).statement());
+        return stmt;
     }
-    [MoveStatement] createMove(Location src, Location dest, int reinterpret) {
+    
+    [MoveStatement] addMove(BasicBlock bb, Location src, Location dest, int reinterpret) {
+        if (!reinterpret) {
+            // TODO: handle type conversion?
+            if (!this.isAssignable(src.getType(), dest.getType())) {
+                this.assert().printCString("incompatible types for move: ")
+                    .print(src).printCString(" <-> ").print(dest);
+                return null;
+            }
+        }
         MoveStatement stmt = this.rt().createInstance(MoveStatement:CLASSNAME);
-        return stmt.init(src, dest, reinterpret);
+        bb.addStmt(stmt.init(src, dest, reinterpret).statement());
+        return stmt;
     }
-    [SetStatement] createSet(Location context, VariableScope var, Location src) {
+    
+    [SetStatement] addSet(BasicBlock bb, Location context, VariableScope var, Location src) {
+        VariableDeclNode decl = var.getVariableDeclNode();
+        Type ct = context.getType();
+        if (ct.isInstance()) {
+            if (!ct.isInstance().getClassScope().hasSuper(var.getClassDeclNode().getClassScope())) {
+                this.assert().printCString("incompatible context ")
+                    .print(context).printCString(" for variable ").print(decl);
+                return null;
+            }
+        } else if (ct.isStruct()) {
+            // TODO: check something?
+        } else {
+            this.assert().printCString("incompatible context ")
+                .print(context).printCString(" for variable ").print(decl);
+            return null;
+        }
+        // TODO: handle type conversion?
+        if (!this.isAssignable(src.getType(), decl.getResolvedType())) {
+            this.assert().printCString("incompatible source ")
+                .print(src).printCString(" for variable ").print(decl);
+            return null;
+        }
         SetStatement stmt = this.rt().createInstance(SetStatement:CLASSNAME);
-        return stmt.init(context, var, src);
+        bb.addStmt(stmt.init(context, var, src).statement());
+        return stmt;
+    }
+
+    // private    
+    [int] isAssignable(Type src, Type dest) {
+        if (sys::memory::Address:equals(src, dest)) { return true; }
+        
+        if (!src.isAll() && !src.isAny() && !src.isInstance() && !src.isStruct()) { return false; }
+        if (!dest.isAll() && !dest.isAny() && !dest.isInstance() && !dest.isStruct()) { return false; }
+        
+        // TODO: handle type conversion?
+        return src.isAll() || dest.isAny();
+    }
+    
+    [int] isValidCall(MethodScope method, AnyList params, AnyList rets) {
+        MethodDeclNode decl = method.getMethodDeclNode();
+        {
+            AnyMap mParams = method.getParameters();
+            if (mParams.size() != params.size()) {
+                this.assert().printCString("invalid parameter count ")
+                    .printInt(params.size()).printCString(" for method-call ").print(decl);
+                return false;
+            }
+            AnyMapEntryIterator mIt = mParams.entries();
+            AnyIterator locIt = params.iterator();
+            while (mIt.hasNext()) {
+                [VariableScope vs, Type t] = mIt.nextPair();
+                Location loc = locIt.next();
+                // TODO: handle type conversion?
+                if (!this.isAssignable(loc.getType(), t)) {
+                    this.assert().printCString("incompatible parameter ")
+                        .print(loc).printCString(" for method-call ").print(decl)
+                        .printCString(" (").print(t).printCString(" <-> ").print(loc.getType()).printChar(')');
+                    return false;
+                }
+            }
+            mIt.destroy();
+            locIt.destroy();
+        }
+        {
+            AnyList mRets = method.getReturnTypes();
+            if (mRets.size() != rets.size()) {
+                this.assert().printCString("invalid parameter count ")
+                    .printInt(params.size()).printCString(" for method-call ").print(decl);
+                return false;
+            }
+            AnyIterator mIt = mRets.iterator();
+            AnyIterator locIt = rets.iterator();
+            while (mIt.hasNext()) {
+                Type t = mIt.next();
+                Location loc = locIt.next();
+                // TODO: handle type conversion?
+                if (!this.isAssignable(loc.getType(), t)) {
+                    this.assert().printCString("incompatible return ")
+                        .print(loc).printCString(" for method-call ").print(decl)
+                        .printCString(" (").print(t).printCString(" <-> ").print(loc.getType()).printChar(')');
+                    return false;
+                }
+            }
+            mIt.destroy();
+            locIt.destroy();
+        }
+        return true;
     }
     
     // TODO: remove with implicit cast

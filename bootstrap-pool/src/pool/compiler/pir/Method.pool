@@ -73,6 +73,8 @@ class Method extends sys::core::Object {
         scope.setPirMethod(this);
     }
     
+    [MethodScope] getMethodScope() { return _scope; }
+    
     [Location] getParam(int id) { return _parameterLocations.at(id); }
     [Location] getRet(int id) { return _returnLocations.at(id); }
     [Location] getTemp(int id) { return _tempLocations.at(id); }
@@ -82,14 +84,14 @@ class Method extends sys::core::Object {
     [Location] getZeroTemp(Factory f) {
         if (!_zeroTemp) {
             _zeroTemp = this.newTemp(f.getIntType().type());
-            _entry.addStmt(f.createAssign(this.getNumber(0), _zeroTemp, false).statement());
+            f.addAssign(_entry, this.getNumber(0), _zeroTemp, false);
         }
         return _zeroTemp;
     }
     [Location] getOneTemp(Factory f) {
         if (!_oneTemp) {
             _oneTemp = this.newTemp(f.getIntType().type());
-            _entry.addStmt(f.createAssign(this.getNumber(1), _oneTemp, false).statement());
+            f.addAssign(_entry, this.getNumber(1), _oneTemp, false);
         }
         return _oneTemp;
     }

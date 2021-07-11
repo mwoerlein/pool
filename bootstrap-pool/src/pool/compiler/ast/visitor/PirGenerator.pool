@@ -87,6 +87,13 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     [PirGenerator] setTypeManager(TypeManager manager) { _typeManager = manager; return this; }
     
     [IntType] getIntType() { return _typeManager.getIntType(); }
+    [OStream] assert()  {
+        if (!_curMethod) { return this.error(); }
+        MethodScope ms = _curMethod.getMethodScope();
+        return this.error()
+            .print(ms.getClassDeclNode().getClassScope().getFullQualifiedName()).printChar(':')
+            .print(ms.getMethodDeclNode().getName()).printCString("(): ");
+    }
     
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
@@ -121,11 +128,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         _curMethod = this.createMethod(node.getMethodScope());
         _curBlock = _curMethod.newBasicBlock();
         
-        _curMethod.getZeroTemp(this.factory());
-        
         _curMethod.getEntryBlock().setNext(_curBlock);
-        
-        Visitor me = this.visitor();
         node.getBody().accept(this.visitor());
         if (!_curBlock.getNext()) { _curBlock.setNext(_curMethod.getExitBlock()); }
         
