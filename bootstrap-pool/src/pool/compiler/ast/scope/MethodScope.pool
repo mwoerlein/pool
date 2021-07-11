@@ -60,6 +60,8 @@ class MethodScope extends Scope {
     [PirMethod] getPirMethod() { if (_mainScope) { return _mainScope.getPirMethod(); } return _pirMethod; }
 
     [MethodScope] isMethod() { return this; }
+    [InstanceScope] isInstanceMethod() { return _parent.isInstance(); }
+    [ClassScope] isGlobalMethod() { return _parent.isClass(); }
     
     [OStream] printDebugName(OStream stream) {
         stream.printCString("MethodScope of ").print(_methodDecl);

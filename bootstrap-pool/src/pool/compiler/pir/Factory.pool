@@ -10,6 +10,7 @@ use pool::compiler::ast::Type;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
 use pool::compiler::ast::node::declaration::VariableDeclNode;
 use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::ast::scope::InstanceScope;
 use pool::compiler::ast::scope::IntType;
 use pool::compiler::ast::scope::MethodScope;
 use pool::compiler::ast::scope::VariableScope;
@@ -83,9 +84,10 @@ class Factory extends sys::core::Object {
     }
     
     [CallStatement] addCall(BasicBlock bb, Location context, MethodScope method, AnyList params, AnyList rets) {
-        Scope parent = method.getParent();
-        if (!parent.isInstance() || !parent.equals(context.getType())) {
-            this.assert().printCString("invalid context ").print(context).printCString(" of method ").print(method.getMethodDeclNode());
+        if (!context.getType().equals(method.isInstanceMethod())) {
+            this.assert().printCString("invalid context ").print(context)
+                .printCString(" of method ").print(method.getMethodDeclNode())
+            ;
             return null;
         }
         if (!this.isValidCall(method, params, rets)) { return null; }
@@ -224,8 +226,8 @@ class Factory extends sys::core::Object {
         {
             AnyList mRets = method.getReturnTypes();
             if (mRets.size() != rets.size()) {
-                this.assert().printCString("invalid parameter count ")
-                    .printInt(params.size()).printCString(" for method-call ").print(decl);
+                this.assert().printCString("invalid return count ")
+                    .printInt(rets.size()).printCString(" for method-call ").print(decl);
                 return false;
             }
             AnyIterator mIt = mRets.iterator();

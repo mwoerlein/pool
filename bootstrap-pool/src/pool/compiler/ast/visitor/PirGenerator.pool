@@ -147,6 +147,16 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         return true;
     }
     
+    [int] visitVariableDecl(VariableDeclNode node) {
+        VariableScope vs = node.getScope().isVariable();
+        if (vs.isLocalVariable()) {
+            vs.setPirLocation(_curMethod.newTemp(node.getResolvedType()));
+        }
+        // method parameters are handled in Method::init
+        // instance variables and consts have no location
+        return true;
+    }
+    
     // instructions
     [int] visitExpressionInst(ExpressionInstNode node) {
         int success = node.getExpression().accept(this.visitor());
@@ -172,6 +182,41 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         return true;
     }
     
+    [int] visitVariableInitInst(VariableInitInstNode node) {
+        NodeList vars = node.getVariables();
+        vars.acceptAll(this.visitor());
+        
+        if (vars.size() == 1) {
+            VariableDeclNode varDecl = vars.first();
+            Location tmp = this.exprAsTemp(node.getInitializer(), null);
+            if (!tmp) { return false; }
+            Location v = varDecl.getVariableScope().getPirLocation();
+            if (!v) {
+                return this.unresolvedVariableError(node.node(), varDecl);
+            }
+            this.addMove(_curBlock, tmp, v, false);
+        } else {
+            node.getInitializer().accept(this.visitor());
+            if (!_lastLocations.size() == vars.size()) {
+                return this.unexpectedInitializerError(node.node(), node.getInitializer());
+            }
+            AnyIterator vit = vars.iterator();
+            AnyIterator lit = _lastLocations.iterator();
+            while (vit.hasNext()) {
+                VariableDeclNode varDecl = vit.next();
+                Location v = varDecl.getVariableScope().getPirLocation();
+                if (!v) {
+                    return this.unresolvedVariableError(node.node(), varDecl);
+                }
+                this.addMove(_curBlock, this.asTemp(lit.next()), v, false);
+            }
+            lit.destroy();
+            vit.destroy();
+            _lastLocations.clear();
+        }
+        return true;
+    }
+    
     // expressions
     [int] visitConstCStringExpr(ConstCStringExprNode node) {
         _lastValue = _curMethod.getString(node.getValue());
@@ -181,18 +226,101 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         _lastValue = _curMethod.getNumber(node.getValue());
         return true;
     }
+    
+    [int] visitMethodCallExpr(MethodCallExprNode node) {
+        MethodScope ms = node.getResolvedMethod();
+        Location context = null;
+        if (ms.isInstanceMethod()) {
+            node.getContext().accept(this.visitor());
+            if (_lastLocations.size() != 1) {
+                return this.unexpectedContextError(node.node(), node.getContext());
+            }
+            context = this.asTemp(_lastLocations.shift());
+        }
+        AnyList params = this.createOwn(AnyList:CLASSNAME);
+        {
+            AnyIterator it = node.getParameters().iterator();
+            while (it.hasNext()) {
+                Location tmp = this.exprAsTemp(it.next(), null);
+                if (!tmp) { return false; }
+                params.add(tmp);
+            }
+            it.destroy();
+        }
+        AnyList rets = this.createOwn(AnyList:CLASSNAME);
+        {
+            AnyIterator it = ms.getReturnTypes().iterator();
+            while (it.hasNext()) {
+                Location loc = _curMethod.newTemp(it.next());
+                _lastLocations.add(loc);
+                rets.add(loc);
+            }
+            it.destroy();
+        }
+        if (context) {
+            this.addCall(_curBlock, context, ms, params, rets);
+        } else {
+            this.addGlobalCall(_curBlock, ms, params, rets);
+        }
+        return true;
+    }
+    
     [int] visitNullExpr(NullExprNode node) {
         _lastValue = _curMethod.getNull();
         return true;
     }
+    
     [int] visitThisExpr(ThisExprNode node) {
         _lastLocations.add(_curMethod.getThis());
+        return true;
+    }
+    
+    [int] visitVariableExpr(VariableExprNode node) {
+        VariableScope var = node.getResolvedVariable();
+        Location loc = var.getPirLocation();
+        ExpressionNode init = var.getFinalInitializer();
+        if (var.isConst()) {
+            // propagate constant value
+            return var.getFinalInitializer().accept(this.visitor());
+        }
+        if (node.hasContext()) {
+            node.getContext().accept(this.visitor());
+            if (_lastLocations.size() != 1) {
+                return this.unexpectedContextError(node.node(), node.getContext());
+            }
+            Location loc = _lastLocations.shift();
+            Location tmp = _curMethod.newTemp(node.getResolvedType());
+            this.addGet(_curBlock, this.asTemp(loc), var, tmp);
+            _lastLocations.add(tmp);
+        } else if (loc) {
+            _lastLocations.add(loc);
+        } else {
+            return this.unresolvedVariableError(node.node(), var.getVariableDeclNode());
+        }
         return true;
     }
     
     // references
     
     // helper
+    [int] unresolvedVariableError(Node node, VariableDeclNode decl) {
+        OStream err = this.assert().printCString("PIR generation: unvisited resolved variable ").print(decl);
+        node.debugToStream(err.printCString(" found for "));
+        return false;
+    }
+    
+    [int] unexpectedContextError(Node node, ExpressionNode context) {
+        OStream err = this.assert().printCString("unexpected context ").print(context);
+        node.debugToStream(err.printCString(" for "));
+        return false;
+    }
+    
+    [int] unexpectedInitializerError(Node node, ExpressionNode initializer) {
+        OStream err = this.assert().printCString("unexpected initializer ").print(initializer);
+        node.debugToStream(err.printCString(" in "));
+        return false;
+    }
+    
     [Location] exprAsTemp(ExpressionNode expr, Type interpretAs) {
         /*
         if (expr.isLogicalBinary() || expr.isLogicalUnary()) {
@@ -212,8 +340,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         expr.accept(this.visitor());
         
         if (_lastLocations.size() == 1) {
-            Location loc = _lastLocations.first();
-            _lastLocations.clear();
+            Location loc = _lastLocations.shift();
             if (interpretAs && !interpretAs.equals(loc.getType())) {
                 Location l = _curMethod.newTemp(interpretAs);
                 this.addMove(_curBlock, this.asTemp(loc), l, true);
