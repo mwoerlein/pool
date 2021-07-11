@@ -318,6 +318,7 @@ class InstructionResolver extends Visitor {
             }
             return false;
         }
+        node.setResolvedMethod(ms);
         // TODO: handle multi return types
         // TODO: compare parameters.resolvedType with calledMethod.parameters.resolvedType
         AnyList returns = ms.getReturnTypes();
@@ -368,7 +369,7 @@ class InstructionResolver extends Visitor {
         VariableDeclNode decl = vs.getVariableDeclNode();
         // ensure variable decl to be resolved
         decl.accept(this.visitor());
-        node.setResolvedType(decl.getResolvedType());
+        node.setResolvedVariable(vs).setResolvedType(decl.getResolvedType());
         
         // convert implicit access to explicit access
         if (!node.hasContext()) {

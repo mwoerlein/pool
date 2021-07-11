@@ -8,6 +8,7 @@ namespace pool::compiler::ast::node::expression;
 use pool::compiler::ast::Visitor;
 use pool::compiler::ast::node::NodeList;
 use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::scope::MethodScope;
 use sys::core::String;
 use sys::stream::OStream;
 
@@ -16,6 +17,7 @@ class MethodCallExprNode extends ExpressionNode {
     String _name;
     NodeList _parameters; //NodeList<ExpressionNode>
     ExpressionNode _context;
+    MethodScope _resolvedMethod;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
@@ -38,6 +40,9 @@ class MethodCallExprNode extends ExpressionNode {
         }
         return false;
     }
+    
+    [MethodCallExprNode] setResolvedMethod(MethodScope scope) { _resolvedMethod = scope; return this; }
+    [MethodScope] getResolvedMethod() { return _resolvedMethod; }
     
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitMethodCallExpr(this); }

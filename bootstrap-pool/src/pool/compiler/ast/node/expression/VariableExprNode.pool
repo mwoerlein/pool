@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::ast::node::expression;
 
 use pool::compiler::ast::Visitor;
+use pool::compiler::ast::scope::VariableScope;
 use pool::compiler::ast::node::reference::ClassRefNode;
 use sys::core::String;
 use sys::stream::OStream;
@@ -14,6 +15,7 @@ class VariableExprNode extends ExpressionNode {
 
     String _name;
     ExpressionNode _context;
+    VariableScope _resolvedVariable;
 
     [] __init() {
         _name = this.createOwn(String:CLASSNAME);
@@ -21,6 +23,8 @@ class VariableExprNode extends ExpressionNode {
     
     [VariableExprNode] setName(String name) { _name.assignString(name); return this; }
     [String] getName() { return _name; }
+    [VariableExprNode] setResolvedVariable(VariableScope scope) { _resolvedVariable = scope; return this; }
+    [VariableScope] getResolvedVariable() { return _resolvedVariable; }
     
     [VariableExprNode] setContext(ExpressionNode context) { _context = this.own(context); return this; }
     [ExpressionNode] getContext() { return _context; }
