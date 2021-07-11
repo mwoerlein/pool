@@ -40,6 +40,8 @@ class Scope extends sys::core::Object {
     int STATE_SIGNATURE_RESOLVED        := 35;
     int STATE_RESOLVING_INSTRUCTIONS    := 40;
     int STATE_INSTRUCTIONS_RESOLVED     := 45;
+    int STATE_GENERATING_PIR            := 50;
+    int STATE_PIR_GENERATED             := 55;
     
     Scope _parent;
     int _state;

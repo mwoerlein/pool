@@ -32,7 +32,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::OStream;
 
-class X86Generator extends sys::core::Object {
+class X86Generator extends sys::log::LoggerAware {
     ClassScope _classScope;
     ClassDeclNode _class;
     CompilationUnit _unit;
@@ -52,6 +52,11 @@ class X86Generator extends sys::core::Object {
         _nodes = unit.getNodeList();
         _classScope = node.getClassScope();
         InstanceScope _instanceScope = node.getInstanceScope();
+        
+        if (!_classScope || _classScope.getState() < ClassScope:STATE_PIR_GENERATED) {
+            this.error().print(node.getName()).printCString(": intermediate representation must be generated before assembly generation!");
+            return;
+        }
 
         // header
         this._newline();

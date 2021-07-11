@@ -51,7 +51,7 @@ class MethodScope extends Scope {
     [MethodScope] addReturnType(Type type) { _returnTypes.add(type); return this; }
     [AnyList] getReturnTypes() { return _returnTypes; }
 
-    [MethodScope] setPirMethod(PirMethod m) { _pirMethod = m; return this; }
+    [MethodScope] setPirMethod(PirMethod m) { _pirMethod = this.own(m); return this; }
     [PirMethod] getPirMethod() { return _pirMethod; }
 
     [OStream] printDebugName(OStream stream) {

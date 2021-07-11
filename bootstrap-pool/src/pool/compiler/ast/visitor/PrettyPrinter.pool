@@ -46,6 +46,11 @@ use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::CStringRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
 use pool::compiler::ast::node::reference::TypeRefNode;
+
+use pool::compiler::pir::BasicBlock;
+use pool::compiler::pir::Method;
+use pool::compiler::pir::statement::CondStatement;
+
 use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
@@ -201,6 +206,38 @@ class PrettyPrinter extends Visitor {
             this.startBlock(line);
             node.getBody().getInstructions().acceptAll(this.visitor());
             this.endBlock();
+        }
+        
+        if (node.getMethodScope() && node.getMethodScope().getPirMethod()) {
+            Method pir = node.getMethodScope().getPirMethod();
+            this.indent().printCString("/*").printNewline();
+            _indent += 4;
+            {
+                AnyIterator it = pir.blocks();
+                while (it.hasNext()) {
+                    BasicBlock block = it.next();
+                    this.indent().print(block).printNewline();
+                    _indent += 4;
+                    {
+                        AnyIterator sit = block.statements();
+                        while (sit.hasNext()) {
+                            this.indent().print(sit.next()).printNewline();
+                        }
+                        sit.destroy();
+                    }
+                    _indent -= 4;
+                    if (block.hasCond()) {
+                        [CondStatement c, BasicBlock n] = block.getCond();
+                        this.indent().printCString("cond: ").print(c).printCString(" next: ").print(n).printNewline();
+                    }
+                    if (block.getNext()) {
+                        this.indent().printCString("next: ").print(block.getNext()).printNewline();
+                    }
+                }
+                it.destroy();
+            }
+            _indent -= 4;
+            this.indent().printCString("*/").printNewline();
         }
         
         this.indent().printNewline();

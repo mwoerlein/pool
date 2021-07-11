@@ -34,10 +34,10 @@ class Location extends sys::core::Object {
             return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
         }
         if (_kind == Location:KIND_SPILL) {
-            return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
+            return stream.printChar('<').print(_type).printCString(">spill(").printInt(_id).printChar(')');
         }
         if (_kind == Location:KIND_TEMP) {
-            return stream.printChar('<').print(_type).printCString(">param(").printInt(_id).printChar(')');
+            return stream.printChar('<').print(_type).printCString(">temp(").printInt(_id).printChar(')');
         }
         return stream.printCString("UNKNOWN LOCATION");
     }

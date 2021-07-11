@@ -36,7 +36,11 @@ class Method extends sys::core::Object {
     Value _null;
     
     [Method] init(MethodScope scope) {
-        scope.setPirMethod(this);
+        _parameterLocations = this.createOwn(AnyList:CLASSNAME);
+        _returnLocations = this.createOwn(AnyList:CLASSNAME);
+        _tempLocations = this.createOwn(AnyList:CLASSNAME);
+        _blocks = this.createOwn(AnyList:CLASSNAME);
+        
         _scope = scope;
         _null = this.createOwn(Value:CLASSNAME);
         _null.initNull();
@@ -65,6 +69,8 @@ class Method extends sys::core::Object {
             }
             it.destroy();
         }
+        
+        scope.setPirMethod(this);
     }
     
     [Location] getParam(int id) { return _parameterLocations.at(id); }
@@ -100,6 +106,9 @@ class Method extends sys::core::Object {
         return ret.initString(_scope.getClassDeclNode().getClassScope().stringId(value, null));
     }
     
+    [AnyIterator] blocks() { return _blocks.iterator(); }
+    [BasicBlock] getEntryBlock() { return _entry; }
+    [BasicBlock] getExitBlock() { return _exit; }
     [BasicBlock] newBasicBlock() {
         BasicBlock bb = _blocks.createOwn(BasicBlock:CLASSNAME);
         bb.init(this, _blocks.size());

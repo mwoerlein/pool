@@ -28,6 +28,11 @@ class Factory extends sys::core::Object {
 
     abstract [IntType] getIntType();
     
+    [Method] createMethod(MethodScope scope) {
+        Method method = this.rt().createInstance(Method:CLASSNAME);
+        return method.init(scope);
+    }
+    
     [ArithOpStatement] createArithOp(int op, Location left, Location right, Location dest) {
         ArithOpStatement stmt = this.rt().createInstance(ArithOpStatement:CLASSNAME);
         return stmt.init(op, left, right, dest);

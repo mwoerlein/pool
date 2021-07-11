@@ -14,6 +14,7 @@ use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::StructDeclNode;
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 use pool::compiler::ast::visitor::InstructionResolver;
+use pool::compiler::ast::visitor::PirGenerator;
 use pool::compiler::ast::visitor::PrettyPrinter;
 use pool::compiler::ast::visitor::SignatureResolver;
 use pool::compiler::ast::visitor::TypeReferenceResolver;
@@ -48,6 +49,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     TypeReferenceResolver resolveTypeRefs;
     SignatureResolver resolveSignature;
     InstructionResolver resolveInstructions;
+    PirGenerator generatePIR;
     X86Generator generatePASMUnit;
     
     AsmParser asmParser;
@@ -62,6 +64,8 @@ class Compiler extends pool::compiler::ast::TypeManager {
         resolveTypeRefs.setTypeManager(this.typeManager());
         resolveSignature = this.createOwn(SignatureResolver:CLASSNAME);
         resolveInstructions = this.createOwn(InstructionResolver:CLASSNAME);
+        generatePIR = this.createOwn(PirGenerator:CLASSNAME);
+        generatePIR.setTypeManager(this.typeManager());
         generatePASMUnit = this.createOwn(X86Generator:CLASSNAME);
         
         asmParser = this.createOwn(AsmParser:CLASSNAME);
@@ -74,6 +78,8 @@ class Compiler extends pool::compiler::ast::TypeManager {
         resolveTypeRefs.setLogger(logger);
         resolveSignature.setLogger(logger);
         resolveInstructions.setLogger(logger);
+        generatePIR.setLogger(logger);
+        generatePASMUnit.setLogger(logger);
         if (pp) { pp.setLogger(logger); }
         return this;
     }
@@ -254,11 +260,10 @@ class Compiler extends pool::compiler::ast::TypeManager {
         this._debugStep(fqn, "resolve instructions");
         resolveInstructions.visit(node.node());
         if (this.hasErrors()) { return false; }
-/*        
+        
         this._debugStep(fqn, "generate PIR");
         generatePIR.visit(node.node());
         if (this.hasErrors()) { return false; }
-*/
         
         this._debugStep(fqn, "generate PASM");
         generatePASMUnit.generateClass(node, unit);

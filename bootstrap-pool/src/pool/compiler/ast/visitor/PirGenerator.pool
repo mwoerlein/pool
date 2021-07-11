@@ -1,0 +1,143 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::compiler::ast::visitor;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::Visitor;
+use pool::compiler::ast::node::NodeList;
+
+use pool::compiler::ast::node::declaration::ClassDeclNode;
+use pool::compiler::ast::node::declaration::MethodDeclNode;
+use pool::compiler::ast::node::declaration::NamespaceDeclNode;
+use pool::compiler::ast::node::declaration::StructDeclNode;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::declaration::UseStatementNode;
+use pool::compiler::ast::node::declaration::VariableDeclNode;
+
+use pool::compiler::ast::node::expression::ArithAssignmentExprNode;
+use pool::compiler::ast::node::expression::ArithBinaryExprNode;
+use pool::compiler::ast::node::expression::ArithUnaryExprNode;
+use pool::compiler::ast::node::expression::AssignmentExprNode;
+use pool::compiler::ast::node::expression::ConstCStringExprNode;
+use pool::compiler::ast::node::expression::ConstIntExprNode;
+use pool::compiler::ast::node::expression::ExpressionNode;
+use pool::compiler::ast::node::expression::LogicalBinaryExprNode;
+use pool::compiler::ast::node::expression::LogicalUnaryExprNode;
+use pool::compiler::ast::node::expression::MethodCallExprNode;
+use pool::compiler::ast::node::expression::NullExprNode;
+use pool::compiler::ast::node::expression::SignExprNode;
+use pool::compiler::ast::node::expression::ThisExprNode;
+use pool::compiler::ast::node::expression::VariableExprNode;
+
+use pool::compiler::ast::node::instruction::BlockInstNode;
+use pool::compiler::ast::node::instruction::ExpressionInstNode;
+use pool::compiler::ast::node::instruction::IfInstNode;
+use pool::compiler::ast::node::instruction::InlinePasmInstNode;
+use pool::compiler::ast::node::instruction::ReturnInstNode;
+use pool::compiler::ast::node::instruction::VariableInitInstNode;
+use pool::compiler::ast::node::instruction::WhileInstNode;
+
+use pool::compiler::ast::node::reference::AllRefNode;
+use pool::compiler::ast::node::reference::AnyRefNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::IntRefNode;
+use pool::compiler::ast::node::reference::TypeRefNode;
+
+use pool::compiler::ast::NamedType;
+use pool::compiler::ast::Scope;
+use pool::compiler::ast::TypeManager;
+use pool::compiler::ast::scope::BlockScope;
+use pool::compiler::ast::scope::ClassScope;
+use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::IntType;
+use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::StructScope;
+use pool::compiler::ast::scope::UnitScope;
+use pool::compiler::ast::scope::VariableScope;
+
+use pool::compiler::pir::BasicBlock;
+use pool::compiler::pir::Method;
+use pool::compiler::pir::statement::CondStatement;
+
+use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::String;
+use sys::stream::OStream;
+
+/**
+ * Generates intermediate representation of methods
+ *
+ * error detection:
+ * - TODO
+ */
+class PirGenerator extends Visitor, pool::compiler::pir::Factory {
+
+    TypeManager _typeManager;
+    
+    Method _curMethod;
+    BasicBlock _curBlock;
+    
+    [PirGenerator] setTypeManager(TypeManager manager) { _typeManager = manager; return this; }
+    
+    [IntType] getIntType() { return _typeManager.getIntType(); }
+    
+    // declarations
+    [int] visitTranslationUnit(TranslationUnitNode node) {
+        this.crit().print(node.getName()).printCString(": PirGenerator only works for classes, not for translation units!");
+        return false;
+    }
+    
+    [int] visitClassDecl(ClassDeclNode node) {
+        ClassScope cs := node.getClassScope();
+        if (!cs || cs.getState() < Scope:STATE_INSTRUCTIONS_RESOLVED) {
+            this.error().print(node.getName()).printCString(": instructions must be resolved before intermediate representation generation!");
+            return false;
+        }
+        if (cs.getState() >= Scope:STATE_PIR_GENERATED) {
+            return true;
+        }
+        
+        this._traceStart(cs.getFullQualifiedName(), "generating intermediate representation");
+        cs.setState(Scope:STATE_GENERATING_PIR);
+        
+        node.getMethods().acceptAll(this.visitor());
+        
+        cs.setState(Scope:STATE_PIR_GENERATED);
+        this._traceStop(cs.getFullQualifiedName(), "generated intermediate representation");
+        
+        return true;
+    }
+
+    [int] visitMethodDecl(MethodDeclNode node) {
+        if (node.isAbstract()) { return true; }
+        
+        _curMethod = this.createMethod(node.getMethodScope());
+        _curBlock = _curMethod.newBasicBlock();
+        
+        _curMethod.getZeroTemp(this.factory());
+        
+        _curMethod.getEntryBlock().setNext(_curBlock);
+        
+        Visitor me = this.visitor();
+        node.getBody().accept(this.visitor());
+        if (!_curBlock.getNext()) { _curBlock.setNext(_curMethod.getExitBlock()); }
+        
+        _curBlock = null;
+        _curMethod = null;
+        return true;
+    }
+    
+    // instructions
+    
+    // expressions
+    
+    // references
+    
+}
