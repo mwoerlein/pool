@@ -30,6 +30,7 @@ class LogicalBinaryExprNode extends ExpressionNode {
     [int] isLe() { return _op == ExpressionNode:OP_LE; }
     [int] isGt() { return _op == ExpressionNode:OP_GT; }
     [int] isGe() { return _op == ExpressionNode:OP_GE; }
+    [int] getOperation() { return _op; }
     
     [LogicalBinaryExprNode] setLeft(ExpressionNode left) { _left = this.own(left); return this; }
     [ExpressionNode] getLeft() { return _left; }
@@ -37,6 +38,8 @@ class LogicalBinaryExprNode extends ExpressionNode {
     [LogicalBinaryExprNode] setRight(ExpressionNode right) { _right = this.own(right); return this; }
     [ExpressionNode] getRight() { return _right; }
     
+    [LogicalBinaryExprNode] isLogicalBinary() { return this; }
+
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitLogicalBinaryExpr(this); }
     [OStream] printDebugName(OStream stream) {

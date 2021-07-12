@@ -19,6 +19,8 @@ class LogicalUnaryExprNode extends ExpressionNode {
     [LogicalUnaryExprNode] setExpression(ExpressionNode expression) { _expression = this.own(expression); return this; }
     [ExpressionNode] getExpression() { return _expression; }
     
+    [LogicalUnaryExprNode] isLogicalUnary() { return this; }
+    
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitLogicalUnaryExpr(this); }
     [OStream] printDebugName(OStream stream) {

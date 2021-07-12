@@ -42,6 +42,21 @@ class Factory extends sys::core::Object {
         return method.init(scope);
     }
     
+    [CondStatement] createCond(int op, Location left, Location right) {
+        if ((op == ExpressionNode:OP_AND) || (op == ExpressionNode:OP_OR)) {
+            this.assert().printCString("invalid operator for condition: ")
+                .print(left).printCString(" <op> ").print(right);
+            return null;
+        }
+        if (!left.getType().isInt() || !right.getType().isInt()) {
+            this.assert().printCString("invalid types for condition: ")
+                .print(left).printCString(" <op> ").print(right);
+            return null;
+        }
+        CondStatement stmt = this.rt().createInstance(CondStatement:CLASSNAME);
+        return stmt.init(op, left, right);
+    }
+    
     [ArithOpStatement] addArithOp(BasicBlock bb, int op, Location left, Location right, Location dest) {
         if (!left.getType().isInt() || !right.getType().isInt() || !dest.getType().isInt()) {
             this.assert().printCString("invalid types for arithmetic operation: ")
@@ -93,22 +108,6 @@ class Factory extends sys::core::Object {
         if (!this.isValidCall(method, params, rets)) { return null; }
         CallStatement stmt = this.rt().createInstance(CallStatement:CLASSNAME);
         bb.addStmt(stmt.init(context, method, params, rets).statement());
-        return stmt;
-    }
-    
-    [CondStatement] addCond(BasicBlock bb, int op, Location left, Location right) {
-        if ((op == ExpressionNode:OP_AND) || (op == ExpressionNode:OP_OR)) {
-            this.assert().printCString("invalid operator for condition: ")
-                .print(left).printCString(" <op> ").print(right);
-            return null;
-        }
-        if (!left.getType().isInt() || !right.getType().isInt()) {
-            this.assert().printCString("invalid types for condition: ")
-                .print(left).printCString(" <op> ").print(right);
-            return null;
-        }
-        CondStatement stmt = this.rt().createInstance(CondStatement:CLASSNAME);
-        bb.addStmt(stmt.init(op, left, right).statement());
         return stmt;
     }
     

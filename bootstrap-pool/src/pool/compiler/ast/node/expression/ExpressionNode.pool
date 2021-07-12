@@ -47,6 +47,9 @@ class ExpressionNode extends Node {
     [ExpressionNode] setResolvedType(Type type) { _resolvedType = type; return this; }
     [Type] getResolvedType() { return _resolvedType; }
     [int] isResolved() { return !!_resolvedType; }
+
+    [LogicalUnaryExprNode] isLogicalUnary() { return null; }
+    [LogicalBinaryExprNode] isLogicalBinary() { return null; }
     
     // TODO: remove with implicit cast
     [ExpressionNode] expression() { return this; }

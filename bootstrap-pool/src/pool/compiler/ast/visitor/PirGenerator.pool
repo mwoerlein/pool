@@ -222,8 +222,24 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         _lastValue = _curMethod.getString(node.getValue());
         return true;
     }
+    
     [int] visitConstIntExpr(ConstIntExprNode node) {
         _lastValue = _curMethod.getNumber(node.getValue());
+        return true;
+    }
+    
+    [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
+        this.error().print(node.expression());
+        Location tmp = this.exprAsTemp(node.expression(), null);
+        if (!tmp) { return false; }
+        _lastLocations.add(tmp);
+        return true;
+    }
+    
+    [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
+        Location tmp = this.exprAsTemp(node.expression(), null);
+        if (!tmp) { return false; }
+        _lastLocations.add(tmp);
         return true;
     }
     
@@ -322,21 +338,20 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     }
     
     [Location] exprAsTemp(ExpressionNode expr, Type interpretAs) {
-        /*
         if (expr.isLogicalBinary() || expr.isLogicalUnary()) {
-            PIRBasicBlock *next = &curMethod->newBasicBlock();
-            PIRBasicBlock *trueBlock = &curMethod->newBasicBlock();
-            trueBlock->next = next;
+            BasicBlock next = _curMethod.newBasicBlock();
+            BasicBlock trueBlock = _curMethod.newBasicBlock();
+            trueBlock.setNext(next);
             
-            PIRLocation &loc = curMethod->newTemp(types.intType);
-            curBlock->addMove(*curMethod->getZeroTemp(types.intType), loc);
-            trueBlock->addMove(*curMethod->getOneTemp(types.intType), loc);
+            Location loc = _curMethod.newTemp(this.getIntType().type());
+            this.addMove(_curBlock, _curMethod.getZeroTemp(this.factory()), loc, false);
+            this.addMove(trueBlock, _curMethod.getOneTemp(this.factory()), loc, false);
             
-            branch(expr, *trueBlock, *next);
-            curBlock = next;
-            return &loc;
+            this.branch(expr, trueBlock, next);
+            _curBlock = next;
+            return loc;
         }
-        */
+        
         expr.accept(this.visitor());
         
         if (_lastLocations.size() == 1) {
@@ -369,4 +384,45 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         return src;
     }
         
+    [] branch(ExpressionNode expr, BasicBlock trueBlock, BasicBlock falseBlock) {
+        LogicalUnaryExprNode logicalUnary = expr.isLogicalUnary();
+        if (logicalUnary) {
+            if (logicalUnary.isNot()) {
+                this.branch(logicalUnary.getExpression(), falseBlock, trueBlock);
+                return;
+            }
+        }
+        LogicalBinaryExprNode logicalBinary = expr.isLogicalBinary();
+        if (logicalBinary) {
+            if (logicalBinary.isAnd()) {
+                BasicBlock nextCond = _curMethod.newBasicBlock();
+                this.branch(logicalBinary.getLeft(), nextCond, falseBlock);
+                _curBlock = nextCond;
+                this.branch(logicalBinary.getRight(), trueBlock, falseBlock);
+                return;
+            }
+            if (logicalBinary.isOr()) {
+                BasicBlock nextCond = _curMethod.newBasicBlock();
+                this.branch(logicalBinary.getLeft(), trueBlock, nextCond);
+                _curBlock = nextCond;
+                this.branch(logicalBinary.getRight(), trueBlock, falseBlock);
+                return;
+            }
+            {
+                Location left = this.exprAsTemp(logicalBinary.getLeft(), null);
+                Location right = this.exprAsTemp(logicalBinary.getRight(), null);
+                if (left && right) {
+                    CondStatement cond = this.createCond(logicalBinary.getOperation(), left, right);
+                    _curBlock.setNext(falseBlock).setCond(cond, trueBlock);
+                }
+                return;
+            }
+        }
+        
+        Location tmp = this.exprAsTemp(expr, this.getIntType().type());
+        if (tmp) {
+            CondStatement cond = this.createCond(ExpressionNode:OP_NEQ, tmp, _curMethod.getZeroTemp(this.factory()));
+            _curBlock.setNext(falseBlock).setCond(cond, trueBlock);
+        }
+    }
 }
