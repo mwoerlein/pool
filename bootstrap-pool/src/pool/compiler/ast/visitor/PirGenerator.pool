@@ -176,11 +176,15 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             _curBlock = trueBlock;
             node.getTrueBlock().accept(this.visitor());
             _curBlock.setNext(next);
+        } else {
+            trueBlock.setNext(next);
         }
         if (node.hasFalseBlock()) {
             _curBlock = falseBlock;
             node.getFalseBlock().accept(this.visitor());
             _curBlock.setNext(next);
+        } else {
+            falseBlock.setNext(next);
         }
         
         _curBlock = next;
