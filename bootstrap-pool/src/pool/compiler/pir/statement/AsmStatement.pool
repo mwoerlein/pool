@@ -19,7 +19,7 @@ class AsmStatement extends Statement {
     AnyMap _out;
 
     [AsmStatement] init(String pasm, AnyMap in, AnyMap out) {
-        _pasm = pasm; _in = in; _out = out;
+        _pasm = pasm; _in = this.own(in); _out = this.own(out);
         return this;
     }
     

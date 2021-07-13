@@ -71,6 +71,7 @@ use pool::storage::PoolStorage;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
 use sys::stream::OStream;
@@ -191,6 +192,64 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         return true;
     }
     
+    [int] visitInlinePasmInst(InlinePasmInstNode node) {
+        AnyMap in = this.createOwn(AnyMap:CLASSNAME); in.init(5);
+        if (node.hasIn()) {
+            AnyMapEntryIterator it = node.getIn().entries();
+            while (it.hasNext()) {
+                [String reg, ExpressionNode ex] = it.nextPair();
+                Location tmp = this.exprAsTemp(ex, null);
+                if (!tmp) { return false; }
+                in.set(reg, tmp);
+            }
+            it.destroy();
+        }
+        
+        AnyMap outSet = this.rt().createInstance(AnyMap:CLASSNAME); outSet.init(5);
+        AnyMap out = this.createOwn(AnyMap:CLASSNAME); out.init(5);
+        if (node.hasOut()) {
+            AnyMapEntryIterator it = node.getOut().entries();
+            while (it.hasNext()) {
+                [String reg, ExpressionNode ex] = it.nextPair();
+                VariableExprNode var = ex.isVariable();
+                if (var && var.hasContext()) {
+                    Location tmp = _curMethod.newTemp(var.getResolvedType());
+                    out.set(reg, tmp);
+                    outSet.set(var, tmp);
+                } else {
+                    ex.accept(this.visitor());
+                    if (_lastLocations.size() != 1) {
+                        return this.unexpectedOutputExpressionError(node.node(), var.getContext());
+                    }
+                    Location o = _lastLocations.shift();
+                    if (!o.isTemp()) {
+                        return this.unexpectedOutputExpressionError(node.node(), var.getContext());
+                    }
+                    out.set(reg, o);
+                }
+            }
+            it.destroy();
+        }
+        this.addAsm(_curBlock, node.getPasm().getValue(), in, out);
+        
+        if (!outSet.isEmpty()) {
+            AnyMapEntryIterator it = outSet.entries();
+            while (it.hasNext()) {
+                [VariableExprNode var, Location tmp] = it.nextPair();
+                var.getContext().accept(this.visitor());
+                if (_lastLocations.size() != 1) {
+                    return this.unexpectedContextError(node.node(), var.getContext());
+                }
+                Location ctx = this.asTemp(_lastLocations.shift());
+                this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
+            }
+            it.destroy();
+        }
+        outSet.destroy();
+        
+        return true;
+    }
+    
     [int] visitReturnInst(ReturnInstNode node) {
         if (!node.hasValues()) { return true; }
         {
@@ -262,6 +321,114 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     }
 
     // expressions
+    [int] visitArithAssignmentExpr(ArithAssignmentExprNode node) {
+        VariableExprNode var = node.getVariable();
+        if (var.hasContext()) {
+            var.getContext().accept(this.visitor());
+            if (_lastLocations.size() != 1) {
+                return this.unexpectedContextError(node.node(), var.getContext());
+            }
+            Location ctx = this.asTemp(_lastLocations.shift());
+            
+            Location val = this.exprAsTemp(node.getValue(), null);
+            if (!val) { return false; }
+            Location tmp = _curMethod.newTemp(node.getResolvedType());
+            this.addGet(_curBlock, ctx, var.getResolvedVariable(), tmp);
+            this.addArithOp(_curBlock, node.getOperation(), tmp, val, tmp);
+            this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
+            _lastLocations.add(tmp);
+        } else {
+            Location val = this.exprAsTemp(node.getValue(), null);
+            if (!val) { return false; }
+            Location loc = var.getResolvedVariable().getPirLocation();
+            this.addArithOp(_curBlock, node.getOperation(), loc, val, loc);
+            _lastLocations.add(loc);
+        }
+        return true;
+    }
+    
+    [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
+        Location left = this.exprAsTemp(node.getLeft(), null);
+        Location right = this.exprAsTemp(node.getRight(), null);
+        if (!left || !right) { return false; }
+        
+        Location dest = _curMethod.newTemp(node.getResolvedType());
+        this.addArithOp(_curBlock, node.getOperation(), left, right, dest);
+        _lastLocations.add(dest);
+        return true;
+    }
+    
+    [int] visitArithUnaryExpr(ArithUnaryExprNode node) {
+        VariableExprNode var = node.getVariable();
+        if (var.hasContext()) {
+            var.getContext().accept(this.visitor());
+            if (_lastLocations.size() != 1) {
+                return this.unexpectedContextError(node.node(), var.getContext());
+            }
+            Location ctx = this.asTemp(_lastLocations.shift());
+            
+            Location tmp = _curMethod.newTemp(node.getResolvedType());
+            this.addGet(_curBlock, ctx, var.getResolvedVariable(), tmp);
+            if (node.isPreInc()) {
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneTemp(this.factory()), tmp);
+                this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
+            } else if (node.isPreDec()) {
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneTemp(this.factory()), tmp);
+                this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
+            } else if (node.isPostInc()) {
+                Location tmp2 = _curMethod.newTemp(node.getResolvedType());
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneTemp(this.factory()), tmp2);
+                this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp2);
+            } else if (node.isPostDec()) {
+                Location tmp2 = _curMethod.newTemp(node.getResolvedType());
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneTemp(this.factory()), tmp2);
+                this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp2);
+            }
+            _lastLocations.add(tmp);
+        } else {
+            Location loc = var.getResolvedVariable().getPirLocation();
+            if (node.isPreInc()) {
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, loc, _curMethod.getOneTemp(this.factory()), loc);
+            } else if (node.isPreDec()) {
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, loc, _curMethod.getOneTemp(this.factory()), loc);
+            } else if (node.isPostInc()) {
+                Location tmp = _curMethod.newTemp(node.getResolvedType());
+                this.addMove(_curBlock, loc, tmp, false);
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneTemp(this.factory()), loc);
+                loc = tmp;
+            } else if (node.isPostDec()) {
+                Location tmp = _curMethod.newTemp(node.getResolvedType());
+                this.addMove(_curBlock, loc, tmp, false);
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneTemp(this.factory()), loc);
+                loc = tmp;
+            }
+            _lastLocations.add(loc);
+        }
+        return true;
+    }
+    
+    [int] visitAssignmentExpr(AssignmentExprNode node) {
+        VariableExprNode var = node.getVariable();
+        if (var.hasContext()) {
+            var.getContext().accept(this.visitor());
+            if (_lastLocations.size() != 1) {
+                return this.unexpectedContextError(node.node(), var.getContext());
+            }
+            Location ctx = this.asTemp(_lastLocations.shift());
+            
+            Location val = this.exprAsTemp(node.getValue(), null);
+            if (!val) { return false; }
+            this.addSet(_curBlock, ctx, var.getResolvedVariable(), val);
+            _lastLocations.add(val);
+        } else {
+            Location val = this.exprAsTemp(node.getValue(), null);
+            if (!val) { return false; }
+            this.addMove(_curBlock, val, var.getResolvedVariable().getPirLocation(), false);
+            _lastLocations.add(val);
+        }
+        return true;
+    }
+    
     [int] visitConstCStringExpr(ConstCStringExprNode node) {
         _lastValue = _curMethod.getString(node.getValue());
         return true;
@@ -330,6 +497,20 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         return true;
     }
     
+    [int] visitSignExpr(SignExprNode node) {
+        node.getExpression().accept(this.visitor());
+        if (_lastLocations.size() != 1) {
+            return this.unexpectedExpressionError(node.node(), node.getExpression());
+        }
+        if (node.isMinus()) {
+            Location left = this.asTemp(_lastLocations.shift());
+            Location tmp = _curMethod.newTemp(node.getResolvedType());
+            this.addArithOp(_curBlock, ExpressionNode:OP_SUB, _curMethod.getZeroTemp(this.factory()), left, tmp);
+            _lastLocations.add(tmp);
+        }
+        return true;
+    }
+    
     [int] visitThisExpr(ThisExprNode node) {
         _lastLocations.add(_curMethod.getThis());
         return true;
@@ -372,6 +553,18 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     [int] unexpectedContextError(Node node, ExpressionNode context) {
         OStream err = this.assert().printCString("unexpected context ").print(context);
         node.debugToStream(err.printCString(" for "));
+        return false;
+    }
+    
+    [int] unexpectedExpressionError(Node node, ExpressionNode expression) {
+        OStream err = this.assert().printCString("unexpected expression ").print(expression);
+        node.debugToStream(err.printCString(" in "));
+        return false;
+    }
+    
+    [int] unexpectedOutputExpressionError(Node node, ExpressionNode expression) {
+        OStream err = this.assert().printCString("unexpected output expression ").print(expression);
+        node.debugToStream(err.printCString(" in "));
         return false;
     }
     

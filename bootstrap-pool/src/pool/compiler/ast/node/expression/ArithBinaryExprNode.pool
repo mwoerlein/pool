@@ -24,6 +24,7 @@ class ArithBinaryExprNode extends ExpressionNode {
     [int] isMul() { return _op == ExpressionNode:OP_MUL; }
     [int] isDiv() { return _op == ExpressionNode:OP_DIV; }
     [int] isMod() { return _op == ExpressionNode:OP_MOD; }
+    [int] getOperation() { return _op; }
     
     [ArithBinaryExprNode] setLeft(ExpressionNode left) { _left = this.own(left); return this; }
     [ExpressionNode] getLeft() { return _left; }

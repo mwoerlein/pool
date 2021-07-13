@@ -34,7 +34,7 @@ class VariableScope extends Scope {
     [PirLocation] getPirLocation() { return _pirLocation; }
 
     [VariableScope] isVariable() { return this; }
-    [int] isConst() { return _finalInitializer && (_parent.isClass() || _parent.isInstance()); }
+    [int] isConst() { return _finalInitializer && (_parent.isStruct() || _parent.isClass() || _parent.isInstance()); }
     [int] isLocalVariable() { return !!this.getBlockInstNode(); }
     
     [OStream] printDebugName(OStream stream) {

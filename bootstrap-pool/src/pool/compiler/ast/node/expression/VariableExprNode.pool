@@ -37,6 +37,8 @@ class VariableExprNode extends ExpressionNode {
         return false;
     }
     
+    [VariableExprNode] isVariable() { return this; }
+    
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitVariableExpr(this); }
     [OStream] printDebugName(OStream stream) {

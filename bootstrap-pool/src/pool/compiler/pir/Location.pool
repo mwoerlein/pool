@@ -25,6 +25,12 @@ class Location extends sys::core::Object {
     [int] getId() { return _id; }
     [Type] getType() { return _type; }
     
+    [int] isThis() { return _kind == Location:KIND_THIS; }
+    [int] isParam() { return _kind == Location:KIND_PARAM; }
+    [int] isReturn() { return _kind == Location:KIND_RETURN; }
+    [int] isSpill() { return _kind == Location:KIND_SPILL; }
+    [int] isTemp() { return _kind == Location:KIND_TEMP; }
+    
     [OStream] printToStream(OStream stream) {
         if (_kind == Location:KIND_THIS) {
             return stream.printChar('<').print(_type).printCString(">this");
