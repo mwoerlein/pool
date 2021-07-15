@@ -69,6 +69,7 @@ class Object {
     
     // TODO: move to destructor/implicit destruction instead of manual one
     [] destroy() {
+        if (owner) { this._removeFromOwner(this); }
         this.__destruct();
         this.__destructOwned();
         this.rt().destroyInstance(this);
@@ -94,22 +95,7 @@ class Object {
         if (!owned) { return Address:convert(o); }
         if (Address:compare(this, owned.owner) == 0) { return Address:convert(o); }
         
-        if (owned.owner) {
-            // remove from old _owned list
-            if (Address:compare(owned, owned.owner._owned_entry) != 0) {
-                // remove inside of _owned list
-                owned._owned_next._owned_prev = owned._owned_prev;
-                owned._owned_prev._owned_next = owned._owned_next;
-            } else if (Address:compare(owned, owned.owner._owned_entry._owned_next) != 0) {
-                // remove first of _owned list
-                owned.owner._owned_entry = owned._owned_prev;
-                owned._owned_next._owned_prev = owned._owned_prev;
-                owned._owned_prev._owned_next = owned._owned_next;
-            } else {
-                // remove last element of _owned list
-                owned.owner._owned_entry = null;
-            }
-        }
+        if (owned.owner) { Object:_removeFromOwner(owned); }
         
         owned.owner = this;
         // insert into new _owned list
@@ -125,6 +111,23 @@ class Object {
     
     [__all__] createOwn(cstring name) {
         return this.own(this.rt().createInstance(name));
+    }
+    
+    global [] _removeFromOwner(Object owned) {
+        // remove from old _owned list
+        if (Address:compare(owned, owned.owner._owned_entry) != 0) {
+            // remove inside of _owned list
+            owned._owned_next._owned_prev = owned._owned_prev;
+            owned._owned_prev._owned_next = owned._owned_next;
+        } else if (Address:compare(owned, owned.owner._owned_entry._owned_next) != 0) {
+            // remove first of _owned list
+            owned.owner._owned_entry = owned._owned_prev;
+            owned._owned_next._owned_prev = owned._owned_prev;
+            owned._owned_prev._owned_next = owned._owned_next;
+        } else {
+            // remove last element of _owned list
+            owned.owner._owned_entry = null;
+        }
     }
 
 }
