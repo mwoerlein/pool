@@ -93,9 +93,10 @@ class Object {
     [__all__] own(__any__ o) {
         Object owned = this.rt().cast(Object:CLASSNAME, o);
         if (!owned) { return Address:convert(o); }
-        if (Address:compare(this, owned.owner) == 0) { return Address:convert(o); }
-        
-        if (owned.owner) { Object:_removeFromOwner(owned); }
+        if (owned.owner) {
+            if (Address:compare(this, owned.owner) == 0) { return Address:convert(o); }
+            Object:_removeFromOwner(owned);
+        }
         
         owned.owner = this;
         // insert into new _owned list
