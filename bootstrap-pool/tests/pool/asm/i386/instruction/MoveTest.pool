@@ -59,7 +59,7 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("foo := 0x200");
         t.in("_start:");
         t.in("    movb %al, (%eax)");
-        t.in("    movb %bh, 0x2(%eax)");
+        t.in("    movb %bh, 2(%eax)");
         t.in("    movw %ax, (%ebx,%eax)");
         t.in("    movw %cx, six(%ebx,%ebp,4)");
         t.in("    movl %edx, (%ecx,%edi,8)");
@@ -97,9 +97,9 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("foo := 0x200");
         t.in("_start:");
         t.in("    movb %al, (%eax)");
-        t.in("    movb %bh, 0x2(%eax)");
+        t.in("    movb %bh, 2(%eax)");
         t.in("    movw %ax, (%ebx,%eax)");
-        t.in("    movw %cx, 0x6(%ebx,%ebp,4)");
+        t.in("    movw %cx, 6(%ebx,%ebp,4)");
         t.in("    movl %edx, (%ecx,%edi,8)");
         t.in("    movl %esp, buffer(,%esi,2)");
             
@@ -151,9 +151,9 @@ class MoveTest extends pool::asm::test::TestCase {
         pool::asm::test::TestData t = this.newTestData("testMR_sreg_ind");
         
         t.in("    movw %cs, (%eax)");
-        t.in("    movw %ds, 0x12c(%esp)");
+        t.in("    movw %ds, 300(%esp)");
         t.in("    mov %es, (,%esi,8)");
-        t.in("    mov %fs, 0x8(%edi,%eax)");
+        t.in("    mov %fs, 8(%edi,%eax)");
 
         t.bin(0x8C).bin(0x08);
         t.bin(0x8C).bin(0x9C).bin(0x24).bin(0x2C).bin(0x01).bin(0x00).bin(0x00);
@@ -167,11 +167,11 @@ class MoveTest extends pool::asm::test::TestCase {
         pool::asm::test::TestData t = this.newTestData("testRM_ind_reg_32bit");
         
         t.in("    movb (%eax), %dl");
-        t.in("    movb 0x5(%ebx), %ch");
+        t.in("    movb 5(%ebx), %ch");
         t.in("    movw (%eax,%ecx), %bx");
-        t.in("    movw 0x7f(%ecx,%ebx,4), %bp");
+        t.in("    movw 127(%ecx,%ebx,4), %bp");
         t.in("    movl (%edx,%edi,8), %ecx");
-        t.in("    movl 0xbf000(,%esi,2), %esp");
+        t.in("    movl 48896(,%esi,2), %esp");
             
         t.in("    movl (0x20), %edi");
         t.in("    movl (0x200), %ebx");
@@ -200,11 +200,11 @@ class MoveTest extends pool::asm::test::TestCase {
         
         t.in("    .code16");
         t.in("    movb (%eax), %dl");
-        t.in("    movb 0x5(%ebx), %ch");
+        t.in("    movb 5(%ebx), %ch");
         t.in("    movw (%eax,%ecx), %bx");
-        t.in("    movw 0x7f(%ecx,%ebx,4), %bp");
+        t.in("    movw 127(%ecx,%ebx,4), %bp");
         t.in("    movl (%edx,%edi,8), %ecx");
-        t.in("    movl 0xbf000(,%esi,2), %esp");
+        t.in("    movl 48896(,%esi,2), %esp");
             
         t.in("    movl (0x20), %edi");
         t.in("    movl (0x200), %ebx");
@@ -252,9 +252,9 @@ class MoveTest extends pool::asm::test::TestCase {
         pool::asm::test::TestData t = this.newTestData("testRM_ind_sreg");
         
         t.in("    movw (%eax), %cs");
-        t.in("    movw 0x12c(%ebp), %ds");
+        t.in("    movw 300(%ebp), %ds");
         t.in("    movw (,%esi,2), %es");
-        t.in("    movw 0x6(%eax,%ebx,8), %ss");
+        t.in("    movw 6(%eax,%ebx,8), %ss");
 
         t.bin(0x8E).bin(0x08);
         t.bin(0x8E).bin(0x9D).bin(0x2C).bin(0x01).bin(0x00).bin(0x00);
@@ -291,22 +291,22 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    .code32");
         t.in("start:");
         t.in("    movb start, (%eax)");
-        t.in("    movb 0xff, 0x2(%eax)");
+        t.in("    movb 0xff, 2(%eax)");
         t.in("    movw 0xc, (%ebx,%eax)");
-        t.in("    movw 0x400, 0x6(%ebx,%ebp,4)");
+        t.in("    movw 0x400, 6(%ebx,%ebp,4)");
         t.in("    movl 0xc0ffee, (%ecx,%edi,8)");
-        t.in("    movl 0xfefe, 0xbf000(,%esi,2)");
-        t.in("    movl 0xfefe, 0xbf000(%ebp,%eax)");
+        t.in("    movl 0xfefe, 48896(,%esi,2)");
+        t.in("    movl 0xfefe, 48896(%ebp,%eax)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    movl 0xdeadbeef, (0x20)");
         
         t.in("    movb start, (%bx)");
         t.in("    movb start, (%bp)");
-        t.in("    movb 0xff, 0x2(%bx)");
+        t.in("    movb 0xff, 2(%bx)");
         t.in("    movw 0xc, (%bx,%di)");
-        t.in("    movw 0x400, 0x6(%bp,%si)");
+        t.in("    movw 0x400, 6(%bp,%si)");
         t.in("    movl 0xc0ffee, (%di)");
-        t.in("    movl 0xfefe, 0xabcd(%si)");
+        t.in("    movl 0xfefe, 43981(%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr16 movl 0xdeadbeef, (0x20)");
 
@@ -339,22 +339,22 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    .code16");
         t.in("start:");
         t.in("    movb start, (%eax)");
-        t.in("    movb 0xff, 0x2(%eax)");
+        t.in("    movb 0xff, 2(%eax)");
         t.in("    movw 0xc, (%ebx,%eax)");
-        t.in("    movw 0x400, 0x6(%ebx,%ebp,4)");
+        t.in("    movw 0x400, 6(%ebx,%ebp,4)");
         t.in("    movl 0xc0ffee, (%ecx,%edi,8)");
-        t.in("    movl 0xfefe, 0xbf000(,%esi,2)");
-        t.in("    movl 0xfefe, 0xbf000(%ebp,%eax)");
+        t.in("    movl 0xfefe, 48896(,%esi,2)");
+        t.in("    movl 0xfefe, 48896(%ebp,%eax)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 movl 0xdeadbeef, (0x20)");
         
         t.in("    movb start, (%bx)");
         t.in("    movb start, (%bp)");
-        t.in("    movb 0xff, 0x2(%bx)");
+        t.in("    movb 0xff, 2(%bx)");
         t.in("    movw 0xc, (%bx,%di)");
-        t.in("    movw 0x400, 0x6(%bp,%si)");
+        t.in("    movw 0x400, 6(%bp,%si)");
         t.in("    movl 0xc0ffee, (%di)");
-        t.in("    movl 0xfefe, 0xabcd(%si)");
+        t.in("    movl 0xfefe, 43981(%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    movl 0xdeadbeef, (0x20)");
         

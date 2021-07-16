@@ -157,10 +157,10 @@ class JumpTest extends pool::asm::test::TestCase {
         t.in("    call %ebx");
         t.in("    jmp (%ecx)");
         t.in("    call (%ecx)");
-        t.in("    jmp 0x2(%ecx,%eax)");
-        t.in("    call 0x2(%ecx,%eax)");
-        t.in("    jmp 0x200(%edx,%eax,4)");
-        t.in("    call 0x200(%edx,%eax,4)");
+        t.in("    jmp 2(%ecx,%eax)");
+        t.in("    call 2(%ecx,%eax)");
+        t.in("    jmp 512(%edx,%eax,4)");
+        t.in("    call 512(%edx,%eax,4)");
         t.in("    jmp (0x1e)");
         t.in("    call (0x1e)");
         
@@ -172,10 +172,10 @@ class JumpTest extends pool::asm::test::TestCase {
         t.in("    call (%di)");
         t.in("    jmp (%bp,%di)");
         t.in("    call (%bp,%di)");
-        t.in("    jmp 0x2(%bx,%si)");
-        t.in("    call 0x2(%bx,%si)");
-        t.in("    jmp 0xabcd(%si)");
-        t.in("    call 0xabcd(%si)");
+        t.in("    jmp 2(%bx,%si)");
+        t.in("    call 2(%bx,%si)");
+        t.in("    jmp 43981(%si)");
+        t.in("    call 43981(%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr16 jmp (0x16)");
         //t.in("    .addr16 call (0x16)");
@@ -218,10 +218,10 @@ class JumpTest extends pool::asm::test::TestCase {
         t.in("    call %ebx");
         t.in("    jmp (%ecx)");
         t.in("    call (%ecx)");
-        t.in("    jmp 0x2(%ecx,%eax)");
-        t.in("    call 0x2(%ecx,%eax)");
-        t.in("    jmp 0x200(%edx,%eax,4)");
-        t.in("    call 0x200(%edx,%eax,4)");
+        t.in("    jmp 2(%ecx,%eax)");
+        t.in("    call 2(%ecx,%eax)");
+        t.in("    jmp 512(%edx,%eax,4)");
+        t.in("    call 512(%edx,%eax,4)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 jmp (0x1e)");
         //t.in("    .addr32 jmp (0x1e)");
@@ -234,10 +234,10 @@ class JumpTest extends pool::asm::test::TestCase {
         t.in("    call (%di)");
         t.in("    jmp (%bp,%di)");
         t.in("    call (%bp,%di)");
-        t.in("    jmp 0x2(%bx,%si)");
-        t.in("    call 0x2(%bx,%si)");
-        t.in("    jmp 0xabcd(%si)");
-        t.in("    call 0xabcd(%si)");
+        t.in("    jmp 2(%bx,%si)");
+        t.in("    call 2(%bx,%si)");
+        t.in("    jmp 43981(%si)");
+        t.in("    call 43981(%si)");
         t.in("    jmp (0x16)");
         t.in("    call (0x16)");
 

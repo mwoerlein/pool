@@ -35,10 +35,10 @@ class GroupThreeInstructionTest extends pool::asm::test::TestCase {
     [int] testM_ind() {
         pool::asm::test::TestData t = this.newTestData("testM_ind");
         
-        t.in("    notb 0x2(%edi)");
-        t.in("    negb 0x2(%ebp,%eax)");
+        t.in("    notb 2(%edi)");
+        t.in("    negb 2(%ebp,%eax)");
         t.in("    mulw (%eax,%ebx,8)");
-        t.in("    imulw 0x5(%eax,%ebx,8)");
+        t.in("    imulw 5(%eax,%ebx,8)");
         t.in("    divl (0x12345678)");
         t.in("    idivl (0x0)");
 

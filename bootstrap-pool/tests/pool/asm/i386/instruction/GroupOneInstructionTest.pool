@@ -65,9 +65,9 @@ class GroupOneInstructionTest extends pool::asm::test::TestCase {
 
         t.in("start:");
         t.in("    subb 0x12, (%eax)");
-        t.in("    xorb 0xff, 0x2(%esp)");
+        t.in("    xorb 0xff, 2(%esp)");
         t.in("    cmpw 0x4, (%edx)");
-        t.in("    addw 0x400, 0x6(%eax,%edi,4)");
+        t.in("    addw 0x400, 6(%eax,%edi,4)");
         t.in("    orl 0xffffffff, (%esp)");
         t.in("    adcl 0xc0ffee, (%esp,%ecx,8)");
         // TODO: activate with .addr and .data support in parser
@@ -75,11 +75,11 @@ class GroupOneInstructionTest extends pool::asm::test::TestCase {
 
         t.in("    sbbb start, (%bx)");
         t.in("    andb start, (%bp)");
-        t.in("    subb 0xff, 0x2(%bx)");
+        t.in("    subb 0xff, 2(%bx)");
         t.in("    xorw 0xc, (%bx,%di)");
-        t.in("    cmpw 0x400, 0x6(%bp,%si)");
+        t.in("    cmpw 0x400, 6(%bp,%si)");
         t.in("    addl 0xc0ffee, (%di)");
-        t.in("    orl 0xfefe, 0xabcd(%si)");
+        t.in("    orl 0xfefe, 43981(%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr16 addl 0xdeadbeef, (0x20)");
 
@@ -111,9 +111,9 @@ class GroupOneInstructionTest extends pool::asm::test::TestCase {
         t.in("    .code16");
         t.in("start:");
         t.in("    adcb 0x12, (%eax)");
-        t.in("    sbbb 0xff, 0x2(%esp)");
+        t.in("    sbbb 0xff, 2(%esp)");
         t.in("    andw 0x4, (%edx)");
-        t.in("    subw 0x400, 0x6(%eax,%edi,4)");
+        t.in("    subw 0x400, 6(%eax,%edi,4)");
         t.in("    xorl 0xffffffff, (%esp)");
         t.in("    cmpl 0xc0ffee, (%esp,%ecx,8)");
         // TODO: activate with .addr and .data support in parser
@@ -121,11 +121,11 @@ class GroupOneInstructionTest extends pool::asm::test::TestCase {
 
         t.in("    addb start, (%bx)");
         t.in("    orb start, (%bp)");
-        t.in("    adcb 0xff, 0x2(%bx)");
+        t.in("    adcb 0xff, 2(%bx)");
         t.in("    sbbw 0xc, (%bx,%di)");
-        t.in("    andw 0x400, 0x6(%bp,%si)");
+        t.in("    andw 0x400, 6(%bp,%si)");
         t.in("    subl 0xc0ffee, (%di)");
-        t.in("    xorl 0xfefe, 0xabcd(%si)");
+        t.in("    xorl 0xfefe, 43981(%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr16 addl 0xdeadbeef, (0x20)");
 
@@ -168,8 +168,8 @@ class GroupOneInstructionTest extends pool::asm::test::TestCase {
     [int] testMR_reg_ind() {
         pool::asm::test::TestData t = this.newTestData("testMR_reg_ind");
 
-        t.in("    adcb %ah, 0x2(%esp)");
-        t.in("    sbbw %di, 0x6(%eax,%edi,4)");
+        t.in("    adcb %ah, 2(%esp)");
+        t.in("    sbbw %di, 6(%eax,%edi,4)");
         t.in("    andl %ebp, (%esp,%ecx,8)");
 
         t.bin(0x10).bin(0x64).bin(0x24).bin(0x02);
@@ -182,8 +182,8 @@ class GroupOneInstructionTest extends pool::asm::test::TestCase {
     [int] testRM_ind_reg() {
         pool::asm::test::TestData t = this.newTestData("test_I");
         
-        t.in("    sub 0x2(%esp), %ah");
-        t.in("    xor 0x6(%eax,%edi,4), %di");
+        t.in("    sub 2(%esp), %ah");
+        t.in("    xor 6(%eax,%edi,4), %di");
         t.in("    cmp (%esp,%ecx,8), %ebp");
 
         t.bin(0x2A).bin(0x64).bin(0x24).bin(0x02);

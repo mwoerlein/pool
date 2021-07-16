@@ -20,21 +20,21 @@ class PushPopTest extends pool::asm::test::TestCase {
         pool::asm::test::TestData t = this.newTestData("testM_ind_32bit");
         
         t.in("    pushw (%eax)");
-        t.in("    push 0x2(%eax)");
+        t.in("    push 2(%eax)");
         t.in("    pushw (%ebx,%eax)");
-        t.in("    push 0x6(%ebx,%ebp,4)");
+        t.in("    push 6(%ebx,%ebp,4)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 pushw (0x20)");
         
         t.in("    pushl (%bx)");
-        t.in("    pushw 0x6(%bp,%si)");
+        t.in("    pushw 6(%bp,%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr16 pushl (0x20)");
 
-        t.in("    popw 0x2(%eax)");
+        t.in("    popw 2(%eax)");
         t.in("    pop (%ebx,%eax)");
         t.in("    popw (%ecx,%edi,8)");
-        t.in("    pop 0xbf000(,%esi,2)");
+        t.in("    pop 48896(,%esi,2)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 popw (0x20)");
         
@@ -77,21 +77,21 @@ class PushPopTest extends pool::asm::test::TestCase {
         
         t.in("    .code16");
         t.in("    push (%eax)");
-        t.in("    pushl 0x2(%eax)");
+        t.in("    pushl 2(%eax)");
         t.in("    push (%ebx,%eax)");
-        t.in("    pushl 0x6(%ebx,%ebp,4)");
+        t.in("    pushl 6(%ebx,%ebp,4)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 pushw (0x20)");
         
         t.in("    pushl (%bx)");
-        t.in("    pushw 0x6(%bp,%si)");
+        t.in("    pushw 6(%bp,%si)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr16 pushl (0x20)");
 
-        t.in("    pop 0x2(%eax)");
+        t.in("    pop 2(%eax)");
         t.in("    popl (%ebx,%eax)");
         t.in("    pop (%ecx,%edi,8)");
-        t.in("    popl 0xbf000(,%esi,2)");
+        t.in("    popl 48896(,%esi,2)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 popw (0x20)");
         

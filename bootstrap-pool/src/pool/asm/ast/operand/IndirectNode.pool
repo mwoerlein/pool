@@ -58,7 +58,10 @@ class IndirectNode extends OperandNode {
         }
         
         // register indirect
-        if (displacement) { stream.print(displacement); }
+        if (displacement) {
+            NumberNode nn = this.rt().cast(NumberNode:CLASSNAME, displacement);
+            if (nn) { stream.printInt(nn.getOperand()); } else { stream.print(displacement); } 
+        }
         stream.printChar('(');
         if (base) { stream.print(base); }
         if (index) {
