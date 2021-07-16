@@ -303,7 +303,7 @@ class SignatureResolver extends Visitor {
         success = node.getVariables().acceptAll(this.visitor()) && success;
         
         // mark (first) variable scope as final
-        if (node.isFinal()) {
+        if (success && node.isFinal()) {
             VariableDeclNode var = node.getVariables().first();
             var.getVariableScope().setFinalInitializer(node.getInitializer());
         }
