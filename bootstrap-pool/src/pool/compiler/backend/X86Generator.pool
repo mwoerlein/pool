@@ -15,8 +15,10 @@ use pool::asm::ast::NodeList;
 use pool::asm::ast::OperandNode;
 use pool::asm::ast::operand::FormulaNode;
 use pool::asm::ast::operand::NumberNode;
+use pool::asm::ast::operand::RegisterNode;
 use pool::asm::ast::operand::StringNode;
 use pool::asm::ast::operand::IdentifierNode;
+use pool::asm::ast::operand::IndirectNode;
 
 use pool::compiler::ast::node::declaration::ClassDeclNode;
 use pool::compiler::ast::node::declaration::MethodDeclNode;
@@ -26,17 +28,27 @@ use pool::compiler::ast::node::instruction::VariableInitInstNode;
 
 use pool::compiler::ast::scope::ClassScope;
 use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::MethodScope;
+
+use pool::compiler::pir::BasicBlock;
+use pool::compiler::pir::Location;
+use pool::compiler::pir::Method;
+use pool::compiler::pir::statement::CondStatement;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::OStream;
 
 class X86Generator extends sys::log::LoggerAware {
-    ClassScope _classScope;
-    ClassDeclNode _class;
     CompilationUnit _unit;
     NodeList _nodes;
+    ClassScope _classScope;
+    ClassDeclNode _class;
+    MethodScope _methodScope;
+    MethodDeclNode _method;
+    
     String _minus;
     int _resolveClasses;
     
@@ -63,26 +75,26 @@ class X86Generator extends sys::log::LoggerAware {
         this._comment().printCString(" class ").print(_class.getName());
         this._label().print(this._classStart());
         this._long(this._number(sys::runtime::ClassDescriptor:MAGIC));
-        this._long0();
+        this._longI(0);
         this._long(this._constStringOffset(_classScope.stringId(_classScope.getFullQualifiedName(), null)));
-        this._long(this._classOffset(this._classTabs()));               // class tabs offset
-        this._long(this._classOffset(this._virtMethodTabs()));          // virt method tabs offset
-        this._long(this._classOffset(this._methodDeclTab()));           // method decl tab offset
-        this._long(this._classOffset(this._instanceStart()));           // instance template offset
-        this._long(this._instanceOffset(this._instanceEnd()));          // instance size
-        this._long(this._instanceOffset(                                // Object handle offset in instance
+        this._long(this._classOffset(this._classTabs()));       // class tabs offset
+        this._long(this._classOffset(this._virtMethodTabs()));  // virt method tabs offset
+        this._long(this._classOffset(this._methodDeclTab()));   // method decl tab offset
+        this._long(this._classOffset(this._instanceStart()));   // instance template offset
+        this._long(this._instanceOffset(this._instanceEnd()));  // instance size
+        this._long(this._instanceOffset(                        // Object handle offset in instance
             this._instanceHandle(_classScope.getFirstSuper())
         ));
-        this._long(this._instanceOffset(                                // <class> handle offset in instance
+        this._long(this._instanceOffset(                        // <class> handle offset in instance
             this._instanceHandle(_classScope)
         ));
-        this._long(this._classOffset(this._classEnd()));                // <class> size
-        this._long(this._number(_resolveClasses));                      // resolved
+        this._long(this._classOffset(this._classEnd()));        // <class> size
+        this._long(this._number(_resolveClasses));              // resolved
 
-        this._long(this._number(sys::memory::MemoryInfo:NONE));         // dynamic memory info "NONE"
-        this._long0();                                                  // dynamic next class desc
-        this._long0();                                                  // reserved
-        this._long0();                                                  // reserved
+        this._long(this._number(sys::memory::MemoryInfo:NONE)); // dynamic memory info "NONE"
+        this._longI(0);                                         // dynamic next class desc
+        this._longI(0);                                         // reserved
+        this._longI(0);                                         // reserved
         this._newline();
 
         // dependent classes
@@ -100,7 +112,7 @@ class X86Generator extends sys::log::LoggerAware {
                 if (_resolveClasses) {
                     this._long(this._classTabDesc(super));
                 } else {
-                    this._long0();  // @class-desc filled on class loading
+                    this._longI(0);  // @class-desc filled on class loading
                 }
                 this._long(this._constStringOffset(_classScope.stringId(super.getFullQualifiedName(), null)));
                 this._long(this._classOffset(this._virtMethodTab(super)));     // virt method tab offset in description
@@ -121,20 +133,20 @@ class X86Generator extends sys::log::LoggerAware {
                     if (_resolveClasses) {
                         this._long(this._classTabDesc(scope));
                     } else {
-                        this._long0();  // @class-desc filled on class loading
+                        this._longI(0);  // @class-desc filled on class loading
                     }
                     this._long(this._constStringOffset(_classScope.stringId(scope.getFullQualifiedName(), null)));
-                    this._long0(); // no vtab offset in description
-                    this._long0(); // no handle offset in instance
+                    this._longI(0); // no vtab offset in description
+                    this._longI(0); // no handle offset in instance
                 }
             }
             it.destroy();
         }
         this._comment().printCString(" class tab end");
-        this._long0();                                                  // dynamic next class desc
-        this._long0();                                                  // dynamic next class desc
-        this._long0();                                                  // dynamic next class desc
-        this._long0();                                                  // dynamic next class desc
+        this._longI(0);
+        this._longI(0);
+        this._longI(0);
+        this._longI(0);
         this._newline();
     
         // vtabs
@@ -167,7 +179,7 @@ class X86Generator extends sys::log::LoggerAware {
             while (it.hasNext()) {
                 MethodDeclNode method = it.next();
                 if (method.isAbstract() || method.isNaked()) {
-                    this._long0();
+                    this._longI(0);
                 } else {
                     this._long(this._classOffset(this._methodDecl(method)));
                 }
@@ -205,7 +217,7 @@ class X86Generator extends sys::log::LoggerAware {
                 this._comment().printCString(" string ").print(id);
                 this._local(this._constStringOffset(id), this._classOffset(this._constString(id)));
                 this._label().print(this._constString(id));
-                this._asciz(string);
+                this._inst1(".asciz", this._string(string));
             }
             it.destroy();
         }
@@ -214,8 +226,8 @@ class X86Generator extends sys::log::LoggerAware {
         // instance template
         this._comment().printCString(" instance template");
         this._label().print(this._instanceStart());
-        this._long0(); // @class-desc
-        this._long0(); // @meminfo
+        this._longI(0); // @class-desc
+        this._longI(0); // @meminfo
         
         // generate handles
         {
@@ -224,9 +236,9 @@ class X86Generator extends sys::log::LoggerAware {
                 ClassScope super = it.next();
                 int isSelf = _classScope.equals(super);
                 this._label().print(this._instanceHandle(super));
-                this._long0(); // _call_entry
-                this._long0(); // @inst
-                this._long0(); // vtab-offset
+                this._longI(0); // _call_entry
+                this._longI(0); // @inst
+                this._longI(0); // vtab-offset
                 
                 AnyIterator sit = super.getSupers();
                 while (sit.hasNext()) {
@@ -265,7 +277,7 @@ class X86Generator extends sys::log::LoggerAware {
                         );
                     //}
                     this._label().print(this._instanceVar(super, var));
-                    this._long0(); // TODO: prepare variable according to var.getResolvedType().getSizeOfVariable()
+                    this._longI(0); // TODO: prepare variable according to var.getResolvedType().getSizeOfVariable()
                 }
                 vit.destroy();
             }
@@ -299,8 +311,58 @@ class X86Generator extends sys::log::LoggerAware {
         if (!method.isNaked()) {
             this._label().print(this._methodDecl(method));
         }
-        // TODO: generate instructions from basic blocks
-        this._ret();
+        _method = method;
+        _methodScope = method.getMethodScope();
+        {
+            AnyIterator it = _methodScope.getPirMethod().blocks();
+            while (it.hasNext()) { this.generateBasicBlock(it.next()); }
+            it.destroy();
+        }
+        _method = null;
+        _methodScope = null;
+    }
+    
+    [] generateBasicBlock(BasicBlock block) {
+        if (_method.isNaked()) {
+            // generate no block header
+        } else if (block.isEntry()) {
+            this._inst1("pushl", this._reg("ebp"));
+            this._inst2("movl", this._reg("esp"), this._reg("ebp"));
+            AnyList temps = _methodScope.getPirMethod().temps();
+            if (!temps.isEmpty()) {
+                // TODO: prepare variables according to var.getResolvedType().getSizeOfVariable()
+                this._inst2("subl", this._number(4*temps.size()), this._reg("esp"));
+            }
+            // treat all registers callee save until register allocation (#11) and enhanced inline asm (#14)
+            this._inst0("pushad");
+        } else {
+            this._label().print(this._methodDeclBlock(_method, block));
+        }
+        
+        // statements
+        //block.accept(this.visitor()); // TODO
+        
+        if (_method.isNaked()) {
+            // generate no block footer
+        } else if (block.isExit()) {
+            this._inst0("popad");
+            this._inst0("leave");
+            this._inst0("ret");
+        } else {
+            if (block.hasCond()) {
+                [CondStatement cond, BasicBlock condNext] = block.getCond();
+                this._inst2("movl", this._location(cond.getLeft()), this._reg("eax"));
+                this._inst2("cmpl", this._location(cond.getRight()), this._reg("eax"));
+                OperandNode next = this._methodDeclBlock(_method, condNext);
+                if (cond.isEq()) { this._inst1("je", next); }
+                else if (cond.isNeq()) { this._inst1("jne", next); }
+                else if (cond.isLt()) { this._inst1("jl", next); }
+                else if (cond.isLe()) { this._inst1("jle", next); }
+                else if (cond.isGt()) { this._inst1("jg", next); }
+                else if (cond.isGe()) { this._inst1("jge", next); }
+            }
+            this._inst1("jmp", this._methodDeclBlock(_method, block.getNext()));
+        }
     }
     
     // HELPER
@@ -332,15 +394,13 @@ class X86Generator extends sys::log::LoggerAware {
     [OperandNode] _methodDeclOffset(MethodDeclNode decl) {
         return this._id3(decl.getScope().getClassDeclNode().getClassScope().getGlobalPrefix(), "_mdo_", decl.getName());
     }
-    /*
-    [OperandNode] _methodDeclBlock(MethodDeclNode decl, PIRBasicBlock block) {
+    [OperandNode] _methodDeclBlock(MethodDeclNode decl, BasicBlock block) {
         IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
         idNode.getIdentifier().print(_classScope.getLocalPrefix())
-            .printCString("_md_").print(decl.getName());
-            .printCString("_bb_").printInt(block.getIndex());
+            .printCString("_md_").print(decl.getName())
+            .printCString("_bb_").printInt(block.getId());
         return idNode.operand();
     }
-    */
     [OperandNode] _virtMethodTabs() { return this._id2(_classScope.getLocalPrefix(), "_mts"); }
     [OperandNode] _virtMethodTab(ClassScope cs) {
         return this._id3(_classScope.getLocalPrefix(), "_mt", cs.getLocalPrefix());
@@ -382,23 +442,8 @@ class X86Generator extends sys::log::LoggerAware {
         return labelNode.getLabel().ostream();
     }
     
-    [] _long(OperandNode value) {
-        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
-        instNode.setCOperation(".long").setOperand1(value);
-        _nodes.add(instNode.node());
-    }
-    
-    [] _long0() {
-        this._long(this._number(0));
-    }
-    
-    [] _asciz(String value) {
-        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
-        StringNode stringNode = instNode.createOwn(StringNode:CLASSNAME);
-        stringNode.setOperand(value);
-        instNode.setCOperation(".asciz").setOperand1(stringNode.operand());
-        _nodes.add(instNode.node());
-    }
+    [] _longI(int i) { this._inst1(".long", this._number(i)); }
+    [] _long(OperandNode value) { this._inst1(".long", value); }
     
     [] _local(OperandNode id, OperandNode value) {
         IdentifierNode idNode = this.rt().cast(IdentifierNode:CLASSNAME, id);
@@ -414,16 +459,63 @@ class X86Generator extends sys::log::LoggerAware {
         _nodes.add(emptyNode.node());
     }
     
+    [] _inst0(cstring inst) {
+        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        instNode.setCOperation(inst);
+        _nodes.add(instNode.node());
+    }
+    
+    [] _inst1(cstring inst, OperandNode op1) {
+        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        instNode.setCOperation(inst).setOperand1(op1);
+        _nodes.add(instNode.node());
+    }
+    
+    [] _inst2(cstring inst, OperandNode op1, OperandNode op2) {
+        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        instNode.setCOperation(inst).setOperand1(op1).setOperand2(op2);
+        _nodes.add(instNode.node());
+    }
+    
+    [] _inst3(cstring inst, OperandNode op1, OperandNode op2, OperandNode op3) {
+        InstructionNode instNode = this.rt().createInstance(InstructionNode:CLASSNAME);
+        instNode.setCOperation(inst).setOperand1(op1).setOperand2(op2).setOperand3(op3);
+        _nodes.add(instNode.node());
+    }
+    
     [OperandNode] _number(int value) {
-         NumberNode numberNode = this.createOwn(NumberNode:CLASSNAME);
-         numberNode.setOperand(value);
-         return numberNode.operand();
+        NumberNode numberNode = this.createOwn(NumberNode:CLASSNAME);
+        return numberNode.setOperand(value).operand();
+    }
+    
+    [OperandNode] _string(String value) {
+        StringNode stringNode = this.createOwn(StringNode:CLASSNAME);
+        return stringNode.setOperand(value).operand();
+    }
+    
+    [OperandNode] _reg(cstring reg) {
+        RegisterNode regNode = this.createOwn(RegisterNode:CLASSNAME);
+        return regNode.setCRegister(reg).operand();
+    }
+    
+    [OperandNode] _indirectBD(OperandNode base, OperandNode displacement) {
+        IndirectNode indNode = this.createOwn(IndirectNode:CLASSNAME);
+        return indNode.setBase(base).setDisplacement(displacement).operand();
+    }
+    
+    [OperandNode] _location(Location l) {
+        int offset = 0;
+        // TODO: prepare offsets according to variable sizes
+        if (l.isParam())  { offset = 16 + 4*l.getId(); }
+        if (l.isReturn()) { offset = 16 + 4*_methodScope.getPirMethod().params().size() + 4*l.getId(); }
+        if (l.isTemp())   { offset = -4 - 4*l.getId(); }
+        if (l.isThis())   { offset = 12; }
+        return this._indirectBD(this._reg("ebp"), this._number(offset));
     }
     
     [OperandNode] _offset(OperandNode start, OperandNode end) {
          FormulaNode formulaNode = this.createOwn(FormulaNode:CLASSNAME);
-         formulaNode.initFormula(end, _minus, start);
-         return formulaNode.operand();
+         return formulaNode.initFormula(end, _minus, start).operand();
     }
     
     [OperandNode] _id(cstring identifier) {

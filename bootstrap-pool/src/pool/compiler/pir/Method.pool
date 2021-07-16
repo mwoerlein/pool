@@ -96,6 +96,10 @@ class Method extends sys::core::Object {
         return _oneTemp;
     }
     
+    [AnyList] params() { return _parameterLocations; }
+    [AnyList] returns() { return _returnLocations; }
+    [AnyList] temps() { return _tempLocations; }
+    
     [Value] getNull() { return _null; }
     
     [Value] getNumber(int n) {
