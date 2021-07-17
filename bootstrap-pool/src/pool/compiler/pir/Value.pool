@@ -24,7 +24,7 @@ class Value extends sys::core::Object {
     
     [int] isNull() { return _type == Value:TYPE_NULL; }
     [int] isNumber() { return _type == Value:TYPE_NUMBER; }
-    [int] isString() { return _type == Value:TYPE_NULL; }
+    [int] isString() { return _type == Value:TYPE_STRING; }
     
     [int] getNumber() { return _number; }
     [String] getString() { return _id; }

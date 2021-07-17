@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::compiler::backend;
 
 use pool::asm::CompilationUnit;
+use pool::asm::Parser;
 use pool::asm::ast::CommentNode;
 use pool::asm::ast::DefinitionNode;
 use pool::asm::ast::EmptyNode;
@@ -29,19 +30,32 @@ use pool::compiler::ast::node::instruction::VariableInitInstNode;
 use pool::compiler::ast::scope::ClassScope;
 use pool::compiler::ast::scope::InstanceScope;
 use pool::compiler::ast::scope::MethodScope;
+use pool::compiler::ast::scope::VariableScope;
 
 use pool::compiler::pir::BasicBlock;
 use pool::compiler::pir::Location;
 use pool::compiler::pir::Method;
+use pool::compiler::pir::Value;
+
+use pool::compiler::pir::statement::ArithOpStatement;
+use pool::compiler::pir::statement::AsmStatement;
+use pool::compiler::pir::statement::AssignStatement;
+use pool::compiler::pir::statement::CallStatement;
 use pool::compiler::pir::statement::CondStatement;
+use pool::compiler::pir::statement::GlobalCallStatement;
+use pool::compiler::pir::statement::GetStatement;
+use pool::compiler::pir::statement::MoveStatement;
+use pool::compiler::pir::statement::SetStatement;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::IStream;
 use sys::stream::OStream;
 
-class X86Generator extends sys::log::LoggerAware {
+class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement::Visitor {
+    Parser _parser;
     CompilationUnit _unit;
     NodeList _nodes;
     ClassScope _classScope;
@@ -56,6 +70,7 @@ class X86Generator extends sys::log::LoggerAware {
         _minus = this.createOwn(String:CLASSNAME);
         _minus.printChar('-');
     }
+    [X86Generator] setParser(Parser parser) { _parser = parser; return this; }
     [X86Generator] setResolveClasses(int resolve) { _resolveClasses = resolve; return this; }
 
     [] generateClass(ClassDeclNode node, CompilationUnit unit) {
@@ -302,7 +317,7 @@ class X86Generator extends sys::log::LoggerAware {
 
     [] generateMethod(MethodDeclNode method) {
         this._newline();
-        this._comment().printCString(" // method ").print(method.getName());
+        this._comment().printCString(" method ").print(method.getName());
         if (method.isAbstract()) { return; }
         if (method.isEntry()) {
             this._local(this._id("_entry_class_desc"), this._classStart());
@@ -340,7 +355,7 @@ class X86Generator extends sys::log::LoggerAware {
         }
         
         // statements
-        //block.accept(this.visitor()); // TODO
+        block.accept(this.visitor());
         
         if (_method.isNaked()) {
             // generate no block footer
@@ -363,6 +378,232 @@ class X86Generator extends sys::log::LoggerAware {
             }
             this._inst1("jmp", this._methodDeclBlock(_method, block.getNext()));
         }
+    }
+    
+    // Statements
+    [] visitArithOp(ArithOpStatement stmt) {
+        OperandNode dest = this._location(stmt.getDest());
+        if (stmt.isAdd()) {
+            this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
+            this._inst2("addl", this._location(stmt.getRight()), this._reg("eax"));
+            this._inst2("movl", this._reg("eax"), dest);
+        } else if (stmt.isSub()) {
+            this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
+            this._inst2("subl", this._location(stmt.getRight()), this._reg("eax"));
+            this._inst2("movl", this._reg("eax"), dest);
+        } else if (stmt.isMul()) {
+            this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
+            /*/
+            this._inst1("imul", this._location(stmt.getRight()));
+            /*/
+            this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
+            this._comment().printCString(" imul %ebx, %eax");
+            this._byteI(0x0f); this._byteI(0xaf); this._byteI(0xc3);
+            //*/
+            this._inst2("movl", this._reg("eax"), dest);
+        } else if (stmt.isDiv()) {
+            this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
+            /*/
+            this._inst0("cdq");
+            /*/
+            this._comment().printCString(" cdq");
+            this._byteI(0x99);
+            //*/
+            this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
+            this._inst1("idiv", this._reg("ebx"));
+            this._inst2("movl", this._reg("eax"), dest);
+        } else if (stmt.isMod()) {
+            this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
+            /*/
+            this._inst0("cdq");
+            /*/
+            this._comment().printCString(" cdq");
+            this._byteI(0x99);
+            //*/
+            this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
+            this._inst1("idiv", this._reg("ebx"));
+            this._inst2("movl", this._reg("edx"), dest);
+        }
+    }
+    [] visitAsm(AsmStatement stmt) {
+        {
+            AnyMapEntryIterator it = stmt.getIn().entries();
+            while (it.hasNext()) {
+                [String reg, Location loc] = it.nextPair();
+                this._inst2("movl", this._location(loc), this._reg(reg.toCString()));
+            }
+            it.destroy();
+        }
+        { // parse asm
+            String s = this.rt().createInstance(String:CLASSNAME);
+            // TODO: fix pasm parser to parse single lines without newlines
+            s.assignString(stmt.getPasm()); s.printNewline();
+            this._comment().printCString(" vvv inline asm");
+            IStream in = s.toIStream();
+            _parser.parse(in, _method.getName(), _unit);
+            in.destroy();
+            s.destroy();
+            this._comment().printCString(" ^^^ inline asm");
+        }
+        {
+            AnyMapEntryIterator it = stmt.getOut().entries();
+            while (it.hasNext()) {
+                [String reg, Location loc] = it.nextPair();
+                this._inst2("movl", this._reg(reg.toCString()), this._location(loc));
+            }
+            it.destroy();
+        }
+    }
+    [] visitAssign(AssignStatement stmt) {
+        Value v = stmt.getValue();
+        OperandNode dest = this._location(stmt.getDest());
+        if (v.isNumber()) {
+            this._inst2("movl", this._number(v.getNumber()), dest);
+        } else if (v.isString()) {
+            this._inst2("movl", this._indirectBD(this._reg("ebp"), this._number(8)), this._reg("eax"));
+            this._inst2("addl", this._constStringOffset(v.getString()), this._reg("eax"));
+            this._inst2("movl", this._reg("eax"), dest);
+        } else { // if (v.isNull()) {
+            this._inst2("movl", this._number(0), dest);
+        }
+    }
+    [] visitCall(CallStatement stmt) {
+        AnyList rets = stmt.getRets();
+        AnyList params = stmt.getParams();
+        if (!rets.isEmpty()) {
+            // TODO: prepare variables according to var.getResolvedType().getSizeOfVariable()
+            this._inst2("subl", this._number(4*rets.size()), this._reg("esp"));
+        }
+        {
+            AnyIterator it = params.iterator();
+            this._pushAllReverse(it);
+            it.destroy();
+        }
+
+        this._inst2("movl", this._location(stmt.getContext()), this._reg("eax"));
+        this._inst1("pushl", this._reg("eax"));
+        this._inst1("pushl", this._number(8*stmt.getMethod().getIndex()));
+        this._inst1("call", this._indirectB(this._reg("eax")));
+        this._inst2("addl", this._number(8 + 4*params.size()), this._reg("esp"));
+
+        if (!rets.isEmpty()) {
+            AnyIterator it = rets.iterator();
+            while (it.hasNext()) {
+                this._inst1("popl", this._location(it.next()));
+            }
+            it.destroy();
+        }
+    }
+    [] visitGlobalCall(GlobalCallStatement stmt) {
+        AnyList rets = stmt.getRets();
+        AnyList params = stmt.getParams();
+        if (!rets.isEmpty()) {
+            // TODO: prepare variables according to var.getResolvedType().getSizeOfVariable()
+            this._inst2("subl", this._number(4*rets.size()), this._reg("esp"));
+        }
+        {
+            AnyIterator it = params.iterator();
+            this._pushAllReverse(it);
+            it.destroy();
+        }
+        MethodScope ms = stmt.getMethod().getMainMethodScope();
+    
+        // method @class-desc => %eax
+        this._inst2("movl", this._indirectBD(this._reg("ebp"), this._number(8)), this._reg("eax"));
+        this._inst2("movl",
+            this._indirectBD(this._reg("eax"), this._classTabOffset(ms.getClassDeclNode().getClassScope())),
+            this._reg("eax")
+        );
+        // method table => %ebx
+        this._inst2("movl", this._reg("eax"), this._reg("ebx"));
+        this._inst2("addl",
+            this._indirectBD(this._reg("ebx"), this._number(20)),
+            this._reg("ebx")
+        );
+        // method offset => %ebx
+        this._inst2("movl",
+            this._indirectBD(this._reg("ebx"), this._number(4*ms.getMethodDeclNode().getIndex())),
+            this._reg("ebx")
+        );
+        // @method => %ebx
+        this._inst2("addl", this._reg("eax"), this._reg("ebx"));
+        this._inst1("pushl", this._number(0));
+        this._inst1("pushl", this._reg("eax"));
+        this._inst1("call", this._reg("ebx"));
+        this._inst2("addl", this._number(8 + 4*params.size()), this._reg("esp"));
+
+        if (!rets.isEmpty()) {
+            AnyIterator it = rets.iterator();
+            while (it.hasNext()) {
+                this._inst1("popl", this._location(it.next()));
+            }
+            it.destroy();
+        }
+    }
+    [] visitGet(GetStatement stmt) {
+        OperandNode dest = this._location(stmt.getDest());
+        VariableScope vs = stmt.getVariableContext();
+        InstanceScope is = vs.getParent().isInstance();
+        if (is) {
+            ClassScope cs = is.getClassScope();
+            this._inst2("movl", this._location(stmt.getContext()), this._reg("eax"));
+            this._inst2("movl",
+                this._indirectBD(this._reg("eax"), this._instanceHandleVarsOffset(cs)),
+                this._reg("ebx")
+            );
+            this._inst2("addl", this._indirectBD(this._reg("eax"), this._number(4)), this._reg("ebx"));
+            this._inst2("movl",
+                this._indirectBD(this._reg("ebx"), this._instanceVarOffset(vs.getClassDeclNode().getClassScope(), vs.getVariableDeclNode())),
+                this._reg("eax")
+            );
+            this._inst2("movl", this._reg("eax"), dest);
+        } else { // struct access
+            this._inst2("movl", this._location(stmt.getContext()), this._reg("ebx"));
+            this._inst2("movl",
+                this._indirectBD(this._reg("ebx"), this._number(vs.getStructOffset())),
+                this._reg("eax")
+            );
+            this._inst2("movl", this._reg("eax"), dest);
+        }
+    }
+    [] visitMove(MoveStatement stmt) {
+        this._inst2("movl", this._location(stmt.getSrc()), this._reg("eax"));
+        this._inst2("movl", this._reg("eax"), this._location(stmt.getDest()));
+    }
+    [] visitSet(SetStatement stmt) {
+        OperandNode src = this._location(stmt.getSrc());
+        VariableScope vs = stmt.getVariableContext();
+        InstanceScope is = vs.getParent().isInstance();
+        if (is) {
+            ClassScope cs = is.getClassScope();
+            this._inst2("movl", this._location(stmt.getContext()), this._reg("eax"));
+            this._inst2("movl",
+                this._indirectBD(this._reg("eax"), this._instanceHandleVarsOffset(cs)),
+                this._reg("ebx")
+            );
+            this._inst2("addl", this._indirectBD(this._reg("eax"), this._number(4)), this._reg("ebx"));
+            this._inst2("movl", src, this._reg("eax"));
+            this._inst2("movl",
+                this._reg("eax"),
+                this._indirectBD(this._reg("ebx"), this._instanceVarOffset(cs, vs.getVariableDeclNode()))
+            );
+        } else { // struct access
+            this._inst2("movl", this._location(stmt.getContext()), this._reg("ebx"));
+            this._inst2("movl", src, this._reg("eax"));
+            this._inst2("movl",
+                this._reg("eax"),
+                this._indirectBD(this._reg("ebx"), this._number(vs.getStructOffset()))
+            );
+        }
+    }
+
+    [] _pushAllReverse(AnyIterator it) {
+        if (!it.hasNext()) {
+            return;
+        }
+        Location loc = it.next();
+        this._pushAllReverse(it);
+        this._inst1("pushl", this._location(loc));
     }
     
     // HELPER
@@ -442,6 +683,7 @@ class X86Generator extends sys::log::LoggerAware {
         return labelNode.getLabel().ostream();
     }
     
+    [] _byteI(int i) { this._inst1(".byte", this._number(i)); }
     [] _longI(int i) { this._inst1(".long", this._number(i)); }
     [] _long(OperandNode value) { this._inst1(".long", value); }
     
@@ -498,6 +740,11 @@ class X86Generator extends sys::log::LoggerAware {
         return regNode.setCRegister(reg).operand();
     }
     
+    [OperandNode] _indirectB(OperandNode base) {
+        IndirectNode indNode = this.createOwn(IndirectNode:CLASSNAME);
+        return indNode.setBase(base).operand();
+    }
+    
     [OperandNode] _indirectBD(OperandNode base, OperandNode displacement) {
         IndirectNode indNode = this.createOwn(IndirectNode:CLASSNAME);
         return indNode.setBase(base).setDisplacement(displacement).operand();
@@ -548,15 +795,6 @@ class X86Generator extends sys::log::LoggerAware {
             .printCString(sep1).print(infix)
             .printCString(sep2).print(postfix);
          return idNode.operand();
-    }
-    
-    // TODO: remove after correct generation
-    [] _ret() {
-        InstructionNode retNode = this.rt().createInstance(InstructionNode:CLASSNAME);
-        String ret = retNode.createOwn(String:CLASSNAME);
-        ret.assignCString("ret");
-        retNode.setOperation(ret);
-        _nodes.add(retNode.node());
     }
     
 }

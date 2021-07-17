@@ -200,6 +200,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
                 [String reg, ExpressionNode ex] = it.nextPair();
                 Location tmp = this.exprAsTemp(ex, null);
                 if (!tmp) { return false; }
+                reg = in.own(reg.subString(1, 0));
                 in.set(reg, tmp);
             }
             it.destroy();
@@ -211,6 +212,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             AnyMapEntryIterator it = node.getOut().entries();
             while (it.hasNext()) {
                 [String reg, ExpressionNode ex] = it.nextPair();
+                reg = out.own(reg.subString(1, 0));
                 VariableExprNode var = ex.isVariable();
                 if (var && var.hasContext()) {
                     Location tmp = _curMethod.newTemp(var.getResolvedType());
@@ -251,8 +253,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     }
     
     [int] visitReturnInst(ReturnInstNode node) {
-        if (!node.hasValues()) { return true; }
-        {
+        if (node.hasValues()) {
             AnyIterator it = node.getValues().iterator();
             int idx = 0;
             while (it.hasNext()) {

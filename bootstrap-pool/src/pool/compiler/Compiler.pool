@@ -66,10 +66,12 @@ class Compiler extends pool::compiler::ast::TypeManager {
         resolveInstructions = this.createOwn(InstructionResolver:CLASSNAME);
         generatePIR = this.createOwn(PirGenerator:CLASSNAME);
         generatePIR.setTypeManager(this.typeManager());
-        generatePASMUnit = this.createOwn(X86Generator:CLASSNAME);
         
         asmParser = this.createOwn(AsmParser:CLASSNAME);
         asmCompiler = this.createOwn(AsmCompiler:CLASSNAME);
+        generatePASMUnit = this.createOwn(X86Generator:CLASSNAME);
+        generatePASMUnit.setParser(asmParser);
+        
         outputMimetype = Mimetype:POOL_ASM;
     }
     [Compiler] initLogger(Logger logger) {
