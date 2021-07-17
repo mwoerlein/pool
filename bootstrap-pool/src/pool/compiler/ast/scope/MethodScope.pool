@@ -61,10 +61,13 @@ class MethodScope extends Scope {
 
     [MethodScope] isMethod() { return this; }
     [InstanceScope] isInstanceMethod() { return _parent.isInstance(); }
-    [ClassScope] isGlobalMethod() { return _parent.isClass(); }
+    [ClassScope] isGlobalMethod() {
+        if (_mainScope) { return _mainScope._parent.isClass(); }
+        return _parent.isClass();
+    }
     
     [OStream] printDebugName(OStream stream) {
-        stream.printCString("MethodScope of ").print(_methodDecl);
+        stream.printCString("MethodScope of ").print(this.getMethodDeclNode());
         ClassDeclNode c = this.getClassDeclNode();
         if (c) { stream.printCString(" in ").print(c); }
         return stream;

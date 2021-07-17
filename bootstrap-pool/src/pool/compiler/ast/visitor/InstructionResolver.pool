@@ -325,9 +325,11 @@ class InstructionResolver extends Visitor {
         if (returns.size() == 1) {
             node.setResolvedType(returns.first());
         }
-        ClassScope cs = ms.getParent().isClass();
+        ClassScope cs = ms.isGlobalMethod();
         if (cs) {
             node.getScope().getClassDeclNode().getClassScope().markAsGloballyRequired(cs);
+            // switch to declaring class for implicit access conversion
+            ms = ms.getMainMethodScope();
         }
         
         // convert implicit access to explicit access

@@ -176,6 +176,7 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
                     AnyIterator mit = super.getInstanceScope().getMethods();
                     while (mit.hasNext()) {
                         MethodDeclNode methodDecl = _instanceScope.getOwnMethod(mit.next()).getMethodDeclNode();
+                        this._comment().print(methodDecl);
                         this._long(this._number(4 * methodDecl.getIndex()));
                         this._long(this._classTabOffset(methodDecl.getScope().getClassDeclNode().getClassScope()));
                     }
@@ -506,12 +507,12 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
             this._pushAllReverse(it);
             it.destroy();
         }
-        MethodScope ms = stmt.getMethod().getMainMethodScope();
+        MethodScope ms = stmt.getMethod();
     
         // method @class-desc => %eax
         this._inst2("movl", this._indirectBD(this._reg("ebp"), this._number(8)), this._reg("eax"));
         this._inst2("movl",
-            this._indirectBD(this._reg("eax"), this._classTabOffset(ms.getClassDeclNode().getClassScope())),
+            this._indirectBD(this._reg("eax"), this._classTabOffset(ms.isGlobalMethod())),
             this._reg("eax")
         );
         // method table => %ebx
