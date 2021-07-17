@@ -56,8 +56,8 @@ class MethodDeclNode extends Node {
     [BlockInstNode] getBody() { return _body; }
     
     [MethodDeclNode] setAbstract() { _kind = MethodDeclNode:KIND_ABSTRACT; return this; }
-    [MethodDeclNode] setNaked() { _kind = MethodDeclNode:KIND_NAKED; return this; }
-    [MethodDeclNode] setEntry() { _kind = MethodDeclNode:KIND_ENTRY; return this; }
+    [MethodDeclNode] setNaked() { _global = true; _kind = MethodDeclNode:KIND_NAKED; return this; }
+    [MethodDeclNode] setEntry() { _global = true; _kind = MethodDeclNode:KIND_ENTRY; return this; }
     
     [int] isNormal() { return _kind == MethodDeclNode:KIND_NORMAL; }
     [int] isAbstract() { return _kind == MethodDeclNode:KIND_ABSTRACT; }
