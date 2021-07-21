@@ -10,9 +10,14 @@ use sys::stream::OStream;
 
 class MemoryManager extends Allocator {
     
+    int MEMORY_LISTS := 4;
+    int OPTIMIZE_THRESHOLD := 0x1000;
+    
     MemoryInfo available;
-    MemoryInfo used;
+    MemoryInfo free;
+    int freeCounter;
     MemoryInfo reserved;
+    MemoryInfo used;
     MemoryInfoPool nonEmbeddedInfos;
     int allocateIncreasing;
     
@@ -23,6 +28,7 @@ class MemoryManager extends Allocator {
         if (Address:compareAddress(required, size) < 0) {
             return this.sizeOverflow(size);
         }
+        if (freeCounter >= MemoryManager:OPTIMIZE_THRESHOLD) { this.optimize(); }
         
         // find available memory
         MemoryInfo available = this._findInfoByLen(this.available, required);
@@ -76,8 +82,36 @@ class MemoryManager extends Allocator {
             freeInfo = this._makeEmbedded(freeInfo);
         }
     
-        // insert into available
-        this._mergeMemoryInfoInto(available, freeInfo);
+        // collect free infos to merge them into available later
+        this._appendMemoryInfo(this.free.prev, freeInfo);
+        freeCounter++;
+    }
+    
+    [] optimize() {
+        MemoryInfo freeList = this.free;
+        if (Address:compare(freeList.next, freeList)) {
+            // extract free elements
+            MemoryInfo freeHead = freeList.next;
+            freeList.next.prev = freeList.prev.next = null;
+            freeList.next = freeList.prev = freeList;
+            
+            // sort free elements
+            freeHead = this._sortElements(freeHead);
+            
+            // extract available elements
+            MemoryInfo availableList = this.available;
+            MemoryInfo availableHead = availableList.next;
+            availableList.next.prev = availableList.prev.next = null;
+            availableList.next = availableList.prev = availableList;
+            
+            // merge free elements and available elements
+            availableHead = this._mergeSortedElements(availableHead, freeHead);
+            
+            // convert available elements into available list
+            this._elementsToList(availableHead, availableList);
+            
+            freeCounter = 0;
+        }
     }
     
     [MemoryInfo] getInfo(int addr) {
@@ -111,7 +145,7 @@ class MemoryManager extends Allocator {
         this.allocateIncreasing = allocateIncreasing;
         
         // allocate pool
-        int poolSize = MemoryInfoPool:SIZEOF + (poolElements + 3)*MemoryInfo:SIZEOF;
+        int poolSize = MemoryInfoPool:SIZEOF + (poolElements + MEMORY_LISTS)*MemoryInfo:SIZEOF;
         int requiredSize = MemoryInfo:SIZEOF + poolSize;
         if (Address:compareAddress(available.len, requiredSize + MemoryInfo:SIZEOF) < 0) {
             // bail out
@@ -121,7 +155,7 @@ class MemoryManager extends Allocator {
         [MemoryInfo used, MemoryInfo initialAvailable] = this._splitAvailableMemoryInfo(available, poolSize);
         used.flags = MemoryInfo:FLAGS_USED;
         
-        this._initEmptyPool(used, poolElements + 3);
+        this._initEmptyPool(used, poolElements + MEMORY_LISTS);
         
         this._appendMemoryInfo(this.available.prev, initialAvailable);
         this._appendMemoryInfo(this.used.prev, used);
@@ -142,8 +176,10 @@ class MemoryManager extends Allocator {
         this.allocateIncreasing = src.allocateIncreasing;
         this.nonEmbeddedInfos = src.nonEmbeddedInfos;
         this.available = src.available;
-        this.used = src.used;
+        this.free = src.free;
+        this.freeCounter = src.freeCounter;
         this.reserved = src.reserved;
+        this.used = src.used;
     }
     
     [MemoryInfoPool] _initEmptyPool(MemoryInfo info, int poolElements) {
@@ -155,8 +191,10 @@ class MemoryManager extends Allocator {
         
         this.nonEmbeddedInfos = pool;
         this.available = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
-        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
+        this.free      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_AVAILABLE);
         this.reserved  = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_RESERVED);
+        this.used      = this._nextNonEmbeddedInfo(0, 0, MemoryInfo:FLAGS_USED);
+        this.freeCounter = 0;
     }
     
     // pool handling
@@ -273,13 +311,75 @@ class MemoryManager extends Allocator {
         info.next = info.prev = info;
     }
     
+    // merge sort of info elements
+    [MemoryInfo] _sortElements(MemoryInfo elements) {
+        if (!elements || !elements.next) { return elements; }
+        [MemoryInfo a, MemoryInfo b] = this._splitElements(elements);
+        return this._mergeSortedElements(this._sortElements(a), this._sortElements(b));
+    }
+    
+    [MemoryInfo, MemoryInfo] _splitElements(MemoryInfo elements) {
+        MemoryInfo fast = elements;
+        MemoryInfo slow = elements;
+        while (fast.next) {
+            fast = fast.next;
+            if (fast.next) {
+                fast = fast.next;
+                slow = slow.next;
+            }
+        }
+        MemoryInfo tmp = slow.next;
+        slow.next = null; 
+        return [elements, tmp];
+    }
+    
+    [MemoryInfo] _mergeSortedElements(MemoryInfo ae, MemoryInfo be) {
+        MemoryInfo a = ae;
+        MemoryInfo b = be;
+        if (!a) { return b; }
+        if (!b) { return a; }
+        MemoryInfo merged = null;
+        MemoryInfo tail = null;
+        if (Address:compareAddress(a.buf, b.buf) < 0) {
+            merged = tail = a; a = a.next;
+        } else {
+            merged = tail = b; b = b.next;
+        }
+        while (a && b) {
+            if (Address:compareAddress(a.buf, b.buf) < 0) {
+                tail = this._mergeOrAppend(tail, a); a = a.next;
+            } else {
+                tail = this._mergeOrAppend(tail, b); b = b.next;
+            }
+        }
+        if (a) { this._mergeOrAppend(tail, a).next = a.next; }
+        if (b) { this._mergeOrAppend(tail, b).next = b.next; }
+        return merged;
+    }
+    
+    [MemoryInfo] _mergeOrAppend(MemoryInfo prev, MemoryInfo info) {
+        if ((prev.buf + prev.len) != info.buf) {
+            return prev.next = info;
+        }
+        // merge left
+        prev.len = (info.buf + info.len) - prev.buf;
+        info.flags = 0;
+        
+        int prevPtr = Address:from(prev);
+        
+        if ((prev.buf != prevPtr) && (Address:compareAddress(prev.len, MemoryInfo:SIZEOF) > 0)) {
+            prev = this._makeEmbedded(prev);
+        }
+        return prev;
+    }
+    
     // debug
     [OStream] dumpToStream(OStream stream, int all) {
         if (Address:compare(available.next, available)) {
             stream.printCString("available:\n");
             MemoryInfo cur = available.next;
             while (Address:compare(cur, available)) {
-                this._dumpInfo(cur, stream).printNewline();
+                MemoryManager:_dumpInfo(cur, stream).printNewline();
                 cur = cur.next;
             }
         }
@@ -288,7 +388,7 @@ class MemoryManager extends Allocator {
                 stream.printCString("reserved:\n");
                 MemoryInfo cur = reserved.next;
                 while (Address:compare(cur, reserved)) {
-                    this._dumpInfo(cur, stream).printNewline();
+                    MemoryManager:_dumpInfo(cur, stream).printNewline();
                     cur = cur.next;
                 }
             }
@@ -296,7 +396,7 @@ class MemoryManager extends Allocator {
                 stream.printCString("used:\n");
                 MemoryInfo cur = used.next;
                 while (Address:compare(cur, used)) {
-                    this._dumpInfo(cur, stream);
+                    MemoryManager:_dumpInfo(cur, stream);
                     sys::core::Object o = this.rt()._asObject(cur.buf);
                     if (o) {
                         stream.printChar(' ').print(o.getClass().getName());
@@ -310,12 +410,14 @@ class MemoryManager extends Allocator {
         return stream;
     }
     
-    [OStream] _dumpInfo(MemoryInfo info, OStream stream) {
-        int infoEnd = info.buf + info.len;
-        int infoPtr = Address:from(info);
-        return stream.printPtr(info.buf).printChar(':').printPtr(infoEnd)
-            .printChar('[').printPtr(info.len).printChar(']')
-            .printChar(' ').printChar('(').printPtr(infoPtr).printChar(')');
+    [] _elementsToList(MemoryInfo info, MemoryInfo list) {
+        MemoryInfo prev = list;
+        while (info) {
+            MemoryInfo next = info.next;
+            this._appendMemoryInfo(prev, info);
+            prev = info;
+            info = next;
+        }
     }
     
     // global
@@ -328,6 +430,14 @@ class MemoryManager extends Allocator {
             
         available.len -= required;
         return bottom;
+    }
+    
+    global [OStream] _dumpInfo(MemoryInfo info, OStream stream) {
+        int infoEnd = info.buf + info.len;
+        int infoPtr = Address:from(info);
+        return stream.printPtr(info.buf).printChar(':').printPtr(infoEnd)
+            .printChar('[').printPtr(info.len).printChar(']')
+            .printChar(' ').printChar('(').printPtr(infoPtr).printChar(')');
     }
     
     global [ClassDescriptor] _getClassDesc() {
