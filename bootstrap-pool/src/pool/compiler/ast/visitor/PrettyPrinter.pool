@@ -167,9 +167,9 @@ class PrettyPrinter extends Visitor {
     [int] visitMethodDecl(MethodDeclNode node) {
         OStream line = this.indent();
         if (node.isAbstract()) { line.printCString("abstract "); }
-        if (node.isEntry()) { line.printCString("__entry__ "); }
-        if (node.isNaked()) { line.printCString("__naked__ "); }
-        if (node.isGlobal()) { line.printCString("global "); }
+        else if (node.isEntry()) { line.printCString("__entry__ "); }
+        else if (node.isNaked()) { line.printCString("__naked__ "); }
+        else if (node.isGlobal()) { line.printCString("global "); }
         
         line.printChar('[');
         {
@@ -208,7 +208,7 @@ class PrettyPrinter extends Visitor {
             this.endBlock();
         }
         
-        if (node.getMethodScope() && node.getMethodScope().getPirMethod()) {
+        if (false && node.getMethodScope() && node.getMethodScope().getPirMethod()) {
             Method pir = node.getMethodScope().getPirMethod();
             this.indent().printCString("/*").printNewline();
             _indent += 4;

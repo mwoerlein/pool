@@ -637,7 +637,7 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
         return this._id3(decl.getScope().getClassDeclNode().getClassScope().getGlobalPrefix(), "_mdo_", decl.getName());
     }
     [OperandNode] _methodDeclBlock(MethodDeclNode decl, BasicBlock block) {
-        IdentifierNode idNode = this.rt().createInstance(IdentifierNode:CLASSNAME);
+        IdentifierNode idNode = this.createOwn(IdentifierNode:CLASSNAME);
         idNode.getIdentifier().print(_classScope.getLocalPrefix())
             .printCString("_md_").print(decl.getName())
             .printCString("_bb_").printInt(block.getId());
