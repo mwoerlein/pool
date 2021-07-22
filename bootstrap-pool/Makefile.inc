@@ -5,6 +5,7 @@ PARSERGEN=./bin/parsergen
 SRCDIR=./src
 TESTDIR=./tests
 BINDIR=./bin
+INSTALLDIR=../bin
 
 $(BINDIR):
 	@mkdir -p $@

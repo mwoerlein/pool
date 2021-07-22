@@ -5,9 +5,12 @@ POOLBSCLIBS = linux.a poolc.a pasm.a sys.a
 PBASMLIBS   = linux.a pasm.a sys.a
 STOREBLIBS  = linux.a sys.a
 
-.PHONY: all clean
+.PHONY: all install clean
 
 all: clean $(BINDIR)/pbasm $(BINDIR)/poolbc $(BINDIR)/poolbsc $(BINDIR)/storeb
+
+install: $(BINDIR)/poolbsc
+	@cp $(BINDIR)/poolbsc $(INSTALLDIR)/poolbsc
 
 clean:
 	@rm -rf $(BINDIR) $(OBJDIR) $(LIBDIR) $(SRCDIR)/poolc/parser/Parserbase.h $(SRCDIR)/poolc/parser/parse.cc $(SRCDIR)/poolc/parser/PoolParser.cc $(SRCDIR)/pasm/i386/PasmParser.cpp

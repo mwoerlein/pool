@@ -16,6 +16,7 @@ SRCDIR=./src
 OBJDIR=./obj
 BINDIR=./bin
 INCDIR=./include
+INSTALLDIR=../bin
 
 $(LIBDIR)/%.a:
 	@make $(MAKEOP) -f ./Makefile.libs LIB=$@ $@
