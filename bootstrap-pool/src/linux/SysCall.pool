@@ -43,7 +43,7 @@ class SysCall {
             subl 4, %esp
             movb %cl, (%esp); movl %esp, %ecx; int 0x80
             addl 4, %esp
-        ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1});
+        ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1}, {"%eax": null});
     }
     
     global [int] open(cstring filename, int mode) {
@@ -57,7 +57,7 @@ class SysCall {
     }
     
     global [] close(int fd) {
-        __pasm__("int 0x80", {"%eax": 6, "%ebx": fd});
+        __pasm__("int 0x80", {"%eax": 6, "%ebx": fd}, {"%eax": null});
     }
     
     global [int] unlink(cstring path) {

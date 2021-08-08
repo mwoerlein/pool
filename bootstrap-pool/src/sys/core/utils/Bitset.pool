@@ -121,7 +121,7 @@ class Bitset {
             addl %ebx, %eax
             // n = n & 0x7f;
             andl 0x7f, %eax
-        ">, {"%eax": n}, {"%eax": ret});
+        ">, {"%eax": n}, {"%eax": ret, "%ebx": null});
         return ret;
     }
     

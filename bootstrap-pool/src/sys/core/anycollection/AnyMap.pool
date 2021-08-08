@@ -205,7 +205,7 @@ class AnyMap extends AnyCollection {
         Object o = this.rt().cast(Object:CLASSNAME, key);
         // return o.hash() \ buckets.size(); // unsigned mod
         int number = 0;
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": o.hash(), "%ebx": buckets.size()}, {"%edx": number});
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": o.hash(), "%ebx": buckets.size()}, {"%eax": null, "%edx": number});
         return number;
     }
     

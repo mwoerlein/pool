@@ -57,9 +57,9 @@ class Address {
         __pasm__(<"
             cmpl %ebx, %eax
             jne _address_equals_ret
-            movl 1, %ecx        // return true
+            movl 1, %edx        // return true
         _address_equals_ret:
-        ">, {"%eax": a, "%ebx": b, "%ecx": eq}, {"%ecx": eq});
+        ">, {"%eax": a, "%ebx": b, "%edx": eq}, {"%edx": eq});
         return eq;
     }
     
@@ -89,12 +89,12 @@ class Address {
     global [int] sumOverflow(int a, int b) {
         int diff = 0;
         __pasm__(<"
-            movl 1, %ecx
+            movl 1, %edx
             addl %ebx, %eax
             jb _address_so_ret
-            movl 0, %ecx
+            movl 0, %edx
         _address_so_ret:
-        ">, {"%eax": a, "%ebx": b}, {"%ecx": diff});
+        ">, {"%eax": a, "%ebx": b}, {"%eax": null, "%edx": diff});
         return diff;
     }
     
@@ -149,28 +149,30 @@ class Address {
     }
     
     global [] copy(int srcAddr, int destAddr) {
-        __pasm__("movl (%esi), %eax; movl %eax, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
+        __pasm__("movl (%ebx), %eax; movl %eax, (%edx)", {"%ebx": srcAddr, "%edx": destAddr}, {"%eax": null});
     }
     
     global [] copyChar(int srcAddr, int destAddr) {
-        __pasm__("movb (%esi), %al; movb %al, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
+        __pasm__("movb (%ebx), %al; movb %al, (%edx)", {"%ebx": srcAddr, "%edx": destAddr}, {"%eax": null});
     }
     
     global [] copyWord(int srcAddr, int destAddr) {
-        __pasm__("movw (%esi), %ax; movw %ax, (%edi)", {"%esi": srcAddr, "%edi": destAddr});
+        __pasm__("movw (%ebx), %ax; movw %ax, (%edx)", {"%ebx": srcAddr, "%edx": destAddr}, {"%eax": null});
     }
     
     global [] copyBytes(int srcAddr, int destAddr, int bytes) {
         __pasm__(
             ".byte 0xf3; .byte 0xa4 #// rep movsb",
-             {"%ecx": bytes, "%esi": srcAddr, "%edi": destAddr}
+             {"%ecx": bytes, "%esi": srcAddr, "%edi": destAddr},
+             {"%ecx": null, "%esi": null, "%edi": null}
         );
     }
     
     global [] setBytes(int destAddr, int bytes, int byte) {
         __pasm__(
             ".byte 0xf3; .byte 0xaa #// rep stosb",
-             {"%ecx": bytes, "%eax": byte, "%edi": destAddr}
+             {"%ecx": bytes, "%eax": byte, "%edi": destAddr},
+             {"%ecx": null, "%edi": null}
         );
     }
 }

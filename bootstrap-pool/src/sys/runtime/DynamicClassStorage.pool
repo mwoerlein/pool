@@ -141,7 +141,7 @@ class DynamicClassStorage extends ClassStorage {
     [int] _getBucketNumber(cstring name) {
         // return String:hashCString(name) \ bucketsCount; // unsigned mod
         int hash = 0;
-        __pasm__("movl 0, %edx; div %ebx", {"%eax": String:hashCString(name), "%ebx": bucketsCount}, {"%edx": hash});
+        __pasm__("movl 0, %edx; div %ebx", {"%eax": String:hashCString(name), "%ebx": bucketsCount}, {"%eax": null, "%edx": hash});
         return hash;
     }
     

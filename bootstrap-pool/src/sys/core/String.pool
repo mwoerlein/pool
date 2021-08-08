@@ -244,17 +244,17 @@ class String extends OStream {
         _scs_strcmp_loop:
             movb (%ebx), %al
             cmpb 0, %al;        je _scs_strcmp_ret_neg_a
-            cmpb 0, (%ecx);     je _scs_strcmp_ret
-            subb (%ecx), %al;   jnz _scs_strcmp_ret
-            addl 1, %ecx
+            cmpb 0, (%edx);     je _scs_strcmp_ret
+            subb (%edx), %al;   jnz _scs_strcmp_ret
+            addl 1, %edx
             addl 1, %ebx
             jmp _scs_strcmp_loop
         _scs_strcmp_ret_neg_a:
-            subb (%ecx), %al
+            subb (%edx), %al
         _scs_strcmp_ret:
             .byte 0x66; .byte 0x98; #// cbw
             .byte 0x98              #// cwde
-        ">, {"%ebx": a, "%ecx": b}, {"%eax": ret});
+        ">, {"%ebx": a, "%edx": b}, {"%eax": ret, "%ebx": null, "%edx": null});
         return ret;
     }
     
@@ -271,7 +271,7 @@ class String extends OStream {
             addl 1, %ecx
             jmp _scs_strhash_loop
         _scs_strhash_ret:
-        ">, {"%ebx": String:HASH_FACTOR, "%ecx": a}, {"%eax": ret});
+        ">, {"%ebx": String:HASH_FACTOR, "%ecx": a}, {"%eax": ret, "%ecx": null, "%edx": null});
         return ret;
     }
 
