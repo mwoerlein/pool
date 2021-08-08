@@ -186,23 +186,21 @@ class Runtime extends Object {
         __pasm__(<"
         _cr_mo_call_entry := (_call_entry - _sys_runtime_Runtime)
         _call_entry:
-            pushl %ecx
-            movl 12(%esp), %ebx // load object handle
-            movl 4(%ebx), %ecx	// get object
-            movl 0(%ecx), %eax  // get class-desc
+            movl 8(%esp), %ebx  // load object handle
+            movl 4(%ebx), %edx	// get object
+            movl 0(%edx), %eax  // get class-desc
             addl 8(%ebx), %eax  // get vtab
-            addl 8(%esp), %eax	// get vtab-entry by adding method-offset number
-            movl 0(%ecx), %ebx	// get class-desc
+            addl 4(%esp), %eax	// get vtab-entry by adding method-offset number
+            movl 0(%edx), %ebx	// get class-desc
             addl 4(%eax), %ebx  // get method-vtabs-entry
-            addl 12(%ebx), %ecx // compute method-@this
-            movl %ecx, 12(%esp) // store method-@this
+            addl 12(%ebx), %edx // compute method-@this
+            movl %edx, 8(%esp)  // store method-@this
             movl 0(%ebx), %ebx  // get method-class-desc
-            movl %ebx, 8(%esp)  // store method-class-desc
-            movl %ebx, %ecx
-            addl 20(%ecx), %ecx // get methods-tab
-            addl 0(%eax), %ecx  // get method-offset-addr
-            addl (%ecx), %ebx   // compute method-addr
-            popl %ecx
+            movl %ebx, 4(%esp)  // store method-class-desc
+            movl %ebx, %edx
+            addl 20(%edx), %edx // get methods-tab
+            addl 0(%eax), %edx  // get method-offset-addr
+            addl (%edx), %ebx   // compute method-addr
             jmp %ebx            // goto method
         ">);
     }

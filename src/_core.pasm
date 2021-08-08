@@ -1,6 +1,6 @@
 /* ********* ABI **********
- * caller-saved: %eax, %ebx
- * callee-saved: others
+ * caller-saved: %eax, %ebx, %edx
+ * callee-saved: %ecx, %esi, %edi
  * Stack-Frame:
  * | caller prepared                                                                            | call         | callee prepared
  * |Ret N|...|Ret 2|Ret 1|Param N|...|Param 2|Param 1|@Obj-Handle|VTab-Method Offset/@class-desc|@caller return|caller %ebp|spilled regs|Local 1|Local 2|...|tmp-data/further frames
