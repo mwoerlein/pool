@@ -51,6 +51,7 @@ class ExpressionNode extends Node {
     [LogicalUnaryExprNode] isLogicalUnary() { return null; }
     [LogicalBinaryExprNode] isLogicalBinary() { return null; }
     [VariableExprNode] isVariable() { return null; }
+    [NullExprNode] isNull() { return null; }
     
     // TODO: remove with implicit cast
     [ExpressionNode] expression() { return this; }

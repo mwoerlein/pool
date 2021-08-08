@@ -110,6 +110,7 @@ bool PIRGenerator::visit(InlinePasmInstNode & pasmInst) {
                     continue;
                 }
             }
+            if (ex.isNull()) { continue; }
             ex.accept(*this);
             if ((lastLocations.size() == 1) && (lastLocations.first()->kind == loc_temp)) {
                 out.set(reg, *lastLocations.first());

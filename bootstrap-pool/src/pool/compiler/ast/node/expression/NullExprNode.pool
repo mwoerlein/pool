@@ -10,6 +10,8 @@ use sys::stream::OStream;
 
 class NullExprNode extends ExpressionNode {
 
+    [NullExprNode] isNull() { return this; }
+    
     // NODE
     [int] accept(Visitor visitor) { return visitor.visitNullExpr(this); }
     [OStream] printDebugName(OStream stream) {

@@ -218,7 +218,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
                     Location tmp = _curMethod.newTemp(var.getResolvedType());
                     out.set(reg, tmp);
                     outSet.set(var, tmp);
-                } else {
+                } else if (!ex.isNull()) {
                     ex.accept(this.visitor());
                     if (_lastLocations.size() != 1) {
                         return this.unexpectedOutputExpressionError(node.node(), var.getContext());
