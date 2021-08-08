@@ -50,6 +50,7 @@ use pool::compiler::pir::statement::SetStatement;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -65,10 +66,15 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
     
     String _minus;
     int _resolveClasses;
+    AnyMap _done;
+    AnyList _todo;
     
     [] __init() {
         _minus = this.createOwn(String:CLASSNAME);
         _minus.printChar('-');
+        _done = this.createOwn(AnyMap:CLASSNAME);
+        _done.init(13);
+        _todo = this.createOwn(AnyList:CLASSNAME);
     }
     [X86Generator] setParser(Parser parser) { _parser = parser; return this; }
     [X86Generator] setResolveClasses(int resolve) { _resolveClasses = resolve; return this; }
@@ -330,15 +336,36 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
         _method = method;
         _methodScope = method.getMethodScope();
         {
+            //*/
+            // iterate blocks in traces
+            _todo.add(_methodScope.getPirMethod().getEntryBlock());
+            BasicBlock cur = null;
+            int fallthrough = false;
+            while (!_todo.isEmpty()) {
+                BasicBlock cur = _todo.shift();
+                if (!_done.has(cur)) {
+                    do {
+                        _done.set(cur, cur);
+                        if (cur.hasCond()) { _todo.add(cur.getCondNext()); }
+                        BasicBlock next = cur.getNext();
+                        fallthrough = next && !_done.has(next);
+                        this.generateBasicBlock(cur, fallthrough);
+                        cur = next;
+                    } while (fallthrough);
+                }
+            }
+            _done.clear();
+            /*/
             AnyIterator it = _methodScope.getPirMethod().blocks();
-            while (it.hasNext()) { this.generateBasicBlock(it.next()); }
+            while (it.hasNext()) { this.generateBasicBlock(it.next(), false); }
             it.destroy();
+            //*/
         }
         _method = null;
         _methodScope = null;
     }
     
-    [] generateBasicBlock(BasicBlock block) {
+    [] generateBasicBlock(BasicBlock block, int fallthrough) {
         if (_method.isNaked()) {
             // generate no block header
         } else if (block.isEntry()) {
@@ -377,7 +404,9 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
                 else if (cond.isGt()) { this._inst1("jg", next); }
                 else if (cond.isGe()) { this._inst1("jge", next); }
             }
-            this._inst1("jmp", this._methodDeclBlock(_method, block.getNext()));
+            if (!fallthrough) {
+                this._inst1("jmp", this._methodDeclBlock(_method, block.getNext()));
+            }
         }
     }
     

@@ -37,6 +37,7 @@ class BasicBlock extends AnyList {
     [BasicBlock] getNext() { return _next; }
     [int] hasCond() { return !!_cond; }
     [CondStatement, BasicBlock] getCond() { return [_cond, _condNext]; }
+    [BasicBlock] getCondNext() { return _condNext; }
     
     [BasicBlock] addStmt(Statement stmt) { this.add(this.own(stmt)); return this; }
     [AnyIterator] statements() { return this.iterator(); }
