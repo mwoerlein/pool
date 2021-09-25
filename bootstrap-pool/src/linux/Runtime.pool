@@ -9,7 +9,6 @@ use sys::memory::Allocator;
 use sys::memory::PageAllocator;
 use sys::memory::PagedMemoryManager;
 use sys::runtime::Runtime as SysRuntime;
-use sys::runtime::StaticResolvedClassStorage;
 use sys::runtime::DynamicClassStorage;
 use sys::stream::OStream;
 
