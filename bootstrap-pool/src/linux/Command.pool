@@ -54,16 +54,7 @@ class Command extends Thread, CommandLine {
         this.configure();
         if (this._parseArgv(argc, argv)) {
             LoggerAware la = this.rt().cast(LoggerAware:CLASSNAME, this);
-            if (la) {
-                Logger logger = this.createOwn(Logger:CLASSNAME);
-                if (this.hasOption("verbose")) { logger.setLevel(Logger:INFO); }
-                if (this.hasOption("debug")) { logger.setLevel(Logger:DEBUG); }
-                if (this.hasOption("trace")) { logger.setLevel(Logger:TRACE); }
-                if (this.hasOption("warning")) { logger.setLevel(Logger:WARNING); }
-                if (this.hasOption("error")) { logger.setLevel(Logger:ERROR); }
-                if (this.hasOption("critical")) { logger.setLevel(Logger:CRITICAL); }
-                la.setLogger(logger);                
-            }
+            if (la) { la.initLoggerFromCommandLine(this.commandLine()); }
             int ret = this.run();
             if (la) { la.getLogger().flush(); }
             return ret;
@@ -164,15 +155,6 @@ class Command extends Thread, CommandLine {
         return stream;
     }
     
-    [int] _parseArgs(AnyList args, CommandLineParserTarget target) {
-        CommandLineParser p = this.rt().createInstance(CommandLineParser:CLASSNAME);
-        AnyIterator ai = args.iterator();
-        int ret = p.parse(ai, target);
-        ai.destroy();
-        p.destroy();
-        return ret;
-    }
-    
     // private
     [int] _parseArgv(int argc, int argv) {
         _calledCommand = Address:loadString(argv);
@@ -190,7 +172,7 @@ class Command extends Thread, CommandLine {
         }
         
         // parse argument list
-        int ret = this._parseArgs(args, this.target());
+        int ret = this._parseArgs(args);
         args.destroy();
         return ret;
     }

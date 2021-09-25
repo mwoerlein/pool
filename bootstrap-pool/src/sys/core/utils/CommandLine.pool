@@ -102,6 +102,15 @@ class CommandLine extends CommandLineParserTarget, Owner {
     
     [int] getArgumentsSize() { return this._arguments.size(); }
     [AnyIterator] getArguments() { return this._arguments.iterator(); }
+
+    [int] _parseArgs(AnyList args) {
+        CommandLineParser p = this.rt().createInstance(CommandLineParser:CLASSNAME);
+        AnyIterator ai = args.iterator();
+        int ret = p.parse(ai, this.target());
+        ai.destroy();
+        p.destroy();
+        return ret;
+    }
     
     [int] pushCLArgument(String arg) {
         String argument = this.createOwnStringFromString(arg);
@@ -147,4 +156,7 @@ class CommandLine extends CommandLineParserTarget, Owner {
         }
         return optionName;
     }
+    
+    // TODO: remove with implicit cast
+    [CommandLine] commandLine() { return this; }
 }

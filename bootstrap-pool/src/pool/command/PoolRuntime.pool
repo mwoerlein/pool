@@ -5,20 +5,27 @@ version = 0.1.0
 */
 namespace pool::command;
 
+use linux::Command;
 use pool::compiler::parser::Parser;
+
 use sys::core::String;
 use sys::core::Thread;
 use sys::core::anycollection::AnyIterator;
+use sys::core::utils::CommandLine;
+
+use sys::log::LoggerAware;
+
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
+
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassDescriptorLoader;
 use sys::runtime::DynamicClassStorage;
 use sys::runtime::Class;
 use sys::runtime::Runtime;
 
-class PoolRuntime extends linux::Command {
+class PoolRuntime extends Command {
 
     Parser parser;
 
@@ -105,16 +112,27 @@ Pool Bootstrap Runtime.
         rt.refreshInstance(rt.out());
         rt.refreshInstance(rt.err());
         rt.refreshInstance(rt.getAllocator());
+        rt.refreshInstance(rt.getClassStorage());
 //*/
-        
-        Thread t = null;
         
         AnyIterator argIt = this.getArguments();
         String classname = argIt.next();
         argIt.destroy();
         
-        rt.createAndRunThread(classname.toCString());
+        Thread t = rt.createInstanceAs(classname.toCString(), Thread:CLASSNAME);
+        if (!t) { return -1; }
         
-        return 0;
+        Command c = rt.cast(Command:CLASSNAME, t);
+        if (c) { c.configure(); }
+        
+        CommandLine cl = rt.cast(CommandLine:CLASSNAME, t);
+        if (cl && !cl._parseArgs(_unparsedArguments)) { return -1; }
+        
+        LoggerAware la = rt.cast(LoggerAware:CLASSNAME, t);
+        if (la) { la.initLoggerFromCommandLine(cl); }
+        
+        int ret = t.run();
+        if (la) { la.getLogger().flush(); }
+        return ret;
     }
 }
