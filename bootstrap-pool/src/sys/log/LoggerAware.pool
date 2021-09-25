@@ -23,17 +23,4 @@ class LoggerAware extends sys::core::Object {
 
     [int] hasLogLevel(int level) { return logger.hasLevel(level); }
     
-    [LoggerAware] initLoggerFromCommandLine(sys::core::utils::CommandLine cl) {
-        Logger l = this.createOwn(Logger:CLASSNAME);
-        if (cl) {
-            if (cl.hasOption("verbose"))  { l.setLevel(Logger:INFO); }
-            if (cl.hasOption("debug"))    { l.setLevel(Logger:DEBUG); }
-            if (cl.hasOption("trace"))    { l.setLevel(Logger:TRACE); }
-            if (cl.hasOption("warning"))  { l.setLevel(Logger:WARNING); }
-            if (cl.hasOption("error"))    { l.setLevel(Logger:ERROR); }
-            if (cl.hasOption("critical")) { l.setLevel(Logger:CRITICAL); }
-        }
-        return this.setLogger(l);                
-    }
-    
 }

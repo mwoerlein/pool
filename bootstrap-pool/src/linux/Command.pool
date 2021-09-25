@@ -9,74 +9,33 @@ use linux::fs::File;
 use linux::fs::Directory;
 
 use sys::core::String;
-use sys::core::Thread;
-use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
-use sys::core::anycollection::AnyMapEntry;
-use sys::core::anycollection::AnyMapEntryIterator;
-use sys::core::utils::CommandLine;
-use sys::core::utils::CommandLineParser;
-use sys::core::utils::CommandLineParserTarget;
-
-use sys::log::Logger;
-use sys::log::LoggerAware;
 use sys::memory::Address;
-use sys::runtime::Runtime;
 use sys::store::Store;
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
-class Command extends Thread, CommandLine {
-
-    cstring name;
-    cstring version;
-    cstring usage;
+class Command extends command::AbstractCommand {
     
     cstring _calledCommand;
     AnyList _unparsedArguments;
     
-    // methods
-    abstract [] configure();
-    
     [] __init() { this._initCommand(); }
     [] _initCommand() {
-        this._initCommandLine();
+        this._initAbstractCommand();
         _unparsedArguments = this.createOwn(AnyList:CLASSNAME);
     }
     
     [] __destruct() { this._destructCommand(); }
     [] _destructCommand() {
-        this._destructCommandLine();
+        this._destructAbstractCommand();
     }
     
     [int] execute(int argc, int argv) {
         this.configure();
-        if (this._parseArgv(argc, argv)) {
-            LoggerAware la = this.rt().cast(LoggerAware:CLASSNAME, this);
-            if (la) { la.initLoggerFromCommandLine(this.commandLine()); }
-            int ret = this.run();
-            if (la) { la.getLogger().flush(); }
-            return ret;
-        }
-        return -1;
-    }
-
-    // protected
-    [Command] setName(cstring name) {
-        this.name = name;
-        return this;
-    }
-    
-    [Command] setVersion(cstring version) {
-        this.version = version;
-        return this;
-    }
-    
-    [Command] setUsage(cstring usage) {
-        this.usage = usage;
-        // TODO: implement usage parsing (see http://docopt.org/)
-        return this;
+        if (!this._parseArgv(argc, argv)) { return -1; }
+        return this._runCommand();
     }
     
     [IStream] openStdIn() {
@@ -106,53 +65,6 @@ class Command extends Thread, CommandLine {
     [Store] openStoreFile(String filename) {
         Store s = this.rt().createOwn(Store:CLASSNAME);
         return s.setContent(this.openFile(this.getValueOption("store"), linux::fs::File:MODE_READ));
-    }
-    
-    // debug
-    [OStream] dumpCLToStream(OStream stream) {
-        stream.printCString("called command: ").printCString(this._calledCommand).printNewline();
-        stream.printCString("options:").printNewline();
-        {
-            AnyMapEntryIterator it = this._options.entries();
-            while (it.hasNext()) {
-                AnyMapEntry e = it.next();
-                String key = e.getKey();
-                String value = e.getValue();
-                stream.printChar('-').printChar(' ').print(key);
-                if (e.getValue()) {
-                    stream.printChar(' ').printChar('=').printChar(' ').print(value);
-                }
-                stream.printNewline();
-            }
-            it.destroy();
-        }
-        {
-            AnyMapEntryIterator it = this._listOptions.entries();
-            while (it.hasNext()) {
-                AnyMapEntry e = it.next();
-                String key = e.getKey();
-                AnyList list = e.getValue();
-                stream.printChar('-').printChar(' ').print(key).printChar(' ').printChar('[');
-                AnyIterator lit = list.iterator();
-                while (lit.hasNext()) {
-                    String value = lit.next();
-                    stream.printChar(' ').print(value);
-                }
-                lit.destroy();
-                stream.printChar(' ').printChar(']').printNewline();
-            }
-            it.destroy();
-        }
-        stream.printCString("arguments:").printNewline();
-        {
-            AnyIterator it = this._arguments.iterator();
-            while (it.hasNext()) {
-                String arg = it.next();
-                stream.printChar('-').printChar(' ').print(arg).printNewline();
-            }
-            it.destroy();
-        }
-        return stream;
     }
     
     // private

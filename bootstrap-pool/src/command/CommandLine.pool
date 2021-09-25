@@ -3,15 +3,18 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core::utils;
+namespace command;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyListIterator;
 use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntry;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::stream::OStream;
 
-class CommandLine extends CommandLineParserTarget, Owner {
+class CommandLine extends CommandLineParserTarget, sys::core::utils::Owner {
 
     AnyList _arguments;     // LinkedList<String>
     AnyMap _options;        // HashMap<String, String>
@@ -102,15 +105,6 @@ class CommandLine extends CommandLineParserTarget, Owner {
     
     [int] getArgumentsSize() { return this._arguments.size(); }
     [AnyIterator] getArguments() { return this._arguments.iterator(); }
-
-    [int] _parseArgs(AnyList args) {
-        CommandLineParser p = this.rt().createInstance(CommandLineParser:CLASSNAME);
-        AnyIterator ai = args.iterator();
-        int ret = p.parse(ai, this.target());
-        ai.destroy();
-        p.destroy();
-        return ret;
-    }
     
     [int] pushCLArgument(String arg) {
         String argument = this.createOwnStringFromString(arg);
@@ -155,6 +149,52 @@ class CommandLine extends CommandLineParserTarget, Owner {
             optionName = this.createStringFromString(alias);
         }
         return optionName;
+    }
+    
+    // debug
+    [OStream] __dumpCLToStream(OStream stream) {
+        stream.printCString("options:").printNewline();
+        {
+            AnyMapEntryIterator it = this._options.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                String key = e.getKey();
+                String value = e.getValue();
+                stream.printChar('-').printChar(' ').print(key);
+                if (e.getValue()) {
+                    stream.printChar(' ').printChar('=').printChar(' ').print(value);
+                }
+                stream.printNewline();
+            }
+            it.destroy();
+        }
+        {
+            AnyMapEntryIterator it = this._listOptions.entries();
+            while (it.hasNext()) {
+                AnyMapEntry e = it.next();
+                String key = e.getKey();
+                AnyList list = e.getValue();
+                stream.printChar('-').printChar(' ').print(key).printChar(' ').printChar('[');
+                AnyIterator lit = list.iterator();
+                while (lit.hasNext()) {
+                    String value = lit.next();
+                    stream.printChar(' ').print(value);
+                }
+                lit.destroy();
+                stream.printChar(' ').printChar(']').printNewline();
+            }
+            it.destroy();
+        }
+        stream.printCString("arguments:").printNewline();
+        {
+            AnyIterator it = this._arguments.iterator();
+            while (it.hasNext()) {
+                String arg = it.next();
+                stream.printChar('-').printChar(' ').print(arg).printNewline();
+            }
+            it.destroy();
+        }
+        return stream;
     }
     
     // TODO: remove with implicit cast

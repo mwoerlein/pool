@@ -3,7 +3,7 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::core::utils;
+namespace command;
 
 use sys::core::Object;
 use sys::core::String;
@@ -11,7 +11,6 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::runtime::Runtime;
 use sys::stream::IStream;
-use sys::stream::OStream;
 
 class CommandLineParser extends Object {
 

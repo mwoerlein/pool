@@ -1,0 +1,83 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace command;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+
+use sys::log::Logger;
+use sys::log::LoggerAware;
+
+class AbstractCommand extends sys::core::Thread, CommandLine {
+
+    cstring name;
+    cstring version;
+    cstring usage;
+    
+    // methods
+    abstract [] configure();
+    
+    [] __init() { this._initAbstractCommand(); }
+    [] _initAbstractCommand() {
+        this._initCommandLine();
+    }
+    
+    [] __destruct() { this._destructAbstractCommand(); }
+    [] _destructAbstractCommand() {
+        this._destructCommandLine();
+    }
+
+    [int] executeCommand(AnyList args) {
+        this.configure();
+        if (!this._parseArgs(args)) { return -1; }
+        return this._runCommand();
+    }
+    
+    // protected
+    [AbstractCommand] setName(cstring name) {
+        this.name = name;
+        return this;
+    }
+    
+    [AbstractCommand] setVersion(cstring version) {
+        this.version = version;
+        return this;
+    }
+    
+    [AbstractCommand] setUsage(cstring usage) {
+        this.usage = usage;
+        // TODO: implement usage parsing (see http://docopt.org/)
+        return this;
+    }
+
+    [int] _parseArgs(AnyList args) {
+        CommandLineParser p = this.rt().createInstance(CommandLineParser:CLASSNAME);
+        AnyIterator ai = args.iterator();
+        int ret = p.parse(ai, this.target());
+        ai.destroy();
+        p.destroy();
+        return ret;
+    }
+    
+    [int] _runCommand() {
+        LoggerAware la = this.rt().cast(LoggerAware:CLASSNAME, this);
+        if (la) {
+            Logger l = this.createOwn(Logger:CLASSNAME);
+            if (this.hasOption("verbose"))  { l.setLevel(Logger:INFO); }
+            if (this.hasOption("debug"))    { l.setLevel(Logger:DEBUG); }
+            if (this.hasOption("trace"))    { l.setLevel(Logger:TRACE); }
+            if (this.hasOption("warning"))  { l.setLevel(Logger:WARNING); }
+            if (this.hasOption("error"))    { l.setLevel(Logger:ERROR); }
+            if (this.hasOption("critical")) { l.setLevel(Logger:CRITICAL); }
+            la.setLogger(l);                
+        }
+        int ret = this.run();
+        if (la) { la.getLogger().flush(); }
+        return ret;
+    }
+    
+}
