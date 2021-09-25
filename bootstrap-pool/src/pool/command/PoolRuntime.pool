@@ -34,8 +34,7 @@ class PoolRuntime extends linux::Command {
 Pool Bootstrap Runtime.
 
     Usage:
-      poolb [options] -c <dir> <fqn>
-      poolb [options] -s <file> <fqn>
+      poolb [options] (-c <dir> | -s <file>) [(-c <dir> | -s <file>)]... <fqn> [-- <classArg>...]
 
     Options:
       -h --help                     Show this screen.
@@ -46,9 +45,8 @@ Pool Bootstrap Runtime.
 // TODO: poolb [options] (-c <dir> | -s <file>) [(-c <dir> | -s <file>)]... --class <fqn> [<arg>]...
 // or:   poolb [options] (-c <dir> | -s <file>) [(-c <dir> | -s <file>)]... <fqn> [--] [<arg>]...
         this.registerOptionAlias('h', "help")
-            .registerOptionAlias('c', "classpath")
-            .registerOptionAlias('s', "store")
-            //.registerOptionList("classpath")
+            .registerOptionAlias('c', "classpath").registerOptionList("classpath")
+            .registerOptionAlias('s', "store").registerOptionList("store")
         ;
     }
 
@@ -62,7 +60,7 @@ Pool Bootstrap Runtime.
             out.printCString(name).printChar(' ').printCString(version).printNewline();
             return 0;
         }
-        if (this.getArgumentsSize() != 1 || (this.hasOption("classpath") == this.hasOption("store"))) {
+        if (this.getArgumentsSize() != 1 || !(this.hasOption("classpath") || this.hasOption("store"))) {
             out.printCString(usage).printNewline();
             return -1;
         }
@@ -71,7 +69,17 @@ Pool Bootstrap Runtime.
 /*/
         Runtime rt = this.rt();
         DynamicClassStorage dcs = rt.cast(DynamicClassStorage:CLASSNAME, rt.getClassStorage());
-        dcs.addLoader(this.openDirectory(this.getValueOption("classpath")).classDescriptorLoader());
+        {
+            AnyIterator it = this.getListOption("classpath");
+            while (it.hasNext()) { dcs.addLoader(this.openDirectory(it.next()).classDescriptorLoader()); }
+            it.destroy();
+        }
+        {
+            AnyIterator it = this.getListOption("store");
+            while (it.hasNext()) { dcs.addLoader(this.openStoreFile(it.next()).classDescriptorLoader()); }
+            it.destroy();
+        }
+
 /*/
         Runtime parent = this.rt();
         Runtime rt = parent.createInstance(Runtime:CLASSNAME);
@@ -80,10 +88,15 @@ Pool Bootstrap Runtime.
         rt.setErr(parent.err());
         
         DynamicClassStorage dcs = parent.createInstance(DynamicClassStorage:CLASSNAME);
-        if (this.hasOption("classpath")) {
-            dcs.addLoader(this.openDirectory(this.getValueOption("classpath")).classDescriptorLoader());
-        } else {
-            dcs.addLoader(this.openStoreFile(this.getValueOption("store")).classDescriptorLoader());
+        {
+            AnyIterator it = this.getListOption("classpath");
+            while (it.hasNext()) { dcs.addLoader(this.openDirectory(it.next()).classDescriptorLoader()); }
+            it.destroy();
+        }
+        {
+            AnyIterator it = this.getListOption("store");
+            while (it.hasNext()) { dcs.addLoader(this.openStoreFile(it.next()).classDescriptorLoader()); }
+            it.destroy();
         }
         rt.setClassStorage(dcs.classStorage());
         
