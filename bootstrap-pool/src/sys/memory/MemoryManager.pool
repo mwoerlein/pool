@@ -199,15 +199,16 @@ class MemoryManager extends Allocator {
     
     // pool handling
     [MemoryInfo] _nextNonEmbeddedInfo(int buf, int len, int flags) {
-        MemoryInfo info = Address:cast(MemoryInfo:NONE);
-        if (nonEmbeddedInfos.used < nonEmbeddedInfos.size) {
-            info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*(nonEmbeddedInfos.used++));
-            info.buf = buf;
-            info.len = len;
-            info.flags = flags;
-            info.owner = 0;
-            info.next = info.prev = info;
+        if (nonEmbeddedInfos.used >= nonEmbeddedInfos.size) {
+            this.rt().err().printCString("insufficient non-embedded memory infos").printNewline();
+            return Address:cast(MemoryInfo:NONE);
         }
+        MemoryInfo info = Address:cast(nonEmbeddedInfos.elements + MemoryInfo:SIZEOF*(nonEmbeddedInfos.used++));
+        info.buf = buf;
+        info.len = len;
+        info.flags = flags;
+        info.owner = 0;
+        info.next = info.prev = info;
         return info;
     }
     
