@@ -9,6 +9,7 @@ use linux::fs::File;
 use linux::fs::Directory;
 
 use sys::core::String;
+use sys::core::Thread;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntry;
@@ -26,21 +27,22 @@ use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
-class Command extends CommandLine {
+class Command extends Thread, CommandLine {
 
     cstring name;
     cstring version;
     cstring usage;
     
     cstring _calledCommand;
+    AnyList _unparsedArguments;
     
     // methods
     abstract [] configure();
-    abstract [int] run();
     
     [] __init() { this._initCommand(); }
     [] _initCommand() {
         this._initCommandLine();
+        _unparsedArguments = this.createOwn(AnyList:CLASSNAME);
     }
     
     [] __destruct() { this._destructCommand(); }
@@ -162,24 +164,33 @@ class Command extends CommandLine {
         return stream;
     }
     
+    [int] _parseArgs(AnyList args, CommandLineParserTarget target) {
+        CommandLineParser p = this.rt().createInstance(CommandLineParser:CLASSNAME);
+        AnyIterator ai = args.iterator();
+        int ret = p.parse(ai, target);
+        ai.destroy();
+        p.destroy();
+        return ret;
+    }
+    
     // private
     [int] _parseArgv(int argc, int argv) {
-        Runtime rt = this.rt();
-        
         _calledCommand = Address:loadString(argv);
         
         // convert argv to List<String>
-        AnyList args = rt.createInstance(AnyList:CLASSNAME);
+        AnyList args = this.rt().createInstance(AnyList:CLASSNAME);
+        AnyList cur = args;
         while (--argc) {
-            args.add(this.createOwnStringFromCString(Address:loadString(argv += 4)));
+            String arg = this.createOwnStringFromCString(Address:loadString(argv += 4));
+            if (arg.cequals("--")) {
+                cur = _unparsedArguments;
+            } else {
+                cur.add(arg);
+            }
         }
         
         // parse argument list
-        CommandLineParser p = rt.createInstance(CommandLineParser:CLASSNAME);
-        AnyIterator ai = args.iterator();
-        int ret = p.parse(ai, this.target());
-        ai.destroy();
-        p.destroy();
+        int ret = this._parseArgs(args, this.target());
         args.destroy();
         return ret;
     }

@@ -10,6 +10,6 @@ namespace sys::core;
 class Thread extends Object {
     
     // methods
-    abstract [] run();
+    abstract [int] run();
     
 }
