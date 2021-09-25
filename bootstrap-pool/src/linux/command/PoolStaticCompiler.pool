@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class PoolStaticCompiler extends pool::command::PoolStaticCompiler {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        PoolStaticCompiler poolbsc = linux::Runtime:buildRuntime().createInstance(PoolStaticCompiler:CLASSNAME);
+        return poolbsc.execute(argc, argv);
+    }
+}

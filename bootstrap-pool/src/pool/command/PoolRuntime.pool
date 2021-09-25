@@ -104,10 +104,4 @@ Pool Bootstrap Runtime.
         
         return 0;
     }
-    
-    // methods
-    __entry__ [int] entry(int argc, int argv) {
-        PoolRuntime pool = linux::Runtime:buildRuntime().createInstance(PoolRuntime:CLASSNAME);
-        return pool.execute(argc, argv);
-    }
 }

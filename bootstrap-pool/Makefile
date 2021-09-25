@@ -14,32 +14,32 @@ clean:
 
 $(BINDIR)/storeb: $(SRCDIR)/pool/command/Store.pool $(BINDIR) $(POOLSC)
 	@echo "build storeb (pool)"
-	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::Store
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::Store
 	@chmod a+x $@
 	
 $(BINDIR)/pbasm: $(SRCDIR)/pool/command/Pbasm.pool $(BINDIR) $(POOLSC)
 	@echo "build pbasm (pool)"
-	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::Pbasm
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::Pbasm
 	@chmod a+x $@
 	
 $(BINDIR)/parsergen: $(SRCDIR)/pool/command/ParserGen.pool $(BINDIR) $(POOLSC)
 	@echo "build parsergen (pool)"
-	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::ParserGen
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::ParserGen
 	@chmod a+x $@
 	
 $(BINDIR)/poolbc: $(SRCDIR)/pool/command/PoolCompiler.pool $(BINDIR) $(POOLSC)
 	@echo "build poolbc (pool)"
-	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::PoolCompiler
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::PoolCompiler
 	@chmod a+x $@
 	
-$(BINDIR)/poolbsc: $(SRCDIR)/pool/command/PoolStaticCompiler.pool $(BINDIR) $(POOLSC)
+$(BINDIR)/poolbsc: $(SRCDIR)/linux/command/PoolStaticCompiler.pool $(BINDIR) $(POOLSC)
 	@echo "build poolbsc (pool)"
-	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::PoolStaticCompiler
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::PoolStaticCompiler
 	@chmod a+x $@
 	
 $(BINDIR)/pool: $(SRCDIR)/pool/command/PoolRuntime.pool $(BINDIR) $(POOLSC)
 	@echo "build pool (pool)"
-	@$(POOLSC) $(PSC_FLAGS) --output $@ pool::command::PoolRuntime
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::PoolRuntime
 	@chmod a+x $@
 	
 $(BINDIR)/pooltest: $(TESTDIR)/test/Command.pool $(BINDIR) $(POOLSC)

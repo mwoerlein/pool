@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class ParserGen extends pool::command::ParserGen {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        ParserGen pg = linux::Runtime:buildRuntime().createInstance(ParserGen:CLASSNAME);
+        return pg.execute(argc, argv);
+    }
+}

@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class PoolRuntime extends pool::command::PoolRuntime {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        PoolRuntime pool = linux::Runtime:buildRuntime().createInstance(PoolRuntime:CLASSNAME);
+        return pool.execute(argc, argv);
+    }
+}

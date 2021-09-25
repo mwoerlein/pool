@@ -136,10 +136,4 @@ Storage Bootstrap Builder.
         outfile.destroy();
         return 0;
     }
-    
-    // methods
-    __entry__ [int] entry(int argc, int argv) {
-        Store store = linux::Runtime:buildRuntime().createInstance(Store:CLASSNAME);
-        return store.execute(argc, argv);
-    }
 }

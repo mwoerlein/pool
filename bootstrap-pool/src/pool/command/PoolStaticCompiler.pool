@@ -108,10 +108,4 @@ Pool Bootstrap Static Compiler.
         
         return 0;
     }
-    
-    // methods
-    __entry__ [int] entry(int argc, int argv) {
-        PoolStaticCompiler poolbsc = linux::Runtime:buildRuntime().createInstance(PoolStaticCompiler:CLASSNAME);
-        return poolbsc.execute(argc, argv);
-    }
 }

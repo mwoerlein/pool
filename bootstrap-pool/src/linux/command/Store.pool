@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class Store extends pool::command::Store {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        Store store = linux::Runtime:buildRuntime().createInstance(Store:CLASSNAME);
+        return store.execute(argc, argv);
+    }
+}

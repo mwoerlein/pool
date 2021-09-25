@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class Pbasm extends pool::command::Pbasm {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        Pbasm pbasm = linux::Runtime:buildRuntime().createInstance(Pbasm:CLASSNAME);
+        return pbasm.execute(argc, argv);
+    }
+}

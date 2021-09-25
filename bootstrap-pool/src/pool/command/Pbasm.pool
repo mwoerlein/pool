@@ -150,10 +150,4 @@ Pool Bootstrap Assembler.
         }
         unit.rawToStream(out);
     }
-    
-    // methods
-    __entry__ [int] entry(int argc, int argv) {
-        Pbasm pbasm = linux::Runtime:buildRuntime().createInstance(Pbasm:CLASSNAME);
-        return pbasm.execute(argc, argv);
-    }
 }
