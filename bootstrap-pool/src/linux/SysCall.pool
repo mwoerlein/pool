@@ -110,4 +110,38 @@ class SysCall {
         ">, {"%eax": 90, "%ebx": size}, {"%eax": start});
         return [start, size];
     }
+    
+    global [int, int] getTimeOfDay() {
+        int ret = 0;
+        int sec = 0;
+        int usec = 0;
+        __pasm__(<"
+            subl 8, %esp
+            movl %esp, %ebx
+            int 0x80
+            popl %ecx
+            popl %edx
+        ">,
+        {"%eax": 78, "%ecx": 0}, // gettimeofday
+        {"%eax": ret, "%ecx": sec, "%edx": usec}
+        );
+        if (ret == 0) { return [sec, usec];}
+        return [-1, -1];
+    }
+    
+    global [] nanoSleep(int sec, int nano) {
+        int timespec = 0;
+        int ret = 0;
+        __pasm__(<"
+            pushl 0
+            pushl %ebx
+            pushl %eax
+            movl %esp, %eax
+        ">, {"%eax": sec, "%ebx": nano}, {"%eax":timespec});
+        do {
+            __pasm__("int 0x80", {"%eax": 162, "%ebx": timespec, "%ecx": timespec}, {"%eax": ret});// nanosleep
+        } while (ret != 0);
+        // free timespec
+        __pasm__("addl 12, %esp");
+    }
 }

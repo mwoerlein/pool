@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+class LinuxClock extends sys::time::Clock {
+    
+    [] sleep(int sec, int nsec) {
+        SysCall:nanoSleep(sec, nsec);
+    }
+    
+    [int, int] getTimestamp() {
+        [int sec, int usec] := SysCall:getTimeOfDay();
+        return [sec, usec*1000];
+    }
+}

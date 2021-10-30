@@ -11,6 +11,7 @@ use sys::memory::Address;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
 use sys::stream::OStream;
+use sys::time::Clock;
 
 class Runtime extends Object {
 
@@ -18,6 +19,7 @@ class Runtime extends Object {
     OStream err;
     Allocator allocator;
     ClassStorage classStorage;
+    Clock clock;
     
     [OStream] out() { return out; }
     [] setOut(OStream out) { this.out = out; }
@@ -30,6 +32,10 @@ class Runtime extends Object {
     
     [ClassStorage] getClassStorage() { return classStorage; }
     [] setClassStorage(ClassStorage classStorage) { this.classStorage = classStorage; }
+    
+    [int] hasClock() { return !!clock; }
+    [Clock] getClock() { return clock; }
+    [] setClock(Clock clock) { this.clock = clock; }
     
     [Class] getClassByCName(cstring name) {
         ClassDescriptor classDesc = classStorage.getClassDesc(name);

@@ -55,6 +55,9 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         ls2.setForeground(LinuxOStream:BRIGHT_RED);
         rt.setErr(ls2.initOStream(SysCall:FD_STDERR));
         
+        LinuxClock lc = rt.createInstance(LinuxClock:CLASSNAME);
+        rt.setClock(lc.clock());
+        
         bsLOut.destroy();
         bsPA.destroy();
         bsPMM.destroy();
