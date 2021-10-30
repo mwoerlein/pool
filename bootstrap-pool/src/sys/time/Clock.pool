@@ -11,6 +11,10 @@ class Clock extends sys::core::Object {
     int MSEC := 1000000;
     int USEC := 1000;
     int NSEC := 1;
+    
+    int MSEC_PER_SEC := 1000;
+    int USEC_PER_SEC := 1000000;
+    int NSEC_PER_SEC := 1000000000;
 
     abstract [] sleep(int sec, int nsec);
     
