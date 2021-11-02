@@ -9,6 +9,8 @@ use sys::core::Object;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::memory::Address;
+use sys::memory::MemoryIOStream;
 use sys::runtime::Runtime;
 use sys::stream::IStream;
 
@@ -43,9 +45,8 @@ class CommandLineParser extends Object {
         Runtime rt = this.rt();
         AnyList list = rt.createInstance(AnyList:CLASSNAME);
         String tmp = rt.createInstance(String:CLASSNAME);
-        String l = rt.createInstance(String:CLASSNAME);
-        l.assignCString(line);
-        IStream input = l.toIStream();
+        MemoryIOStream input = rt.createInstance(MemoryIOStream:CLASSNAME);
+        input._initBuf(Address:fromString(line), String:lengthCString(line));
         // TODO: handle ".."- and '..'-sequences with space correctly 
         while (!input.isEmpty()) {
             int c = input.readChar();
@@ -67,7 +68,6 @@ class CommandLineParser extends Object {
             tmp.clear();
         }
         input.destroy();
-        l.destroy();
         tmp.destroy();
         return list;
     }

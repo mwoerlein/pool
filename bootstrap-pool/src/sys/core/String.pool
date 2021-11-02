@@ -274,5 +274,16 @@ class String extends OStream {
         ">, {"%ebx": String:HASH_FACTOR, "%ecx": a}, {"%eax": ret, "%ecx": null, "%edx": null});
         return ret;
     }
+    
+    global [int] lengthCString(cstring a) {
+        int ret = 0;
+        // adopted from http://www.int80h.org/strlen/
+        __pasm__(
+            ".byte 0xf2; .byte 0xae #// repne scasb",
+             {"%eax": 0, "%ecx": -1, "%edi": a},
+             {"%ecx": ret, "%edi": null}
+        );
+        return -2-ret;
+    }
 
 }

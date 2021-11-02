@@ -45,6 +45,10 @@ class StringTest extends test::TestCase {
         
         s2.destroy();
         s1.destroy();
+        
+        if (String:lengthCString("") != 0) { return this.fail("Length of empty cstring"); }
+        if (String:lengthCString("0123456789") != 10) { return this.fail("Length of cstring"); }
+        
         return this.success();
     }
     
