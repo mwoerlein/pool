@@ -121,6 +121,7 @@ class MemoryManager extends Allocator {
     
     [int] getAvailableBytes() {
         int bytes = 0;
+        this.optimize();
         MemoryInfo cur = available.next;
         while (Address:compare(cur, available)) {
             bytes += cur.len;
@@ -385,6 +386,14 @@ class MemoryManager extends Allocator {
             }
         }
         if (all) {
+            if (Address:compare(free.next, free)) {
+                stream.printCString("free:\n");
+                MemoryInfo cur = free.next;
+                while (Address:compare(cur, free)) {
+                    MemoryManager:_dumpInfo(cur, stream).printNewline();
+                    cur = cur.next;
+                }
+            }
             if (Address:compare(reserved.next, reserved)) {
                 stream.printCString("reserved:\n");
                 MemoryInfo cur = reserved.next;
