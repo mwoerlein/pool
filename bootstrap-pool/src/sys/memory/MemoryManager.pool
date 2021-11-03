@@ -120,8 +120,10 @@ class MemoryManager extends Allocator {
     }
     
     [int] getAvailableBytes() {
-        int bytes = 0;
+        // merge free memory into available list, before counting available bytes
         this.optimize();
+        
+        int bytes = 0;
         MemoryInfo cur = available.next;
         while (Address:compare(cur, available)) {
             bytes += cur.len;
