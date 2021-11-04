@@ -320,6 +320,12 @@ Register * PasmParser::parseRegister(char * start, char * end) {
         "%"[fF][sS]          { if (cur != end) break; return &env().create<Register, RegisterName>(reg_fs); }
         "%"[gG][sS]          { if (cur != end) break; return &env().create<Register, RegisterName>(reg_gs); }
         "%"[sS][sS]          { if (cur != end) break; return &env().create<Register, RegisterName>(reg_ss); }
+        
+        "%"[cC][rR][0]       { if (cur != end) break; return &env().create<Register, RegisterName>(reg_cr0); }
+        "%"[cC][rR][1]       { if (cur != end) break; return &env().create<Register, RegisterName>(reg_cr1); }
+        "%"[cC][rR][2]       { if (cur != end) break; return &env().create<Register, RegisterName>(reg_cr2); }
+        "%"[cC][rR][3]       { if (cur != end) break; return &env().create<Register, RegisterName>(reg_cr3); }
+        "%"[cC][rR][4]       { if (cur != end) break; return &env().create<Register, RegisterName>(reg_cr4); }
 
         * { break; }
 */

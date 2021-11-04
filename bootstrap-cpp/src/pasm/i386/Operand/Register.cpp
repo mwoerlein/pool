@@ -45,6 +45,13 @@ BitWidth Register::getOperandSize() {
         case reg_gs:
         case reg_ss:
             return bit_16;
+            
+        case reg_cr0:
+        case reg_cr1:
+        case reg_cr2:
+        case reg_cr3:
+        case reg_cr4:
+            return bit_32;
     }
     return bit_auto;
 }
@@ -58,6 +65,13 @@ RegisterKind Register::kind() {
         case reg_gs:
         case reg_ss:
             return reg_segment;
+            
+        case reg_cr0:
+        case reg_cr1:
+        case reg_cr2:
+        case reg_cr3:
+        case reg_cr4:
+            return reg_control;
     }
     return reg_general;
 }
@@ -68,26 +82,31 @@ int Register::getOpCodeRegister() {
         case reg_ax:
         case reg_eax:
         case reg_es:
+        case reg_cr0:
             return 0;
         case reg_cl:
         case reg_cx:
         case reg_ecx:
         case reg_cs:
+        case reg_cr1:
             return 1;
         case reg_dl:
         case reg_dx:
         case reg_edx:
         case reg_ss:
+        case reg_cr2:
             return 2;
         case reg_bl:
         case reg_bx:
         case reg_ebx:
         case reg_ds:
+        case reg_cr3:
             return 3;
         case reg_ah:
         case reg_sp:
         case reg_esp:
         case reg_fs:
+        case reg_cr4:
             return 4;
         case reg_ch:
         case reg_bp:
@@ -195,6 +214,12 @@ OStream & Register::operator >>(OStream & stream) {
         case reg_fs: return stream<<"%fs";
         case reg_gs: return stream<<"%gs";
         case reg_ss: return stream<<"%ss";
+        
+        case reg_cr0: return stream<<"%cr0";
+        case reg_cr1: return stream<<"%cr1";
+        case reg_cr2: return stream<<"%cr2";
+        case reg_cr3: return stream<<"%cr3";
+        case reg_cr4: return stream<<"%cr4";
     }
     return stream;
 }

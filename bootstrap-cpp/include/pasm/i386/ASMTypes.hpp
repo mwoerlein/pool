@@ -13,11 +13,12 @@ enum RegisterName {
     reg_ax, reg_bx, reg_cx, reg_dx, reg_di, reg_si, reg_bp, reg_sp, // 16bit
     reg_eax, reg_ebx, reg_ecx, reg_edx, reg_edi, reg_esi, reg_ebp, reg_esp, // 32bit
     reg_cs, reg_ds, reg_es, reg_fs, reg_gs, reg_ss, // segment register
+    reg_cr0, reg_cr1, reg_cr2, reg_cr3, reg_cr4, // control register
     reg_none
 };
 
 enum RegisterKind {
-    reg_general, reg_segment
+    reg_general, reg_segment, reg_control
 };
 
 enum InstructionCondition {

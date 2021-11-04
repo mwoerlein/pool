@@ -3,10 +3,13 @@
 // protected
 size_t Move::approximateSizeInBytes() {
     Numeric *num1 = o1->asNumeric();
+    Register *r1 = o1->as<Register>(reg);
+    Register *r2 = o2->as<Register>(reg);
     Indirect *i1 = o1->as<Indirect>(indirect);
     Indirect *i2 = o2->as<Indirect>(indirect);
     
     size_t size = 2; //opcode, modrm
+    if ((r1 && (r1->kind() == reg_control)) || (r2 && (r2->kind() == reg_control))) { size++; } // 2-byte opcode
     if (requiresOperandSizeOverride()) {
         size++;
     }
@@ -81,6 +84,8 @@ void Move::validateOperands() {
     Register *gr2 = (r2 && (r2->kind() == reg_general)) ? r2 : 0;
     Register *sr1 = (r1 && (r1->kind() == reg_segment)) ? r1 : 0;
     Register *sr2 = (r2 && (r2->kind() == reg_segment)) ? r2 : 0;
+    Register *cr1 = (r1 && (r1->kind() == reg_control)) ? r1 : 0;
+    Register *cr2 = (r2 && (r2->kind() == reg_control)) ? r2 : 0;
     
     if (gr1) {
         gr1->validate(*list, operandSize);
@@ -96,7 +101,7 @@ void Move::validateOperands() {
     if (i1 && gr2) {
         return;
     }
-    if (gr1 && sr2) {
+    if (gr1 && (sr2 || cr2)) {
         return;
     }
     if (i1 && sr2) {
@@ -105,7 +110,7 @@ void Move::validateOperands() {
         }
         return;
     }
-    if (sr1 && gr2) {
+    if ((sr1 || cr1) && gr2) {
         return;
     }
     if (sr1 && i2) {
@@ -115,6 +120,7 @@ void Move::validateOperands() {
         return;
     }
     list->err<<"unsupported operands in \""<<*this<<"\"\n";
+
 }
 
 size_t Move::compileOperands() {
@@ -128,6 +134,8 @@ size_t Move::compileOperands() {
     Register *gr2 = (r2 && (r2->kind() == reg_general)) ? r2 : 0;
     Register *sr1 = (r1 && (r1->kind() == reg_segment)) ? r1 : 0;
     Register *sr2 = (r2 && (r2->kind() == reg_segment)) ? r2 : 0;
+    Register *cr1 = (r1 && (r1->kind() == reg_control)) ? r1 : 0;
+    Register *cr2 = (r2 && (r2->kind() == reg_control)) ? r2 : 0;
     
     if (requiresOperandSizeOverride()) {
         pre3 = 0x66; size++;
@@ -211,6 +219,18 @@ size_t Move::compileOperands() {
         useIndirectSizes(i2);
         return size + 1 + modrmSize + sibSize + dispSize;
     }
+    if (gr1 && cr2) {
+        op1 = 0x0F;
+        op2 = 0x22;
+        modrmSize = 1;
+        return size + 2 + modrmSize;
+    }
+    if (cr1 && gr2) {
+        op1 = 0x0F;
+        op2 = 0x20;
+        modrmSize = 1;
+        return size + 2 + modrmSize;
+    }
     return -1;
 }
 
@@ -231,7 +251,7 @@ void Move::writeOperandsToStream(OStream & stream) {
     }
     if (r1) {
         if (r2) {
-            if (r2->kind() == reg_segment) {
+            if ((r2->kind() == reg_segment) || (r2->kind() == reg_control)) {
                 writeModRMToStream(stream, r2, r1);
             } else {
                 writeModRMToStream(stream, r1, r2);
