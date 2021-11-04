@@ -6,7 +6,7 @@ version = 0.1.0
 namespace sys::runtime;
 
 use sys::core::Object;
-use sys::core::Thread;
+use sys::core::Task;
 use sys::memory::Address;
 use sys::memory::Allocator;
 use sys::memory::MemoryInfo;
@@ -77,11 +77,11 @@ class Runtime extends Object {
         return instance;
     }
     
-    [] createAndRunThread(cstring name) {
-        Thread thread = this.createInstanceAs(name, Thread:CLASSNAME);
-        if (thread) { 
-            thread.run();
-            thread.destroy();
+    [] createAndRunTask(cstring name) {
+        Task task = this.createInstanceAs(name, Task:CLASSNAME);
+        if (task) { 
+            task.run();
+            task.destroy();
         }
     }
     

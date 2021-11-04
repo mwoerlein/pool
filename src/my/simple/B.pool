@@ -6,11 +6,11 @@ version = 0.1.0
 namespace my::simple;
 
 use sys::core::Object;
-use sys::core::Thread as myThread;
+use sys::core::Task as myTask;
 use sys::runtime::Runtime;
 use sys::stream::OStream;
 
-class B extends myThread, my::simple::A {
+class B extends myTask, my::simple::A {
     
     // methods
     [] run() {

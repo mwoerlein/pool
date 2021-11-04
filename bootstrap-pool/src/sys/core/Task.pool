@@ -7,7 +7,7 @@ namespace sys::core;
 
 
 // TODO: convert to interface 
-class Thread extends Object {
+class Task extends Object {
     
     // methods
     abstract [int] run();

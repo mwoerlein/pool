@@ -12,7 +12,7 @@ use sys::core::anycollection::AnyList;
 use sys::log::Logger;
 use sys::log::LoggerAware;
 
-class AbstractCommand extends sys::core::Thread, CommandLine {
+class AbstractCommand extends sys::core::Task, CommandLine {
 
     cstring name;
     cstring version;
