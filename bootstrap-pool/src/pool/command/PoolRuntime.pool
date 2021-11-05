@@ -110,6 +110,11 @@ Pool Bootstrap Runtime.
         rt.refreshInstance(rt.err());
         rt.refreshInstance(rt.getAllocator());
         rt.refreshInstance(rt.getClassStorage());
+        if (parent.hasClock()) {
+            sys::time::Clock c := parent.getClock();
+            rt.refreshInstance(c);
+            rt.setClock(c);
+        }
 //*/
         
         AnyIterator argIt = this.getArguments();
