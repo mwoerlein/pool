@@ -11,7 +11,7 @@ class LinuxClock extends sys::time::Clock {
         SysCall:nanoSleep(sec, nsec);
     }
     
-    [int, int] getTimestamp() {
+    [int, int] getTime() {
         [int sec, int usec] := SysCall:getTimeOfDay();
         return [sec, usec*1000];
     }

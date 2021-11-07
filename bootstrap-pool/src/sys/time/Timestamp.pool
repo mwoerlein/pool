@@ -1,0 +1,102 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::time;
+
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+class Timestamp extends sys::core::Object {
+
+    int MSEC := 1000000;
+    int USEC := 1000;
+    int NSEC := 1;
+    
+    int MSEC_PER_SEC := 1000;
+    int USEC_PER_SEC := 1000000;
+    int NSEC_PER_SEC := 1000000000;
+
+    int _sec;
+    int _nsec;
+    
+    [int, int] getTime() { return [_sec, _nsec]; }
+    
+    [Timestamp] setTime(int sec, int nsec) { _sec = sec; _nsec = nsec; return this; }
+    [Timestamp] setTimestamp(Timestamp ts) { return this.setTime(ts._sec, ts._nsec); }
+    [Timestamp] setClock(Clock c) { [int s, int ns] := c.getTime(); return this.setTime(s, ns); }
+    
+    [Timestamp] addTime(int sec, int nsec) {
+        _sec += sec;
+        _nsec += nsec;
+        if (_nsec >= Timestamp:NSEC_PER_SEC) { ++_sec; _nsec -= Timestamp:NSEC_PER_SEC; }
+        return this;
+    }
+    [Timestamp] addTimestamp(Timestamp ts) { return this.addTime(ts._sec, ts._nsec); }
+    [Timestamp] addClock(Clock c) { [int s, int ns] := c.getTime(); return this.addTime(s, ns); }
+    
+    [Timestamp] subTime(int sec, int nsec) {
+        _sec -= sec;
+        _nsec -= nsec;
+        if (_nsec < 0) { --_sec; _nsec += Timestamp:NSEC_PER_SEC; }
+        return this;
+    }
+    [Timestamp] subTimestamp(Timestamp ts) { return this.subTime(ts._sec, ts._nsec); }
+    [Timestamp] subClock(Clock c) { [int s, int ns] := c.getTime(); return this.subTime(s, ns); }
+    
+    [int, int] updateToTime(int sec, int nsec) {
+        [int ds, int dns] := Timestamp:subTimes(sec, nsec, _sec, _nsec);
+        _sec = sec; _nsec = nsec;
+        return [ds, dns];
+    }
+    [int, int] updateToTimestamp(Timestamp ts) {
+        [int ds, int dns] := this.updateToTime(ts._sec, ts._nsec);
+        return [ds, dns];
+    }
+    [int, int] updateToClock(Clock c) {
+        [int s, int ns] := c.getTime();
+        [int ds, int dns] := this.updateToTime(s, ns);
+        return [ds, dns];
+    }
+    
+    [int] compareTime(int sec, int nsec) {
+        int ds := _sec - sec;
+        if (ds == 0) { return _nsec - nsec; }
+        return ds;
+    }
+    [int] compareTimestamp(Timestamp ts) { return this.compareTime(ts._sec, ts._nsec); }
+    [int] compareClock(Clock c) { [int s, int ns] := c.getTime(); return this.compareTime(s, ns); }
+    
+    [int] hash() { return Bitset:xor(_sec, _nsec); }
+    [int] equals(__any__ obj) {
+        Timestamp ts = this.rt().cast(Timestamp:CLASSNAME, obj);
+        if (ts) {
+            return this.compareTimestamp(ts) == 0;
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return Timestamp:formatToStream(stream, _sec, _nsec);
+    }
+    
+    global [int, int] addTimes(int secA, int nsecA, int secB, int nsecB) {
+        int sec = secA + secB;
+        int nsec = nsecA + nsecB;
+        if (nsec >= Timestamp:NSEC_PER_SEC) { ++sec; nsec -= Timestamp:NSEC_PER_SEC; }
+        return [sec, nsec];
+    }
+    
+    global [int, int] subTimes(int secA, int nsecA, int secB, int nsecB) {
+        int sec = secA - secB;
+        int nsec = nsecA - nsecB;
+        if (nsec < 0) { --sec; nsec += Timestamp:NSEC_PER_SEC; }
+        return [sec, nsec];
+    }
+    
+    global [OStream] formatToStream(OStream stream, int sec, int nsec) {
+        return stream.printInt(sec).printChar('.')._printInt(nsec, 10, 9);
+    }
+
+}
