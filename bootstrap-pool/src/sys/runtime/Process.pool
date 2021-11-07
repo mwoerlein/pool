@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+class Process extends sys::core::Object {
+    
+    abstract [int] getPid();
+    abstract [int, int] getCPUTime();
+    
+    abstract [Thread] startThreadForTask(cstring name);
+    
+    // TODO: remove with implicit cast
+    [Process] process() { return this; }
+}

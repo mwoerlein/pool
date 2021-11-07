@@ -1,0 +1,25 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+class Thread extends sys::core::Object {
+    
+    int STATUS_READY := 0;
+    int STATUS_RUNNING := 1;
+    int STATUS_TERMINATED := 2;
+    int STATUS_WAITING := 3;
+    
+    abstract [Process] getProcess();
+    abstract [int, int] getCPUTime();
+    abstract [int] getStatus();
+    abstract [] awaitTermination();
+    
+    [int] getPid() { return this.getProcess().getPid(); }
+    
+    // TODO: remove with implicit cast
+    [Thread] thread() { return this; }
+}
