@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::stream::OStream;
 
 class Process extends sys::core::Object {
     
@@ -12,6 +13,14 @@ class Process extends sys::core::Object {
     abstract [int, int] getCPUTime();
     
     abstract [Thread] startThreadForTask(cstring name);
+    
+    [OStream] printToStream(OStream stream) {
+        stream
+            .print(this.getClass().getName()).printChar('@').printPtr(this.getAddress())
+            .printCString(" (pid: ").printInt(this.getPid()).printCString(" cpu: ");
+        [int sec, int nsec] = this.getCPUTime();
+        return sys::time::Timestamp:formatToStream(stream, sec, nsec).printChar(')');
+    }
     
     // TODO: remove with implicit cast
     [Process] process() { return this; }

@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::runtime;
 
+use sys::stream::OStream;
 
 class Thread extends sys::core::Object {
     
@@ -19,6 +20,14 @@ class Thread extends sys::core::Object {
     abstract [] awaitTermination();
     
     [int] getPid() { return this.getProcess().getPid(); }
+    
+    [OStream] printToStream(OStream stream) {
+        stream
+            .print(this.getClass().getName()).printChar('@').printPtr(this.getAddress())
+            .printCString(" (pid: ").printInt(this.getPid()).printCString(" cpu: ");
+        [int sec, int nsec] = this.getCPUTime();
+        return sys::time::Timestamp:formatToStream(stream, sec, nsec).printChar(')');
+    }
     
     // TODO: remove with implicit cast
     [Thread] thread() { return this; }
