@@ -36,6 +36,7 @@ class Runtime extends Object {
     [int] hasClock() { return !!clock; }
     [Clock] getClock() { return clock; }
     [] setClock(Clock clock) { this.clock = clock; }
+    [] sleep(int sec, int nsec) { if (clock) { clock.sleep(sec, nsec); } }
     
     [Thread] getCurrentThread() { return null; }
     [] yield () { }
