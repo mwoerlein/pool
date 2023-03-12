@@ -23,6 +23,7 @@ class Method extends sys::core::Object {
     AnyList _parameterLocations; // List<Location>
     AnyList _returnLocations; // List<Location>
     AnyList _tempLocations; // List<Location>
+    AnyList _constLocations; // List<Location>
     
     AnyList _blocks; // List<BasicBlock>
     
@@ -31,14 +32,15 @@ class Method extends sys::core::Object {
     BasicBlock _exit;
     
     Location _this;
-    Location _zeroTemp;
-    Location _oneTemp;
+    Location _zeroConst;
+    Location _oneConst;
     Value _null;
     
     [Method] init(MethodScope scope) {
         _parameterLocations = this.createOwn(AnyList:CLASSNAME);
         _returnLocations = this.createOwn(AnyList:CLASSNAME);
         _tempLocations = this.createOwn(AnyList:CLASSNAME);
+        _constLocations = this.createOwn(AnyList:CLASSNAME);
         _blocks = this.createOwn(AnyList:CLASSNAME);
         
         _scope = scope;
@@ -79,21 +81,25 @@ class Method extends sys::core::Object {
     [Location] getRet(int id) { return _returnLocations.at(id); }
     [Location] getTemp(int id) { return _tempLocations.at(id); }
     [Location] newTemp(Type type) { return this._newLocation(Location:KIND_TEMP, type, _tempLocations); }
+    [Location] newConst(int value, Type type) {
+        Location loc = _constLocations.createOwn(Location:CLASSNAME);
+        loc.init(Location:KIND_CONST, value, type);
+        _constLocations.add(loc);
+        return loc;
+    }
     
     [Location] getThis() { return _this; }
-    [Location] getZeroTemp(Factory f) {
-        if (!_zeroTemp) {
-            _zeroTemp = this.newTemp(f.getIntType().type());
-            f.addAssign(_entry, this.getNumber(0), _zeroTemp, false);
+    [Location] getZeroConst(Factory f) {
+        if (!_zeroConst) {
+            _zeroConst = this.newConst(0, f.getIntType().type());
         }
-        return _zeroTemp;
+        return _zeroConst;
     }
-    [Location] getOneTemp(Factory f) {
-        if (!_oneTemp) {
-            _oneTemp = this.newTemp(f.getIntType().type());
-            f.addAssign(_entry, this.getNumber(1), _oneTemp, false);
+    [Location] getOneConst(Factory f) {
+        if (!_oneConst) {
+            _oneConst = this.newConst(1, f.getIntType().type());
         }
-        return _oneTemp;
+        return _oneConst;
     }
     
     [AnyList] params() { return _parameterLocations; }

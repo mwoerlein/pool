@@ -16,6 +16,7 @@ class Location extends sys::core::Object {
     int KIND_RETURN := 2;
     int KIND_SPILL  := 3;
     int KIND_TEMP   := 4;
+    int KIND_CONST  := 5;
     
     int _kind;
     int _id;
@@ -30,6 +31,7 @@ class Location extends sys::core::Object {
     [int] isReturn() { return _kind == Location:KIND_RETURN; }
     [int] isSpill() { return _kind == Location:KIND_SPILL; }
     [int] isTemp() { return _kind == Location:KIND_TEMP; }
+    [int] isConst() { return _kind == Location:KIND_CONST; }
     
     [OStream] printToStream(OStream stream) {
         if (_kind == Location:KIND_THIS) {
@@ -46,6 +48,9 @@ class Location extends sys::core::Object {
         }
         if (_kind == Location:KIND_TEMP) {
             return stream.printChar('<').print(_type).printCString(">temp(").printInt(_id).printChar(')');
+        }
+        if (_kind == Location:KIND_CONST) {
+            return stream.printChar('<').print(_type).printCString(">const(").printInt(_id).printChar(')');
         }
         return stream.printCString("UNKNOWN LOCATION");
     }

@@ -198,7 +198,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             AnyMapEntryIterator it = node.getIn().entries();
             while (it.hasNext()) {
                 [String reg, ExpressionNode ex] = it.nextPair();
-                Location tmp = this.exprAsTemp(ex, null);
+                Location tmp = this.exprAsTemp(ex, null, true);
                 if (!tmp) { return false; }
                 reg = in.own(reg.subString(1, 0));
                 in.set(reg, tmp);
@@ -257,7 +257,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             AnyIterator it = node.getValues().iterator();
             int idx = 0;
             while (it.hasNext()) {
-                Location tmp = this.exprAsTemp(it.next(), null);
+                Location tmp = this.exprAsTemp(it.next(), null, true);
                 if (!tmp) { return false; }
                 this.addMove(_curBlock, tmp, _curMethod.getRet(idx++), false);
             }
@@ -274,7 +274,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         
         if (vars.size() == 1) {
             VariableDeclNode varDecl = vars.first();
-            Location tmp = this.exprAsTemp(node.getInitializer(), null);
+            Location tmp = this.exprAsTemp(node.getInitializer(), null, true);
             if (!tmp) { return false; }
             Location v = varDecl.getVariableScope().getPirLocation();
             if (!v) {
@@ -331,7 +331,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             }
             Location ctx = this.asTemp(_lastLocations.shift());
             
-            Location val = this.exprAsTemp(node.getValue(), null);
+            Location val = this.exprAsTemp(node.getValue(), null, true);
             if (!val) { return false; }
             Location tmp = _curMethod.newTemp(node.getResolvedType());
             this.addGet(_curBlock, ctx, var.getResolvedVariable(), tmp);
@@ -339,7 +339,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
             _lastLocations.add(tmp);
         } else {
-            Location val = this.exprAsTemp(node.getValue(), null);
+            Location val = this.exprAsTemp(node.getValue(), null, true);
             if (!val) { return false; }
             Location loc = var.getResolvedVariable().getPirLocation();
             this.addArithOp(_curBlock, node.getOperation(), loc, val, loc);
@@ -349,8 +349,8 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     }
     
     [int] visitArithBinaryExpr(ArithBinaryExprNode node) {
-        Location left = this.exprAsTemp(node.getLeft(), null);
-        Location right = this.exprAsTemp(node.getRight(), null);
+        Location left = this.exprAsTemp(node.getLeft(), null, true);
+        Location right = this.exprAsTemp(node.getRight(), null, true);
         if (!left || !right) { return false; }
         
         Location dest = _curMethod.newTemp(node.getResolvedType());
@@ -371,36 +371,36 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             Location tmp = _curMethod.newTemp(node.getResolvedType());
             this.addGet(_curBlock, ctx, var.getResolvedVariable(), tmp);
             if (node.isPreInc()) {
-                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneTemp(this.factory()), tmp);
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneConst(this.factory()), tmp);
                 this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
             } else if (node.isPreDec()) {
-                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneTemp(this.factory()), tmp);
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneConst(this.factory()), tmp);
                 this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp);
             } else if (node.isPostInc()) {
                 Location tmp2 = _curMethod.newTemp(node.getResolvedType());
-                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneTemp(this.factory()), tmp2);
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneConst(this.factory()), tmp2);
                 this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp2);
             } else if (node.isPostDec()) {
                 Location tmp2 = _curMethod.newTemp(node.getResolvedType());
-                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneTemp(this.factory()), tmp2);
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneConst(this.factory()), tmp2);
                 this.addSet(_curBlock, ctx, var.getResolvedVariable(), tmp2);
             }
             _lastLocations.add(tmp);
         } else {
             Location loc = var.getResolvedVariable().getPirLocation();
             if (node.isPreInc()) {
-                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, loc, _curMethod.getOneTemp(this.factory()), loc);
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, loc, _curMethod.getOneConst(this.factory()), loc);
             } else if (node.isPreDec()) {
-                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, loc, _curMethod.getOneTemp(this.factory()), loc);
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, loc, _curMethod.getOneConst(this.factory()), loc);
             } else if (node.isPostInc()) {
                 Location tmp = _curMethod.newTemp(node.getResolvedType());
                 this.addMove(_curBlock, loc, tmp, false);
-                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneTemp(this.factory()), loc);
+                this.addArithOp(_curBlock, ExpressionNode:OP_ADD, tmp, _curMethod.getOneConst(this.factory()), loc);
                 loc = tmp;
             } else if (node.isPostDec()) {
                 Location tmp = _curMethod.newTemp(node.getResolvedType());
                 this.addMove(_curBlock, loc, tmp, false);
-                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneTemp(this.factory()), loc);
+                this.addArithOp(_curBlock, ExpressionNode:OP_SUB, tmp, _curMethod.getOneConst(this.factory()), loc);
                 loc = tmp;
             }
             _lastLocations.add(loc);
@@ -417,12 +417,12 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             }
             Location ctx = this.asTemp(_lastLocations.shift());
             
-            Location val = this.exprAsTemp(node.getValue(), null);
+            Location val = this.exprAsTemp(node.getValue(), null, false);
             if (!val) { return false; }
             this.addSet(_curBlock, ctx, var.getResolvedVariable(), val);
             _lastLocations.add(val);
         } else {
-            Location val = this.exprAsTemp(node.getValue(), null);
+            Location val = this.exprAsTemp(node.getValue(), null, false);
             if (!val) { return false; }
             this.addMove(_curBlock, val, var.getResolvedVariable().getPirLocation(), false);
             _lastLocations.add(val);
@@ -442,14 +442,14 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
     
     [int] visitLogicalBinaryExpr(LogicalBinaryExprNode node) {
         this.error().print(node.expression());
-        Location tmp = this.exprAsTemp(node.expression(), null);
+        Location tmp = this.exprAsTemp(node.expression(), null, false);
         if (!tmp) { return false; }
         _lastLocations.add(tmp);
         return true;
     }
     
     [int] visitLogicalUnaryExpr(LogicalUnaryExprNode node) {
-        Location tmp = this.exprAsTemp(node.expression(), null);
+        Location tmp = this.exprAsTemp(node.expression(), null, false);
         if (!tmp) { return false; }
         _lastLocations.add(tmp);
         return true;
@@ -469,7 +469,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         {
             AnyIterator it = node.getParameters().iterator();
             while (it.hasNext()) {
-                Location tmp = this.exprAsTemp(it.next(), null);
+                Location tmp = this.exprAsTemp(it.next(), null, true);
                 if (!tmp) { return false; }
                 params.add(tmp);
             }
@@ -506,7 +506,7 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         if (node.isMinus()) {
             Location left = this.asTemp(_lastLocations.shift());
             Location tmp = _curMethod.newTemp(node.getResolvedType());
-            this.addArithOp(_curBlock, ExpressionNode:OP_SUB, _curMethod.getZeroTemp(this.factory()), left, tmp);
+            this.addArithOp(_curBlock, ExpressionNode:OP_SUB, _curMethod.getZeroConst(this.factory()), left, tmp);
             _lastLocations.add(tmp);
         }
         return true;
@@ -575,15 +575,15 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
         return false;
     }
     
-    [Location] exprAsTemp(ExpressionNode expr, Type interpretAs) {
+    [Location] exprAsTemp(ExpressionNode expr, Type interpretAs, int useConst) {
         if (expr.isLogicalBinary() || expr.isLogicalUnary()) {
             BasicBlock next = _curMethod.newBasicBlock();
             BasicBlock trueBlock = _curMethod.newBasicBlock();
             trueBlock.setNext(next);
             
             Location loc = _curMethod.newTemp(this.getIntType().type());
-            this.addMove(_curBlock, _curMethod.getZeroTemp(this.factory()), loc, false);
-            this.addMove(trueBlock, _curMethod.getOneTemp(this.factory()), loc, false);
+            this.addMove(_curBlock, _curMethod.getZeroConst(this.factory()), loc, false);
+            this.addMove(trueBlock, _curMethod.getOneConst(this.factory()), loc, false);
             
             this.branch(expr, trueBlock, next);
             _curBlock = next;
@@ -606,10 +606,13 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             Location loc = null;
             if (interpretAs) {
                 loc = _curMethod.newTemp(interpretAs);
+                this.addAssign(_curBlock, _lastValue, loc, true);
+            } else if (useConst && _lastValue.isNumber()) {
+                loc = _curMethod.newConst(_lastValue.getNumber(), expr.getResolvedType());
             } else {
                 loc = _curMethod.newTemp(expr.getResolvedType());
+                this.addAssign(_curBlock, _lastValue, loc, false);
             }
-            this.addAssign(_curBlock, _lastValue, loc, !!interpretAs);
             _lastValue = null;
             return loc;
         }
@@ -647,8 +650,8 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
                 return;
             }
             {
-                Location left = this.exprAsTemp(logicalBinary.getLeft(), null);
-                Location right = this.exprAsTemp(logicalBinary.getRight(), null);
+                Location left = this.exprAsTemp(logicalBinary.getLeft(), null, true);
+                Location right = this.exprAsTemp(logicalBinary.getRight(), null, true);
                 if (left && right) {
                     CondStatement cond = this.createCond(logicalBinary.getOperation(), left, right);
                     _curBlock.setNext(falseBlock).setCond(cond, trueBlock);
@@ -657,9 +660,9 @@ class PirGenerator extends Visitor, pool::compiler::pir::Factory {
             }
         }
         
-        Location tmp = this.exprAsTemp(expr, this.getIntType().type());
+        Location tmp = this.exprAsTemp(expr, this.getIntType().type(), true);
         if (tmp) {
-            CondStatement cond = this.createCond(ExpressionNode:OP_NEQ, tmp, _curMethod.getZeroTemp(this.factory()));
+            CondStatement cond = this.createCond(ExpressionNode:OP_NEQ, tmp, _curMethod.getZeroConst(this.factory()));
             _curBlock.setNext(falseBlock).setCond(cond, trueBlock);
         }
     }

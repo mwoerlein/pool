@@ -782,6 +782,7 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
     
     [OperandNode] _location(Location l) {
         int offset = 0;
+        if (l.isConst())  { return this._number(l.getId()); }
         // TODO: prepare offsets according to variable sizes
         if (l.isParam())  { offset = 16 + 4*l.getId(); }
         if (l.isReturn()) { offset = 16 + 4*_methodScope.getPirMethod().params().size() + 4*l.getId(); }
