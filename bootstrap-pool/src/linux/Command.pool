@@ -57,6 +57,11 @@ class Command extends command::AbstractCommand {
         return f.iostream();
     }
     
+    [LinuxScreen] initScreen() {
+        LinuxScreen ls = this.createOwn(LinuxScreen:CLASSNAME);
+        return ls.init();
+    }
+    
     [Directory] openDirectory(String classpath) {
         Directory d = this.rt().createInstance(Directory:CLASSNAME);
         return d.setBaseDir(classpath);

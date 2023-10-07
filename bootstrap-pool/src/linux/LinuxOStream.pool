@@ -20,40 +20,38 @@ class LinuxOStream extends FOStream {
     [OStream] printChar(int c) { 
         if (c == '\n') {
             SysCall:writeChar(stream, c);
-            return this.ostream();
+        } else {
+            this.printFChar(c, fg, bg);
         }
-        return this.printFChar(c, fg, bg).ostream();
+        return this.ostream();
     }
     
     [FOStream] printFChar(int c, int fg, int bg) {
         if (fg == FOStream:DEFAULT && bg == FOStream:DEFAULT) {
             SysCall:writeChar(stream, c);
-            return this.fostream();
+        } else {
+            LinuxScreen:_writeFormat(stream, fg, bg);
+            SysCall:writeChar(stream, c);
+            LinuxScreen:_resetFormat(stream);
         }
-        SysCall:writeChar(stream, 0x1b);
-        SysCall:writeChar(stream, '[');
-        if (fg != FOStream:DEFAULT) {
-            SysCall:writeChar(stream, ';');
-            SysCall:writeChar(stream, '3');
-            SysCall:writeChar(stream, '0' + (fg % 10));
-        }
-        if (bg != FOStream:DEFAULT) {
-            SysCall:writeChar(stream, ';');
-            SysCall:writeChar(stream, '4');
-            SysCall:writeChar(stream, '0' + (bg % 10));
-        }
-        if (fg >= 10 || bg >= 10) {
-            SysCall:writeChar(stream, ';');
-            SysCall:writeChar(stream, '1');
-        }
-        SysCall:writeChar(stream, 'm');
-        SysCall:writeChar(stream, c);
-        SysCall:writeChar(stream, 0x1b);
-        SysCall:writeChar(stream, '[');
-        SysCall:writeChar(stream, '0');
-        SysCall:writeChar(stream, 'm');
         
         return this.fostream();
     }
-
+    
+    [FOStream] printFBoxChar(int bc, int fg, int bg) {
+        int bcode = LinuxScreen:_getBoxCode(bc);
+        if (fg == FOStream:DEFAULT && bg == FOStream:DEFAULT) {
+            SysCall:writeChar(stream, 0xE2);
+            SysCall:writeChar(stream, bcode/256);
+            SysCall:writeChar(stream, bcode);
+        } else {
+            LinuxScreen:_writeFormat(stream, fg, bg);
+            SysCall:writeChar(stream, 0xE2);
+            SysCall:writeChar(stream, bcode/256);
+            SysCall:writeChar(stream, bcode);
+            LinuxScreen:_resetFormat(stream);
+        }
+        
+        return this.fostream();
+    }
 }

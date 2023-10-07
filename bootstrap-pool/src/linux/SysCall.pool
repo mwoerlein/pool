@@ -144,4 +144,24 @@ class SysCall {
         // free timespec
         __pasm__("addl 12, %esp");
     }
+    
+    global [int, int] getTerminalSize(int fd) {
+        // ioctl 54
+        // TIOCGWINSZ 21523
+        
+        int rows = -1;
+        int cols = -1;
+        __pasm__(<"
+            subl 8, %esp
+            movl %esp, %edx
+            int 0x80
+            popw %edi
+            popw %esi
+            addl 4, %esp
+        ">,
+        {"%eax": 54, "%ebx": fd, "%ecx": 21523, "%edi": 0, "%esi": 0},
+        {"%eax": null, "%edx": null, "%edi": rows, "%esi": cols}
+        );
+        return [rows, cols];
+    }
 }

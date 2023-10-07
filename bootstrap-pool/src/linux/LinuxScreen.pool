@@ -1,0 +1,193 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+use sys::stream::FOStream;
+use sys::stream::OStream;
+use sys::tui::ScreenFOStream;
+
+class LinuxScreen extends sys::tui::Screen {
+    
+    int fd;
+    
+    // public
+    [LinuxScreen] init() {
+        this.fd = SysCall:FD_STDOUT;
+        [int rows, int cols] := SysCall:getTerminalSize(this.fd);
+        this._initScreen(cols, rows, 0);
+        this.clear();
+        return this;
+    }
+    
+    [] drawFCharAt(int c, int fg, int bg, int x, int y) {
+        this._storeCursor(fd);
+        this._moveCursor(fd, x, y);
+        this.drawFChar(c, fg, bg);
+        this._restoreCursor(fd);
+    }
+    
+    [] drawFChar(int c, int fg, int bg) {
+        if (fg == FOStream:DEFAULT && bg == FOStream:DEFAULT) {
+            SysCall:writeChar(fd, c);
+        } else {
+            this._writeFormat(fd, fg, bg);
+            SysCall:writeChar(fd, c);
+            this._resetFormat(fd);
+        }
+    }
+    
+    [] drawFBoxCharAt(int bc, int fg, int bg, int x, int y) {
+        this._storeCursor(fd);
+        this._moveCursor(fd, x, y);
+        this.drawFBoxChar(bc, fg, bg);
+        this._restoreCursor(fd);
+    }
+    
+    [] drawFBoxChar(int bc, int fg, int bg) {
+        int bcode = LinuxScreen:_getBoxCode(bc);
+        if (fg == FOStream:DEFAULT && bg == FOStream:DEFAULT) {
+            SysCall:writeChar(fd, 0xE2);
+            SysCall:writeChar(fd, bcode/256);
+            SysCall:writeChar(fd, bcode);
+        } else {
+            this._writeFormat(fd, fg, bg);
+            SysCall:writeChar(fd, 0xE2);
+            SysCall:writeChar(fd, bcode/256);
+            SysCall:writeChar(fd, bcode);
+            this._resetFormat(fd);
+        }
+    }
+    
+    [] clear() {
+        this._clearScreen(fd);
+        this._moveCursor(fd, 0, 0);
+    }
+    
+    // private
+    global [] _clearScreen(int fd) {
+        SysCall:writeChar(fd, 0x1b);
+        SysCall:writeChar(fd, '[');
+        SysCall:writeChar(fd, '2');
+        SysCall:writeChar(fd, 'J');
+    }
+    
+    global [] _storeCursor(int fd) {
+        SysCall:writeChar(fd, 0x1b);
+        SysCall:writeChar(fd, '[');
+        SysCall:writeChar(fd, 's');
+    }
+    global [] _restoreCursor(int fd) {
+        SysCall:writeChar(fd, 0x1b);
+        SysCall:writeChar(fd, '[');
+        SysCall:writeChar(fd, 'u');
+    }
+    global [] _moveCursor(int fd, int x, int y) {
+        SysCall:writeChar(fd, 0x1b);
+        SysCall:writeChar(fd, '[');
+        this._writeSimpleInt(fd, y+1);
+        SysCall:writeChar(fd, ';');
+        this._writeSimpleInt(fd, x+1);
+        SysCall:writeChar(fd, 'H');
+    }
+    
+    global [] _writeFormat(int fd, int fg, int bg) {
+        SysCall:writeChar(fd, 0x1b);
+        SysCall:writeChar(fd, '[');
+        if (fg != FOStream:DEFAULT) {
+            SysCall:writeChar(fd, ';');
+            SysCall:writeChar(fd, '3');
+            SysCall:writeChar(fd, '0' + (fg % 10));
+        }
+        if (bg != FOStream:DEFAULT) {
+            SysCall:writeChar(fd, ';');
+            SysCall:writeChar(fd, '4');
+            SysCall:writeChar(fd, '0' + (bg % 10));
+        }
+        if (fg >= 10 || bg >= 10) {
+            SysCall:writeChar(fd, ';');
+            SysCall:writeChar(fd, '1');
+        }
+        SysCall:writeChar(fd, 'm');
+    }
+    global [] _resetFormat(int fd) {
+        SysCall:writeChar(fd, 0x1b);
+        SysCall:writeChar(fd, '[');
+        SysCall:writeChar(fd, '0');
+        SysCall:writeChar(fd, 'm');
+    }
+    
+    global [] _writeSimpleInt(int fd, int i) {
+        int cur = i;
+        if (cur >= 10000) { SysCall:writeChar(fd, '0'+(cur/10000)); cur %= 10000; }
+        if (cur >= 1000) { SysCall:writeChar(fd, '0'+(cur/1000)); cur %= 1000; }
+        if (cur >= 100) { SysCall:writeChar(fd, '0'+(cur/100)); cur %= 100; }
+        if (cur >= 10) { SysCall:writeChar(fd, '0'+(cur/10)); cur %= 10; }
+        SysCall:writeChar(fd, '0'+cur);
+    }
+    
+    global [int] _getBoxCode(int bc) {
+        int ret = 0;
+        __pasm__("movl 8(%ebp), %eax; movw _ls_offset_box_char_map(%eax, %ebx, 2), %dx", {"%ebx": bc, "%edx": 0}, {"%edx": ret});
+        return ret;
+    }
+    
+    __naked__ [] _box_char_map() {
+        __pasm__(<"
+        _ls_offset_box_char_map := (_ls_box_char_map - _linux_LinuxScreen)
+        _ls_box_char_map:
+           .word 0x0000 //              0;
+           .word 0x9482 // BOX_VS   :=  1;
+           .word 0x9480 // BOX_HS   :=  2;
+           .word 0x9591 // BOX_VD   :=  3;
+           .word 0x9590 // BOX_HD   :=  4;
+           .word 0x0000 //              5;
+           .word 0x0000 //              6;
+           .word 0x0000 //              7;
+           .word 0x0000 //              8;
+           .word 0x0000 //              9;
+           .word 0x0000 //             10;
+           .word 0x948C // BOX_DSRS := 11;
+           .word 0x9490 // BOX_DSLS := 12;
+           .word 0x94AC // BOX_DSHS := 13;
+           .word 0x9494 // BOX_USRS := 14;
+           .word 0x9498 // BOX_USLS := 15;
+           .word 0x94B4 // BOX_USHS := 16;
+           .word 0x949C // BOX_VSRS := 17;
+           .word 0x94A4 // BOX_VSLS := 18;
+           .word 0x94BC // BOX_VSHS := 19;
+           .word 0x0000 //             20;
+           .word 0x9594 // BOX_DDRD := 21;
+           .word 0x9597 // BOX_DDLD := 22;
+           .word 0x95A6 // BOX_DDHD := 23;
+           .word 0x959A // BOX_UDRD := 24;
+           .word 0x959D // BOX_UDLD := 25;
+           .word 0x95A9 // BOX_UDHD := 26;
+           .word 0x95A0 // BOX_VDRD := 27;
+           .word 0x95A3 // BOX_VDLD := 28;
+           .word 0x95AC // BOX_VDHD := 29;
+           .word 0x0000 //             30;
+           .word 0x9593 // BOX_DDRS := 31;
+           .word 0x9596 // BOX_DDLS := 32;
+           .word 0x95A5 // BOX_DDHS := 33;
+           .word 0x9599 // BOX_UDRS := 34;
+           .word 0x959C // BOX_UDLS := 35;
+           .word 0x95A8 // BOX_UDHS := 36;
+           .word 0x959F // BOX_VDRS := 37;
+           .word 0x95A2 // BOX_VDLS := 38;
+           .word 0x95AB // BOX_VDHS := 39;
+           .word 0x0000 //             40;
+           .word 0x9592 // BOX_DSRD := 41;
+           .word 0x9595 // BOX_DSLD := 42;
+           .word 0x95A4 // BOX_DSHD := 43;
+           .word 0x9598 // BOX_USRD := 44;
+           .word 0x959B // BOX_USLD := 45;
+           .word 0x95A7 // BOX_USHD := 46;
+           .word 0x959E // BOX_VSRD := 47;
+           .word 0x95A1 // BOX_VSLD := 48;
+           .word 0x95AA // BOX_VSHD := 49;
+        ">);
+    }
+}
