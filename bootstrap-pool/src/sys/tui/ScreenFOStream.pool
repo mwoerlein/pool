@@ -1,0 +1,29 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::tui;
+
+use sys::stream::FOStream;
+use sys::stream::OStream;
+
+class ScreenFOStream extends FOStream {
+    
+    Screen screen;
+    
+    [FOStream] initFOStream(Screen screen) {
+        this.screen = screen;
+        return this.fostream();
+    }
+    
+    [FOStream] printFChar(int c, int fg, int bg) {
+        screen.drawFChar(c, fg, bg);
+        return this.fostream();
+    }
+    
+    [FOStream] printFBoxChar(int bc, int fg, int bg) {
+        screen.drawFBoxChar(bc, fg, bg);
+        return this.fostream();
+    }
+}

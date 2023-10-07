@@ -1,0 +1,47 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::tui;
+
+
+class Screen extends sys::core::Object {
+    
+    // private
+    int maxX;
+    int maxY;
+    int maxPos;
+    int cursor;
+    
+    // public
+    [] _initScreen(int maxX, int maxY, int cursor) {
+        this.maxX = maxX;
+        this.maxY = maxY;
+        this.maxPos = maxX * maxY;
+        this.cursor = cursor;
+    }
+    
+    [int] getMaxX() { return maxX; }
+    [int] getMaxY() { return maxY; }
+    [int] getCursor() { return cursor; }
+    
+    [sys::stream::FOStream] createFOStream(int fg, int bg) {
+        ScreenFOStream stream = this.createOwn(ScreenFOStream:CLASSNAME);
+        stream.setForeground(fg).setBackground(bg);
+        return stream.initFOStream(this.screen());
+    }
+    
+    [sys::stream::OStream] createOStream(int fg, int bg) {
+        return this.createFOStream(fg, bg).ostream();
+    }
+    
+    abstract [] drawFCharAt(int c, int fg, int bg, int x, int y);
+    abstract [] drawFChar(int c, int fg, int bg);
+    abstract [] drawFBoxCharAt(int bc, int fg, int bg, int x, int y);
+    abstract [] drawFBoxChar(int bc, int fg, int bg);
+    abstract [] clear();
+    
+    // TODO: remove with implicit cast
+    [Screen] screen() { return this; }
+}

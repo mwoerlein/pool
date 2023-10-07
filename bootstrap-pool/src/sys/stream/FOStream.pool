@@ -26,6 +26,51 @@ class FOStream extends OStream {
     int BRIGHT_CYAN    := 16;
     int BRIGHT_WHITE   := 17;
     
+    int BOX_VS   :=  1;
+    int BOX_HS   :=  2;
+    int BOX_VD   :=  3;
+    int BOX_HD   :=  4;
+    //single
+    int BOX_DSRS := 11;
+    int BOX_DSLS := 12;
+    int BOX_DSHS := 13;
+    int BOX_USRS := 14;
+    int BOX_USLS := 15;
+    int BOX_USHS := 16;
+    int BOX_VSRS := 17;
+    int BOX_VSLS := 18;
+    int BOX_VSHS := 19;
+    //double
+    int BOX_DDRD := 21;
+    int BOX_DDLD := 22;
+    int BOX_DDHD := 23;
+    int BOX_UDRD := 24;
+    int BOX_UDLD := 25;
+    int BOX_UDHD := 26;
+    int BOX_VDRD := 27;
+    int BOX_VDLD := 28;
+    int BOX_VDHD := 29;
+    //double vertical
+    int BOX_DDRS := 31;
+    int BOX_DDLS := 32;
+    int BOX_DDHS := 33;
+    int BOX_UDRS := 34;
+    int BOX_UDLS := 35;
+    int BOX_UDHS := 36;
+    int BOX_VDRS := 37;
+    int BOX_VDLS := 38;
+    int BOX_VDHS := 39;
+    //double horizontal
+    int BOX_DSRD := 41;
+    int BOX_DSLD := 42;
+    int BOX_DSHD := 43;
+    int BOX_USRD := 44;
+    int BOX_USLD := 45;
+    int BOX_USHD := 46;
+    int BOX_VSRD := 47;
+    int BOX_VSLD := 48;
+    int BOX_VSHD := 49;
+    
     int fg;
     int bg;
     
@@ -36,6 +81,274 @@ class FOStream extends OStream {
     
     abstract [FOStream] printFChar(int c, int fg, int bg);
     [OStream] printChar(int c) { return this.printFChar(c, fg, bg).ostream(); }
+    
+    abstract [FOStream] printFBoxChar(int bc, int fg, int bg);
+    [FOStream] printBoxChar(int bc) { return this.printFBoxChar(bc, fg, bg); }
+    
+    // TODO: remove sample boxes after final testing
+    [FOStream] printSampleBoxSS() {
+        this
+            .printBoxChar(FOStream:BOX_DSRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_DSHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_DSLS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VSRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_VSHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_VSLS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_USRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_USHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_USLS)
+            .printNewline();
+        
+        return this;
+    }
+    
+    [FOStream] printSampleBoxDD() {
+        this
+            .printBoxChar(FOStream:BOX_DDRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_DDHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_DDLD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VDRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_VDHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_VDLD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_UDRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_UDHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_UDLD)
+            .printNewline();
+        
+        return this;
+    }
+    
+    [FOStream] printSampleBoxSD() {
+        this
+            .printBoxChar(FOStream:BOX_DSRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_DSHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_DSLD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VSRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_VSHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_VSLD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_USRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_USHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_USLD)
+            .printNewline();
+        
+        return this;
+    }
+    
+    [FOStream] printSampleBoxDS() {
+        this
+            .printBoxChar(FOStream:BOX_DDRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_DDHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_DDLS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VDRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_VDHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_VDLS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_UDRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_UDHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_UDLS)
+            .printNewline();
+        
+        return this;
+    }
+    
+    [FOStream] printSampleBoxSODI() {
+        this
+            .printBoxChar(FOStream:BOX_DSRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_DDHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_DSLS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VSRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_VDHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_VSLD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_USRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_UDHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_USLS)
+            .printNewline();
+        
+        return this;
+    }
+    
+    [FOStream] printSampleBoxDOSI() {
+        this
+            .printBoxChar(FOStream:BOX_DDRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_DSHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_DDLD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this .printBoxChar(FOStream:BOX_VD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VDRS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_VSHS)
+            .printBoxChar(FOStream:BOX_HS).printBoxChar(FOStream:BOX_HS)
+            .printBoxChar(FOStream:BOX_VDLS)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_VD)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VS)
+            .printChar(' ').printChar(' ');
+        this.printBoxChar(FOStream:BOX_VD)
+            .printNewline();
+        
+        this
+            .printBoxChar(FOStream:BOX_UDRD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_USHD)
+            .printBoxChar(FOStream:BOX_HD).printBoxChar(FOStream:BOX_HD)
+            .printBoxChar(FOStream:BOX_UDLD)
+            .printNewline();
+        
+        return this;
+    }
     
     // TODO: remove with implicit cast
     [FOStream] fostream() { return this; }
