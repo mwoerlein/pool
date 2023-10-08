@@ -13,6 +13,11 @@ class LinuxScreen extends sys::tui::Screen {
     
     int fd;
     
+    [] __destruct() { this._destructLinuxScreen(); }
+    [] _destructLinuxScreen() {
+        this.clear();
+    }
+    
     // public
     [LinuxScreen] init() {
         this.fd = SysCall:FD_STDOUT;
