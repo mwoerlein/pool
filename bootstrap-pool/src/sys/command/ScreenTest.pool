@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::command;
 
+use sys::stream::FOStream;
 
 class ScreenTest extends linux::Command {
 
@@ -34,8 +35,12 @@ Test for some screen features.
         
         linux::LinuxScreen ls = this.initScreen();
         sys::tui::WindowManager wm = this.createOwn(sys::tui::WindowManager:CLASSNAME);
+        int fg = FOStream:BRIGHT_YELLOW;
+        int bg = FOStream:BLUE;
+//        int fg = FOStream:RED;
+//        int bg = FOStream:WHITE;
 /*        
-        sys::stream::FOStream fout = ls.createFOStream(13, 4);
+        FOStream fout = ls.createFOStream(13, 4);
         fout.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
         fout.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
 */
@@ -46,23 +51,23 @@ Test for some screen features.
         int y1 = ls.getMaxY() - y2 - 3;
         wm._init(ls.screen()).draw3TiledFrame(x1, x2, y1, y2);
         
-        ls.drawFCharAt('#',1,2,98,1);
-        ls.drawFCharAt('#',1,2,99,2);
-        ls.drawFCharAt('#',1,2,100,3);
-        ls.drawFCharAt('#',1,2,101,4);
-        ls.drawFCharAt('#',1,2,102,5);
-        ls.drawFCharAt('#',1,2,103,6);
-        ls.drawFCharAt('#',1,2,104,7);
-        ls.drawFCharAt('#',1,2,105,8);
-        ls.drawFCharAt('#',1,2,106,9);
-        ls.drawFCharAt('#',1,2,107,10);
-        ls.drawFCharAt('#',1,2,108,11);
-        ls.drawFCharAt('#',1,2,109,12);
-        ls.drawFCharAt('#',1,2,110,13);
-//        ls.drawFCharAt('#',1,2,0,0);
-//        ls.drawFCharAt('#',1,2,ls.getMaxX()-1,ls.getMaxY()-1);
-
-        // wait bevor termination which clears screen again
+        ls.drawFCharAt('#',fg,bg, 98,1);
+        ls.drawFCharAt('#',fg,bg, 99,2);
+        ls.drawFCharAt('#',fg,bg,100,3);
+        ls.drawFCharAt('#',fg,bg,101,4);
+        ls.drawFCharAt('#',fg,bg,102,5);
+        ls.drawFCharAt('#',fg,bg,103,6);
+        ls.drawFCharAt('#',fg,bg,104,7);
+        ls.drawFCharAt('#',fg,bg,105,8);
+        ls.drawFCharAt('#',fg,bg,106,9);
+        ls.drawFCharAt('#',fg,bg,107,10);
+        ls.drawFCharAt('#',fg,bg,108,11);
+        ls.drawFCharAt('#',fg,bg,109,12);
+        ls.drawFCharAt('#',fg,bg,110,13);
+//        ls.drawFCharAt('#',fg,bg,0,0);
+//        ls.drawFCharAt('#',fg,bg,ls.getMaxX()-1,ls.getMaxY()-1);
+        
+        // wait before termination which clears screen again
         this.rt().sleep(10, 0);
     }
 }

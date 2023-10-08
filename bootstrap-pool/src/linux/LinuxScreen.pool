@@ -103,17 +103,18 @@ class LinuxScreen extends sys::tui::Screen {
         SysCall:writeChar(fd, '[');
         if (fg != FOStream:DEFAULT) {
             SysCall:writeChar(fd, ';');
-            SysCall:writeChar(fd, '3');
-            SysCall:writeChar(fd, '0' + (fg % 10));
+            if (fg >= 10 || bg >= 10) {
+                // brighter foreground on any bright color, to match basic cga behavior
+                SysCall:writeChar(fd, '9');
+            } else {
+                SysCall:writeChar(fd, '3');
+            }
+            SysCall:writeChar(fd, '0' + this._color(fg));
         }
         if (bg != FOStream:DEFAULT) {
             SysCall:writeChar(fd, ';');
             SysCall:writeChar(fd, '4');
-            SysCall:writeChar(fd, '0' + (bg % 10));
-        }
-        if (fg >= 10 || bg >= 10) {
-            SysCall:writeChar(fd, ';');
-            SysCall:writeChar(fd, '1');
+            SysCall:writeChar(fd, '0' + this._color(bg));
         }
         SysCall:writeChar(fd, 'm');
     }
@@ -122,6 +123,19 @@ class LinuxScreen extends sys::tui::Screen {
         SysCall:writeChar(fd, '[');
         SysCall:writeChar(fd, '0');
         SysCall:writeChar(fd, 'm');
+    }
+    
+    global [int] _color(int foColor) {
+        int base = foColor % 10;
+        if (base == FOStream:BLACK) { return 0; }
+        else if (base == FOStream:RED) { return 1; }
+        else if (base == FOStream:GREEN) { return 2; }
+        else if (base == FOStream:YELLOW) { return 3; }
+        else if (base == FOStream:BLUE) { return 4; }
+        else if (base == FOStream:MAGENTA) { return 5; }
+        else if (base == FOStream:CYAN) { return 6; }
+        else if (base == FOStream:WHITE) { return 7; }
+        return 9; // Default
     }
     
     global [] _writeSimpleInt(int fd, int i) {
