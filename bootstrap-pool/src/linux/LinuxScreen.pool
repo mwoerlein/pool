@@ -121,11 +121,11 @@ class LinuxScreen extends sys::tui::Screen {
     
     global [] _writeSimpleInt(int fd, int i) {
         int cur = i;
-        if (cur >= 10000) { SysCall:writeChar(fd, '0'+(cur/10000)); cur %= 10000; }
-        if (cur >= 1000) { SysCall:writeChar(fd, '0'+(cur/1000)); cur %= 1000; }
-        if (cur >= 100) { SysCall:writeChar(fd, '0'+(cur/100)); cur %= 100; }
-        if (cur >= 10) { SysCall:writeChar(fd, '0'+(cur/10)); cur %= 10; }
-        SysCall:writeChar(fd, '0'+cur);
+        if (cur >= 10000) { SysCall:writeChar(fd, '0'+((cur/10000) % 10));  }
+        if (cur >= 1000)  { SysCall:writeChar(fd, '0'+((cur/1000) % 10)); }
+        if (cur >= 100)   { SysCall:writeChar(fd, '0'+((cur/100) % 10)); }
+        if (cur >= 10)    { SysCall:writeChar(fd, '0'+((cur/10) % 10)); }
+        SysCall:writeChar(fd, '0'+(cur % 10));
     }
     
     global [int] _getBoxCode(int bc) {
