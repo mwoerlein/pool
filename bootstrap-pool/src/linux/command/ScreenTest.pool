@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class ScreenTest extends sys::command::ScreenTest {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        ScreenTest test = linux::Runtime:buildRuntime().createInstance(ScreenTest:CLASSNAME);
+        int ret = test.execute(argc, argv);
+        test.destroy();
+        return ret;
+    }
+}

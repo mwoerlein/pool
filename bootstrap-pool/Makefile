@@ -12,6 +12,11 @@ install: $(BINDIR)/poolbsc
 clean:
 	@rm -rf $(BINDIR)
 
+$(BINDIR)/screentest: $(SRCDIR)/sys/command/ScreenTest.pool $(BINDIR) $(POOLSC)
+	@echo "build screentest (pool)"
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::ScreenTest
+	@chmod a+x $@
+	
 $(BINDIR)/storeb: $(SRCDIR)/pool/command/Store.pool $(BINDIR) $(POOLSC)
 	@echo "build storeb (pool)"
 	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::Store

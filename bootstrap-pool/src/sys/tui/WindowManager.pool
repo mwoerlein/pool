@@ -1,0 +1,77 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::tui;
+
+use sys::stream::FOStream;
+use sys::stream::OStream;
+
+class WindowManager extends sys::core::Object {
+    
+    Screen mainScreen;
+    int fg;
+    int bg;
+    
+    [WindowManager] _init(Screen screen) {
+        this.mainScreen = screen;
+        this.fg = FOStream:DEFAULT;
+        this.bg = FOStream:DEFAULT;
+        return this;
+    }
+    
+    [WindowManager] draw3TiledFrame(int x1, int x2, int y1, int y2) {
+        int i = 0;
+        int c0 = 0;
+        int c1 = c0 + x1 + 1;
+        int c2 = c1 + x2 + 1;
+        int r0 = 0;
+        int r1 = r0 + y1 + 1;
+        int r2 = r1 + y2 + 1;
+        
+        // horizontal lines
+        i = c0 + 1;
+        while (i < c1) {
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HS, fg, bg, i, r0);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r1);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r2);
+            i++;
+        }
+        i = c1 + 1;
+        while (i < c2) {
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HS, fg, bg, i, r0);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r1);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r2);
+            i++;
+        }
+        // vertical lines
+        i = r0 + 1;
+        while (i < r1) {
+            mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c0, i);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c1, i);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c2, i);
+            i++;
+        }
+        i = r1 + 1;
+        while (i < r2) {
+            mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c0, i);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c2, i);
+            i++;
+        }
+        // corners/junctions
+        // r0
+        mainScreen.drawFBoxCharAt(FOStream:BOX_DSRS, fg, bg, c0, r0);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_DSHS, fg, bg, c1, r0);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_DSLS, fg, bg, c2, r0);
+        // r1
+        mainScreen.drawFBoxCharAt(FOStream:BOX_VSRD, fg, bg, c0, r1);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_USHD, fg, bg, c1, r1);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_VSLD, fg, bg, c2, r1);
+        // r2
+        mainScreen.drawFBoxCharAt(FOStream:BOX_USRD, fg, bg, c0, r2);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_HD  , fg, bg, c1, r2);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_USLD, fg, bg, c2, r2);
+        return this;
+    }
+}
