@@ -128,6 +128,12 @@ class Address {
         return c;
     }
     
+    global [int] loadDWord(int addr) {
+        int c = 0;
+        __pasm__("movl (%eax), %ebx", {"%eax": addr, "%ebx": c} , {"%ebx": c});
+        return c;
+    }
+    
     global [] store(int addr, __any__ a) {
         __pasm__("movl %ebx, (%eax)", {"%eax": addr, "%ebx": a});
     }
@@ -148,6 +154,10 @@ class Address {
         __pasm__("movw %bx, (%eax)", {"%eax": addr, "%ebx": c});
     }
     
+    global [] storeDWord(int addr, int c) {
+        __pasm__("movl %ebx, (%eax)", {"%eax": addr, "%ebx": c});
+    }
+    
     global [] copy(int srcAddr, int destAddr) {
         __pasm__("movl (%ebx), %eax; movl %eax, (%edx)", {"%ebx": srcAddr, "%edx": destAddr}, {"%eax": null});
     }
@@ -160,18 +170,54 @@ class Address {
         __pasm__("movw (%ebx), %ax; movw %ax, (%edx)", {"%ebx": srcAddr, "%edx": destAddr}, {"%eax": null});
     }
     
-    global [] copyBytes(int srcAddr, int destAddr, int bytes) {
+    global [] copyDWord(int srcAddr, int destAddr) {
+        __pasm__("movl (%ebx), %eax; movl %eax, (%edx)", {"%ebx": srcAddr, "%edx": destAddr}, {"%eax": null});
+    }
+    
+    global [] copyBytes(int srcAddr, int destAddr, int n) {
         __pasm__(
             ".byte 0xf3; .byte 0xa4 #// rep movsb",
-             {"%ecx": bytes, "%esi": srcAddr, "%edi": destAddr},
+             {"%ecx": n, "%esi": srcAddr, "%edi": destAddr},
              {"%ecx": null, "%esi": null, "%edi": null}
         );
     }
     
-    global [] setBytes(int destAddr, int bytes, int byte) {
+    global [] copyWords(int srcAddr, int destAddr, int n) {
+        __pasm__(
+            ".byte 0xf3; .byte 0x66; .byte 0xa5 #// rep movsw",
+             {"%ecx": n, "%esi": srcAddr, "%edi": destAddr},
+             {"%ecx": null, "%esi": null, "%edi": null}
+        );
+    }
+    
+    global [] copyDWords(int srcAddr, int destAddr, int n) {
+        __pasm__(
+            ".byte 0xf3; .byte 0xa5 #// rep movsd",
+             {"%ecx": n, "%esi": srcAddr, "%edi": destAddr},
+             {"%ecx": null, "%esi": null, "%edi": null}
+        );
+    }
+    
+    global [] setBytes(int destAddr, int n, int val) {
         __pasm__(
             ".byte 0xf3; .byte 0xaa #// rep stosb",
-             {"%ecx": bytes, "%eax": byte, "%edi": destAddr},
+             {"%ecx": n, "%eax": val, "%edi": destAddr},
+             {"%ecx": null, "%edi": null}
+        );
+    }
+    
+    global [] setWords(int destAddr, int n, int val) {
+        __pasm__(
+            ".byte 0xf3; .byte 0x66; .byte 0xab #// rep stosw",
+             {"%ecx": n, "%eax": val, "%edi": destAddr},
+             {"%ecx": null, "%edi": null}
+        );
+    }
+    
+    global [] setDWords(int destAddr, int n, int val) {
+        __pasm__(
+            ".byte 0xf3; .byte 0xab #// rep stosd",
+             {"%ecx": n, "%eax": val, "%edi": destAddr},
              {"%ecx": null, "%edi": null}
         );
     }
