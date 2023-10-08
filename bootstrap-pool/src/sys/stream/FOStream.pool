@@ -8,23 +8,23 @@ namespace sys::stream;
 
 class FOStream extends OStream {
     
-    int DEFAULT := -1;
-    int BLACK   := 0;
-    int RED     := 1;
-    int GREEN   := 2;
-    int YELLOW  := 3;
-    int BLUE    := 4;
-    int MAGENTA := 5;
-    int CYAN    := 6;
-    int WHITE   := 7;
-    int BRIGHT_BLACK   := 10;
-    int BRIGHT_RED     := 11;
-    int BRIGHT_GREEN   := 12;
-    int BRIGHT_YELLOW  := 13;
-    int BRIGHT_BLUE    := 14;
-    int BRIGHT_MAGENTA := 15;
-    int BRIGHT_CYAN    := 16;
-    int BRIGHT_WHITE   := 17;
+    int DEFAULT := 0;
+    int BLACK   := 1;
+    int RED     := 2;
+    int GREEN   := 3;
+    int YELLOW  := 4;
+    int BLUE    := 5;
+    int MAGENTA := 6;
+    int CYAN    := 7;
+    int WHITE   := 8;
+    int BRIGHT_BLACK   := 11;
+    int BRIGHT_RED     := 12;
+    int BRIGHT_GREEN   := 13;
+    int BRIGHT_YELLOW  := 14;
+    int BRIGHT_BLUE    := 15;
+    int BRIGHT_MAGENTA := 16;
+    int BRIGHT_CYAN    := 17;
+    int BRIGHT_WHITE   := 18;
     
     int BOX_VS   :=  1;
     int BOX_HS   :=  2;

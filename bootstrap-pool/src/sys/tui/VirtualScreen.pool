@@ -1,0 +1,138 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::tui;
+
+use sys::memory::Address;
+use sys::memory::MemoryInfo;
+
+class VirtualScreen extends Screen {
+    
+    int _buf;
+    MemoryInfo _owned;
+    
+    // public
+    [] _initVirtualScreen(int maxX, int maxY) {
+        _initScreen(maxX, maxY, 0);
+        _owned = this.rt().getAllocator().allocate(maxPos * 4);
+        _buf = _owned.buf;
+    }
+    
+    [] __destruct() {
+        if (_owned) {
+            this.rt().getAllocator().free(_owned);
+        }
+    }
+    
+    [] drawFormattedCharAt(int fc, int x, int y) {
+        if (x >= 0 && x < maxX && y >= 0 && y < maxY) {
+            this.drawFormattedCharAtPos(fc, x + y * maxX);
+        }
+    }
+    
+    [] drawFCharAt(int c, int fg, int bg, int x, int y) {
+        int fc = c + 0x100*fg + 0x10000*bg;
+        this.drawFormattedCharAt(fc, x, y);
+    }
+    
+    [] drawFBoxCharAt(int bc, int fg, int bg, int x, int y) {
+        int fc = bc + 0x100*fg + 0x10000*bg + 0x1000000;
+        this.drawFormattedCharAt(fc, x, y);
+    }
+        
+    [] drawFChar(int c, int fg, int bg) {
+        if (c == 0 || c == '\r') {
+            return;
+        }
+        int format = 0x100*fg + 0x10000*bg;
+        int pos = cursor;
+        if (c == '\n') {
+            // clear rest of line
+            do { this.drawFormattedCharAtPos(' ' + format, pos++); } while (pos % maxX);
+        } else if (c == '\t') {
+            do { this.drawFormattedCharAtPos(' ' + format, pos++); } while (pos % 8);
+        } else {
+            this.drawFormattedCharAtPos(c + format, pos++);
+        }
+        
+        this._updateCursor(pos, format);
+    }
+    
+    [] drawFBoxChar(int bc, int fg, int bg) {
+        int pos = cursor;
+        int format = 0x100*fg + 0x10000*bg;
+        int fc = bc + format + 0x1000000;
+        this.drawFormattedCharAtPos(fc, pos++);
+        this._updateCursor(pos, format);
+    }
+    
+    [] syncToScreen(Screen screen, int x, int y) {
+        int p = 0;
+        int cx = 0;
+        int cy = 0;
+        while (p < maxPos) {
+            int fc = this.getFormattedCharAtPos(p++);
+            int c = fc % 256; fc /= 256;
+            int fg = fc % 256; fc /= 256;
+            int bg = fc % 256; fc /= 256;
+            if (fc == 1) {
+                screen.drawFBoxCharAt(c, fg, bg, x+cx, y+cy);
+            } else {
+                screen.drawFCharAt(c, fg, bg, x+cx, y+cy);
+            }
+            cx++;
+            if (cx >= maxX) { 
+                cx = 0;
+                cy++;
+            }
+        }
+    }
+    
+    [] clear() {
+        // default format == 0
+        Address:setDWords(_buf, maxPos, ' ');
+        cursor = 0;
+        this._hookOnNewLine();
+    }
+    
+    [] clearF(int fg, int bg) {
+        int format = 0x100*fg + 0x10000*bg;
+        Address:setDWords(_buf, maxPos, ' ' + format);
+        cursor = 0;
+        this._hookOnNewLine();
+    }
+    
+    [] drawFormattedCharAtPos(int fc, int pos) {
+        Address:storeDWord(_buf + 4*pos, fc);
+    }
+    
+    [int] getFormattedCharAtPos(int pos) {
+        return Address:loadDWord(_buf + 4*pos);
+    }
+    
+    [] copyFormattedCharAtPos(int src, int dest) {
+        Address:copyDWord(_buf + 4*src, _buf + 4*dest);
+    }
+    
+    [] _updateCursor(int pos, int format) {
+        if ((pos % maxX) == 0) {
+            this._hookOnNewLine();
+        }
+        if (pos >= maxPos) {
+            // end of screen => scroll up
+            int p1 = 0;
+            int p2 = maxX;
+            // TODO: use Address::copyDWord? for whole lines?
+            while (p2 < maxPos) { this.copyFormattedCharAtPos(p2++, p1++); }
+            // TODO: use Address::storeDWord? for whole line?
+            while (p1 < maxPos) { this.drawFormattedCharAtPos(' ' + format, p1++); }
+            pos -= maxX;
+        }
+        cursor = pos;
+    }
+    
+    [] _hookOnNewLine() {}
+
+}

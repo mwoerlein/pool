@@ -39,17 +39,28 @@ Test for some screen features.
         int bg = FOStream:BLUE;
 //        int fg = FOStream:RED;
 //        int bg = FOStream:WHITE;
-/*        
-        FOStream fout = ls.createFOStream(13, 4);
-        fout.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
-        fout.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
-*/
         
         int x1 = (ls.getMaxX() / 2) - 1;
         int x2 = ls.getMaxX() - x1 - 3;
         int y2 = ls.getMaxY() / 5;
         int y1 = ls.getMaxY() - y2 - 3;
+        
         wm._init(ls.screen()).draw3TiledFrame(x1, x2, y1, y2);
+        
+        sys::tui::VirtualSubScreen vs1 = ls.createOwn(sys::tui::VirtualSubScreen:CLASSNAME);
+        vs1._initVirtualSubScreen(x1, y1, ls.screen(), 1, 1);
+        vs1.clearF(fg, bg);
+        
+        FOStream fout = vs1.createFOStream(fg, bg);
+        this.rt().sleep(1, 0);
+        fout.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
+        this.rt().sleep(1, 0);
+        fout.printChar('$').printInt(vs1.getMaxX()).printChar('x').printInt(vs1.getMaxY()).printNewline();
+        int i = 60;
+        while (i--) {
+            this.rt().sleep(0, 250);
+            fout.printInt(i).printNewline();
+        }
         
         ls.drawFCharAt('#',fg,bg, 98,1);
         ls.drawFCharAt('#',fg,bg, 99,2);

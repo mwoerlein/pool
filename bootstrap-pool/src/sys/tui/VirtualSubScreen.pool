@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::tui;
+
+use sys::memory::Address;
+use sys::memory::MemoryInfo;
+
+class VirtualSubScreen extends VirtualScreen {
+    
+    Screen parent;
+    int xOffset;
+    int yOffset;
+    
+    // public
+    [] _initVirtualSubScreen(int maxX, int maxY, Screen parent, int xOffset, int yOffset) {
+        this.parent = parent;
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
+        int xMax = parent.getMaxX() - xOffset;
+        if (maxX > xMax) { maxX = xMax; }
+        int yMax = parent.getMaxY() - yOffset;
+        if (maxY > yMax) { maxY = yMax; }
+        _initVirtualScreen(maxX, maxY);
+    }
+    
+    [] _hookOnNewLine() {
+        this.syncToScreen(parent, xOffset, yOffset);
+    }
+
+}
