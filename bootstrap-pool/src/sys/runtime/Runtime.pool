@@ -41,6 +41,8 @@ class Runtime extends Object {
     [Thread] getCurrentThread() { return null; }
     [] yield () { }
     
+    [Runtime] cloneRuntime() { return this._initFromRuntime(this.createInstance(Runtime:CLASSNAME)); }
+    
     [Class] getClassByCName(cstring name) {
         ClassDescriptor classDesc = classStorage.getClassDesc(name);
         if (!classDesc) { return null; } // abort on initialization error
@@ -120,6 +122,15 @@ class Runtime extends Object {
             }
         }
         return null;
+    }
+    
+    [Runtime] _initFromRuntime(Runtime clone) {
+        clone.setAllocator(this.getAllocator());
+        clone.setClassStorage(this.getClassStorage());
+        clone.setClock(this.getClock());
+        clone.setOut(this.out());
+        clone.setErr(this.err());
+        return clone;
     }
     
     // TODO #9: use generic method instead of __any__
