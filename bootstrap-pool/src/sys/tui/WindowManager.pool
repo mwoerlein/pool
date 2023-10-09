@@ -21,6 +21,26 @@ class WindowManager extends sys::core::Object {
         return this;
     }
     
+    [Screen, Screen, Screen] split3Tiled() {
+        int x1 = mainScreen.getMaxX()/2 - 1;
+        int x2 = mainScreen.getMaxX() - x1 - 3;
+        int y1 = mainScreen.getMaxY()/5 * 3;
+        int y2 = mainScreen.getMaxY() - y1 - 3;
+        
+        draw3TiledFrame(x1, x2, y1, y2);
+        
+        VirtualSubScreen vs1 = mainScreen.createOwn(VirtualSubScreen:CLASSNAME);
+        vs1._initVirtualSubScreen(x1, y1, mainScreen, 1, 1);
+        
+        VirtualSubScreen vs2 = mainScreen.createOwn(VirtualSubScreen:CLASSNAME);
+        vs2._initVirtualSubScreen(x2, y1, mainScreen, 2+x1, 1);
+        
+        VirtualSubScreen vs3 = mainScreen.createOwn(VirtualSubScreen:CLASSNAME);
+        vs3._initVirtualSubScreen(x1+x2+1, y2, mainScreen, 1, 2+y1);
+        
+        return [vs1.screen(), vs2.screen(), vs3.screen()];
+    }
+    
     [WindowManager] draw3TiledFrame(int x1, int x2, int y1, int y2) {
         int i = 0;
         int c0 = 0;
