@@ -55,21 +55,21 @@ class WindowManager extends sys::core::Object {
         while (i < c1) {
             mainScreen.drawFBoxCharAt(FOStream:BOX_HS, fg, bg, i, r0);
             mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r1);
-            mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r2);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HS, fg, bg, i, r2);
             i++;
         }
         i = c1 + 1;
         while (i < c2) {
             mainScreen.drawFBoxCharAt(FOStream:BOX_HS, fg, bg, i, r0);
             mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r1);
-            mainScreen.drawFBoxCharAt(FOStream:BOX_HD, fg, bg, i, r2);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_HS, fg, bg, i, r2);
             i++;
         }
         // vertical lines
         i = r0 + 1;
         while (i < r1) {
             mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c0, i);
-            mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c1, i);
+            mainScreen.drawFBoxCharAt(FOStream:BOX_VD, fg, bg, c1, i);
             mainScreen.drawFBoxCharAt(FOStream:BOX_VS, fg, bg, c2, i);
             i++;
         }
@@ -82,16 +82,30 @@ class WindowManager extends sys::core::Object {
         // corners/junctions
         // r0
         mainScreen.drawFBoxCharAt(FOStream:BOX_DSRS, fg, bg, c0, r0);
-        mainScreen.drawFBoxCharAt(FOStream:BOX_DSHS, fg, bg, c1, r0);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_DDHS, fg, bg, c1, r0);
         mainScreen.drawFBoxCharAt(FOStream:BOX_DSLS, fg, bg, c2, r0);
         // r1
         mainScreen.drawFBoxCharAt(FOStream:BOX_VSRD, fg, bg, c0, r1);
-        mainScreen.drawFBoxCharAt(FOStream:BOX_USHD, fg, bg, c1, r1);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_UDHD, fg, bg, c1, r1);
         mainScreen.drawFBoxCharAt(FOStream:BOX_VSLD, fg, bg, c2, r1);
         // r2
-        mainScreen.drawFBoxCharAt(FOStream:BOX_USRD, fg, bg, c0, r2);
-        mainScreen.drawFBoxCharAt(FOStream:BOX_HD  , fg, bg, c1, r2);
-        mainScreen.drawFBoxCharAt(FOStream:BOX_USLD, fg, bg, c2, r2);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_USRS, fg, bg, c0, r2);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_HS  , fg, bg, c1, r2);
+        mainScreen.drawFBoxCharAt(FOStream:BOX_USLS, fg, bg, c2, r2);
+/*        
+        int j = 1;
+        while (j < 9) {
+            i = 1;
+            while (i < 9) {
+                mainScreen.drawFCharAt('#', i, j, i+50, j+20);
+                mainScreen.drawFCharAt('#', i+10, j, i+60, j+20);
+                mainScreen.drawFCharAt('#', i+10, j+10, i+60, j+30);
+                mainScreen.drawFCharAt('#', i, j+10, i+50, j+30);
+                i++;
+            }
+            j++;    
+        }
+//*/
         return this;
     }
 }

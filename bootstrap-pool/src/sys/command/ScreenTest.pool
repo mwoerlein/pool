@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::command;
 
 use sys::stream::FOStream;
+use sys::tui::Screen;
 
 class ScreenTest extends linux::Command {
 
@@ -27,7 +28,8 @@ Test for some screen features.
     }
 
     [int] run() {
-        sys::stream::OStream out = this.rt().out();
+        sys::runtime::Runtime rt = this.rt();
+        sys::stream::OStream out = rt.out();
         if (this.hasOption("help")) {
             out.printCString(usage).printNewline();
             return 0;
@@ -35,50 +37,39 @@ Test for some screen features.
         
         linux::LinuxScreen ls = this.initScreen();
         sys::tui::WindowManager wm = this.createOwn(sys::tui::WindowManager:CLASSNAME);
-        int fg = FOStream:BRIGHT_YELLOW;
-        int bg = FOStream:BLUE;
-//        int fg = FOStream:RED;
-//        int bg = FOStream:WHITE;
+        [Screen vs1, Screen vs2, Screen vs3] = wm._init(ls.screen()).split3Tiled();
         
-        int x1 = (ls.getMaxX() / 2) - 1;
-        int x2 = ls.getMaxX() - x1 - 3;
-        int y2 = ls.getMaxY() / 5;
-        int y1 = ls.getMaxY() - y2 - 3;
+        vs1.clear(FOStream:BRIGHT_YELLOW, FOStream:BLUE);
+        vs2.clear(FOStream:BLACK, FOStream:WHITE);
+        vs3.clear(FOStream:DEFAULT, FOStream:DEFAULT);
         
-        wm._init(ls.screen()).draw3TiledFrame(x1, x2, y1, y2);
+        rt.setOut(vs3.createOStream(FOStream:DEFAULT, FOStream:DEFAULT));
+        rt.setErr(vs3.createOStream(FOStream:BRIGHT_RED, FOStream:DEFAULT));
         
-        sys::tui::VirtualSubScreen vs1 = ls.createOwn(sys::tui::VirtualSubScreen:CLASSNAME);
-        vs1._initVirtualSubScreen(x1, y1, ls.screen(), 1, 1);
-        vs1.clearF(fg, bg);
-        
-        FOStream fout = vs1.createFOStream(fg, bg);
-        this.rt().sleep(1, 0);
-        fout.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
-        this.rt().sleep(1, 0);
-        fout.printChar('$').printInt(vs1.getMaxX()).printChar('x').printInt(vs1.getMaxY()).printNewline();
+        FOStream fout1 = vs1.createFOStream(FOStream:BRIGHT_YELLOW, FOStream:BLUE);
+        FOStream fout2 = vs2.createFOStream(FOStream:BLACK, FOStream:WHITE);
+        this.sleep(1, 0);
+        fout1.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
+        fout2.printChar('$').printInt(ls.getMaxX()).printChar('x').printInt(ls.getMaxY()).printNewline();
+        this.sleep(1, 0);
+        fout1.printChar('$').printInt(vs1.getMaxX()).printChar('x').printInt(vs1.getMaxY()).printNewline();
+        this.sleep(1, 0);
+        fout2.printChar('$').printInt(vs2.getMaxX()).printChar('x').printInt(vs2.getMaxY()).printNewline();
         int i = 60;
         while (i--) {
-            this.rt().sleep(0, 250);
-            fout.printInt(i).printNewline();
+            this.sleep(0, i * 25000000);
+            fout1.printInt(i).printNewline();
+            fout2.printInt(i).printNewline();
         }
         
-        ls.drawFCharAt('#',fg,bg, 98,1);
-        ls.drawFCharAt('#',fg,bg, 99,2);
-        ls.drawFCharAt('#',fg,bg,100,3);
-        ls.drawFCharAt('#',fg,bg,101,4);
-        ls.drawFCharAt('#',fg,bg,102,5);
-        ls.drawFCharAt('#',fg,bg,103,6);
-        ls.drawFCharAt('#',fg,bg,104,7);
-        ls.drawFCharAt('#',fg,bg,105,8);
-        ls.drawFCharAt('#',fg,bg,106,9);
-        ls.drawFCharAt('#',fg,bg,107,10);
-        ls.drawFCharAt('#',fg,bg,108,11);
-        ls.drawFCharAt('#',fg,bg,109,12);
-        ls.drawFCharAt('#',fg,bg,110,13);
-//        ls.drawFCharAt('#',fg,bg,0,0);
-//        ls.drawFCharAt('#',fg,bg,ls.getMaxX()-1,ls.getMaxY()-1);
-        
         // wait before termination which clears screen again
-        this.rt().sleep(10, 0);
+        this.sleep(10, 0);
+    }
+    
+    [] sleep(int sec, int nsec) {
+        sec += nsec / 1000000000;
+        nsec %= 1000000000;
+        this.rt().out().printCString("Sleep for ").printInt(sec).printCString("s and ").printInt(nsec).printCString("ns").printNewline();
+        this.rt().sleep(sec, nsec);
     }
 }
