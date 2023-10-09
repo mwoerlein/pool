@@ -15,7 +15,7 @@ class LinuxScreen extends sys::tui::Screen {
     
     [] __destruct() { this._destructLinuxScreen(); }
     [] _destructLinuxScreen() {
-        this.clear();
+        this.clear(FOStream:DEFAULT, FOStream:DEFAULT);
     }
     
     // public
@@ -23,7 +23,7 @@ class LinuxScreen extends sys::tui::Screen {
         this.fd = SysCall:FD_STDOUT;
         [int rows, int cols] := SysCall:getTerminalSize(this.fd);
         this._initScreen(cols, rows, 0);
-        this.clear();
+        this.clear(FOStream:DEFAULT, FOStream:DEFAULT);
         return this;
     }
     
@@ -66,9 +66,16 @@ class LinuxScreen extends sys::tui::Screen {
         }
     }
     
-    [] clear() {
-        this._clearScreen(fd);
-        this._moveCursor(fd, 0, 0);
+    [] clear(int fg, int bg) {
+        if (fg == FOStream:DEFAULT && bg == FOStream:DEFAULT) {
+            this._clearScreen(fd);
+            this._moveCursor(fd, 0, 0);
+        } else {
+            this._writeFormat(fd, fg, bg);
+            this._clearScreen(fd);
+            this._moveCursor(fd, 0, 0);
+            this._resetFormat(fd);
+        }
     }
     
     // private

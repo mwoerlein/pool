@@ -40,7 +40,7 @@ class Screen extends sys::core::Object {
     abstract [] drawFChar(int c, int fg, int bg);
     abstract [] drawFBoxCharAt(int bc, int fg, int bg, int x, int y);
     abstract [] drawFBoxChar(int bc, int fg, int bg);
-    abstract [] clear();
+    abstract [] clear(int fg, int bg);
     
     // TODO: remove with implicit cast
     [Screen] screen() { return this; }

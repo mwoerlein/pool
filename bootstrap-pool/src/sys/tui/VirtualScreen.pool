@@ -90,14 +90,7 @@ class VirtualScreen extends Screen {
         }
     }
     
-    [] clear() {
-        // default format == 0
-        Address:setDWords(_buf, maxPos, ' ');
-        cursor = 0;
-        this._hookOnNewLine();
-    }
-    
-    [] clearF(int fg, int bg) {
+    [] clear(int fg, int bg) {
         int format = 0x100*fg + 0x10000*bg;
         Address:setDWords(_buf, maxPos, ' ' + format);
         cursor = 0;
