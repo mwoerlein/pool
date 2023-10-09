@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::command;
 
 use sys::stream::FOStream;
+use sys::time::Timestamp;
 use sys::tui::Screen;
 
 class ScreenTest extends linux::Command {
@@ -57,7 +58,7 @@ Test for some screen features.
         fout2.printChar('$').printInt(vs2.getMaxX()).printChar('x').printInt(vs2.getMaxY()).printNewline();
         int i = 60;
         while (i--) {
-            this.sleep(0, i * 25000000);
+            this.sleep(0, i * 25 * Timestamp:MSEC);
             fout1.printInt(i).printNewline();
             fout2.printInt(i).printNewline();
         }
@@ -67,9 +68,9 @@ Test for some screen features.
     }
     
     [] sleep(int sec, int nsec) {
-        sec += nsec / 1000000000;
-        nsec %= 1000000000;
-        this.rt().out().printCString("Sleep for ").printInt(sec).printCString("s and ").printInt(nsec).printCString("ns").printNewline();
+        sec += nsec / Timestamp:NSEC_PER_SEC;
+        nsec %= Timestamp:NSEC_PER_SEC;
+        Timestamp:formatToStream(this.rt().out().printCString("Sleep for "), sec, nsec).printCString("s").printNewline();
         this.rt().sleep(sec, nsec);
     }
 }
