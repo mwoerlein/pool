@@ -51,6 +51,20 @@ class OStream extends Object {
         return this.printChar('\n');
     }
     
+    [OStream] printRawByte(int i) {
+        int n = i;
+        this.printChar(Bitset:and(n, 0xff));
+        return this;
+    }
+    
+    [OStream] printRawWord(int i) {
+        int n = i;
+        this.printChar(Bitset:and(n, 0xff));
+        n = Bitset:rshift(n, 8);
+        this.printChar(Bitset:and(n, 0xff));
+        return this;
+    }
+    
     [OStream] printRawInt(int i) {
         int n = i;
         this.printChar(Bitset:and(n, 0xff));
