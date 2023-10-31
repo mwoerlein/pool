@@ -39,7 +39,7 @@ class Runtime extends Object {
     [] sleep(int sec, int nsec) { if (clock) { clock.sleep(sec, nsec); } }
     
     [Thread] getCurrentThread() { return null; }
-    [] yield () { }
+    [] yield () { if (clock) { clock.sleep(0, 0); } }
     
     [Runtime] cloneRuntime() { return this._initFromRuntime(this.createInstance(Runtime:CLASSNAME)); }
     
