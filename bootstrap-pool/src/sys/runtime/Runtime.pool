@@ -58,9 +58,24 @@ class Runtime extends Object {
     
     // TODO #9: use generic method or special new syntax instead __all__
     [__all__] createInstance(cstring name) {
+        return this.createInstanceAt(name, allocator);
+    }
+    
+    [__all__] createInstanceAs(cstring name, cstring cast) {
+        __all__ tmp = this.createInstanceAt(name, allocator);
+        __all__ instance = this.cast(cast, tmp);
+        if (!instance && tmp) {
+            // invalid cast, try to destroy temporary instance 
+            Object o = this.cast(Object:CLASSNAME, tmp);
+            if (o) { o.destroy(); }
+        }
+        return instance;
+    }
+    
+    [__all__] createInstanceAt(cstring name, Allocator allocator) {
         ClassDescriptor classDesc = classStorage.getClassDesc(name);
         if (!classDesc) { return null; } // abort on initialization error
-        if (!classDesc.class_instance && !this._createClass(classDesc)) { return null; } // abort on initialization error
+        if (!classDesc.class_instance && !classStorage.rt()._createClass(classDesc)) { return null; } // abort on initialization error
         
         // allocate memory for instance
         MemoryInfo instInfo = allocator.allocate(classDesc.inst_tpl_size);
@@ -69,17 +84,6 @@ class Runtime extends Object {
         [__all__ instance, Object oinstance] = Runtime:_initTemplate(instInfo, classDesc);
         oinstance.setRt(this);
         oinstance.__init();
-        return instance;
-    }
-    
-    [__all__] createInstanceAs(cstring name, cstring cast) {
-        __all__ tmp = this.createInstance(name);
-        __all__ instance = this.cast(cast, tmp);
-        if (!instance && tmp) {
-            // invalid cast, try to destroy temporary instance 
-            Object o = this.cast(Object:CLASSNAME, tmp);
-            if (o) { o.destroy(); }
-        }
         return instance;
     }
     
