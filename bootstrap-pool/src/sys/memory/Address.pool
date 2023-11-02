@@ -221,4 +221,24 @@ class Address {
              {"%ecx": null, "%edi": null}
         );
     }
+    
+    global [int] compareBytes(int srcAddr, int destAddr, int n) {
+        int ret = 0;
+        __pasm__(<"
+                movl 0, %eax
+            _address_cb_loop:
+                movb (%esi), %al
+                subb (%edi), %al;   jnz _address_cb_ret
+                addl 1, %edi
+                addl 1, %esi
+                subl 1, %ecx;       jnz _address_cb_loop
+            _address_cb_ret:
+                .byte 0x66; .byte 0x98; #// cbw
+                .byte 0x98              #// cwde
+            ">,
+             {"%ecx": n, "%esi": srcAddr, "%edi": destAddr},
+             {"%ecx": null, "%esi": null, "%edi": null, "%eax": ret}
+        );
+        return ret;    
+    }
 }

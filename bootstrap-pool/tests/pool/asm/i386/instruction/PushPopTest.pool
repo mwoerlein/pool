@@ -34,7 +34,7 @@ class PushPopTest extends pool::asm::test::TestCase {
         t.in("    popw 2(%eax)");
         t.in("    pop (%ebx,%eax)");
         t.in("    popw (%ecx,%edi,8)");
-        t.in("    pop 48896(,%esi,2)");
+        t.in("    pop 782336(,%esi,2)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 popw (0x20)");
         
@@ -91,7 +91,7 @@ class PushPopTest extends pool::asm::test::TestCase {
         t.in("    pop 2(%eax)");
         t.in("    popl (%ebx,%eax)");
         t.in("    pop (%ecx,%edi,8)");
-        t.in("    popl 48896(,%esi,2)");
+        t.in("    popl 782336(,%esi,2)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 popw (0x20)");
         

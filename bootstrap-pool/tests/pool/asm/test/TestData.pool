@@ -13,16 +13,16 @@ use sys::stream::OStream;
 
 class TestData extends sys::core::Object {
     String name;
-    String input;
-    String pretty;
-    String binary;
+    Buffer input;
+    Buffer pretty;
+    Buffer binary;
     int startAddress;
     
     [] __init() {
         this.name = this.rt().createInstance(String:CLASSNAME);
-        this.input = this.rt().createInstance(String:CLASSNAME);
-        this.pretty = this.rt().createInstance(String:CLASSNAME);
-        this.binary = this.rt().createInstance(String:CLASSNAME);
+        this.input = this.rt().createInstance(Buffer:CLASSNAME);
+        this.pretty = this.rt().createInstance(Buffer:CLASSNAME);
+        this.binary = this.rt().createInstance(Buffer:CLASSNAME);
         this.startAddress = 0;
     }
 
@@ -40,12 +40,12 @@ class TestData extends sys::core::Object {
     [TestData] setStartAddress(int startAddress) { this.startAddress = startAddress; return this; }
     
     [String] getName() { return name; }
-    [String] getInput() { return input; }
-    [String] getPretty() {
+    [Buffer] getInput() { return input; }
+    [Buffer] getPretty() {
         if (pretty.length() == 0) { return input; }
         return pretty;
     }
-    [String] getBinary() { return binary; }
+    [Buffer] getBinary() { return binary; }
     [int] getStartAddress() { return startAddress; }
     [int] hasExplicitPretty() { return pretty.length() != 0; }
 }

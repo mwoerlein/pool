@@ -171,7 +171,7 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    movw (%eax,%ecx), %bx");
         t.in("    movw 127(%ecx,%ebx,4), %bp");
         t.in("    movl (%edx,%edi,8), %ecx");
-        t.in("    movl 48896(,%esi,2), %esp");
+        t.in("    movl 782336(,%esi,2), %esp");
             
         t.in("    movl (0x20), %edi");
         t.in("    movl (0x200), %ebx");
@@ -204,7 +204,7 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    movw (%eax,%ecx), %bx");
         t.in("    movw 127(%ecx,%ebx,4), %bp");
         t.in("    movl (%edx,%edi,8), %ecx");
-        t.in("    movl 48896(,%esi,2), %esp");
+        t.in("    movl 782336(,%esi,2), %esp");
             
         t.in("    movl (0x20), %edi");
         t.in("    movl (0x200), %ebx");
@@ -295,8 +295,8 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    movw 0xc, (%ebx,%eax)");
         t.in("    movw 0x400, 6(%ebx,%ebp,4)");
         t.in("    movl 0xc0ffee, (%ecx,%edi,8)");
-        t.in("    movl 0xfefe, 48896(,%esi,2)");
-        t.in("    movl 0xfefe, 48896(%ebp,%eax)");
+        t.in("    movl 0xfefe, 782336(,%esi,2)");
+        t.in("    movl 0xfefe, 782336(%ebp,%eax)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    movl 0xdeadbeef, (0x20)");
         
@@ -343,8 +343,8 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    movw 0xc, (%ebx,%eax)");
         t.in("    movw 0x400, 6(%ebx,%ebp,4)");
         t.in("    movl 0xc0ffee, (%ecx,%edi,8)");
-        t.in("    movl 0xfefe, 48896(,%esi,2)");
-        t.in("    movl 0xfefe, 48896(%ebp,%eax)");
+        t.in("    movl 0xfefe, 782336(,%esi,2)");
+        t.in("    movl 0xfefe, 782336(%ebp,%eax)");
         // TODO: activate with .addr and .data support in parser
         //t.in("    .addr32 movl 0xdeadbeef, (0x20)");
         

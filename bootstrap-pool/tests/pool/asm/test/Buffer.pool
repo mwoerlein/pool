@@ -1,0 +1,39 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::test;
+
+use sys::core::String;
+use sys::memory::Address;
+use sys::stream::OStream;
+
+// TODO: extract raw buffer from String generally?
+class Buffer extends String {
+
+    [int] equals(__any__ obj) {
+        Buffer b = this.rt().cast(Buffer:CLASSNAME, obj);
+        if (b) {
+            if (this._length == b._length && this._hash == b._hash) {
+                return Address:compareBytes(this._buffer.buf, b._buffer.buf, this._length) == 0;
+            }
+        }
+        return false;
+    }
+    
+    [OStream] hexDumpToStream(OStream stream, int bytesPerLine) {
+        int i = 0;
+        int pos = _buffer.buf;
+        int end = _buffer.buf + _length;
+        while (pos < end) {
+            int cur = Address:loadChar(pos++);
+            stream._printUHex(cur,2).printChar(' ');
+            if (++i >= bytesPerLine) {
+                stream.printNewline();
+                i = 0;
+            }
+        }
+        return stream; 
+    }
+}

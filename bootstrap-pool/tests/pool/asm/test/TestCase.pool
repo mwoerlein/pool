@@ -28,7 +28,7 @@ class TestCase extends test::TestCase {
     }
     
     [int] runTest(TestData data) {
-        String buffer = this.rt().createInstance(String:CLASSNAME);
+        Buffer buffer = this.rt().createInstance(Buffer:CLASSNAME);
         {
             CompilationUnit unit = this.parseAndCompile(data.getInput(), data.getName(), data.getStartAddress());
             if (unit.hasErrors()) { return this.failUnit(unit); }
@@ -39,7 +39,13 @@ class TestCase extends test::TestCase {
         
             buffer.clear();
             unit.rawToStream(buffer.ostream());
-            if (!buffer.equals(data.getBinary())) { return this.fail("invalid binary"); }
+            if (!buffer.equals(data.getBinary())) {
+                int ret = this.fail("invalid binary");
+                sys::stream::OStream notice = tout.notice();
+                data.getBinary().hexDumpToStream(notice.printCString("expected:").printNewline(), 16).printNewline();
+                buffer.hexDumpToStream(notice.printCString("got:").printNewline(), 16);
+                return ret;
+            }
             
             unit.destroy();
         }
@@ -53,7 +59,13 @@ class TestCase extends test::TestCase {
         
             buffer.clear();
             unit.rawToStream(buffer.ostream());
-            if (!buffer.equals(data.getBinary())) { return this.fail("invalid stable binary"); }
+            if (!buffer.equals(data.getBinary())) {
+                int ret = this.fail("invalid stable binary");
+                sys::stream::OStream notice = tout.notice();
+                data.getBinary().hexDumpToStream(notice.printCString("expected:").printNewline(), 16).printNewline();
+                buffer.hexDumpToStream(notice.printCString("got:").printNewline(), 16);
+                return ret;
+            }
             
             unit.destroy();
         }
@@ -62,7 +74,7 @@ class TestCase extends test::TestCase {
         return this.success();
     }
     
-    [CompilationUnit] parseAndCompile(String input, String name, int startAddress) {
+    [CompilationUnit] parseAndCompile(Buffer input, String name, int startAddress) {
         CompilationUnit unit = this.rt().createInstance(CompilationUnit:CLASSNAME);
         Parser parser = this.rt().createInstance(Parser:CLASSNAME);
         Compiler compiler = this.rt().createInstance(Compiler:CLASSNAME);
