@@ -63,6 +63,7 @@ class MoveTest extends pool::asm::test::TestCase {
         t.in("    movw %ax, (%ebx,%eax)");
         t.in("    movw %cx, six(%ebx,%ebp,4)");
         t.in("    movl %edx, (%ecx,%edi,8)");
+        t.in("    movl %edi, (%ebp)");
         t.in("    movl %esp, buffer(,%esi,2)");
             
         t.in("    movl %edi, (0x20)");
@@ -76,6 +77,7 @@ class MoveTest extends pool::asm::test::TestCase {
         t.bin(0x66).bin(0x89).bin(0x04).bin(0x03);
         t.bin(0x66).bin(0x89).bin(0x4C).bin(0xAB).bin(0x06);
         t.bin(0x89).bin(0x14).bin(0xF9);
+        t.bin(0x89).bin(0x7D).bin(0x00);
         t.bin(0x89).bin(0x24).bin(0x75).bin(0x00).bin(0xF2).bin(0x0B).bin(0x00);
             
         t.bin(0x89).bin(0x3D).bin(0x20).bin(0x00).bin(0x00).bin(0x00);

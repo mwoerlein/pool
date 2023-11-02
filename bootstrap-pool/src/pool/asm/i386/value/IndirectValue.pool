@@ -140,7 +140,10 @@ class IndirectValue extends Value {
             if ((base || index) && displacement.isConstant() && (-128 <= value && value <= 127)) { return 1; }
             return addrWidth / 8;
         }
-        if (!index && base && base.isRegister(RegisterValue:BP)) { return 1; } // use 0(%bp)
+        if (!index && base) {
+            if (base.isRegister(RegisterValue:BP)) { return 1; } // use 0(%bp)
+            if (base.isRegister(RegisterValue:EBP)) { return 1; } // use 0(%ebp)
+        }
         if (!base && index) { return addrWidth / 8; } // use 0(,<_index>)
         return 0; // no disp bytes
     }
