@@ -118,6 +118,37 @@ class Runtime extends Object {
         return cl;
     }
     
+    [__all__] createSelfcontainedRuntime(cstring name, Allocator allocator, ClassStorage classStorage) {
+        // TODO: ensure critical block to be executed continuously
+        // or restructure code to work correctly without modifying current runtime
+        // challenge: class storage uses own runtime to create class instances if required
+        Allocator ownAllocator = this.allocator;
+        ClassStorage ownClassStorage = this.classStorage;
+        
+        this.allocator = allocator;
+        this.classStorage = classStorage;
+        Class classClass = this._createClassClass();
+        __all__ ret := this.createInstance(name);
+        
+        this.allocator = ownAllocator;
+        this.classStorage = ownClassStorage;
+        
+        if (!ret) { return null; }
+        Runtime rt := Runtime:_castTo(classStorage.getClassDesc(Runtime:CLASSNAME), ret);
+        if (!rt) {
+            // invalid cast, try to destroy temporary instance 
+            Object o = Runtime:_castTo(classStorage.getClassDesc(Object:CLASSNAME), ret);
+            if (o) { o.destroy(); }
+            return null;
+        }
+        rt.setAllocator(allocator);
+        rt.setClassStorage(classStorage);
+        rt.refreshInstance(classClass);
+        rt.refreshInstance(rt.getClass());
+        rt.refreshInstance(rt);
+        return ret;
+    }
+    
     [Object] _asObject(int mem) {
         {
             InstanceHandle h = Address:cast(mem + InstanceDescriptor:SIZEOF);
