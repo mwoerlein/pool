@@ -19,8 +19,8 @@ class ClassDescriptorLoader extends Object {
     // methods
     abstract [ClassDescriptor] loadClassDesc(cstring name);
     
-    [ClassDescriptor] buildClassDescFromIStream(IStream in, int size) {
-        MemoryInfo info = this.rt().getAllocator().allocate(size);
+    [ClassDescriptor] buildClassDescFromIStream(IStream in, int size, Allocator allocator) {
+        MemoryInfo info = allocator.allocate(size);
         MemoryIOStream s = this.rt().createInstance(MemoryIOStream:CLASSNAME);
         s._initMem(info);
         in.printToStream(s.ostream());

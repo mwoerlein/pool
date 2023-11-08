@@ -41,7 +41,7 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
         ClassDescriptor ret = null;
         if (e) {
             // TODO: validate meta.mimetype and pool.class property?
-            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize(), this.rt().getAllocator());
             e.destroy();
         }
         return ret;

@@ -11,6 +11,7 @@ use pool::storage::PropertiesMarshaller;
 use sys::core::String;
 use sys::core::utils::PropertyContainer;
 use sys::memory::Address;
+use sys::memory::Allocator;
 use sys::memory::MemoryIOStream;
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassDescriptorLoader;
@@ -89,10 +90,22 @@ class Store extends PropertyContainer, ClassDescriptorLoader {
         ClassDescriptor ret = null;
         if (e) {
             // TODO: validate meta.mimetype and pool.class property?
-            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize(), this.rt().getAllocator());
             e.destroy();
         }
         return ret;
+    }
+    
+    [] loadAllClassDesc(sys::runtime::DynamicClassStorage dcs, Allocator allocator) {
+        StorageElementDesc cur = first;
+        while (cur) {
+            if (cur.mimeType == Mimetype:POOL_X86_CLASS) {
+                StorageElement e = this._getElement(cur);
+                dcs.addClassDesc(this.buildClassDescFromIStream(e.getContent(), e.getContentSize(), allocator));
+                e.destroy();
+            }
+            cur = cur.next;
+        }
     }
     
     //// Store ////
