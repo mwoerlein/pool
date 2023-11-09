@@ -11,7 +11,6 @@ use pool::storage::PropertiesMarshaller;
 use sys::core::String;
 use sys::core::utils::PropertyContainer;
 use sys::memory::Address;
-use sys::memory::Allocator;
 use sys::memory::MemoryIOStream;
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassDescriptorLoader;
@@ -25,10 +24,13 @@ class Store extends PropertyContainer, ClassDescriptorLoader {
     SeekableIOStream content;
     PropertiesMarshaller pm;
     
-    [] __init() { this._initStore(); }
+    [] __init() {
+        this._initPropertyContainer();
+        this._initClassDescriptorLoader();
+        this._initStore();
+    }
     [] _initStore() {
         pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
-        this._initPropertyContainer();
     }
     [] __destruct() { this._destructStore(); }
     [] _destructStore() {
@@ -90,18 +92,18 @@ class Store extends PropertyContainer, ClassDescriptorLoader {
         ClassDescriptor ret = null;
         if (e) {
             // TODO: validate meta.mimetype and pool.class property?
-            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize(), this.rt().getAllocator());
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
             e.destroy();
         }
         return ret;
     }
     
-    [] loadAllClassDesc(sys::runtime::DynamicClassStorage dcs, Allocator allocator) {
+    [] loadAllClassDesc(sys::runtime::DynamicClassStorage dcs) {
         StorageElementDesc cur = first;
         while (cur) {
             if (cur.mimeType == Mimetype:POOL_X86_CLASS) {
                 StorageElement e = this._getElement(cur);
-                dcs.addClassDesc(this.buildClassDescFromIStream(e.getContent(), e.getContentSize(), allocator));
+                dcs.addClassDesc(this.buildClassDescFromIStream(e.getContent(), e.getContentSize()));
                 e.destroy();
             }
             cur = cur.next;

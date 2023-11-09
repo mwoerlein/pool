@@ -1,0 +1,25 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::runtime;
+
+
+class ClassStorageClassDescriptorLoader extends ClassDescriptorLoader {
+    
+    ClassStorage classStorage;
+    
+    [ClassStorageClassDescriptorLoader] setClassStorage(ClassStorage classStorage) {
+        this.classStorage = classStorage;
+        return this;
+    }
+    
+    // methods
+    [ClassDescriptor] loadClassDesc(cstring name) {
+        if (!classStorage) { return null; }
+        ClassDescriptor desc = classStorage.getClassDesc(name);
+        if (!desc) { return null; }
+        return ClassStorage:_cloneClassDescriptorAt(desc, allocator);
+    }
+}

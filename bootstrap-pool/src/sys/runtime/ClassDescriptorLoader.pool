@@ -14,12 +14,20 @@ use sys::stream::IStream;
 
 class ClassDescriptorLoader extends Object {
     
+    Allocator allocator;
     ClassDescriptorLoader next;
+    
+    [] __init() { this._initClassDescriptorLoader(); }
+    [] _initClassDescriptorLoader() {
+        this.allocator = this.rt().getAllocator();
+    }
     
     // methods
     abstract [ClassDescriptor] loadClassDesc(cstring name);
     
-    [ClassDescriptor] buildClassDescFromIStream(IStream in, int size, Allocator allocator) {
+    [ClassDescriptorLoader] setAllocator(Allocator allocator) { this.allocator = allocator; return this; }
+    
+    [ClassDescriptor] buildClassDescFromIStream(IStream in, int size) {
         MemoryInfo info = allocator.allocate(size);
         MemoryIOStream s = this.rt().createInstance(MemoryIOStream:CLASSNAME);
         s._initMem(info);
@@ -31,7 +39,7 @@ class ClassDescriptorLoader extends Object {
         desc.class_instance = null;
         desc.resolved = false;
         if (desc.magic != ClassDescriptor:MAGIC) {
-            this.rt().getAllocator().free(info);
+            allocator.free(info);
             return null;
         }
         return desc;

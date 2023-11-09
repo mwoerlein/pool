@@ -17,16 +17,11 @@ class ClassStorage extends Object {
     abstract [] transferClasses(DynamicClassStorage store, Allocator allocator);
     
     [] transferClass(ClassDescriptor classDesc, DynamicClassStorage store, Allocator allocator) {
-        ClassDescriptor desc = classDesc;
         if (allocator) {
-            MemoryInfo info = allocator.allocate(classDesc.class_size);
-            Address:copyBytes(Address:from(classDesc), info.buf, classDesc.class_size);
-            desc = Address:cast(info.buf);
-            desc.mem_info = info;
-            desc.class_instance = null;
-            desc.resolved = false;
+            store.addClassDesc(ClassStorage:_cloneClassDescriptorAt(classDesc, allocator));
+        } else {
+            store.addClassDesc(classDesc);
         }
-        store.addClassDesc(desc);
     }
     
     [int] _resolve(ClassDescriptor desc) {
@@ -52,4 +47,14 @@ class ClassStorage extends Object {
         
     // TODO: remove with implicit cast
     [ClassStorage] classStorage() { return this; }
+    
+    global [ClassDescriptor] _cloneClassDescriptorAt(ClassDescriptor classDesc, Allocator allocator) {
+        MemoryInfo info = allocator.allocate(classDesc.class_size);
+        Address:copyBytes(Address:from(classDesc), info.buf, classDesc.class_size);
+        ClassDescriptor desc = Address:cast(info.buf);
+        desc.mem_info = info;
+        desc.class_instance = null;
+        desc.resolved = false;
+        return desc;
+    }
 }

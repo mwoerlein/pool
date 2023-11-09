@@ -22,6 +22,10 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
     PropertiesMarshaller pm;
     
     [] __init() {
+        this._initClassDescriptorLoader();
+        this._initDirectory();
+    }
+    [] _initDirectory() {
         pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
     }
     
@@ -41,7 +45,7 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
         ClassDescriptor ret = null;
         if (e) {
             // TODO: validate meta.mimetype and pool.class property?
-            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize(), this.rt().getAllocator());
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
             e.destroy();
         }
         return ret;
