@@ -28,33 +28,31 @@ class Runtime extends sys::runtime::RuntimeBuilder {
         bsRt.setErr(debug);
         Allocator bsAllocator := bsRt.getAllocator();
         
+        // bootstrap heap management
         PageAllocator bsPA := bsRt.createInstanceAs(LinuxPageAllocator:CLASSNAME, PageAllocator:CLASSNAME);
         PagedMemoryManager bsPMM := bsRt.createInstance(PagedMemoryManager:CLASSNAME);
         bsPMM.setMinimalPageAllocation(0x40).initFromPageAllocator(bsPA, 1);
         
-        bsRt.setAllocator(bsPMM.allocator());
-        SysRuntime rt = bsRt.createInstance(SysRuntime:CLASSNAME);
-        bsRt.setAllocator(bsAllocator);
-        rt.setRt(rt);
-        rt.setClassStorage(bsRt.getClassStorage());
-        rt.setAllocator(bsPMM.allocator());
+        SysRuntime rt = bsRt.createSelfcontainedRuntime(SysRuntime:CLASSNAME, bsPMM.allocator(), bsRt.getClassStorage());
         
+        // rebuild class storage in runtime
         DynamicClassStorage dcs = rt.createInstance(DynamicClassStorage:CLASSNAME);
         bsRt.getClassStorage().transferClasses(dcs, null);
         rt.setClassStorage(dcs.classStorage());
         dcs.rebuildClasses();
         
+        // rebuild heap management in runtime
         PageAllocator pa := rt.createInstanceAs(LinuxPageAllocator:CLASSNAME, PageAllocator:CLASSNAME);
         PagedMemoryManager pmm := rt.createInstance(PagedMemoryManager:CLASSNAME);
         pmm.initFromPagedMemoryManager(pa, bsPMM);
         rt.setAllocator(pmm.allocator());
 
+        // setup further runtime services
         LinuxOStream ls1 = rt.createInstance(LinuxOStream:CLASSNAME);
         rt.setOut(ls1.initOStream(SysCall:FD_STDOUT));
         LinuxOStream ls2 = rt.createInstance(LinuxOStream:CLASSNAME);
         ls2.setForeground(LinuxOStream:BRIGHT_RED);
         rt.setErr(ls2.initOStream(SysCall:FD_STDERR));
-        
         LinuxClock lc = rt.createInstance(LinuxClock:CLASSNAME);
         rt.setClock(lc.clock());
         
