@@ -50,6 +50,8 @@ class DynamicClassStorage extends ClassStorage {
         alloc.free(this.bucketsInfo);
     }
     
+    [int] size() { return classDescCount; }
+    
     [ClassDescriptor] getClassDesc(cstring name) {
         int bucketNumber = this._getBucketNumber(name);
         ClassDescriptor desc = this._findInBucket(this._getBucket(bucketNumber), name);
@@ -127,6 +129,32 @@ class DynamicClassStorage extends ClassStorage {
             }
         }
     }
+    
+    [ClassDescriptor] preloadClassDesc(cstring name) {
+        int bucketNumber = this._getBucketNumber(name);
+        ClassDescriptor desc = this._findInBucket(this._getBucket(bucketNumber), name);
+        if (!desc) {
+            desc = this.loadClassDesc(name);
+            if (!desc) { return null; }
+            this.addClassDesc(desc);
+            if (!this._preloadUsedClasses(desc)) { return null; }
+        }
+        return desc;
+    }
+    
+    [int] _preloadUsedClasses(ClassDescriptor desc) {
+        ClassTableEntry cte = Address:offset(desc, desc.class_tabs_offset);
+        while (cte.classname_offset) {
+            cstring classname = Address:string(desc, cte.classname_offset);
+            ClassDescriptor sDesc = this.preloadClassDesc(classname);
+            if (!sDesc) {
+                this.rt().err().printCString("unknown requirement ").printCString(classname).printNewline();
+                return false;
+            } 
+            cte = Address:offset(cte, ClassTableEntry:SIZEOF);
+        }
+        return true;
+    } 
    
     [] _setBucket(int number, ClassDescriptor value) {
         int addr = bucketsInfo.buf + number * Address:SIZE;

@@ -98,18 +98,6 @@ class Store extends PropertyContainer, ClassDescriptorLoader {
         return ret;
     }
     
-    [] loadAllClassDesc(sys::runtime::DynamicClassStorage dcs) {
-        StorageElementDesc cur = first;
-        while (cur) {
-            if (cur.mimeType == Mimetype:POOL_X86_CLASS) {
-                StorageElement e = this._getElement(cur);
-                dcs.addClassDesc(this.buildClassDescFromIStream(e.getContent(), e.getContentSize()));
-                e.destroy();
-            }
-            cur = cur.next;
-        }
-    }
-    
     //// Store ////
     [PropertiesMarshaller] getPropertiesMarshaller() { return pm; }
     
