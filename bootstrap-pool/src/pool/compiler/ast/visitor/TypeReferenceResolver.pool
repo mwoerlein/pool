@@ -226,6 +226,13 @@ class TypeReferenceResolver extends Visitor {
             }
         }
         if (!resolvedType) { return false; }
+        { // mark referenced class as used by current class
+            ClassDeclNode classNode = _curScope.getClassDeclNode();
+            ClassScope classScope = resolvedType.isClass();
+            if (classNode && classScope) {
+                classNode.getClassScope().markAsUsed(classScope);
+            }
+        }
         node.setResolvedType(resolvedType.type());
         return true;
     }

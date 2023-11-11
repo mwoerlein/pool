@@ -52,6 +52,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
+use sys::runtime::ClassTableEntry;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
@@ -121,6 +122,7 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
         // dependent classes
         this._comment().printCString(" class tab");
         this._label().print(this._classTabs());
+        this._comment().printCString(" used in hierarchy");
         {
             AnyIterator it = _classScope.getSupers();
             while (it.hasNext()) {
@@ -141,6 +143,7 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
             }
             it.destroy();
         }
+        this._comment().printCString(" used globally");
         {
             AnyIterator it = _classScope.getGloballyRequiredClasses();
             while (it.hasNext()) {
@@ -156,6 +159,25 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
                     } else {
                         this._longI(0);  // @class-desc filled on class loading
                     }
+                    this._long(this._constStringOffset(_classScope.stringId(scope.getFullQualifiedName(), null)));
+                    this._longI(0); // no vtab offset in description
+                    this._longI(0); // no handle offset in instance
+                }
+            }
+            it.destroy();
+        }
+        this._comment().printCString(" used unresolved");
+        {
+            AnyIterator it = _classScope.getUsedClasses();
+            while (it.hasNext()) {
+                ClassScope scope = it.next();
+                if (!_classScope.hasSuper(scope) && !_classScope.hasGloballyRequiredClass(scope)) {
+                    this._local(
+                        this._classTabOffset(scope),
+                        this._classOffset(this._classTab(scope))
+                    );
+                    this._label().print(this._classTab(scope));
+                    this._longI(ClassTableEntry:DO_NOT_RESOLVE); // mark as pseudo dependency
                     this._long(this._constStringOffset(_classScope.stringId(scope.getFullQualifiedName(), null)));
                     this._longI(0); // no vtab offset in description
                     this._longI(0); // no handle offset in instance

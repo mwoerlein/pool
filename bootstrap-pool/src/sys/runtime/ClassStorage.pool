@@ -28,7 +28,9 @@ class ClassStorage extends Object {
         //this.rt().out().printCString("resolve ").printCString(Address:string(desc, desc.classname_offset)).printNewline();
         ClassTableEntry cte = Address:offset(desc, desc.class_tabs_offset);
         while (cte.classname_offset) {
-            if (cte.classname_offset == desc.classname_offset) {
+            if (Address:from(cte.class_desc) == ClassTableEntry:DO_NOT_RESOLVE) {
+                // skip entry
+            } else if (cte.classname_offset == desc.classname_offset) {
                 cte.class_desc = desc;
             } else {
                 cstring classname = Address:string(desc, cte.classname_offset);

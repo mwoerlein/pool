@@ -7,6 +7,8 @@ namespace sys::runtime;
 
 
 struct ClassTableEntry {
+    global int DO_NOT_RESOLVE := 0xFFFFFFFF;
+    
     ClassDescriptor class_desc;
     int classname_offset;
     int vtab_offset;

@@ -22,6 +22,7 @@ class ClassScope extends NamedType, Scope {
     
     AnyMap _supers;  // HashMap<String, ClassScope>
     AnyMap _required;  // HashMap<String, ClassScope>
+    AnyMap _usedClasses;  // HashMap<String, ClassScope>
     AnyMap _strings;  // HashMap<String, String>
     
     String _localPrefix;
@@ -35,6 +36,7 @@ class ClassScope extends NamedType, Scope {
     [] _initClassScope() {
         _supers = this.createOwn(AnyMap:CLASSNAME);
         _required = this.createOwn(AnyMap:CLASSNAME);
+        _usedClasses = this.createOwn(AnyMap:CLASSNAME);
         _strings = this.createOwn(AnyMap:CLASSNAME);
         
         _localPrefix = this.createOwn(String:CLASSNAME);
@@ -74,6 +76,10 @@ class ClassScope extends NamedType, Scope {
     [] markAsGloballyRequired(ClassScope required) { _required.set(required.getFullQualifiedName(), required); }
     [int] hasGloballyRequiredClass(ClassScope scope) { return _required.has(scope.getFullQualifiedName()); }
     [AnyIterator] getGloballyRequiredClasses() { return _required.values(); }
+    
+    [] markAsUsed(ClassScope scope) { _usedClasses.set(scope.getFullQualifiedName(), scope); }
+    [int] hasUsedClass(ClassScope scope) { return _usedClasses.has(scope.getFullQualifiedName()); }
+    [AnyIterator] getUsedClasses() { return _usedClasses.values(); }
     
     [String] stringId(String value, String seed) {
         String id = _strings.get(value);
