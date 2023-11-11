@@ -146,6 +146,7 @@ class Runtime extends Object {
         rt.refreshInstance(classClass);
         rt.refreshInstance(rt.getClass());
         rt.refreshInstance(rt);
+        
         return ret;
     }
     
@@ -196,7 +197,7 @@ class Runtime extends Object {
             ClassDescriptor objDesc = curHandle.inst_desc.class_desc;
             ClassTableEntry curEntry = Address:offset(objDesc, objDesc.class_tabs_offset);
             while (curEntry.handle_offset) {
-                if (Address:equals(classDesc, curEntry.class_desc)) {
+                if (curEntry.handle_offset && Address:equals(classDesc, curEntry.class_desc)) {
                     return Address:offset(curHandle.inst_desc, curEntry.handle_offset);
                 }
                 curEntry = Address:offset(curEntry, ClassTableEntry:SIZEOF);
