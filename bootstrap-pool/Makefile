@@ -47,6 +47,11 @@ $(BINDIR)/pool: $(SRCDIR)/pool/command/PoolRuntime.pool $(BINDIR) $(POOLSC)
 	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::PoolRuntime
 	@chmod a+x $@
 	
+$(BINDIR)/pls: $(SRCDIR)/pool/command/PoolLanguageServer.pool $(BINDIR) $(POOLSC)
+	@echo "build pls (pool)"
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::PoolLanguageServer
+	@chmod a+x $@
+	
 $(BINDIR)/pooltest: $(TESTDIR)/test/Command.pool $(BINDIR) $(POOLSC)
 	@echo "build pooltest (pool)"
 	@$(POOLSC) --classpath $(TESTDIR) $(PSC_FLAGS) --output $@ test::Command

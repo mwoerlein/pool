@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class PoolLanguageServer extends pool::command::PoolLanguageServer {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        PoolLanguageServer pls = linux::Runtime:buildRuntime().createInstance(PoolLanguageServer:CLASSNAME);
+        return pls.execute(argc, argv);
+    }
+}
