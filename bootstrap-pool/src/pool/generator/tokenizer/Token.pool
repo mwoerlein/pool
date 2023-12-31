@@ -59,7 +59,7 @@ class Token extends Object {
     }
     
     [OStream] debugToStream(SymbolTable table, OStream stream) {
-        table.debugSymbol(symbol, stream).printChar('(')
+        table.debugSymbol(symbol, stream).printChar('@').print(inputName).printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)
             .printChar('-')
             .printInt(lastLine).printChar('/').printInt(lastColumn)
