@@ -46,6 +46,36 @@ class SysCall {
         ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1}, {"%eax": null});
     }
     
+    global [int] isReadAvailable(int fd) {
+        if (fd >= 1024) { return false; } // maximal file descriptor for select
+        if (fd != SysCall:FD_STDIN) { return false; } // currently hardcoded select on stdin
+        int ret = false;
+        int fd_set = 0;
+        int timeout = 0;
+        
+        // allocate fd_set
+        __pasm__("subl %ecx, %esp; movl %esp, %edi; .byte 0xf3; .byte 0xaa #// rep stosb", {"%eax": 0, "%ecx": 128}, {"%esp": fd_set});
+        // TODO set fd bit instead of implicit stdin
+        __pasm__("movl %eax, (%edi)", {"%eax": 1, "%edi": fd_set});
+        // allocate timeout in %edi
+        __pasm__("subl %ecx, %esp; movl %esp, %edi; .byte 0xf3; .byte 0xaa #// rep stosb", {"%eax": 0, "%ecx": 16}, {"%esp": timeout});
+        
+        // call select syscall
+        __pasm__(
+            "int 0x80",
+            {"%eax": 142, "%ebx": fd+1, "%ecx": fd_set, "%edx": null, "%esi": null, "%edi": timeout}
+        );
+        __pasm__("movl (%edi), %eax", {"%edi": fd_set}, {"%eax": ret});
+        
+        // free timeout
+        __pasm__("addl %ecx, %esp", {"%ecx": 16});
+        // free fd_set
+        __pasm__("addl %ecx, %esp", {"%ecx": 128});
+        
+        // TODO test fd bit instead of implicit stdin
+        return ret == 1;
+    }
+    
     global [int] open(cstring filename, int mode) {
         int fd = 0;
         __pasm__(

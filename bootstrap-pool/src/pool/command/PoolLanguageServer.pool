@@ -57,7 +57,7 @@ Pool Language Server.
         this.sendResponse(out, initializeResponse);
         initializeResponse.destroy();
         
-        while (!input.isEmpty()) {
+        while (!input.isDone()) {
             String message = this.readMessage(input, debug);
             debug.print(message).printNewline();
             if (message) {
@@ -65,7 +65,7 @@ Pool Language Server.
                 message.destroy();
             }
         }
-        
+        debug.printCString("exit").printNewline();
         return 0;
     }
     
@@ -75,6 +75,11 @@ Pool Language Server.
     }
     
     [String] readMessage(IStream in, OStream debug) {
+        while (!in.isAvailable()) {
+            debug.printCString("Waiting for message...").printNewline();
+            this.rt().sleep(1,0);
+        }
+        
         int contentLength = -1;
 
         int state = 1;

@@ -7,8 +7,15 @@ namespace sys::stream;
 
 use sys::core::Object;
 
+// TODO: refactor blocking/non-blocking input handling
 class IStream extends Object {
     
+    // non-blocking check, if readChar/peekChar will return immediately with a valid character
+    [int] isAvailable() { return !this.isEmpty(); }
+    // non-blocking check, if readChar/peekChar will never ever return with a valid character
+    [int] isDone() { return this.isEmpty(); }
+    
+    // blocking methods, if necessary
     abstract [int] isEmpty();
     abstract [int] peekChar();
     abstract [int] readChar();
