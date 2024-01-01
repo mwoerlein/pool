@@ -1,0 +1,75 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class Server extends sys::core::Task {
+
+    MessageBus mb;
+    OStream debug;
+
+    [] _initServer(MessageBus mb, OStream debug) {
+        this.mb = mb;
+        this.debug = debug;
+    }
+    
+    [int] run() {
+        if (!this.awaitInitialization()) {
+            debug.printCString("Initialization failed!").printNewline();
+            return -1;
+        }
+        while (true) {
+            while (mb.hasMessages()) {
+                // TODO: determine and queue jobs from messages/notifications
+                // mirror message
+                String message = mb.getRawMessage();
+                debug.print(message).printNewline();
+                if (message) {
+                    mb.sendRawResponse(message);
+                    message.destroy();
+                }
+            }
+            if (mb.isClientGone()) {
+                // TODO: queue shutdown job?
+                debug.printCString("client gone => exit").printNewline();
+                return 0;
+            }
+            // TODO: do queued job, if available, instead of busy waiting
+            debug.printCString("Waiting for message...").printNewline();
+            // TODO: blocking wait for message, if no job exists?
+            this.rt().sleep(1,0);
+        }
+        return -1;
+    }
+    
+    [int] awaitInitialization() {
+        // await messages
+        while (!mb.hasMessages()) {
+            if (mb.isClientGone()) { return false; }
+            debug.printCString("Waiting for initialization...").printNewline();
+            // TODO: blocking wait for initialization?
+            this.rt().sleep(1,0);
+        }
+        
+        // TODO: detect and handle initialize correctly
+        // pull and ignore initialize message
+        {
+            String initializeMessage = mb.getRawMessage();
+            debug.print(initializeMessage).printNewline();
+            if (initializeMessage) { initializeMessage.destroy(); }
+        }
+        // send fake initialize response
+        {
+            String initializeResponse = this.rt().createInstance(String:CLASSNAME);
+            initializeResponse.printCString("{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":{\"capabilities\":{\"hoverProvider\":false,\"declarationProvider\":false,\"definitionProvider\":false,\"typeDefinitionProvider\":false},\"serverInfo\":{\"name\":\"PoolLanguageServer\",\"version\":\"0.1\"}}}");
+            mb.sendRawResponse(initializeResponse);
+            initializeResponse.destroy();
+        }
+        return true;
+    }
+}
