@@ -1,0 +1,67 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::value;
+
+use sys::stream::OStream;
+
+class ObjectValue extends JsonValue, sys::core::anycollection::AnyMap {
+
+    [int] chas(cstring key) {
+        StringValue k = this._key(key);
+        int ret = this.has(k);
+        k.destroy();
+        return ret;
+    }
+    
+    [JsonValue] cget(cstring key) {
+        StringValue k = this._key(key);
+        JsonValue ret = this.get(k);
+        k.destroy();
+        return ret;
+    }
+    
+    [JsonValue] cset(cstring key, JsonValue value) {
+        return this.set(this.own(this._key(key)), this.own(value));
+    }
+
+    [JsonValue] cunset(cstring key) {
+        StringValue k = this._key(key);
+        JsonValue ret = this.unset(k);
+        k.destroy();
+        return ret;
+    }
+    
+    [OStream] jsonToStream(OStream stream) {
+        stream.printChar('{');
+        {
+            sys::core::anycollection::AnyMapEntryIterator it = this.entries();
+            if (it.hasNext()) {
+                [StringValue key, JsonValue value] := it.nextPair();
+                value.jsonToStream(key.jsonToStream(stream).printChar(':'));
+            }
+            while (it.hasNext()) {
+                [StringValue key, JsonValue value] := it.nextPair();
+                value.jsonToStream(key.jsonToStream(stream.printChar(',')).printChar(':'));
+            }
+            it.destroy();
+        }
+        return stream.printChar('}');
+    }
+
+    [ObjectValue] asObjectValue() { return this; }
+    
+    [ObjectValue] _append(StringValue key, JsonValue value) {
+        JsonValue old = this.set(this.own(key), this.own(value));
+        if (old) { old.destroy(); }
+        return this;
+    }
+
+    [StringValue] _key(cstring value) {
+        StringValue s = this.rt().createInstance(StringValue:CLASSNAME);
+        s.assignCString(value);
+        return s;
+    }
+}

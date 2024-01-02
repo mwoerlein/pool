@@ -1,0 +1,44 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::value;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+// TODO: handle fraction and exponent
+class NumberValue extends JsonValue {
+
+    int integer;
+    String fraction;
+    String exponent;
+    
+    [NumberValue] fromJson(String integer, String fraction, String exponent) {
+        this.integer = integer.toInt();
+        if (fraction) {
+            this.fraction = this.createOwn(String:CLASSNAME);
+            this.fraction.assignString(fraction);
+            this.rt().err().printCString("Fractions in json numbers are not correctly supported, yet");
+        }
+        if (exponent) {
+            this.exponent = this.createOwn(String:CLASSNAME);
+            this.exponent.assignString(exponent); 
+            this.rt().err().printCString("Exponents in json numbers are not correctly supported, yet");
+        }
+        return this;
+    }
+    
+    [int] toInt() { return integer; }
+
+    [OStream] jsonToStream(OStream stream) {
+        stream.printInt(integer);
+        if (fraction) { stream.print(fraction); }
+        if (exponent) { stream.print(exponent); }
+        return stream;
+    }
+
+    [NumberValue] asNumberValue() { return this; }
+    
+}

@@ -1,0 +1,36 @@
+%namespace  "json::parser"
+%classname  "Parser"
+%extends    "BaseParser"
+%tokenizer  "Tokenizer"
+%ignores WSP
+
+--- TOKENS ---
+WSP       := /[ \t\r\n]*/
+STRING    := /"([^"\\\t\r\n]|\\["\\\/bfnrt]|\\u[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z])*"/
+INTEGER   := /\-?(0|[1-9][0-9]*)/
+FRACTION  := /\.[0-9]+/
+EXPONENT  := /[eE][\+\-]?[0-9]+/
+
+--- RULES ---
+json: value                             { $$ = this.json = $1; }
+
+value: '{' '}'                          { $$ = this.objectValue().jsonValue(); }
+value: '{' members '}'                  { $$ = this.obj($2).jsonValue(); }
+value: '[' ']'                          { $$ = this.arrayValue().jsonValue(); }
+value: '[' elements ']'                 { $$ = this.arr($2).jsonValue(); }
+value: STRING                           { $$ = this.stringValue($1).jsonValue(); }
+value: number                           { $$ = this.num($1).jsonValue(); }
+value: 'true'                           { $$ = this.trueValue().jsonValue(); }
+value: 'false'                          { $$ = this.falseValue().jsonValue(); }
+value: 'null'                           { $$ = this.nullValue().jsonValue(); }
+
+members: STRING ':' value               { $$ = this.appendToObject(this.objectValue(), this.stringValue($1), $3); }
+members: members ',' STRING ':' value   { $$ = this.appendToObject($1, this.stringValue($3), $5); }
+
+elements: value                         { $$ = this.appendToArray(this.arrayValue(), $1); }
+elements: elements ',' value            { $$ = this.appendToArray($1, $3); }
+
+number: INTEGER                         { $$ = this.numberValue($1, null, null); }
+number: INTEGER FRACTION                { $$ = this.numberValue($1, $2, null); }
+number: INTEGER EXPONENT                { $$ = this.numberValue($1, null, $2); }
+number: INTEGER FRACTION EXPONENT       { $$ = this.numberValue($1, $2, $3); }

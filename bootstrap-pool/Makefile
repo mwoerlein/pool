@@ -69,4 +69,5 @@ regenerate-parsers: $(PARSERGEN)
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/generator/parser/grammar/Parser.gram
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/asm/Parser.gram
 	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/pool/compiler/parser/Parser.gram
+	@$(PARSERGEN) --classpath $(SRCDIR) $(SRCDIR)/json/parser/Parser.gram
 

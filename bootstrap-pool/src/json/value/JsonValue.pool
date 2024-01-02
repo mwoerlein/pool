@@ -1,0 +1,24 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::value;
+
+use sys::stream::OStream;
+
+class JsonValue extends sys::core::Object {
+
+    abstract [OStream] jsonToStream(OStream stream);
+
+    [ObjectValue] asObjectValue() { return null; }
+    [ArrayValue] asArrayValue() { return null; }
+    [StringValue] asStringValue() { return null; }
+    [NumberValue] asNumberValue() { return null; }
+    [TrueValue] asTrueValue() { return null; }
+    [FalseValue] asFalseValue() { return null; }
+    [NullValue] asNullValue() { return null; }
+    
+    // TODO: remove with implicit cast
+    [JsonValue] jsonValue() { return this; }
+}

@@ -1,0 +1,25 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::value;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+// TODO: handle unicode characters
+class StringValue extends JsonValue, String {
+
+    [StringValue] fromJson(String val) {
+        val.unescapeToStream(this.ostream());
+        return this;
+    }
+
+    [OStream] jsonToStream(OStream stream) {
+        return this.escapeToStream(stream);
+    }
+
+    [StringValue] asStringValue() { return this; }
+    
+}

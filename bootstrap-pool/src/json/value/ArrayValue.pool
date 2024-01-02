@@ -1,0 +1,36 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::value;
+
+use sys::stream::OStream;
+
+class ArrayValue extends JsonValue, sys::core::anycollection::AnyList {
+
+    [OStream] jsonToStream(OStream stream) {
+        stream.printChar('[');
+        {
+            sys::core::anycollection::AnyIterator it = this.iterator();
+            if (it.hasNext()) {
+                JsonValue value := it.next();
+                value.jsonToStream(stream);
+            }
+            while (it.hasNext()) {
+                JsonValue value := it.next();
+                value.jsonToStream(stream.printChar(','));
+            }
+            it.destroy();
+        }
+        return stream.printChar(']');
+    }
+
+    [ArrayValue] asArrayValue() { return this; }
+    
+    [ArrayValue] _append(JsonValue value) {
+        this.add(this.own(value));
+        return this;
+    }
+
+}

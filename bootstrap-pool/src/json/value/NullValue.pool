@@ -1,0 +1,15 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::value;
+
+use sys::stream::OStream;
+
+class NullValue extends JsonValue {
+
+    [OStream] jsonToStream(OStream stream) { return stream.printCString("null"); }
+    [NullValue] asNullValue() { return this; }
+    
+}

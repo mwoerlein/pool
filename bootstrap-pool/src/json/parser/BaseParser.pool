@@ -1,0 +1,68 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace json::parser;
+
+use json::value::ArrayValue;
+use json::value::FalseValue;
+use json::value::JsonValue;
+use json::value::NullValue;
+use json::value::NumberValue;
+use json::value::ObjectValue;
+use json::value::StringValue;
+use json::value::TrueValue;
+
+use pool::generator::tokenizer::Token;
+
+use sys::core::String;
+use sys::stream::IStream;
+
+class BaseParser extends pool::generator::parser::Parser {
+
+    JsonValue json;
+    
+    [sys::stream::OStream] newError() { return this.rt().err(); }
+
+    [JsonValue] parse(IStream input) {
+        Tokenizer in = this.rt().createInstance(Tokenizer:CLASSNAME);
+        String name = this.rt().createInstance(String:CLASSNAME);
+        name.assignCString("json");
+        this._parse(in.init(input, name));
+        JsonValue ret = this.json;
+        this.json = null;
+        in.destroy();
+        name.destroy();
+        return ret;
+    }
+
+    [TrueValue] trueValue() { return this.rt().createInstance(TrueValue:CLASSNAME); }
+    [FalseValue] falseValue() { return this.rt().createInstance(FalseValue:CLASSNAME); }
+    [NullValue] nullValue() { return this.rt().createInstance(NullValue:CLASSNAME); }
+    
+    [StringValue] stringValue(Token t) {
+        StringValue ret = this.rt().createInstance(StringValue:CLASSNAME);
+        return ret.fromJson(t.getValue());
+    }
+    
+    [NumberValue] numberValue(Token integer, Token fraction, Token exponent) {
+        NumberValue ret = this.rt().createInstance(NumberValue:CLASSNAME);
+        String i = integer.getValue();
+        String f = null;
+        if (fraction) { f = fraction.getValue(); }
+        String e = null;
+        if (exponent) { e = exponent.getValue(); }
+        return ret.fromJson(i, f, e);
+    }
+    
+    [ObjectValue] objectValue() { return this.rt().createInstance(ObjectValue:CLASSNAME); }
+    [ObjectValue] appendToObject(ObjectValue object, StringValue key, JsonValue value) { return object._append(key, value); }
+    [ArrayValue] arrayValue() { return this.rt().createInstance(ArrayValue:CLASSNAME); }
+    [ArrayValue] appendToArray(ArrayValue array, JsonValue value) { return array._append(value); }
+    
+    [ObjectValue] obj(ObjectValue val) { return val; }
+    [ArrayValue] arr(ArrayValue val) { return val; }
+    [NumberValue] num(NumberValue val) { return val; }
+    
+}
