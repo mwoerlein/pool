@@ -1,0 +1,41 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::textdocument;
+
+use pool::languageserver::message::Notification;
+
+use json::value::ObjectValue;
+use json::value::StringValue;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class DidCloseNotification extends Notification {
+
+    cstring METHOD := "textDocument/didClose";
+
+    ObjectValue params;
+    StringValue uri;
+    
+    [String] getUri() { if (uri) { return uri.string(); } return null; }
+
+    [int] hasParams() { return true; }
+    [Notification] initParamsFromJson(ObjectValue params) {
+        // TODO parse parameters into model
+        this.params = params;
+        
+        ObjectValue textDocument = params.cgetObjectValue("textDocument");
+        if (textDocument) {
+            uri = textDocument.cgetStringValue("uri");
+        }
+        
+        return this.notification();
+    }
+    [OStream] paramsJsonToStream(OStream stream) { return params.jsonToStream(stream); }
+
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+}

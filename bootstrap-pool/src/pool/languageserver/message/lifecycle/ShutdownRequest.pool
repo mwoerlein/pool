@@ -1,0 +1,19 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::lifecycle;
+
+use pool::languageserver::message::Request;
+
+use json::value::ObjectValue;
+use sys::stream::OStream;
+
+class ShutdownRequest extends Request {
+
+    cstring METHOD := "shutdown";
+
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+}

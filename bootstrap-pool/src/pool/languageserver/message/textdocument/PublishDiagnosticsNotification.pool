@@ -1,0 +1,69 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::textdocument;
+
+use pool::languageserver::message::Notification;
+
+use json::value::ObjectValue;
+use json::value::StringValue;
+use json::value::NumberValue;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class PublishDiagnosticsNotification extends Notification {
+
+    cstring METHOD := "textDocument/publishDiagnostics";
+
+    StringValue uri;
+    NumberValue version;
+    
+    [PublishDiagnosticsNotification] setUri(String uri) {
+        this.uri = this.createOwn(StringValue:CLASSNAME);
+        this.uri.assignString(uri);
+        return this;
+    }
+    [PublishDiagnosticsNotification] setVersion(int version) {
+        this.version = this.createOwn(NumberValue:CLASSNAME);
+        this.version.setInteger(version);
+        return this;
+    }
+    
+    [String] getUri() { if (uri) { return uri.string(); } return null; }
+    [int] getVersion() { if (version) { return version.toInt(); } return -1; }
+
+    [int] hasParams() { return true; }
+    [Notification] initParamsFromJson(ObjectValue params) {
+        // TODO parse parameters into model
+        //this.params = params;
+        
+        ObjectValue textDocument = params.cgetObjectValue("textDocument");
+        if (textDocument) {
+            uri = textDocument.cgetStringValue("uri");
+            version = textDocument.cgetNumberValue("version");
+        }
+        
+        return this.notification();
+    }
+    [OStream] paramsJsonToStream(OStream stream) {
+        stream.printChar('{')
+            .printCString("\"diagnostics\":[{")
+                .printCString("\"range\":{")
+                    .printCString("\"start\":{\"line\":0,\"character\":0}")
+                    .printCString(",\"end\":{\"line\":5,\"character\":0}")
+                .printChar('}')
+                .printCString(",\"severity\":3")
+                .printCString(",\"tags\":[1]")
+                .printCString(",\"message\":\"MetaData\"")
+            .printCString("}]");
+            if (uri) { uri.jsonToStream(stream.printCString(",\"uri\":")); }
+            if (version) { version.jsonToStream(stream.printCString(",\"version\":")); }
+        return stream.printChar('}');
+    }
+
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+}

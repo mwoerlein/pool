@@ -1,0 +1,58 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::window;
+
+use pool::languageserver::message::Notification;
+
+use json::value::ObjectValue;
+use json::value::StringValue;
+use json::value::NumberValue;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class ShowMessageNotification extends Notification {
+
+    cstring METHOD := "window/showMessage";
+    
+    int ERROR := 1;
+    int WARN := 2;
+    int INFO := 3;
+    int LOG := 4;
+    int DEBUG := 5;
+
+    int type;
+    StringValue message;
+    
+    [ShowMessageNotification] setType(int type) { this.type = type; return this; }
+    [OStream] messageStream() {
+        if (!message) { message = this.createOwn(StringValue:CLASSNAME); }
+        return message.ostream();
+    }
+    
+    [OStream] error() { this.setType(ERROR); return this.messageStream(); }
+    [OStream] warn() { this.setType(WARN); return this.messageStream(); }
+    [OStream] info() { this.setType(INFO); return this.messageStream(); }
+    [OStream] log() { this.setType(LOG); return this.messageStream(); }
+    [OStream] debug() { this.setType(DEBUG); return this.messageStream(); }
+
+    [int] hasParams() { return true; }
+    [Notification] initParamsFromJson(ObjectValue params) {
+        // TODO parse parameters into model
+        return this.notification();
+    }
+    [OStream] paramsJsonToStream(OStream stream) {
+        this.messageStream(); // ensure message to be initialized
+        
+        stream.printChar('{')
+            .printCString("\"type\":").printInt(type);
+            message.jsonToStream(stream.printCString(",\"message\":"));
+        return stream.printChar('}');
+    }
+
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+}

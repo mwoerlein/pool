@@ -1,0 +1,45 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::textdocument;
+
+use pool::languageserver::message::Notification;
+
+use json::value::ObjectValue;
+use json::value::StringValue;
+use json::value::NumberValue;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+class DidOpenNotification extends Notification {
+
+    cstring METHOD := "textDocument/didOpen";
+
+    ObjectValue params;
+    StringValue uri;
+    NumberValue version;
+    
+    [String] getUri() { if (uri) { return uri.string(); } return null; }
+    [int] getVersion() { if (version) { return version.toInt(); } return -1; }
+
+    [int] hasParams() { return true; }
+    [Notification] initParamsFromJson(ObjectValue params) {
+        // TODO parse parameters into model
+        this.params = params;
+        
+        ObjectValue textDocument = params.cgetObjectValue("textDocument");
+        if (textDocument) {
+            uri = textDocument.cgetStringValue("uri");
+            version = textDocument.cgetNumberValue("version");
+        }
+        
+        return this.notification();
+    }
+    [OStream] paramsJsonToStream(OStream stream) { return params.jsonToStream(stream); }
+
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+}
