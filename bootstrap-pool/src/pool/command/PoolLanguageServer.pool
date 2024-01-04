@@ -7,6 +7,7 @@ namespace pool::command;
 
 use pool::languageserver::MessageBus;
 use pool::languageserver::Server;
+use pool::languageserver::message::MessageFactory;
 use sys::stream::OStream;
 
 class PoolLanguageServer extends linux::Command {
@@ -53,10 +54,11 @@ Pool Language Server.
     [Server] _createServer() {
         linux::LinuxOStream ls = this.createOwn(linux::LinuxOStream:CLASSNAME);
         OStream debug := ls.initOStream(linux::SysCall:FD_STDERR);
+        MessageFactory mf := this.createOwn(MessageFactory:CLASSNAME);
         MessageBus mb := this.createOwn(MessageBus:CLASSNAME);
-        mb._initMessageBus(this.openStdIn(), this.rt().out(), debug);
+        mb._initMessageBus(mf, this.openStdIn(), this.rt().out(), debug);
         Server s = this.createOwn(Server:CLASSNAME);
-        s._initServer(mb, debug);
+        s._initServer(mb, mf, debug);
         return s;
     }
 }

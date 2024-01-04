@@ -5,16 +5,30 @@ version = 0.1.0
 */
 namespace pool::languageserver;
 
+use pool::languageserver::message::Message;
+use pool::languageserver::message::MessageFactory;
+use pool::languageserver::message::Response;
+use pool::languageserver::message::lifecycle::InitializeRequest;
+use pool::languageserver::message::lifecycle::InitializedNotification;
+use pool::languageserver::message::textdocument::DidOpenNotification;
+use pool::languageserver::message::textdocument::DidCloseNotification;
+use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
+use pool::languageserver::message::window::ShowMessageNotification;
+
+use json::value::JsonValue;
+
 use sys::core::String;
 use sys::stream::OStream;
 
 class Server extends sys::core::Task {
 
     MessageBus mb;
+    MessageFactory mf;
     OStream debug;
 
-    [] _initServer(MessageBus mb, OStream debug) {
+    [] _initServer(MessageBus mb, MessageFactory mf, OStream debug) {
         this.mb = mb;
+        this.mf = mf;
         this.debug = debug;
     }
     
@@ -27,13 +41,39 @@ class Server extends sys::core::Task {
             while (mb.hasMessages()) {
                 // TODO: determine and queue jobs from messages/notifications
                 // mirror message
-                String message = mb.getRawMessage();
-                debug.print(message).printNewline();
-                if (message) {
-                    mb.sendRawResponse(message);
-                    message.destroy();
+                [Message message, JsonValue raw] = mb.getMessage();
+                
+                if (!message) {
+                    if (raw) {
+                        debug.printCString("mirror raw message").printNewline();
+                        mb.sendRawMessage(raw);
+                    }
+                } else if (message.isClass(DidOpenNotification:CLASSNAME)) {
+                    DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
+                    
+                    debug.printCString("publish diagnostic").printNewline();
+                    PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
+                        .setUri(not.getUri())
+                        .setVersion(not.getVersion());
+                    mb.sendMessage(diagnosticNotice.message());
+                    diagnosticNotice.destroy();
+                } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
+                    DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
+                    
+                    debug.printCString("show message").printNewline();
+                    ShowMessageNotification showMessage = mf.createShowMessageNotification();
+                    showMessage.info().printCString("close URI: ").print(not.getUri());
+                    mb.sendMessage(showMessage.message());
+                    showMessage.destroy();
+                } else {
+                    debug.printCString("mirror message").printNewline();
+                    mb.sendMessage(message);
                 }
+                
+                if (message) { message.destroy(); }
+                if (raw) { raw.destroy(); }
             }
+            
             if (mb.isClientGone()) {
                 // TODO: queue shutdown job?
                 debug.printCString("client gone => exit").printNewline();
@@ -57,19 +97,57 @@ class Server extends sys::core::Task {
         }
         
         // TODO: detect and handle initialize correctly
-        // pull and ignore initialize message
         {
-            String initializeMessage = mb.getRawMessage();
-            debug.print(initializeMessage).printNewline();
-            if (initializeMessage) { initializeMessage.destroy(); }
+            [Message message, JsonValue raw] = mb.getMessage();
+            
+            if (message && message.isClass(InitializeRequest:CLASSNAME)) {
+                debug.printCString("send initialize response").printNewline();
+                // send initialize response
+                InitializeRequest initializeRequest := message.castTo(InitializeRequest:CLASSNAME);
+                initializeRequest.jsonToStream(debug).printNewline(); 
+                Response initializeResponse = mf.createInitializeResponse(initializeRequest).response();
+                mb.sendMessage(initializeResponse.message());
+                initializeResponse.destroy();
+            } else {
+                debug.printCString("send init error...").printNewline();
+                // send error
+                Response errorResponse = mf.createErrorResponse(message, -32600);
+                errorResponse.errorMessage().printCString("expecting initialize as first message");
+                mb.sendMessage(errorResponse.message());
+                errorResponse.destroy();
+            }
+            
+            if (message) { message.destroy(); }
+            if (raw) { raw.destroy(); }
         }
-        // send fake initialize response
+        
+        // TODO: await initialized notification
+        while (!mb.hasMessages()) {
+            if (mb.isClientGone()) { return false; }
+            debug.printCString("Waiting for finalizing initialization...").printNewline();
+            // TODO: blocking wait for initialization?
+            this.rt().sleep(1,0);
+        }
+        
         {
-            String initializeResponse = this.rt().createInstance(String:CLASSNAME);
-            initializeResponse.printCString("{\"jsonrpc\":\"2.0\",\"id\":\"1\",\"result\":{\"capabilities\":{\"hoverProvider\":false,\"declarationProvider\":false,\"definitionProvider\":false,\"typeDefinitionProvider\":false},\"serverInfo\":{\"name\":\"PoolLanguageServer\",\"version\":\"0.1\"}}}");
-            mb.sendRawResponse(initializeResponse);
-            initializeResponse.destroy();
+            [Message message, JsonValue raw] = mb.getMessage();
+            
+            if (message && message.isClass(InitializedNotification:CLASSNAME)) {
+                debug.printCString("finalize initialization").printNewline();
+                // finalize initialization
+            } else {
+                debug.printCString("send init error...").printNewline();
+                // send error
+                Response errorResponse = mf.createErrorResponse(message, -32600);
+                errorResponse.errorMessage().printCString("expecting initialized as next message");
+                mb.sendMessage(errorResponse.message());
+                errorResponse.destroy();
+            }
+            
+            if (message) { message.destroy(); }
+            if (raw) { raw.destroy(); }
         }
+
         return true;
     }
 }

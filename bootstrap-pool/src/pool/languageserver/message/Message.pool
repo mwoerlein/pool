@@ -7,7 +7,7 @@ namespace pool::languageserver::message;
 
 use sys::stream::OStream;
 
-class Message extends json::value::JsonValue { //sys::core::Object {
+class Message extends sys::core::Object {
     
     abstract [OStream] jsonToStream(OStream stream);
     

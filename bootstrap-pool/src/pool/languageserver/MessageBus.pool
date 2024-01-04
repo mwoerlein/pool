@@ -5,7 +5,14 @@ version = 0.1.0
 */
 namespace pool::languageserver;
 
+use pool::languageserver::message::Message;
+use pool::languageserver::message::MessageFactory;
+
+use json::parser::Parser as JsonParser;
+use json::value::JsonValue;
+
 use sys::core::String;
+use sys::memory::MemoryIOStream;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
@@ -14,11 +21,15 @@ class MessageBus extends sys::core::Object {
     IStream in;
     OStream out;
     OStream debug;
+    JsonParser jp;
+    MessageFactory mf;
 
-    [] _initMessageBus(IStream in, OStream out, OStream debug) {
+    [] _initMessageBus(MessageFactory mf, IStream in, OStream out, OStream debug) {
         this.in = in;
         this.out = out;
         this.debug = debug;
+        this.jp = this.createOwn(JsonParser:CLASSNAME);
+        this.mf = mf;
     }
     
     [int] isClientGone() { return in.isDone(); }
@@ -30,16 +41,42 @@ class MessageBus extends sys::core::Object {
     }
     
     // TODO: change to pull (and parse) raw message from queue
-    [String] getRawMessage() {
+    [Message, JsonValue] getMessage() {
         int contentLength = this._readAndParseHeader();
-        if (!contentLength) { return null; }
-        return this._readRawMessage(contentLength);    
+        if (!contentLength) { return [null, null]; }
+        JsonValue raw = null;
+        Message message = null;
+        
+        MemoryIOStream content = this._readContent(contentLength);
+        content.rewind();
+        raw = jp.parse(content.istream());
+        
+        content.rewind();
+        content.printToStream(debug.printCString("parse content '")).printCString("' to ").print(raw).printNewline();
+        if (raw) {
+            message = mf.fromJsonObject(raw.asObjectValue()); 
+            raw.jsonToStream(debug.printCString("parse json '")).printCString("' to ").print(message).printNewline();
+        }
+        
+        return [message, raw];
     }
     
-    [] sendRawResponse(String response) {
-        out.printCString("Content-Length: ").printInt(response.length()).printChar('\r').printChar('\n')
+    [] sendRawMessage(JsonValue message) {
+        String tmp = this.rt().createInstance(String:CLASSNAME);
+        message.jsonToStream(tmp.ostream());
+        out.printCString("Content-Length: ").printInt(tmp.length()).printChar('\r').printChar('\n')
             .printChar('\r').printChar('\n')
-            .print(response);
+            .print(tmp);
+        tmp.destroy();
+    }
+    
+    [] sendMessage(Message message) {
+        String tmp = this.rt().createInstance(String:CLASSNAME);
+        message.jsonToStream(tmp.ostream());
+        out.printCString("Content-Length: ").printInt(tmp.length()).printChar('\r').printChar('\n')
+            .printChar('\r').printChar('\n')
+            .print(tmp);
+        tmp.destroy();
     }
     
     [int] _readAndParseHeader() {
@@ -116,12 +153,12 @@ class MessageBus extends sys::core::Object {
         return contentLength;
     }
     
-    [String] _readRawMessage(int contentLength) {
-        debug.printCString("read message (").printInt(contentLength).printCString(" bytes)").printNewline();
+    [MemoryIOStream] _readContent(int contentLength) {
+        debug.printCString("read content (").printInt(contentLength).printCString(" bytes)").printNewline();
         
-        String message = this.rt().createInstance(String:CLASSNAME);
-        message._initString(contentLength);
-        in.printNToStream(contentLength, message.ostream());
-        return message;
+        MemoryIOStream content = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+        content._init(contentLength);
+        in.printNToStream(contentLength, content.ostream());
+        return content;
     }
 }
