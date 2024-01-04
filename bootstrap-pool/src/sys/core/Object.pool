@@ -96,7 +96,10 @@ class Object {
         }
     }
     
-    [Object] getOwner() { return owner; }
+    [Object] getOwner() { return this.owner; }
+    [int] isOwnedBy(__any__ o) {
+        return this.owner && o && this.owner.isSameAs(o);
+    }
     
     [__all__] own(__any__ o) {
         Object owned = this.rt().cast(Object:CLASSNAME, o);
