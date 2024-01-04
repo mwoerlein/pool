@@ -29,6 +29,7 @@ class NumberValue extends JsonValue {
         }
         return this;
     }
+    [NumberValue] setInteger(int i) { this.integer = i; return this; }
     
     [int] toInt() { return integer; }
 

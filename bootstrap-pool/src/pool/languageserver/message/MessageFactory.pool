@@ -1,0 +1,70 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message;
+
+use pool::languageserver::message::lifecycle::InitializeRequest;
+use pool::languageserver::message::lifecycle::InitializeResponse;
+
+use json::value::ObjectValue;
+use json::value::StringValue;
+use sys::core::String;
+use sys::stream::OStream;
+
+class MessageFactory extends sys::core::Object {
+    
+    [Message] fromJsonObject(ObjectValue obj) {
+        if (!obj) { return null; }
+        
+        Notification not = this.notificationFromJsonObject(obj);
+        if (not) { return not.message(); }
+        
+        Request req = this.requestFromJsonObject(obj);
+        if (req) { return req.message(); }
+        
+        // TODO: how to determine response types from json? Requires "known/open requests"-Map i.E. to match via id?
+        
+        return null;
+    }
+    
+    [Notification] notificationFromJsonObject(ObjectValue obj) {
+        String method = obj.cgetString("method");
+        if (!method) { return null; }
+        
+        // determine notification
+        Notification not = null;
+        
+        // init params
+        if (not && not.hasParams()) { not.initParamsFromJson(obj.cgetObjectValue("params")); }
+        return not;
+    }
+    
+    [Request] requestFromJsonObject(ObjectValue obj) {
+        String method = obj.cgetString("method");
+        String id = obj.cgetString("id");
+        if (!method || !id) { return null; }
+        
+        // determine request
+        Request req = null;
+        if (method.cequals(InitializeRequest:METHOD)) { req = this.createInitializeRequest(id).request(); }
+        
+        // init params
+        if (req && req.hasParams()) { req.initParamsFromJson(obj.cgetObjectValue("params")); }
+        return req;
+    }
+    
+    [InitializeRequest] createInitializeRequest(String id) {
+        InitializeRequest req = this.rt().createInstance(InitializeRequest:CLASSNAME);
+        req.setRequestId(id);
+        return req;
+    }
+    
+    [InitializeResponse] createInitializeResponse(InitializeRequest req) {
+        InitializeResponse resp = this.rt().createInstance(InitializeResponse:CLASSNAME);
+        resp.setRequestId(req.getRequestId());
+        return resp;
+    }
+    
+}

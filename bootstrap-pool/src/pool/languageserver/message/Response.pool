@@ -1,0 +1,58 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message;
+
+use json::value::ObjectValue;
+use json::value::StringValue;
+use sys::core::String;
+use sys::stream::OStream;
+
+class Response extends Message {
+
+    StringValue id;
+    int errorCode;
+    StringValue errorMessage;
+    
+    [Response] setRequestId(String id) {
+        this.id = this.createOwn(StringValue:CLASSNAME);
+        this.id.assignString(id);
+    }
+    [Response] setCRequestId(cstring id) {
+        this.id = this.createOwn(StringValue:CLASSNAME);
+        this.id.assignCString(id);
+    }
+    [String] getRequestId() { return id.string(); }
+    
+    [Response] setErrorCode(int code) { this.errorCode = code; return this; }
+    
+    [OStream] errorMessage() {
+        if (!errorMessage) { errorMessage = this.createOwn(StringValue:CLASSNAME); }
+        return errorMessage.ostream();
+    }
+
+    [Response] initResultFromJson(ObjectValue result) { return this; }
+    [OStream] resultJsonToStream(OStream stream) {
+        return stream.printCString("{}");
+    }
+    
+    [OStream] jsonToStream(OStream stream) {
+        stream.printCString("{\"jsonrpc\":\"2.0\"");
+        if (id) { id.jsonToStream(stream.printCString(",\"id\":"));}
+        if (errorMessage) {
+            stream.printCString(",\"error\":{\"code\":").printInt(errorCode);
+            errorMessage.jsonToStream(stream.printCString(",\"message\":"));
+            stream.printChar('}');
+        } else {
+            resultJsonToStream(stream.printCString(",\"result\":"));
+        }
+        return stream.printChar('}');
+    }
+    
+    // TODO: remove with implicit cast
+    [Response] response() { return this; }
+    [Response] asResponse() { return this; }
+
+}

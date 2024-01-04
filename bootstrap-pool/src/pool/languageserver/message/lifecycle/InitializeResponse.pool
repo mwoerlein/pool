@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::lifecycle;
+
+use pool::languageserver::message::Response;
+
+use json::value::ObjectValue;
+use sys::stream::OStream;
+
+class InitializeResponse extends Response {
+
+    [Response] initResultFromJson(ObjectValue result) {
+        // TODO: parse result into model
+        return this.response();
+    }
+
+    [OStream] resultJsonToStream(OStream stream) {
+        // TODO: build result from model
+        stream
+            .printCString("{\"serverInfo\":")
+            .printCString("{\"name\":\"Pool Language Server\",\"version\":\"0.1\"}")
+            .printCString(",\"capabilities\":")
+            .printCString("{\"hoverProvider\":false,\"declarationProvider\":false,\"definitionProvider\":false,\"typeDefinitionProvider\":false}")
+        ;                        
+        return stream.printChar('}');
+    }
+}

@@ -1,0 +1,21 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message;
+
+use sys::stream::OStream;
+
+class Message extends json::value::JsonValue { //sys::core::Object {
+    
+    abstract [OStream] jsonToStream(OStream stream);
+    
+    // TODO: remove with implicit cast
+    [Message] message() { return this; }
+    
+    [Notification] asNotification() { return null; }
+    [Request] asRequest() { return null; }
+    [Response] asResponse() { return null; }
+    
+}

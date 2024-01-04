@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace json::value;
 
+use sys::core::String;
 use sys::stream::OStream;
 
 class ObjectValue extends JsonValue, sys::core::anycollection::AnyMap {
@@ -12,13 +13,6 @@ class ObjectValue extends JsonValue, sys::core::anycollection::AnyMap {
     [int] chas(cstring key) {
         StringValue k = this._key(key);
         int ret = this.has(k);
-        k.destroy();
-        return ret;
-    }
-    
-    [JsonValue] cget(cstring key) {
-        StringValue k = this._key(key);
-        JsonValue ret = this.get(k);
         k.destroy();
         return ret;
     }
@@ -33,6 +27,52 @@ class ObjectValue extends JsonValue, sys::core::anycollection::AnyMap {
         k.destroy();
         return ret;
     }
+    
+    [JsonValue] cget(cstring key) {
+        StringValue k = this._key(key);
+        JsonValue ret = this.get(k);
+        k.destroy();
+        return ret;
+    }
+    
+    [ArrayValue] cgetArrayValue(cstring key) {
+        JsonValue v := this.cget(key);
+        if (v) { return v.asArrayValue(); }
+        return null;
+    }
+    
+    [NumberValue] cgetNumberValue(cstring key) {
+        JsonValue v := this.cget(key);
+        if (v) { return v.asNumberValue(); }
+        return null;
+    }
+    
+    [ObjectValue] cgetObjectValue(cstring key) {
+        JsonValue v := this.cget(key);
+        if (v) { return v.asObjectValue(); }
+        return null;
+    }
+    
+    [StringValue] cgetStringValue(cstring key) {
+        JsonValue v := this.cget(key);
+        if (v) { return v.asStringValue(); }
+        return null;
+    }
+    
+    [String] cgetString(cstring key) {
+        JsonValue v := this.cget(key);
+        StringValue sv = null;
+        if (v && (sv = v.asStringValue())) { return sv.string(); }
+        return null;
+    }
+    
+    [int] cgetInt(cstring key) {
+        JsonValue v := this.cget(key);
+        NumberValue nv = null;
+        if (v && (nv = v.asNumberValue())) { return nv.toInt(); }
+        return 0;
+    }
+    
     
     [OStream] jsonToStream(OStream stream) {
         stream.printChar('{');

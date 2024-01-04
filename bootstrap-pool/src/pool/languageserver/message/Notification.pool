@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message;
+
+use json::value::ObjectValue;
+use sys::stream::OStream;
+
+class Notification extends Message {
+
+    abstract [OStream] methodJsonToStream(OStream stream);
+
+    [int] hasParams() { return false; }
+    [Notification] initParamsFromJson(ObjectValue params) { return this; }
+    [OStream] paramsJsonToStream(OStream stream) { return stream.printCString("null"); }
+    
+    [OStream] jsonToStream(OStream stream) {
+        stream.printCString("{\"jsonrpc\":\"2.0\"");
+        this.methodJsonToStream(stream.printCString(",\"method\":"));
+        if (this.hasParams()) { paramsJsonToStream(stream.printCString(",\"params\":")); }
+        return stream.printChar('}');
+    }
+    
+    // TODO: remove with implicit cast
+    [Notification] notification() { return this; }
+    [Notification] asNotification() { return this; }
+
+}
