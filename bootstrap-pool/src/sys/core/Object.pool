@@ -56,6 +56,14 @@ class Object {
         return runtime;
     }
     
+    [int] isClass(cstring name) {
+        return this.getClass().getName().cequals(name);
+    }
+    
+    [__all__] castTo(cstring name) {
+        return this.rt().cast(name, this);
+    }
+    
     // TODO #7: move to constructor?
     [] __init() {}
     
