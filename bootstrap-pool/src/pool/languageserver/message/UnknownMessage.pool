@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message;
+
+use json::value::JsonValue;
+use sys::stream::OStream;
+
+class UnknownMessage extends Message {
+
+    json::value::JsonValue raw;
+    
+    [UnknownMessage] setRaw(JsonValue raw) { this.raw = this.own(raw); return this; }
+    [JsonValue] getRaw() { return this.raw; }
+    
+    [OStream] jsonToStream(OStream stream) {
+        stream.printCString("{\"jsonrpc\":\"2.0\",\"method\":\"unknown\"");
+        if (raw) { raw.jsonToStream(stream.printCString(",\"raw\":")); }
+        return stream.printChar('}');
+    }
+}

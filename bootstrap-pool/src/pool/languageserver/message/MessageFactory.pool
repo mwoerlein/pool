@@ -16,6 +16,7 @@ use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
 
 use pool::languageserver::message::window::ShowMessageNotification;
 
+use json::value::JsonValue;
 use json::value::ObjectValue;
 use json::value::StringValue;
 use sys::core::String;
@@ -23,49 +24,50 @@ use sys::stream::OStream;
 
 class MessageFactory extends sys::core::Object {
     
-    [Message] fromJsonObject(ObjectValue obj) {
-        if (!obj) { return null; }
-        
-        Notification not = this.notificationFromJsonObject(obj);
-        if (not) { return not.message(); }
-        
-        Request req = this.requestFromJsonObject(obj);
-        if (req) { return req.message(); }
-        
-        // TODO: how to determine response types from json? Requires "known/open requests"-Map i.E. to match via id?
-        
-        return null;
+    [Message] fromJsonValue(JsonValue val) {
+        ObjectValue obj = val.asObjectValue();
+        if (obj) {
+            String method = obj.cgetString("method");
+            String id = obj.cgetString("id");
+            
+            if (method && id) {
+                Request req = this.requestFromJsonObject(method, id, obj.cgetObjectValue("params"));
+                if (req) { return req.message(); }
+            }
+            if (method) {
+                Notification not = this.notificationFromJsonObject(method, obj.cgetObjectValue("params"));
+                if (not) { return not.message(); }
+            }
+            if (id) {
+                // TODO: how to determine response types from json? Requires "known/open requests"-Map i.E. to match via id?
+            }
+        }
+        UnknownMessage unknown = this.rt().createInstance(UnknownMessage:CLASSNAME);
+        return unknown.setRaw(val).message();
     }
     
-    [Notification] notificationFromJsonObject(ObjectValue obj) {
-        String method = obj.cgetString("method");
-        if (!method) { return null; }
-        
+    [Notification] notificationFromJsonObject(String method, ObjectValue params) {
         // determine notification
         Notification not = null;
         if (method.cequals(InitializedNotification:METHOD)) { not = this.createInitializedNotification().notification(); }
-        if (method.cequals(DidOpenNotification:METHOD)) { not = this.createDidOpenNotification().notification(); }
-        if (method.cequals(DidCloseNotification:METHOD)) { not = this.createDidCloseNotification().notification(); }
-        if (method.cequals(PublishDiagnosticsNotification:METHOD)) { not = this.createPublishDiagnosticsNotification().notification(); }
-        if (method.cequals(ShowMessageNotification:METHOD)) { not = this.createShowMessageNotification().notification(); }
+        else if (method.cequals(DidOpenNotification:METHOD)) { not = this.createDidOpenNotification().notification(); }
+        else if (method.cequals(DidCloseNotification:METHOD)) { not = this.createDidCloseNotification().notification(); }
+        else if (method.cequals(PublishDiagnosticsNotification:METHOD)) { not = this.createPublishDiagnosticsNotification().notification(); }
+        else if (method.cequals(ShowMessageNotification:METHOD)) { not = this.createShowMessageNotification().notification(); }
         
         // init params
-        if (not && not.hasParams()) { not.initParamsFromJson(obj.cgetObjectValue("params")); }
+        if (not && not.hasParams() && params) { not.initParamsFromJson(params); }
         return not;
     }
     
-    [Request] requestFromJsonObject(ObjectValue obj) {
-        String method = obj.cgetString("method");
-        String id = obj.cgetString("id");
-        if (!method || !id) { return null; }
-        
+    [Request] requestFromJsonObject(String method, String id, ObjectValue params) {
         // determine request
         Request req = null;
         if (method.cequals(InitializeRequest:METHOD)) { req = this.createInitializeRequest(id).request(); }
-        if (method.cequals(ShutdownRequest:METHOD)) { req = this.createShutdownRequest(id).request(); }
+        else if (method.cequals(ShutdownRequest:METHOD)) { req = this.createShutdownRequest(id).request(); }
         
         // init params
-        if (req && req.hasParams()) { req.initParamsFromJson(obj.cgetObjectValue("params")); }
+        if (req && req.hasParams() && params) { req.initParamsFromJson(params); }
         return req;
     }
     
@@ -104,4 +106,5 @@ class MessageFactory extends sys::core::Object {
     
     // window
     [ShowMessageNotification] createShowMessageNotification() { return this.rt().createInstance(ShowMessageNotification:CLASSNAME); }
+
 }

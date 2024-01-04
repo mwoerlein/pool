@@ -8,8 +8,10 @@ namespace pool::languageserver;
 use pool::languageserver::message::Message;
 use pool::languageserver::message::MessageFactory;
 use pool::languageserver::message::Response;
-use pool::languageserver::message::lifecycle::InitializeRequest;
+use pool::languageserver::message::UnknownMessage;
 use pool::languageserver::message::lifecycle::InitializedNotification;
+use pool::languageserver::message::lifecycle::InitializeRequest;
+use pool::languageserver::message::lifecycle::InitializeResponse;
 use pool::languageserver::message::textdocument::DidOpenNotification;
 use pool::languageserver::message::textdocument::DidCloseNotification;
 use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
@@ -40,38 +42,35 @@ class Server extends sys::core::Task {
         while (true) {
             while (mb.hasMessages()) {
                 // TODO: determine and queue jobs from messages/notifications
-                // mirror message
-                [Message message, JsonValue raw] = mb.getMessage();
-                
-                if (!message) {
-                    if (raw) {
+                Message message := mb.getMessage();
+                if (message) {
+                    if (message.isClass(DidOpenNotification:CLASSNAME)) {
+                        DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
+                        
+                        debug.printCString("publish diagnostic").printNewline();
+                        PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
+                            .setUri(not.getUri())
+                            .setVersion(not.getVersion());
+                        mb.sendMessage(diagnosticNotice.message());
+                        diagnosticNotice.destroy();
+                    } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
+                        DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
+                        
+                        debug.printCString("show message").printNewline();
+                        ShowMessageNotification showMessage = mf.createShowMessageNotification();
+                        showMessage.info().printCString("close URI: ").print(not.getUri());
+                        mb.sendMessage(showMessage.message());
+                        showMessage.destroy();
+                    } else if (message.isClass(UnknownMessage:CLASSNAME)) {
+                        UnknownMessage mes = message.castTo(UnknownMessage:CLASSNAME);
                         debug.printCString("mirror raw message").printNewline();
-                        mb.sendRawMessage(raw);
+                        mb.sendRawMessage(mes.getRaw());
+                    } else {
+                        debug.printCString("mirror message").printNewline();
+                        mb.sendMessage(message);
                     }
-                } else if (message.isClass(DidOpenNotification:CLASSNAME)) {
-                    DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
-                    
-                    debug.printCString("publish diagnostic").printNewline();
-                    PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
-                        .setUri(not.getUri())
-                        .setVersion(not.getVersion());
-                    mb.sendMessage(diagnosticNotice.message());
-                    diagnosticNotice.destroy();
-                } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
-                    DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
-                    
-                    debug.printCString("show message").printNewline();
-                    ShowMessageNotification showMessage = mf.createShowMessageNotification();
-                    showMessage.info().printCString("close URI: ").print(not.getUri());
-                    mb.sendMessage(showMessage.message());
-                    showMessage.destroy();
-                } else {
-                    debug.printCString("mirror message").printNewline();
-                    mb.sendMessage(message);
+                    message.destroy();
                 }
-                
-                if (message) { message.destroy(); }
-                if (raw) { raw.destroy(); }
             }
             
             if (mb.isClientGone()) {
@@ -98,14 +97,14 @@ class Server extends sys::core::Task {
         
         // TODO: detect and handle initialize correctly
         {
-            [Message message, JsonValue raw] = mb.getMessage();
+            Message message := mb.getMessage();
             
             if (message && message.isClass(InitializeRequest:CLASSNAME)) {
                 debug.printCString("send initialize response").printNewline();
                 // send initialize response
                 InitializeRequest initializeRequest := message.castTo(InitializeRequest:CLASSNAME);
                 initializeRequest.jsonToStream(debug).printNewline(); 
-                Response initializeResponse = mf.createInitializeResponse(initializeRequest).response();
+                InitializeResponse initializeResponse = mf.createInitializeResponse(initializeRequest);
                 mb.sendMessage(initializeResponse.message());
                 initializeResponse.destroy();
             } else {
@@ -118,7 +117,6 @@ class Server extends sys::core::Task {
             }
             
             if (message) { message.destroy(); }
-            if (raw) { raw.destroy(); }
         }
         
         // TODO: await initialized notification
@@ -130,7 +128,7 @@ class Server extends sys::core::Task {
         }
         
         {
-            [Message message, JsonValue raw] = mb.getMessage();
+            Message message := mb.getMessage();
             
             if (message && message.isClass(InitializedNotification:CLASSNAME)) {
                 debug.printCString("finalize initialization").printNewline();
@@ -145,7 +143,6 @@ class Server extends sys::core::Task {
             }
             
             if (message) { message.destroy(); }
-            if (raw) { raw.destroy(); }
         }
 
         return true;

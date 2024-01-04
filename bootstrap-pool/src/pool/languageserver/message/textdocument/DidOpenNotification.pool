@@ -28,7 +28,7 @@ class DidOpenNotification extends Notification {
     [int] hasParams() { return true; }
     [Notification] initParamsFromJson(ObjectValue params) {
         // TODO parse parameters into model
-        this.params = params;
+        this.params = this.own(params);
         
         ObjectValue textDocument = params.cgetObjectValue("textDocument");
         if (textDocument) {

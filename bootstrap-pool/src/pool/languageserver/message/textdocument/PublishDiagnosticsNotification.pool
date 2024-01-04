@@ -38,7 +38,6 @@ class PublishDiagnosticsNotification extends Notification {
     [int] hasParams() { return true; }
     [Notification] initParamsFromJson(ObjectValue params) {
         // TODO parse parameters into model
-        //this.params = params;
         
         ObjectValue textDocument = params.cgetObjectValue("textDocument");
         if (textDocument) {

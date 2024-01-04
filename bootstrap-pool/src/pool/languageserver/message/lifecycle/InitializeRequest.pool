@@ -19,7 +19,7 @@ class InitializeRequest extends Request {
     [int] hasParams() { return true; }
     [Request] initParamsFromJson(ObjectValue params) {
         // TODO parse parameters into model
-        this.params = params;
+        this.params = this.own(params);
         return this.request();
     }
     [OStream] paramsJsonToStream(OStream stream) { return params.jsonToStream(stream); }

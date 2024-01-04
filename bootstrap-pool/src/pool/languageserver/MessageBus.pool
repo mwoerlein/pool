@@ -41,24 +41,27 @@ class MessageBus extends sys::core::Object {
     }
     
     // TODO: change to pull (and parse) raw message from queue
-    [Message, JsonValue] getMessage() {
+    [Message] getMessage() {
         int contentLength = this._readAndParseHeader();
-        if (!contentLength) { return [null, null]; }
-        JsonValue raw = null;
-        Message message = null;
+        if (!contentLength) { return null; }
         
         MemoryIOStream content = this._readContent(contentLength);
         content.rewind();
-        raw = jp.parse(content.istream());
-        
+        JsonValue raw = jp.parse(content.istream());
         content.rewind();
         content.printToStream(debug.printCString("parse content '")).printCString("' to ").print(raw).printNewline();
+        
+        Message message = null;
         if (raw) {
-            message = mf.fromJsonObject(raw.asObjectValue()); 
+            message = mf.fromJsonValue(raw); 
             raw.jsonToStream(debug.printCString("parse json '")).printCString("' to ").print(message).printNewline();
+            if (!raw.isOwnedBy(message)) { raw.destroy(); }
+        } else {
+            // handle invalid json?
         }
         
-        return [message, raw];
+        content.destroy();
+        return message;
     }
     
     [] sendRawMessage(JsonValue message) {
