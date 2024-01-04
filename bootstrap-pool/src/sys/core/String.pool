@@ -229,6 +229,9 @@ class String extends OStream {
         return Address:loadChar(_buffer.buf+i);
     }
     
+    // TODO: remove with implicit cast
+    [String] string() { return this; }
+    
     [] _resizeBufferTo(int length) {
         MemoryInfo b = _allocator.allocate(length);
         Address:copyBytes(_buffer.buf, b.buf, _buffer.len);
