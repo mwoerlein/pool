@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace pool::languageserver::message;
 
+use pool::languageserver::message::lifecycle::ExitNotification;
 use pool::languageserver::message::lifecycle::InitializeRequest;
 use pool::languageserver::message::lifecycle::InitializeResponse;
 use pool::languageserver::message::lifecycle::InitializedNotification;
@@ -50,6 +51,7 @@ class MessageFactory extends sys::core::Object {
         // determine notification
         Notification not = null;
         if (method.cequals(InitializedNotification:METHOD)) { not = this.createInitializedNotification().notification(); }
+        else if (method.cequals(ExitNotification:METHOD)) { not = this.createExitNotification().notification(); }
         else if (method.cequals(DidOpenNotification:METHOD)) { not = this.createDidOpenNotification().notification(); }
         else if (method.cequals(DidCloseNotification:METHOD)) { not = this.createDidCloseNotification().notification(); }
         else if (method.cequals(PublishDiagnosticsNotification:METHOD)) { not = this.createPublishDiagnosticsNotification().notification(); }
@@ -80,6 +82,11 @@ class MessageFactory extends sys::core::Object {
         return resp.setErrorCode(code);
     }
     
+    [Response] createEmptyResponse(Request req) {
+        Response resp = this.rt().createInstance(Response:CLASSNAME);
+        return resp.setRequestId(req.getRequestId());
+    }
+    
     // lifecycle    
     [InitializeRequest] createInitializeRequest(String id) {
         InitializeRequest req = this.rt().createInstance(InitializeRequest:CLASSNAME);
@@ -92,6 +99,7 @@ class MessageFactory extends sys::core::Object {
         return resp;
     }
     [InitializedNotification] createInitializedNotification() { return this.rt().createInstance(InitializedNotification:CLASSNAME); }
+    [ExitNotification] createExitNotification() { return this.rt().createInstance(ExitNotification:CLASSNAME); }
     
     [ShutdownRequest] createShutdownRequest(String id) {
         ShutdownRequest req = this.rt().createInstance(ShutdownRequest:CLASSNAME);

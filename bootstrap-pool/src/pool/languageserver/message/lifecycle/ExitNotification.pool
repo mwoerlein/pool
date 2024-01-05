@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::lifecycle;
+
+use pool::languageserver::message::Notification;
+
+use sys::stream::OStream;
+
+class ExitNotification extends Notification {
+
+    cstring METHOD := "exit";
+    
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+}

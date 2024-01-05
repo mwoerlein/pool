@@ -9,9 +9,11 @@ use pool::languageserver::message::Message;
 use pool::languageserver::message::MessageFactory;
 use pool::languageserver::message::Response;
 use pool::languageserver::message::UnknownMessage;
+use pool::languageserver::message::lifecycle::ExitNotification;
 use pool::languageserver::message::lifecycle::InitializedNotification;
 use pool::languageserver::message::lifecycle::InitializeRequest;
 use pool::languageserver::message::lifecycle::InitializeResponse;
+use pool::languageserver::message::lifecycle::ShutdownRequest;
 use pool::languageserver::message::textdocument::DidOpenNotification;
 use pool::languageserver::message::textdocument::DidCloseNotification;
 use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
@@ -35,11 +37,13 @@ class Server extends sys::core::Task {
     }
     
     [int] run() {
+        int state = -1;
         if (!this.awaitInitialization()) {
             debug.printCString("Initialization failed!").printNewline();
             return -1;
         }
-        while (true) {
+        state = 0;
+        while (state != 5) {
             while (mb.hasMessages()) {
                 // TODO: determine and queue jobs from messages/notifications
                 Message message := mb.getMessage();
@@ -61,6 +65,13 @@ class Server extends sys::core::Task {
                         showMessage.info().printCString("close URI: ").print(not.getUri());
                         mb.sendMessage(showMessage.message());
                         showMessage.destroy();
+                    } else if (message.isClass(ShutdownRequest:CLASSNAME)) {
+                        state = 3;
+                        debug.printCString("acknowledge shutdown").printNewline();
+                        mb.sendMessage(mf.createEmptyResponse(message.asRequest()).message());
+                    } else if (message.isClass(ExitNotification:CLASSNAME)) {
+                        state = 5;
+                        debug.printCString("exiting ...");
                     } else if (message.isClass(UnknownMessage:CLASSNAME)) {
                         UnknownMessage mes = message.castTo(UnknownMessage:CLASSNAME);
                         debug.printCString("mirror raw message").printNewline();
@@ -83,7 +94,9 @@ class Server extends sys::core::Task {
             // TODO: blocking wait for message, if no job exists?
             this.rt().sleep(1,0);
         }
-        return -1;
+        
+        debug.printCString("now").printNewline();
+        return 0;
     }
     
     [int] awaitInitialization() {
