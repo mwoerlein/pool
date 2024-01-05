@@ -7,7 +7,6 @@ namespace pool::languageserver::message::lifecycle;
 
 use pool::languageserver::message::Notification;
 
-use json::value::ObjectValue;
 use sys::stream::OStream;
 
 class InitializedNotification extends Notification {

@@ -19,10 +19,12 @@ class Response extends Message {
     [Response] setRequestId(String id) {
         this.id = this.createOwn(StringValue:CLASSNAME);
         this.id.assignString(id);
+        return this;
     }
     [Response] setCRequestId(cstring id) {
         this.id = this.createOwn(StringValue:CLASSNAME);
         this.id.assignCString(id);
+        return this;
     }
     [String] getRequestId() { return id.string(); }
     
