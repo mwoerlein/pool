@@ -17,12 +17,16 @@ class StdIn extends IStream {
         notEof = true;
     }
     
-    [int] isAvailable() {
-        return SysCall:isReadAvailable(SysCall:FD_STDIN);
-    }
-    
     [int] isDone() {
         return !notEof || (this.isAvailable() && !(this._fillBuffer()));
+    }
+    
+    [int] isAvailable() {
+        return SysCall:isReadAvailable(SysCall:FD_STDIN, 0, 0);
+    }
+    
+    [int] awaitAvailable(int sec, int usec) {
+        return SysCall:isReadAvailable(SysCall:FD_STDIN, sec, usec);
     }
     
     [int] isEmpty() {

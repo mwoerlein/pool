@@ -46,7 +46,7 @@ class SysCall {
         ">, {"%eax": 4, "%ebx": fd, "%ecx": c, "%edx": 1}, {"%eax": null});
     }
     
-    global [int] isReadAvailable(int fd) {
+    global [int] isReadAvailable(int fd, int sec, int usec) {
         if (fd >= 1024) { return false; } // maximal file descriptor for select
         if (fd != SysCall:FD_STDIN) { return false; } // currently hardcoded select on stdin
         int ret = false;
@@ -57,8 +57,8 @@ class SysCall {
         __pasm__("subl %ecx, %esp; movl %esp, %edi; .byte 0xf3; .byte 0xaa #// rep stosb", {"%eax": 0, "%ecx": 128}, {"%esp": fd_set});
         // TODO set fd bit instead of implicit stdin
         __pasm__("movl %eax, (%edi)", {"%eax": 1, "%edi": fd_set});
-        // allocate timeout in %edi
-        __pasm__("subl %ecx, %esp; movl %esp, %edi; .byte 0xf3; .byte 0xaa #// rep stosb", {"%eax": 0, "%ecx": 16}, {"%esp": timeout});
+        // allocate timeout
+        __pasm__("pushl %ebx; pushl %eax", {"%eax": sec, "%ebx": usec}, {"%esp": timeout});
         
         // call select syscall
         __pasm__(
@@ -68,7 +68,7 @@ class SysCall {
         __pasm__("movl (%edi), %eax", {"%edi": fd_set}, {"%eax": ret});
         
         // free timeout
-        __pasm__("addl %ecx, %esp", {"%ecx": 16});
+        __pasm__("addl %ecx, %esp", {"%ecx": 8});
         // free fd_set
         __pasm__("addl %ecx, %esp", {"%ecx": 128});
         

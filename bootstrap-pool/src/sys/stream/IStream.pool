@@ -10,10 +10,12 @@ use sys::core::Object;
 // TODO: refactor blocking/non-blocking input handling
 class IStream extends Object {
     
-    // non-blocking check, if readChar/peekChar will return immediately with a valid character
-    [int] isAvailable() { return !this.isEmpty(); }
     // non-blocking check, if readChar/peekChar will never ever return with a valid character
     [int] isDone() { return this.isEmpty(); }
+    // non-blocking check, if readChar/peekChar will return immediately with a valid character
+    [int] isAvailable() { return !this.isEmpty(); }
+    // blocking check, with timeout, if readChar/peekChar will return immediately with a valid character
+    [int] awaitAvailable(int sec, int usec) { return !this.isEmpty(); }
     
     // blocking methods, if necessary
     abstract [int] isEmpty();
@@ -78,6 +80,17 @@ class IStream extends Object {
         return stream;
     }
     
+    [OStream] dumpToStream(OStream stream) {
+        stream.printNewline();
+        while (!this.isEmpty()) {
+            stream.printChar(' ')._printUHex(this.readChar(), 2);
+        }
+        stream.printNewline();
+        return stream;
+    }
+    
+
+
     [int] _peekDigit() {
         int c = this.peekChar();
         if (c >= '0' && c <= '9') { return c - '0'; }
