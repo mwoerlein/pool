@@ -12,6 +12,7 @@ use json::parser::Parser as JsonParser;
 use json::value::JsonValue;
 
 use sys::core::String;
+use sys::core::anycollection::AnyList;
 use sys::memory::MemoryIOStream;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -21,6 +22,7 @@ class MessageBus extends sys::core::Object {
     IStream in;
     OStream out;
     OStream debug;
+    AnyList inbox;
     JsonParser jp;
     MessageFactory mf;
 
@@ -28,40 +30,33 @@ class MessageBus extends sys::core::Object {
         this.in = in;
         this.out = out;
         this.debug = debug;
+        this.inbox = this.createOwn(AnyList:CLASSNAME);
         this.jp = this.createOwn(JsonParser:CLASSNAME);
         this.mf = mf;
     }
     
     [int] isClientGone() { return in.isDone(); }
     
-    // TODO: change to poll and queue (raw/parsed?) message(s) - if available - and return size of queue
     [int] hasMessages() {
-        if (!in.isAvailable() || in.isDone()) { return false; }
-        return true;
+        while (!in.isDone() && in.isAvailable()) {
+            this._readMessageToInbox();
+        }
+        return inbox.size() > 0;
     }
     
-    // TODO: change to pull (and parse) raw message from queue
     [Message] getMessage() {
-        int contentLength = this._readAndParseHeader();
-        if (!contentLength) { return null; }
-        
-        MemoryIOStream content = this._readContent(contentLength);
-        content.rewind();
-        JsonValue raw = jp.parse(content.istream());
-        content.rewind();
-        content.printToStream(debug.printCString("parse content '")).printCString("' to ").print(raw).printNewline();
-        
-        Message message = null;
-        if (raw) {
-            message = mf.fromJsonValue(raw); 
-            raw.jsonToStream(debug.printCString("parse json '")).printCString("' to ").print(message).printNewline();
-            if (!raw.isOwnedBy(message)) { raw.destroy(); }
-        } else {
-            // handle invalid json?
+        while (!in.isDone() && in.isAvailable()) {
+            this._readMessageToInbox();
         }
-        
-        content.destroy();
-        return message;
+        return inbox.shift();
+    }
+    
+    [Message] awaitMessage(int sec, int usec) {
+        if (inbox.isEmpty()) {
+            if (!in.awaitAvailable(sec, usec) || in.isDone()) { return null; }
+            this._readMessageToInbox();
+        }
+        return inbox.shift();
     }
     
     [] sendRawMessage(JsonValue message) {
@@ -80,6 +75,26 @@ class MessageBus extends sys::core::Object {
             .printChar('\r').printChar('\n')
             .print(tmp);
         tmp.destroy();
+    }
+    
+    [] _readMessageToInbox() {
+        int contentLength = this._readAndParseHeader();
+        if (!contentLength) { return; }
+        
+        MemoryIOStream content := this._readContent(contentLength);
+        content.rewind();
+        JsonValue raw := jp.parse(content.istream());
+        if (!raw) {
+            content.rewind();
+            content.printToStream(debug.printCString("invalid message content received: '")).printCString("'").printNewline();
+        } else {
+            Message message := mf.fromJsonValue(raw); 
+            raw.jsonToStream(debug.printCString("parse content '"))
+                .printCString("' to ").print(message.getClass().getName()).printNewline();
+            if (!raw.isOwnedBy(message)) { raw.destroy(); }
+            inbox.add(message);
+        }
+        content.destroy();
     }
     
     [int] _readAndParseHeader() {

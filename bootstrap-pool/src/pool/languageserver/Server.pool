@@ -42,46 +42,46 @@ class Server extends sys::core::Task {
             debug.printCString("Initialization failed!").printNewline();
             return -1;
         }
+        Message message = mb.getMessage();
         state = 0;
-        while (state != 5) {
-            while (mb.hasMessages()) {
-                // TODO: determine and queue jobs from messages/notifications
-                Message message := mb.getMessage();
-                if (message) {
-                    if (message.isClass(DidOpenNotification:CLASSNAME)) {
-                        DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
-                        
-                        debug.printCString("publish diagnostic").printNewline();
-                        PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
-                            .setUri(not.getUri())
-                            .setVersion(not.getVersion());
-                        mb.sendMessage(diagnosticNotice.message());
-                        diagnosticNotice.destroy();
-                    } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
-                        DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
-                        
-                        debug.printCString("show message").printNewline();
-                        ShowMessageNotification showMessage = mf.createShowMessageNotification();
-                        showMessage.info().printCString("close URI: ").print(not.getUri());
-                        mb.sendMessage(showMessage.message());
-                        showMessage.destroy();
-                    } else if (message.isClass(ShutdownRequest:CLASSNAME)) {
-                        state = 3;
-                        debug.printCString("acknowledge shutdown").printNewline();
-                        mb.sendMessage(mf.createEmptyResponse(message.asRequest()).message());
-                    } else if (message.isClass(ExitNotification:CLASSNAME)) {
-                        state = 5;
-                        debug.printCString("exiting ...");
-                    } else if (message.isClass(UnknownMessage:CLASSNAME)) {
-                        UnknownMessage mes = message.castTo(UnknownMessage:CLASSNAME);
-                        debug.printCString("mirror raw message").printNewline();
-                        mb.sendRawMessage(mes.getRaw());
-                    } else {
-                        debug.printCString("mirror message").printNewline();
-                        mb.sendMessage(message);
-                    }
-                    message.destroy();
+        do {
+            // TODO: determine and queue jobs from messages/notifications
+            while (message) {
+                if (message.isClass(DidOpenNotification:CLASSNAME)) {
+                    DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
+                    
+                    debug.printCString("publish diagnostic").printNewline();
+                    PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
+                        .setUri(not.getUri())
+                        .setVersion(not.getVersion());
+                    mb.sendMessage(diagnosticNotice.message());
+                    diagnosticNotice.destroy();
+                } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
+                    DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
+                    
+                    debug.printCString("show message").printNewline();
+                    ShowMessageNotification showMessage = mf.createShowMessageNotification();
+                    showMessage.info().printCString("close URI: ").print(not.getUri());
+                    mb.sendMessage(showMessage.message());
+                    showMessage.destroy();
+                } else if (message.isClass(ShutdownRequest:CLASSNAME)) {
+                    state = 3;
+                    debug.printCString("acknowledge shutdown").printNewline();
+                    mb.sendMessage(mf.createEmptyResponse(message.asRequest()).message());
+                } else if (message.isClass(ExitNotification:CLASSNAME)) {
+                    state = 5;
+                    debug.printCString("exiting ...");
+                } else if (message.isClass(UnknownMessage:CLASSNAME)) {
+                    UnknownMessage mes = message.castTo(UnknownMessage:CLASSNAME);
+                    debug.printCString("mirror raw message").printNewline();
+                    mb.sendRawMessage(mes.getRaw());
+                } else {
+                    debug.printCString("mirror message").printNewline();
+                    mb.sendMessage(message);
                 }
+                message.destroy();
+                
+                message = mb.getMessage();
             }
             
             if (mb.isClientGone()) {
@@ -89,28 +89,22 @@ class Server extends sys::core::Task {
                 debug.printCString("client gone => exit").printNewline();
                 return 0;
             }
-            // TODO: do queued job, if available, instead of busy waiting
-            debug.printCString("Waiting for message...").printNewline();
-            // TODO: blocking wait for message, if no job exists?
-            this.rt().sleep(1,0);
-        }
+            // TODO: do queued job, if available, instead of waiting
+            if (state != 5) {
+                debug.printCString("Waiting for message...").printNewline();
+                message = mb.awaitMessage(5, 0);
+            }
+        } while (state != 5);
         
-        debug.printCString("now").printNewline();
+        debug.printCString(" now").printNewline();
         return 0;
     }
     
     [int] awaitInitialization() {
-        // await messages
-        while (!mb.hasMessages()) {
-            if (mb.isClientGone()) { return false; }
-            debug.printCString("Waiting for initialization...").printNewline();
-            // TODO: blocking wait for initialization?
-            this.rt().sleep(1,0);
-        }
-        
         // TODO: detect and handle initialize correctly
         {
-            Message message := mb.getMessage();
+            debug.printCString("Waiting for initialize request...").printNewline();
+            Message message := mb.awaitMessage(10, 0);
             
             if (message && message.isClass(InitializeRequest:CLASSNAME)) {
                 debug.printCString("send initialize response").printNewline();
@@ -132,16 +126,9 @@ class Server extends sys::core::Task {
             if (message) { message.destroy(); }
         }
         
-        // TODO: await initialized notification
-        while (!mb.hasMessages()) {
-            if (mb.isClientGone()) { return false; }
-            debug.printCString("Waiting for finalizing initialization...").printNewline();
-            // TODO: blocking wait for initialization?
-            this.rt().sleep(1,0);
-        }
-        
         {
-            Message message := mb.getMessage();
+            debug.printCString("Waiting for initialized notification...").printNewline();
+            Message message := mb.awaitMessage(10, 0);
             
             if (message && message.isClass(InitializedNotification:CLASSNAME)) {
                 debug.printCString("finalize initialization").printNewline();
