@@ -12,21 +12,25 @@ use sys::stream::OStream;
 
 class Response extends Message {
 
-    StringValue id;
+    Request req;
     int errorCode;
     StringValue errorMessage;
     
-    [Response] setRequestId(String id) {
-        this.id = this.createOwn(StringValue:CLASSNAME);
-        this.id.assignString(id);
+    [Response] setRequest(Request req) { this.req = req; return this; }
+    [Request] getRequest() { return req; }
+    [String] getRequestId() {
+        if (req) { return req.getRequestId(); }
+        return null;
+    }
+    
+    [Response] initErrorFromJson(ObjectValue error) {
+        this.errorCode = error.cgetInt("code");
+        this.errorMessage = error.cgetStringValue("message");
+        // TODO: handle additional "data"
         return this;
     }
-    [Response] setCRequestId(cstring id) {
-        this.id = this.createOwn(StringValue:CLASSNAME);
-        this.id.assignCString(id);
-        return this;
-    }
-    [String] getRequestId() { return id.string(); }
+    
+    [int] isError() { return !!errorMessage; }
     
     [Response] setErrorCode(int code) { this.errorCode = code; return this; }
     
@@ -37,12 +41,13 @@ class Response extends Message {
 
     [Response] initResultFromJson(ObjectValue result) { return this; }
     [OStream] resultJsonToStream(OStream stream) {
-        return stream.printCString("{}");
+        return stream.printCString("null");
     }
     
     [OStream] jsonToStream(OStream stream) {
         stream.printCString("{\"jsonrpc\":\"2.0\"");
-        if (id) { id.jsonToStream(stream.printCString(",\"id\":"));}
+        if (req) { req.idJsonToStream(stream.printCString(",\"id\":")); }
+        else { stream.printCString(",\"id\":\"unknown\""); }
         if (errorMessage) {
             stream.printCString(",\"error\":{\"code\":").printInt(errorCode);
             errorMessage.jsonToStream(stream.printCString(",\"message\":"));

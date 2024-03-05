@@ -1,0 +1,31 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::lifecycle;
+
+use pool::languageserver::message::Request;
+
+use json::value::ObjectValue;
+use sys::stream::OStream;
+
+class RegisterCapabilityRequest extends Request {
+
+    cstring METHOD := "client/registerCapability";
+
+    [int] hasParams() { return true; }
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    [OStream] paramsJsonToStream(OStream stream) {
+        // TODO: manage registrations
+        stream
+            .printCString("{\"registrations\":[{")
+                .printCString("\"id\":\"5678\",")
+                .printCString("\"method\":\"workspace/didChangeWatchedFiles\",")
+                .printCString("\"registerOptions\":{\"watchers\":[{\"globPattern\":\"**/*.pool\"}]}")
+            .printCString("}]")
+        ;                        
+        return stream.printChar('}');
+    }
+    
+}

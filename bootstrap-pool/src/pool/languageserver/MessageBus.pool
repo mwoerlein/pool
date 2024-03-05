@@ -7,12 +7,16 @@ namespace pool::languageserver;
 
 use pool::languageserver::message::Message;
 use pool::languageserver::message::MessageFactory;
+use pool::languageserver::message::Notification;
+use pool::languageserver::message::Request;
+use pool::languageserver::message::Response;
 
 use json::parser::Parser as JsonParser;
 use json::value::JsonValue;
 
 use sys::core::String;
 use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
 use sys::memory::MemoryIOStream;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -22,6 +26,7 @@ class MessageBus extends sys::core::Object {
     IStream in;
     OStream out;
     OStream debug;
+    AnyMap pendingRequests;  // HashMap<String, Request>
     AnyList inbox;
     JsonParser jp;
     MessageFactory mf;
@@ -30,6 +35,7 @@ class MessageBus extends sys::core::Object {
         this.in = in;
         this.out = out;
         this.debug = debug;
+        this.pendingRequests = this.createOwn(AnyMap:CLASSNAME);
         this.inbox = this.createOwn(AnyList:CLASSNAME);
         this.jp = this.createOwn(JsonParser:CLASSNAME);
         this.mf = mf;
@@ -59,6 +65,7 @@ class MessageBus extends sys::core::Object {
         return inbox.shift();
     }
     
+// vvv TODO: remove manuel/debug send methods    
     [] sendRawMessage(JsonValue message) {
         String tmp = this.rt().createInstance(String:CLASSNAME);
         message.jsonToStream(tmp.ostream());
@@ -67,8 +74,25 @@ class MessageBus extends sys::core::Object {
             .print(tmp);
         tmp.destroy();
     }
-    
     [] sendMessage(Message message) {
+        String tmp = this.rt().createInstance(String:CLASSNAME);
+        message.jsonToStream(tmp.ostream());
+        out.printCString("Content-Length: ").printInt(tmp.length()).printChar('\r').printChar('\n')
+            .printChar('\r').printChar('\n')
+            .print(tmp);
+        tmp.destroy();
+    }
+// ^^^
+        
+    [] sendRequest(Request req) {
+        this.pendingRequests.set(req.getRequestId(), req);
+        debug.printCString("request response to ").print(req.getRequestId()).printNewline();
+        this._sendMessage(req.message());
+    }
+    [] sendResponse(Response resp) { this._sendMessage(resp.message()); }
+    [] sendNotification(Notification not) { this._sendMessage(not.message()); }
+
+    [] _sendMessage(Message message) {
         String tmp = this.rt().createInstance(String:CLASSNAME);
         message.jsonToStream(tmp.ostream());
         out.printCString("Content-Length: ").printInt(tmp.length()).printChar('\r').printChar('\n')
@@ -88,10 +112,15 @@ class MessageBus extends sys::core::Object {
             content.rewind();
             content.printToStream(debug.printCString("invalid message content received: '")).printCString("'").printNewline();
         } else {
-            Message message := mf.fromJsonValue(raw); 
+            Message message := mf.fromJsonValue(raw, this.pendingRequests); 
             raw.jsonToStream(debug.printCString("parse content '"))
                 .printCString("' to ").print(message.getClass().getName()).printNewline();
             if (!raw.isOwnedBy(message)) { raw.destroy(); }
+            Response resp := message.asResponse();
+            if (resp) {
+                debug.printCString("accept response to ").print(resp.getRequestId()).printNewline();
+                this.pendingRequests.unset(resp.getRequestId());
+            }
             inbox.add(message);
         }
         content.destroy();

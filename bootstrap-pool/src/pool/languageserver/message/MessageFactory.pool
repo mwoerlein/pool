@@ -9,7 +9,10 @@ use pool::languageserver::message::lifecycle::ExitNotification;
 use pool::languageserver::message::lifecycle::InitializeRequest;
 use pool::languageserver::message::lifecycle::InitializeResponse;
 use pool::languageserver::message::lifecycle::InitializedNotification;
+use pool::languageserver::message::lifecycle::RegisterCapabilityRequest;
+use pool::languageserver::message::lifecycle::RegisterCapabilityResponse;
 use pool::languageserver::message::lifecycle::ShutdownRequest;
+use pool::languageserver::message::lifecycle::ShutdownResponse;
 
 use pool::languageserver::message::textdocument::DidCloseNotification;
 use pool::languageserver::message::textdocument::DidOpenNotification;
@@ -21,11 +24,12 @@ use json::value::JsonValue;
 use json::value::ObjectValue;
 use json::value::StringValue;
 use sys::core::String;
+use sys::core::anycollection::AnyMap;
 use sys::stream::OStream;
 
 class MessageFactory extends sys::core::Object {
     
-    [Message] fromJsonValue(JsonValue val) {
+    [Message] fromJsonValue(JsonValue val, AnyMap knownRequests /*HashMap<String, Request>*/) {
         ObjectValue obj = val.asObjectValue();
         if (obj) {
             String method = obj.cgetString("method");
@@ -34,13 +38,17 @@ class MessageFactory extends sys::core::Object {
             if (method && id) {
                 Request req = this.requestFromJsonObject(method, id, obj.cgetObjectValue("params"));
                 if (req) { return req.message(); }
-            }
-            if (method) {
+            } else if (method) {
                 Notification not = this.notificationFromJsonObject(method, obj.cgetObjectValue("params"));
                 if (not) { return not.message(); }
-            }
-            if (id) {
-                // TODO: how to determine response types from json? Requires "known/open requests"-Map i.E. to match via id?
+            } else if (id && knownRequests) {
+                Request knownRequest = knownRequests.get(id);
+                if (knownRequest) {
+                    ObjectValue error = obj.cgetObjectValue("error");
+                    if (error) { return this.createEmptyResponse(knownRequest).initErrorFromJson(error).message(); }
+                    Response resp = this.responseFromJsonObject(knownRequest, obj.cgetObjectValue("result"));
+                    if (resp) { return resp.message(); }
+                }
             }
         }
         UnknownMessage unknown = this.rt().createInstance(UnknownMessage:CLASSNAME);
@@ -66,6 +74,7 @@ class MessageFactory extends sys::core::Object {
         // determine request
         Request req = null;
         if (method.cequals(InitializeRequest:METHOD)) { req = this.createInitializeRequest(id).request(); }
+        else if (method.cequals(RegisterCapabilityRequest:METHOD)) { req = this.createRegisterCapabilityRequest(id).request(); }
         else if (method.cequals(ShutdownRequest:METHOD)) { req = this.createShutdownRequest(id).request(); }
         
         // init params
@@ -73,18 +82,30 @@ class MessageFactory extends sys::core::Object {
         return req;
     }
     
+    [Response] responseFromJsonObject(Request req, ObjectValue result) {
+        // determine response
+        Response resp = null;
+        if (req.isClass(InitializeRequest:CLASSNAME)) { resp = this.createInitializeResponse(req.castTo(InitializeRequest:CLASSNAME)).response(); }
+        else if (req.isClass(RegisterCapabilityRequest:CLASSNAME)) { resp = this.createRegisterCapabilityResponse(req.castTo(RegisterCapabilityRequest:CLASSNAME)).response(); }
+        else if (req.isClass(ShutdownRequest:CLASSNAME)) { resp = this.createShutdownResponse(req.castTo(ShutdownRequest:CLASSNAME)).response(); }
+        
+        // init result
+        if (resp && result) { resp.initResultFromJson(result); }
+        return resp;
+    }
+    
     [Response] createErrorResponse(Message m, int code) {
         Response resp = this.rt().createInstance(Response:CLASSNAME);
         Request req = null;
         if (m) { req = m.asRequest(); }
-        if (req) { resp.setRequestId(req.getRequestId()); } else { resp.setCRequestId("unknown"); }
+        if (req) { resp.setRequest(req); }
         resp.errorMessage();
         return resp.setErrorCode(code);
     }
     
     [Response] createEmptyResponse(Request req) {
         Response resp = this.rt().createInstance(Response:CLASSNAME);
-        return resp.setRequestId(req.getRequestId());
+        return resp.setRequest(req);
     }
     
     // lifecycle    
@@ -95,16 +116,32 @@ class MessageFactory extends sys::core::Object {
     }
     [InitializeResponse] createInitializeResponse(InitializeRequest req) {
         InitializeResponse resp = this.rt().createInstance(InitializeResponse:CLASSNAME);
-        resp.setRequestId(req.getRequestId());
+        resp.setRequest(req.request());
         return resp;
     }
     [InitializedNotification] createInitializedNotification() { return this.rt().createInstance(InitializedNotification:CLASSNAME); }
     [ExitNotification] createExitNotification() { return this.rt().createInstance(ExitNotification:CLASSNAME); }
     
+    [RegisterCapabilityRequest] createRegisterCapabilityRequest(String id) {
+        RegisterCapabilityRequest req = this.rt().createInstance(RegisterCapabilityRequest:CLASSNAME);
+        req.setRequestId(id);
+        return req;
+    }
+    [RegisterCapabilityResponse] createRegisterCapabilityResponse(RegisterCapabilityRequest req) {
+        RegisterCapabilityResponse resp = this.rt().createInstance(RegisterCapabilityResponse:CLASSNAME);
+        resp.setRequest(req.request());
+        return resp;
+    }
+    
     [ShutdownRequest] createShutdownRequest(String id) {
         ShutdownRequest req = this.rt().createInstance(ShutdownRequest:CLASSNAME);
         req.setRequestId(id);
         return req;
+    }
+    [ShutdownResponse] createShutdownResponse(ShutdownRequest req) {
+        ShutdownResponse resp = this.rt().createInstance(ShutdownResponse:CLASSNAME);
+        resp.setRequest(req.request());
+        return resp;
     }
     
     // text document

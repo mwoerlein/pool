@@ -13,7 +13,10 @@ use pool::languageserver::message::lifecycle::ExitNotification;
 use pool::languageserver::message::lifecycle::InitializedNotification;
 use pool::languageserver::message::lifecycle::InitializeRequest;
 use pool::languageserver::message::lifecycle::InitializeResponse;
+use pool::languageserver::message::lifecycle::RegisterCapabilityRequest;
+use pool::languageserver::message::lifecycle::RegisterCapabilityResponse;
 use pool::languageserver::message::lifecycle::ShutdownRequest;
+use pool::languageserver::message::lifecycle::ShutdownResponse;
 use pool::languageserver::message::textdocument::DidOpenNotification;
 use pool::languageserver::message::textdocument::DidCloseNotification;
 use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
@@ -42,6 +45,12 @@ class Server extends sys::core::Task {
             debug.printCString("Initialization failed!").printNewline();
             return -1;
         }
+        {
+            String id = this.createOwn(String:CLASSNAME);
+            id.printInt(4711);
+            RegisterCapabilityRequest req3 = mf.createRegisterCapabilityRequest(id);
+            mb.sendRequest(req3.request());
+        }
         Message message = mb.getMessage();
         state = 0;
         do {
@@ -54,7 +63,7 @@ class Server extends sys::core::Task {
                     PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
                         .setUri(not.getUri())
                         .setVersion(not.getVersion());
-                    mb.sendMessage(diagnosticNotice.message());
+                    mb.sendNotification(diagnosticNotice.notification());
                     diagnosticNotice.destroy();
                 } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
                     DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
@@ -62,12 +71,17 @@ class Server extends sys::core::Task {
                     debug.printCString("show message").printNewline();
                     ShowMessageNotification showMessage = mf.createShowMessageNotification();
                     showMessage.info().printCString("close URI: ").print(not.getUri());
-                    mb.sendMessage(showMessage.message());
+                    mb.sendNotification(showMessage.notification());
                     showMessage.destroy();
                 } else if (message.isClass(ShutdownRequest:CLASSNAME)) {
+                    ShutdownRequest req = message.castTo(ShutdownRequest:CLASSNAME);
                     state = 3;
                     debug.printCString("acknowledge shutdown").printNewline();
-                    mb.sendMessage(mf.createEmptyResponse(message.asRequest()).message());
+                    ShutdownResponse resp = mf.createShutdownResponse(req);
+                    mb.sendResponse(resp.response());
+                    resp.destroy();
+                } else if (message.isClass(RegisterCapabilityResponse:CLASSNAME)) {
+                    debug.printCString("capability registered").printNewline();
                 } else if (message.isClass(ExitNotification:CLASSNAME)) {
                     state = 5;
                     debug.printCString("exiting ...");
@@ -112,14 +126,14 @@ class Server extends sys::core::Task {
                 InitializeRequest initializeRequest := message.castTo(InitializeRequest:CLASSNAME);
                 initializeRequest.jsonToStream(debug).printNewline(); 
                 InitializeResponse initializeResponse = mf.createInitializeResponse(initializeRequest);
-                mb.sendMessage(initializeResponse.message());
+                mb.sendResponse(initializeResponse.response());
                 initializeResponse.destroy();
             } else {
                 debug.printCString("send init error...").printNewline();
                 // send error
                 Response errorResponse = mf.createErrorResponse(message, -32600);
                 errorResponse.errorMessage().printCString("expecting initialize as first message");
-                mb.sendMessage(errorResponse.message());
+                mb.sendResponse(errorResponse);
                 errorResponse.destroy();
             }
             
@@ -138,7 +152,7 @@ class Server extends sys::core::Task {
                 // send error
                 Response errorResponse = mf.createErrorResponse(message, -32600);
                 errorResponse.errorMessage().printCString("expecting initialized as next message");
-                mb.sendMessage(errorResponse.message());
+                mb.sendResponse(errorResponse);
                 errorResponse.destroy();
             }
             

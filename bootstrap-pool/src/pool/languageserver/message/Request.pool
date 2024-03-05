@@ -26,6 +26,7 @@ class Request extends Message {
     [int] hasParams() { return false; }
     [Request] initParamsFromJson(ObjectValue params) { return this; }
     [OStream] paramsJsonToStream(OStream stream) { return stream.printCString("null"); }
+    [OStream] idJsonToStream(OStream stream) { return id.jsonToStream(stream); }
     
     [OStream] jsonToStream(OStream stream) {
         stream.printCString("{\"jsonrpc\":\"2.0\"");

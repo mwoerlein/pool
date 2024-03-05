@@ -54,8 +54,8 @@ class PublishDiagnosticsNotification extends Notification {
                     .printCString("\"start\":{\"line\":0,\"character\":0}")
                     .printCString(",\"end\":{\"line\":5,\"character\":0}")
                 .printChar('}')
-                .printCString(",\"severity\":3")
-                .printCString(",\"tags\":[1]")
+                .printCString(",\"severity\":3") // 1:Error; 2:Warning; 3:Information; 4:Hint
+                .printCString(",\"tags\":[1]") // 1:Unused; 2:Deprecated
                 .printCString(",\"message\":\"MetaData\"")
             .printCString("}]");
             if (uri) { uri.jsonToStream(stream.printCString(",\"uri\":")); }

@@ -1,0 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::lifecycle;
+
+use pool::languageserver::message::Response;
+
+
+class ShutdownResponse extends Response {
+
+}
