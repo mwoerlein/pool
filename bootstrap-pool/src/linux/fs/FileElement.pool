@@ -18,11 +18,13 @@ class FileElement extends StorageElement {
     
     String filename;
     int offset;
+    int lineOffset;
     int contentSize;
     
     [FileElement] init(String path, PropertiesMarshaller pm) {
         filename = this.own(path);
         offset = 0;
+        lineOffset = 0;
         contentSize = 0;
         
         File file = this.rt().createInstance(File:CLASSNAME);
@@ -30,6 +32,12 @@ class FileElement extends StorageElement {
         if (file._init(filename.toCString(), File:MODE_READ, offset) >= 0) {
             if (pm && pm.unmarshall(file.istream(), this.propertyContainer())) {
                 offset = file.pos();
+                file.seek(0);
+                int todo = offset;
+                while (todo) {
+                    if (file.readChar() == '\n') { lineOffset++; }
+                    todo--;
+                }
             } else {
                 _properties.clear();
             }
@@ -54,5 +62,7 @@ class FileElement extends StorageElement {
     }
     
     [int] getContentSize() { return contentSize; }
+    [int] getContentOffset() { return offset; }
+    [int] getContentLineOffset() { return lineOffset; }
     
 }

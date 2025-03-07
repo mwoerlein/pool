@@ -21,6 +21,8 @@ class StorageElement extends PropertyContainer {
     
     abstract [IStream] getContent();
     abstract [int] getContentSize();
+    [int] getContentOffset() { return 0; }
+    [int] getContentLineOffset() { return 0; }
     
     // TODO: remove with implicit cast
     [StorageElement] storageElement() { return this; }
