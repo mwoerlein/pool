@@ -1,0 +1,76 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::textdocument;
+
+use json::value::JsonValue;
+
+use sys::core::String;
+use sys::stream::OStream;
+
+// TODO: handle fraction and exponent
+class Diagnostic extends JsonValue {
+
+    // TODO: extract Range class?
+    int _startLine;
+    int _startChar;
+    int _endLine;
+    int _endChar;
+    
+    int _deprecated;
+    int _unnecessary;
+    
+    int _severity;
+    String message;
+    
+    [Diagnostic] _initDiagnostic(int startLine, int startChar, int endLine, int endChar) {
+        this._startLine = startLine;
+        this._startChar = startChar;
+        this._endLine = endLine;
+        this._endChar = endChar;
+        this._deprecated = false;
+        this._unnecessary = false;
+        this._severity = 1;
+        this.message = this.createOwn(String:CLASSNAME);
+    }
+    [Diagnostic] deprecated() { _deprecated = true; return this; }
+    [Diagnostic] unnecessary() { _unnecessary = true; return this; }
+
+    [OStream] error() { _severity = 1; message.clear(); return message.ostream(); }
+    [OStream] warn()  { _severity = 2; message.clear(); return message.ostream(); }
+    [OStream] info()  { _severity = 3; message.clear(); return message.ostream(); }
+    [OStream] hint()  { _severity = 4; message.clear(); return message.ostream(); }
+
+    [OStream] jsonToStream(OStream stream) {
+        stream.printChar('{')
+        // print range
+            .printCString("\"range\":{")
+                .printCString("\"start\":{")
+                    .printCString("\"line\":").printInt(_startLine)
+                    .printCString(",\"character\":").printInt(_startChar)
+                .printChar('}')
+                .printCString(",\"end\":{")
+                    .printCString("\"line\":").printInt(_endLine)
+                    .printCString(",\"character\":").printInt(_endChar)
+                .printChar('}')
+            .printChar('}')
+        // print severity
+            .printCString(",\"severity\":").printInt(_severity);
+        // print message
+        message.escapeToStream(stream.printCString(",\"message\":"));
+        // print tags (TODO: only send supported tags?
+        if (_unnecessary) {
+            if (_deprecated) {
+                stream.printCString(",\"tags\":[1,2]");
+            } else {
+                stream.printCString(",\"tags\":[1]");
+            }
+        } else if (_deprecated) {
+            stream.printCString(",\"tags\":[2]");
+        }
+        return stream.printChar('}');
+    }
+    
+}

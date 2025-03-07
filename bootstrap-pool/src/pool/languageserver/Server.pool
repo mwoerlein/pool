@@ -98,18 +98,37 @@ class Server extends sys::core::Task {
                     if (fallbackStorage) {
                         fallbackElem = fallbackStorage.getElementByUri(not.getUri());
                     }
+                    // TODO: generate real diagnostic for element                    
                     if (sourceElem) {
                         debug.printCString("found URI in sources: ").print(not.getUri())
                         .printCString(" size: ").printInt(sourceElem.getContentSize())
                         .printCString(" offset: ").printInt(sourceElem.getContentOffset())
                         .printCString(" lineOffset: ").printInt(sourceElem.getContentLineOffset())
                         .printNewline();
+                        
+                        debug.printCString("publish diagnostic").printNewline();
+                        PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
+                            .setUri(not.getUri())
+                            .setVersion(not.getVersion());
+                        diagnosticNotice.newDiagnostic(0, 0, sourceElem.getContentLineOffset(), 0)
+                            .unnecessary().info().printCString("MetaData");
+                        mb.sendNotification(diagnosticNotice.notification());
+                        diagnosticNotice.destroy();
                     } else if (fallbackElem) {
                         debug.printCString("found URI in fallback: ").print(not.getUri())
                         .printCString(" size: ").printInt(fallbackElem.getContentSize())
                         .printCString(" offset: ").printInt(fallbackElem.getContentOffset())
                         .printCString(" lineOffset: ").printInt(fallbackElem.getContentLineOffset())
                         .printNewline();
+                        
+                        debug.printCString("publish diagnostic").printNewline();
+                        PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
+                            .setUri(not.getUri())
+                            .setVersion(not.getVersion());
+                        diagnosticNotice.newDiagnostic(0, 0, fallbackElem.getContentLineOffset(), 0)
+                            .unnecessary().info().printCString("MetaData");
+                        mb.sendNotification(diagnosticNotice.notification());
+                        diagnosticNotice.destroy();
                     } else {
                         debug.printCString("show message").printNewline();
                         ShowMessageNotification showMessage = mf.createShowMessageNotification();
@@ -117,13 +136,6 @@ class Server extends sys::core::Task {
                         mb.sendNotification(showMessage.notification());
                         showMessage.destroy();
                     }
-                    // TODO: generate real diagnostic for element                    
-                    debug.printCString("publish diagnostic").printNewline();
-                    PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
-                        .setUri(not.getUri())
-                        .setVersion(not.getVersion());
-                    mb.sendNotification(diagnosticNotice.notification());
-                    diagnosticNotice.destroy();
                     if (fallbackElem) { fallbackElem.destroy(); }
                     if (sourceElem) { sourceElem.destroy(); }
                 } else if (message.isClass(DidCloseNotification:CLASSNAME)) {

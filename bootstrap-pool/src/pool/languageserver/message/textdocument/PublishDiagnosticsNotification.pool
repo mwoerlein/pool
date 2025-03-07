@@ -7,6 +7,7 @@ namespace pool::languageserver::message::textdocument;
 
 use pool::languageserver::message::Notification;
 
+use json::value::ArrayValue;
 use json::value::ObjectValue;
 use json::value::StringValue;
 use json::value::NumberValue;
@@ -20,6 +21,11 @@ class PublishDiagnosticsNotification extends Notification {
 
     StringValue uri;
     NumberValue version;
+    ArrayValue diagnostics;
+    
+    [] __init() {
+        this.diagnostics = this.createOwn(ArrayValue:CLASSNAME);
+    }
     
     [PublishDiagnosticsNotification] setUri(String uri) {
         this.uri = this.createOwn(StringValue:CLASSNAME);
@@ -32,32 +38,29 @@ class PublishDiagnosticsNotification extends Notification {
         return this;
     }
     
+    [Diagnostic] newDiagnostic(int startLine, int startChar, int endLine, int endChar) {
+        Diagnostic d = this.createOwn(Diagnostic:CLASSNAME);
+        diagnostics.add(d._initDiagnostic(startLine, startChar, endLine, endChar).jsonValue());
+        return d;
+    }
+    
     [String] getUri() { if (uri) { return uri.string(); } return null; }
     [int] getVersion() { if (version) { return version.toInt(); } return -1; }
 
     [int] hasParams() { return true; }
     [Notification] initParamsFromJson(ObjectValue params) {
-        // TODO parse parameters into model
-        
         ObjectValue textDocument = params.cgetObjectValue("textDocument");
         if (textDocument) {
             uri = textDocument.cgetStringValue("uri");
             version = textDocument.cgetNumberValue("version");
         }
+        // TODO parse diagnostics
         
         return this.notification();
     }
     [OStream] paramsJsonToStream(OStream stream) {
-        stream.printChar('{')
-            .printCString("\"diagnostics\":[{")
-                .printCString("\"range\":{")
-                    .printCString("\"start\":{\"line\":0,\"character\":0}")
-                    .printCString(",\"end\":{\"line\":5,\"character\":0}")
-                .printChar('}')
-                .printCString(",\"severity\":3") // 1:Error; 2:Warning; 3:Information; 4:Hint
-                .printCString(",\"tags\":[1]") // 1:Unused; 2:Deprecated
-                .printCString(",\"message\":\"MetaData\"")
-            .printCString("}]");
+        stream.printChar('{');
+            diagnostics.jsonToStream(stream.printCString("\"diagnostics\":"));
             if (uri) { uri.jsonToStream(stream.printCString(",\"uri\":")); }
             if (version) { version.jsonToStream(stream.printCString(",\"version\":")); }
         return stream.printChar('}');
