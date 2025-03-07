@@ -43,6 +43,7 @@ class Server extends sys::core::Task {
     
     AnyList sourceStorages;
     ClassPathStorage classpath;
+    UriAccessStorageWrapper fallbackStorage;
 
     [] _initServer(MessageBus mb, MessageFactory mf, OStream debug) {
         this.mb = mb;
@@ -52,10 +53,17 @@ class Server extends sys::core::Task {
         this.classpath = this.createOwn(ClassPathStorage:CLASSNAME);
     }
     
-    [] addSourceStorage(String uri, PoolStorage storage) {
+    [Server] addSourceStorage(String uri, PoolStorage storage) {
         UriAccessStorageWrapper uasw = this.createOwn(UriAccessStorageWrapper:CLASSNAME);
         sourceStorages.add(uasw.init(uri, storage));
         classpath.add(storage);
+        return this;
+    }
+    
+    [Server] setFallbackStorage(String uri, PoolStorage storage) {
+        fallbackStorage = this.createOwn(UriAccessStorageWrapper:CLASSNAME);
+        fallbackStorage.init(uri, storage);
+        return this;
     }
     
     [int] run() {
@@ -77,28 +85,37 @@ class Server extends sys::core::Task {
             while (message) {
                 if (message.isClass(DidOpenNotification:CLASSNAME)) {
                     DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
-                    
-                    StorageElement elem = null;
+                    StorageElement sourceElem = null;
                     {
                         AnyIterator it = sourceStorages.iterator();
-                        while (!elem && it.hasNext()) {
+                        while (!sourceElem && it.hasNext()) {
                             UriAccessStorageWrapper uasw = it.next();
-                            elem = uasw.getElementByUri(not.getUri());
+                            sourceElem = uasw.getElementByUri(not.getUri());
                         }
                         it.destroy();
                     }
-                    if (!elem) {
+                    StorageElement fallbackElem = null;
+                    if (fallbackStorage) {
+                        fallbackElem = fallbackStorage.getElementByUri(not.getUri());
+                    }
+                    if (sourceElem) {
+                        debug.printCString("found URI in sources: ").print(not.getUri())
+                        .printCString(" size: ").printInt(sourceElem.getContentSize())
+                        .printCString(" offset: ").printInt(sourceElem.getContentOffset())
+                        .printCString(" lineOffset: ").printInt(sourceElem.getContentLineOffset())
+                        .printNewline();
+                    } else if (fallbackElem) {
+                        debug.printCString("found URI in fallback: ").print(not.getUri())
+                        .printCString(" size: ").printInt(fallbackElem.getContentSize())
+                        .printCString(" offset: ").printInt(fallbackElem.getContentOffset())
+                        .printCString(" lineOffset: ").printInt(fallbackElem.getContentLineOffset())
+                        .printNewline();
+                    } else {
                         debug.printCString("show message").printNewline();
                         ShowMessageNotification showMessage = mf.createShowMessageNotification();
                         showMessage.warn().printCString("URI not found: ").print(not.getUri());
                         mb.sendNotification(showMessage.notification());
                         showMessage.destroy();
-                    } else {
-                        debug.printCString("found URI:").print(not.getUri())
-                        .printCString(" size: ").printInt(elem.getContentSize())
-                        .printCString(" offset: ").printInt(elem.getContentOffset())
-                        .printCString(" lineOffset: ").printInt(elem.getContentLineOffset())
-                        .printNewline();
                     }
                     // TODO: generate real diagnostic for element                    
                     debug.printCString("publish diagnostic").printNewline();
@@ -107,7 +124,8 @@ class Server extends sys::core::Task {
                         .setVersion(not.getVersion());
                     mb.sendNotification(diagnosticNotice.notification());
                     diagnosticNotice.destroy();
-                    elem.destroy();
+                    if (fallbackElem) { fallbackElem.destroy(); }
+                    if (sourceElem) { sourceElem.destroy(); }
                 } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
                     DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
                     

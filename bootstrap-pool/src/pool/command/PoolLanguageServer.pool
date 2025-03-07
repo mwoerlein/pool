@@ -70,7 +70,10 @@ Pool Language Server.
             s.destroy();
             return -1;
         }
-        return s.run();
+        
+        String fallbackUri = this.createOwn(String:CLASSNAME);
+        fallbackUri.assignCString("file://");
+        return s.setFallbackStorage(fallbackUri, this.openDirectory(fallbackUri.subString(-1, 0)).poolStorage()).run();
     }
     
     [Server] _createServer() {
