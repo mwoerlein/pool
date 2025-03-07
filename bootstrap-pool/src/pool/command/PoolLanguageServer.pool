@@ -8,6 +8,8 @@ namespace pool::command;
 use pool::languageserver::MessageBus;
 use pool::languageserver::Server;
 use pool::languageserver::message::MessageFactory;
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 
 class PoolLanguageServer extends linux::Command {
@@ -23,13 +25,15 @@ class PoolLanguageServer extends linux::Command {
 Pool Language Server.
 
     Usage:
-      pls
+      pls [-s <uri>]...
 
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
+      -s <uri> --sourceUri <uri>    Search for files in all of these locations.
 ">);
         this.registerOptionAlias('h', "help")
+            .registerOptionAlias('s', "sourceUri").registerOptionList("sourceUri")
         ;
     }
 
@@ -47,8 +51,26 @@ Pool Language Server.
             out.printCString(usage).printNewline();
             return -1;
         }
-        
-        return this._createServer().run();
+        Server s = this._createServer();
+        int error = false; 
+        {
+            AnyIterator it = this.getListOption("sourceUri");
+            while (it.hasNext()) {
+                String uri = it.next();
+                if (uri.startsWithCString("file:///")) {
+                    s.addSourceStorage(uri, this.openDirectory(uri.subString(7, 0)).poolStorage());
+                } else {
+                    this.rt().err().printCString("Unsupported source uri: ").print(uri).printNewline();
+                    error = true;
+                }
+            }
+            it.destroy();
+        }
+        if (error) {
+            s.destroy();
+            return -1;
+        }
+        return s.run();
     }
     
     [Server] _createServer() {

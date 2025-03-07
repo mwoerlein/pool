@@ -22,9 +22,17 @@ use pool::languageserver::message::textdocument::DidCloseNotification;
 use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
 use pool::languageserver::message::window::ShowMessageNotification;
 
+use pool::languageserver::storage::UriAccessStorageWrapper;
+
+use pool::storage::ClassPathStorage;
+use pool::storage::PoolStorage;
+use sys::store::StorageElement;
+
 use json::value::JsonValue;
 
 use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
 
 class Server extends sys::core::Task {
@@ -32,11 +40,22 @@ class Server extends sys::core::Task {
     MessageBus mb;
     MessageFactory mf;
     OStream debug;
+    
+    AnyList sourceStorages;
+    ClassPathStorage classpath;
 
     [] _initServer(MessageBus mb, MessageFactory mf, OStream debug) {
         this.mb = mb;
         this.mf = mf;
         this.debug = debug;
+        this.sourceStorages = this.createOwn(AnyList:CLASSNAME);
+        this.classpath = this.createOwn(ClassPathStorage:CLASSNAME);
+    }
+    
+    [] addSourceStorage(String uri, PoolStorage storage) {
+        UriAccessStorageWrapper uasw = this.createOwn(UriAccessStorageWrapper:CLASSNAME);
+        sourceStorages.add(uasw.init(uri, storage));
+        classpath.add(storage);
     }
     
     [int] run() {
@@ -59,12 +78,36 @@ class Server extends sys::core::Task {
                 if (message.isClass(DidOpenNotification:CLASSNAME)) {
                     DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
                     
+                    StorageElement elem = null;
+                    {
+                        AnyIterator it = sourceStorages.iterator();
+                        while (!elem && it.hasNext()) {
+                            UriAccessStorageWrapper uasw = it.next();
+                            elem = uasw.getElementByUri(not.getUri());
+                        }
+                        it.destroy();
+                    }
+                    if (!elem) {
+                        debug.printCString("show message").printNewline();
+                        ShowMessageNotification showMessage = mf.createShowMessageNotification();
+                        showMessage.warn().printCString("URI not found: ").print(not.getUri());
+                        mb.sendNotification(showMessage.notification());
+                        showMessage.destroy();
+                    } else {
+                        debug.printCString("found URI:").print(not.getUri())
+                        .printCString(" size: ").printInt(elem.getContentSize())
+                        .printCString(" offset: ").printInt(elem.getContentOffset())
+                        .printCString(" lineOffset: ").printInt(elem.getContentLineOffset())
+                        .printNewline();
+                    }
+                    // TODO: generate real diagnostic for element                    
                     debug.printCString("publish diagnostic").printNewline();
                     PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
                         .setUri(not.getUri())
                         .setVersion(not.getVersion());
                     mb.sendNotification(diagnosticNotice.notification());
                     diagnosticNotice.destroy();
+                    elem.destroy();
                 } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
                     DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
                     
@@ -106,7 +149,7 @@ class Server extends sys::core::Task {
             // TODO: do queued job, if available, instead of waiting
             if (state != 5) {
                 debug.printCString("Waiting for message...").printNewline();
-                message = mb.awaitMessage(5, 0);
+                message = mb.awaitMessage(60, 0);
             }
         } while (state != 5);
         

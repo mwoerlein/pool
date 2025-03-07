@@ -1,0 +1,100 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::storage;
+
+use pool::storage::Mimetype;
+use pool::storage::PoolStorage;
+
+use sys::core::String;
+use sys::core::utils::PropertyContainer;
+use sys::store::StorageElement;
+use sys::stream::OStream;
+use sys::stream::IStream;
+
+class UriAccessStorageWrapper extends PoolStorage {
+
+    int PATH_SEPARATOR := '/';
+    
+    String _baseUri;
+    PoolStorage _inner;
+    
+    [UriAccessStorageWrapper] init(String baseUri, PoolStorage storage) {
+        this._inner = storage;
+        this._baseUri = this.own(baseUri);
+        this._baseUri.printChar(UriAccessStorageWrapper:PATH_SEPARATOR);
+        return this;
+    }
+    
+    [StorageElement] getElementByUri(String uri) {
+        [String fullQualifiedName, int mimeType] := this._uriToFqnMime(uri);
+        if (!fullQualifiedName) { return null; }
+        return _inner.getElement(fullQualifiedName, mimeType);
+    }
+    
+    [StorageElement] getElement(String fullQualifiedName, int mimeType) {
+        return _inner.getElement(fullQualifiedName, mimeType);
+    }
+    
+    [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
+        return _inner.writeElement(fullQualifiedName, mimeType, properties);
+    }
+    
+    [int] removeElement(String fullQualifiedName, int mimeType) {
+        return _inner.removeElement(fullQualifiedName, mimeType);
+    }
+    
+    [String, int] _uriToFqnMime(String uri) {
+        if (!uri.startsWithString(this._baseUri)) {
+            return [null, Mimetype:UNKNOWN];
+        }
+        
+        // get mimetype by known extensions
+        // TODO centralize extension handling?
+        int mimeType = Mimetype:UNKNOWN;
+        int end = 0;
+        {
+            String end4 = uri.subString(-4, 0);
+            String end5 = uri.subString(-5, 0);
+            if (end5.cequals(".pool")) {
+                mimeType = Mimetype:POOL_SRC;
+                end = -5;
+            } else if (end5.cequals(".pasm")) {
+                mimeType = Mimetype:POOL_ASM;
+                end = -5;
+            } else if (end5.cequals(".gram")) {
+                mimeType = Mimetype:POOL_GRAMMAR;
+                end = -5;
+            } else if (end4.cequals(".p86")) {
+                mimeType = Mimetype:POOL_X86_CLASS;
+                end = -4;
+            }
+            end5.destroy();
+            end4.destroy();
+        }
+        if (mimeType == Mimetype:UNKNOWN) {
+            return [null, Mimetype:UNKNOWN];
+        }
+        
+        // build full qualified name
+        String fqn = this.createOwn(String:CLASSNAME);
+        {
+            String path = uri.subString(this._baseUri.length(), end);
+            IStream in = path.toIStream();
+            while (!in.isEmpty()) {
+                int c = in.readChar();
+                if (c == UriAccessStorageWrapper:PATH_SEPARATOR) {
+                    fqn.printChar(':').printChar(':');
+                } else {
+                    fqn.printChar(c);
+                }
+            }
+            in.destroy();
+            path.destroy();
+        }
+        return [fqn, mimeType];
+    }
+   
+}
