@@ -2,7 +2,7 @@ include ./Makefile.inc
 
 .PHONY: all clean regenerate-parsers tests clear-tests install
 
-all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/pool $(BINDIR)/poolbc $(BINDIR)/poolbsc $(BINDIR)/parsergen
+all: clean $(BINDIR)/storeb $(BINDIR)/pbasm $(BINDIR)/pls $(BINDIR)/pool $(BINDIR)/poolbc $(BINDIR)/poolbsc $(BINDIR)/parsergen
 tests: clear-tests regenerate-test-parsers $(BINDIR)/pooltest
 	@$(BINDIR)/pooltest
 
