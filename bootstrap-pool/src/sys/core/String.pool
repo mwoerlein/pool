@@ -72,6 +72,14 @@ class String extends OStream {
         return String:compareCStrings(this.toCString(), s.toCString());
     }
     
+    [int] startsWithCString(cstring s) {
+        return String:startsWithCStrings(this.toCString(), s);
+    }
+    
+    [int] startsWithString(String s) {
+        return String:startsWithCStrings(this.toCString(), s.toCString());
+    }
+    
     [int] hash() { return _hash; }
     [int] equals(__any__ obj) {
         String s = this.rt().cast(String:CLASSNAME, obj);
@@ -258,6 +266,29 @@ class String extends OStream {
             .byte 0x66; .byte 0x98; #// cbw
             .byte 0x98              #// cwde
         ">, {"%ebx": a, "%edx": b}, {"%eax": ret, "%ebx": null, "%edx": null});
+        return ret;
+    }
+    
+    global [int] startsWithCStrings(cstring a, cstring b) {
+        int ret = 0;
+        __pasm__(<"
+            movl 0, %eax
+        _scs_strstart_loop:
+            movb (%ebx), %al
+            cmpb 0, %al;        je _scs_strstart_ret_1
+            subb (%edx), %al;   jnz _scs_strstart_ret_0
+            addl 1, %edx
+            addl 1, %ebx
+            jmp _scs_strstart_loop
+        _scs_strstart_ret_0:
+            movl 0, %eax
+            jmp _scs_strstart_ret
+        _scs_strstart_ret_1:
+            movl 1, %eax
+        _scs_strstart_ret:
+            .byte 0x66; .byte 0x98; #// cbw
+            .byte 0x98              #// cwde
+        ">, {"%ebx": b, "%edx": a}, {"%eax": ret, "%ebx": null, "%edx": null});
         return ret;
     }
     

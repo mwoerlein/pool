@@ -25,6 +25,7 @@ class StringTest extends test::TestCase {
         this.testPrintToStream();
         this.testRawInt();
         this.testCompareCStrings();
+        this.testStartsWithCStrings();
     }
     
     [int] testInitializationClearAndLength() {
@@ -433,6 +434,21 @@ class StringTest extends test::TestCase {
         if (String:compareCStrings("b", "ABC") <= 0) { return this.fail("Test 'b' >  'ABC'"); }
         if (String:compareCStrings("b", "BCD") <  0) { return this.fail("Test 'b' >= 'BCD'"); }
         if (String:compareCStrings("b", "ABCDE") == 0) { return this.fail("Test 'b' != 'ABCDE'"); }
+        
+        return this.success();
+    }
+    
+    [int] testStartsWithCStrings() {
+        this.start("testStartsWithCStrings");
+
+        if (!String:startsWithCStrings("", "")) { return this.fail("Test '' starts with ''"); }
+        if (String:startsWithCStrings("", "ABC")) { return this.fail("Test '' don't starts with 'ABC'"); }
+        if (!String:startsWithCStrings("ABC", "")) { return this.fail("Test 'ABC' starts with ''"); }
+        if (!String:startsWithCStrings("ABC", "ABC")) { return this.fail("Test 'ABC' starts with 'ABC'"); }
+        if (String:startsWithCStrings("ABC", "ABCDE")) { return this.fail("Test 'ABC' don't starts with 'ABCDE'"); }
+        if (!String:startsWithCStrings("ABCDE", "ABC")) { return this.fail("Test 'ABCDE' starts with 'ABC'"); }
+        if (String:startsWithCStrings("ABCDE", "ABCEF")) { return this.fail("Test 'ABCDE' don't starts with 'ABCEF'"); }
+        if (String:startsWithCStrings("ABCDE", "BCDEF")) { return this.fail("Test 'ABCDE' don't starts with 'BCDEF'"); }
         
         return this.success();
     }
