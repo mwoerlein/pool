@@ -22,9 +22,11 @@ class PublishDiagnosticsNotification extends Notification {
     StringValue uri;
     NumberValue version;
     ArrayValue diagnostics;
+    int lineOffset;
     
     [] __init() {
         this.diagnostics = this.createOwn(ArrayValue:CLASSNAME);
+        this.lineOffset = 0;
     }
     
     [PublishDiagnosticsNotification] setUri(String uri) {
@@ -37,15 +39,20 @@ class PublishDiagnosticsNotification extends Notification {
         this.version.setInteger(version);
         return this;
     }
+    [PublishDiagnosticsNotification] setLineOffset(int lineOffset) {
+        this.lineOffset = lineOffset;
+        return this;
+    }
     
     [Diagnostic] newDiagnostic(int startLine, int startChar, int endLine, int endChar) {
         Diagnostic d = this.createOwn(Diagnostic:CLASSNAME);
-        diagnostics.add(d._initDiagnostic(startLine, startChar, endLine, endChar).jsonValue());
+        diagnostics.add(d._initDiagnostic(startLine + lineOffset, startChar, endLine + lineOffset, endChar).jsonValue());
         return d;
     }
     
     [String] getUri() { if (uri) { return uri.string(); } return null; }
     [int] getVersion() { if (version) { return version.toInt(); } return -1; }
+    [int] hasDiagnostics() { return !diagnostics.isEmpty(); }
 
     [int] hasParams() { return true; }
     [Notification] initParamsFromJson(ObjectValue params) {

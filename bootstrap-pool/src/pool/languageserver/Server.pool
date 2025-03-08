@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::languageserver;
 
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+
 use pool::languageserver::message::Message;
 use pool::languageserver::message::MessageFactory;
 use pool::languageserver::message::Response;
@@ -39,6 +41,7 @@ class Server extends sys::core::Task {
 
     MessageBus mb;
     MessageFactory mf;
+    PoolParser parser;
     OStream debug;
     
     AnyList sourceStorages;
@@ -49,6 +52,7 @@ class Server extends sys::core::Task {
         this.mb = mb;
         this.mf = mf;
         this.debug = debug;
+        this.parser = this.createOwn(PoolParser:CLASSNAME);
         this.sourceStorages = this.createOwn(AnyList:CLASSNAME);
         this.classpath = this.createOwn(ClassPathStorage:CLASSNAME);
     }
@@ -85,50 +89,56 @@ class Server extends sys::core::Task {
             while (message) {
                 if (message.isClass(DidOpenNotification:CLASSNAME)) {
                     DidOpenNotification not = message.castTo(DidOpenNotification:CLASSNAME);
-                    StorageElement sourceElem = null;
+                    StorageElement elem = null;
+                    String fqn = null;
+                    int fallback = false;
                     {
                         AnyIterator it = sourceStorages.iterator();
-                        while (!sourceElem && it.hasNext()) {
+                        while (!elem && it.hasNext()) {
                             UriAccessStorageWrapper uasw = it.next();
-                            sourceElem = uasw.getElementByUri(not.getUri());
+                            [StorageElement e, String n, int m] := uasw.getElementByUri(not.getUri());
+                            elem = e;
+                            fqn = n;
                         }
                         it.destroy();
                     }
                     StorageElement fallbackElem = null;
-                    if (fallbackStorage) {
-                        fallbackElem = fallbackStorage.getElementByUri(not.getUri());
+                    if (!elem && fallbackStorage) {
+                        [StorageElement e, String n, int m] := fallbackStorage.getElementByUri(not.getUri());
+                        elem = e;
+                        fqn = n;
+                        fallback = true;
                     }
-                    // TODO: generate real diagnostic for element                    
-                    if (sourceElem) {
-                        debug.printCString("found URI in sources: ").print(not.getUri())
-                        .printCString(" size: ").printInt(sourceElem.getContentSize())
-                        .printCString(" offset: ").printInt(sourceElem.getContentOffset())
-                        .printCString(" lineOffset: ").printInt(sourceElem.getContentLineOffset())
-                        .printNewline();
+                    if (elem) {
+                        if (fallback) {
+                            debug.printCString("found URI in fallback: ").print(not.getUri());
+                        } else {
+                            debug.printCString("found URI in sources: ").print(not.getUri());
+                        }
+                        debug.printCString(" size: ").printInt(elem.getContentSize())
+                            .printCString(" offset: ").printInt(elem.getContentOffset())
+                            .printCString(" lineOffset: ").printInt(elem.getContentLineOffset())
+                            .printNewline();
                         
-                        debug.printCString("publish diagnostic").printNewline();
                         PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
                             .setUri(not.getUri())
                             .setVersion(not.getVersion());
-                        diagnosticNotice.newDiagnostic(0, 0, sourceElem.getContentLineOffset(), 0)
-                            .unnecessary().info().printCString("MetaData");
-                        mb.sendNotification(diagnosticNotice.notification());
+                            
+                        if (elem.getContentOffset() > 0) { 
+                            int lineOffset = elem.getContentLineOffset();
+                            diagnosticNotice.newDiagnostic(0, 0, lineOffset, 0).unnecessary().info().printCString("MetaData");
+                            diagnosticNotice.setLineOffset(lineOffset);
+                        }
+                        {
+                            TranslationUnitNode unit = elem.createOwn(TranslationUnitNode:CLASSNAME);
+                            parser.parseToDiagnostics(unit.init(elem, fqn), diagnosticNotice);
+                        }
+                        if (diagnosticNotice.hasDiagnostics()) {
+                            debug.printCString("publish diagnostic").printNewline();
+                            mb.sendNotification(diagnosticNotice.notification());
+                        }
                         diagnosticNotice.destroy();
-                    } else if (fallbackElem) {
-                        debug.printCString("found URI in fallback: ").print(not.getUri())
-                        .printCString(" size: ").printInt(fallbackElem.getContentSize())
-                        .printCString(" offset: ").printInt(fallbackElem.getContentOffset())
-                        .printCString(" lineOffset: ").printInt(fallbackElem.getContentLineOffset())
-                        .printNewline();
-                        
-                        debug.printCString("publish diagnostic").printNewline();
-                        PublishDiagnosticsNotification diagnosticNotice = mf.createPublishDiagnosticsNotification()
-                            .setUri(not.getUri())
-                            .setVersion(not.getVersion());
-                        diagnosticNotice.newDiagnostic(0, 0, fallbackElem.getContentLineOffset(), 0)
-                            .unnecessary().info().printCString("MetaData");
-                        mb.sendNotification(diagnosticNotice.notification());
-                        diagnosticNotice.destroy();
+                        elem.destroy();
                     } else {
                         debug.printCString("show message").printNewline();
                         ShowMessageNotification showMessage = mf.createShowMessageNotification();
@@ -136,8 +146,6 @@ class Server extends sys::core::Task {
                         mb.sendNotification(showMessage.notification());
                         showMessage.destroy();
                     }
-                    if (fallbackElem) { fallbackElem.destroy(); }
-                    if (sourceElem) { sourceElem.destroy(); }
                 } else if (message.isClass(DidCloseNotification:CLASSNAME)) {
                     DidCloseNotification not = message.castTo(DidCloseNotification:CLASSNAME);
                     

@@ -1,0 +1,60 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver;
+
+use pool::compiler::ast::Node;
+use pool::compiler::ast::node::declaration::TranslationUnitNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
+use pool::compiler::parser::Parser;
+
+use pool::generator::tokenizer::Token;
+use pool::generator::tokenizer::Tokenizer;
+
+use pool::languageserver::message::textdocument::Diagnostic;
+use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
+
+use sys::stream::OStream;
+
+class PoolParser extends Parser {
+    
+    PublishDiagnosticsNotification diagnostics;
+
+    [] parseToDiagnostics(TranslationUnitNode unit, PublishDiagnosticsNotification diagnostics) {
+        this.diagnostics = diagnostics;
+        this.parse(unit);
+    }
+
+    [] unexpectedTokenError(Token t, Tokenizer tokens, int state, int action) {
+        tokens.symbolTable().debugSymbol(t.getSymbol(), this._tokenDiagnostic(t).error().printCString("Unexpected "))
+            .printCString(" token (state: ").printInt(state).printCString(", action: ").printInt(action).printChar(')');
+    }
+    
+    [] invalidCharacterRepresentationError(Token t) {
+        this._tokenDiagnostic(t).error().printCString("invalid character sequence");
+    }
+    
+    [] multilineClassRefError(ClassRefNode node) {
+        this._nodeDiagnostic(node.node()).error().printCString("multiline full qualified name");
+    }
+    
+    [Diagnostic] _tokenDiagnostic(Token t) {
+        // diagnostic lines/characters are 0-based but tokens lines/columns are 1-based
+        // and a character ends with the start of the next character
+        return this.diagnostics.newDiagnostic(
+            t.getFirstLine()-1, t.getFirstColumn()-1,
+            t.getLastLine()-1, t.getLastColumn()
+        );
+    }
+    
+    [Diagnostic] _nodeDiagnostic(Node n) {
+        // diagnostic lines/characters are 0-based but nodes lines/columns are 1-based
+        // and a character ends with the start of the next character
+        return this.diagnostics.newDiagnostic(
+            n.getFirstLine()-1, n.getFirstColumn()-1,
+            n.getLastLine()-1, n.getLastColumn()
+        );
+    }
+}

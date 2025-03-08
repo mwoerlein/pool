@@ -28,10 +28,10 @@ class UriAccessStorageWrapper extends PoolStorage {
         return this;
     }
     
-    [StorageElement] getElementByUri(String uri) {
+    [StorageElement, String, int] getElementByUri(String uri) {
         [String fullQualifiedName, int mimeType] := this._uriToFqnMime(uri);
-        if (!fullQualifiedName) { return null; }
-        return _inner.getElement(fullQualifiedName, mimeType);
+        if (!fullQualifiedName) { return [null, null, mimeType]; }
+        return [_inner.getElement(fullQualifiedName, mimeType), fullQualifiedName, mimeType];
     }
     
     [StorageElement] getElement(String fullQualifiedName, int mimeType) {
