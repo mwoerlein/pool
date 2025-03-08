@@ -1,0 +1,104 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::languageserver::message::workspace;
+
+use pool::languageserver::message::Notification;
+
+use json::value::ArrayValue;
+use json::value::JsonValue;
+use json::value::NumberValue;
+use json::value::ObjectValue;
+
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+use sys::core::String;
+use sys::stream::OStream;
+
+class DidChangeWatchedFilesNotification extends Notification {
+
+    cstring METHOD := "workspace/didChangeWatchedFiles";
+
+    AnyList created;
+    AnyList changed;
+    AnyList deleted;
+    
+    [] __init() {
+        created = this.createOwn(AnyList:CLASSNAME);
+        changed = this.createOwn(AnyList:CLASSNAME);
+        deleted = this.createOwn(AnyList:CLASSNAME);
+    }
+    
+    [Notification] initParamsFromJson(ObjectValue params) {
+        ArrayValue changes = params.cgetArrayValue("changes");
+        if (changes) {
+            AnyIterator it = changes.iterator();
+            while (it.hasNext()) {
+                JsonValue v = it.next();
+                ObjectValue o = null;
+                if (v && (o = v.asObjectValue())) {
+                    String uri = o.cgetString("uri");
+                    NumberValue typeValue = o.cgetNumberValue("type");
+                    if (uri && typeValue) {
+                        int type = typeValue.toInt();
+                        if (type == 1) { this._addUriToList(uri, created); }
+                        else if (type == 2) { this._addUriToList(uri, changed); }
+                        else if (type == 3) { this._addUriToList(uri, deleted); }
+                    }
+                }
+            }
+            it.destroy();
+        }
+        return this.notification();
+    }
+    
+    [AnyIterator] createdIterator() { return created.iterator(); }
+    [AnyIterator] changedIterator() { return changed.iterator(); }
+    [AnyIterator] deletedIterator() { return deleted.iterator(); }
+    
+    [int] hasParams() { return true; }
+    [OStream] paramsJsonToStream(OStream stream) {
+        stream.printCString("{\"changes\":[");
+        {
+            int first = true;
+            {
+                AnyIterator it = created.iterator();
+                if (it.hasNext()) {
+                    String uri := it.next();
+                    if (first) { first = false; } else { stream.printChar(','); }
+                    stream.printCString("{\"uri\":").escapeString(uri).printCString(",\"type\":1}");
+                }
+                it.destroy();
+            }
+            {
+                AnyIterator it = changed.iterator();
+                if (it.hasNext()) {
+                    String uri := it.next();
+                    if (first) { first = false; } else { stream.printChar(','); }
+                    stream.printCString("{\"uri\":").escapeString(uri).printCString(",\"type\":2}");
+                }
+                it.destroy();
+            }
+            {
+                AnyIterator it = deleted.iterator();
+                if (it.hasNext()) {
+                    String uri := it.next();
+                    if (first) { first = false; } else { stream.printChar(','); }
+                    stream.printCString("{\"uri\":").escapeString(uri).printCString(",\"type\":3}");
+                }
+                it.destroy();
+            }
+        }
+        return stream.printCString("]}");
+    }
+
+    [OStream] methodJsonToStream(OStream stream) { return stream.printChar('\"').printCString(METHOD).printChar('\"'); }
+    
+    [] _addUriToList(String uri, AnyList list) {
+        String s = list.createOwn(String:CLASSNAME);
+        s.assignString(uri);
+        list.add(s);
+    }
+}
