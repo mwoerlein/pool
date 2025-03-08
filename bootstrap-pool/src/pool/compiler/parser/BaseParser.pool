@@ -179,7 +179,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
                 tmp.destroy();
             } else {
                 tmp.destroy();
-                this.newError().printCString("invalid character sequence: ").print(v);
+                this.invalidCharacterRepresentationError(t);
             }
         } else { val = v.toInt(); }
         
@@ -382,7 +382,7 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
         node.appendName(id.getValue());
         node.setLastLocation(id.getLastLine(), id.getLastColumn());
         if ((id.getFirstLine() != line) || (id.getFirstColumn() != end + 3)) {
-            node.debugToStream(this.newError().printCString("non-consecutive full qualified name: "));
+            this.multilineClassRefError(node);
         }
         return node;
     }
@@ -397,6 +397,14 @@ class BaseParser extends pool::generator::parser::Parser, sys::log::LoggerAware 
         IntRefNode node = this.rt().createInstance(IntRefNode:CLASSNAME);
         node.setLocation(t.getFirstLine(), t.getFirstColumn(), t.getLastLine(), t.getLastColumn());
         return node;
+    }
+    
+    [] invalidCharacterRepresentationError(Token t) {
+        t.debugLocationToStream(this.newError().printCString("invalid character sequence: ").print(t.getValue()));
+    }
+    
+    [] multilineClassRefError(ClassRefNode node) {
+        node.debugToStream(this.newError().printCString("multiline full qualified name: "));
     }
     
 }

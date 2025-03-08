@@ -386,7 +386,7 @@ class InstructionResolver extends Visitor {
     [OStream] validationError(Node node) {
         OStream stream = this.error();
         if (node.getScope()) {
-            node.debugInfoToStream(stream.print(node.getScope().getClassDeclNode().getName()));
+            node.debugLocationToStream(stream.print(node.getScope().getClassDeclNode().getName()));
         } else {
             node.debugToStream(stream);
         }

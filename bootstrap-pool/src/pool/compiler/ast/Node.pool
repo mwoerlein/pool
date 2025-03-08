@@ -47,10 +47,10 @@ class Node extends sys::core::Object {
     }
     
     [OStream] debugToStream(OStream stream) {
-        return this.debugInfoToStream(this.printDebugName(stream));
+        return this.debugLocationToStream(this.printDebugName(stream));
     }
     
-    [OStream] debugInfoToStream(OStream stream) {
+    [OStream] debugLocationToStream(OStream stream) {
         return stream
             .printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)

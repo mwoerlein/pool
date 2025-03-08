@@ -59,12 +59,15 @@ class Token extends Object {
     }
     
     [OStream] debugToStream(SymbolTable table, OStream stream) {
-        table.debugSymbol(symbol, stream).printChar('@').print(inputName).printChar('(')
+        return value.escapeToStream(this.debugLocationToStream(table.debugSymbol(symbol, stream)).printChar(':'));
+    }
+    
+    [OStream] debugLocationToStream(OStream stream) {
+        return stream.printChar('@').print(inputName).printChar('(')
             .printInt(firstLine).printChar('/').printInt(firstColumn)
             .printChar('-')
             .printInt(lastLine).printChar('/').printInt(lastColumn)
             .printChar(')');
-        return value.escapeToStream(stream.printChar(':'));
     }
     
     [] debugSymbol(OStream stream) {
