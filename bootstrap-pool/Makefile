@@ -17,6 +17,11 @@ $(BINDIR)/screentest: $(SRCDIR)/sys/command/ScreenTest.pool $(BINDIR) $(POOLSC)
 	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::ScreenTest
 	@chmod a+x $@
 	
+$(BINDIR)/vectortest: $(SRCDIR)/vector/command/VectorTest.pool $(BINDIR) $(POOLSC)
+	@echo "build vectortest (pool)"
+	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::VectorTest
+	@chmod a+x $@
+	
 $(BINDIR)/storeb: $(SRCDIR)/pool/command/Store.pool $(BINDIR) $(POOLSC)
 	@echo "build storeb (pool)"
 	@$(POOLSC) $(PSC_FLAGS) --output $@ linux::command::Store

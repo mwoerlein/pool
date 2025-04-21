@@ -1,0 +1,17 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::command;
+
+class VectorTest extends vector::command::VectorTest {
+    
+    // methods
+    __entry__ [int] entry(int argc, int argv) {
+        VectorTest test = linux::Runtime:buildRuntime().createInstance(VectorTest:CLASSNAME);
+        int ret = test.execute(argc, argv);
+        test.destroy();
+        return ret;
+    }
+}

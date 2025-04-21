@@ -1,0 +1,57 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::command;
+
+use sys::stream::OStream;
+use sys::stream::SeekableIOStream;
+
+use vector::svg::Writer;
+
+class VectorTest extends linux::Command {
+
+    [] configure() {
+        this.setName("vectortest")
+            .setVersion("0.1.0")
+            .setUsage(<"
+Test for some vector features.
+
+    Usage:
+      screentest [options] -o file
+
+    Options:
+      -h --help                     Show this screen.
+      --version                     Show version.
+      -o <file> --output <file>     Place the output into <file>.
+">);
+        this.registerOptionAlias('h', "help")
+            .registerOptionAlias('o', "output")
+        ;
+    }
+
+    [int] run() {
+        OStream out = this.rt().out();
+        if (this.hasOption("help")) {
+            out.printCString(usage).printNewline();
+            return 0;
+        }
+        if (this.hasOption("version")) {
+            out.printCString(name).printChar(' ').printCString(version).printNewline();
+            return 0;
+        }
+        if (!this.hasValueOption("output") ) {
+            out.printCString(usage).printNewline();
+            return -1;
+        }
+        
+        Writer svgWriter = this.createOwn(Writer:CLASSNAME);
+        
+        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
+        svgWriter.svgToStream(outfile.ostream());
+        outfile.destroy();
+        return 0;
+    }
+    
+}

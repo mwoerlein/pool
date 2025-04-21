@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::svg;
+
+use sys::stream::OStream;
+
+class Writer extends sys::core::Object {
+    
+    [OStream] svgToStream(OStream stream) {
+        return stream
+            .printCString("<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"")
+                .printCString(" width=\"15cm\"")
+                .printCString(" height=\"15cm\"")
+                .printCString(" viewBox=\"-50.000000 -50.000000 100.000000 100.000000\"")
+            .printChar('>')
+                .printCString("<circle cx=\"0\" cy=\"0\" r=\"45\" fill=\"green\" fill-opacity=\"0.5\" fill-rule=\"evenodd\" stroke=\"black\" stroke-opacity=\"1\" stroke-width=\"1\"/>")
+            .printCString("</svg>");
+    }
+
+}
