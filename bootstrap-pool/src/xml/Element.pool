@@ -1,0 +1,99 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace xml;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyMap;
+use sys::core::anycollection::AnyMapEntryIterator;
+use sys::core::String;
+
+use sys::stream::OStream;
+
+class Element extends sys::core::utils::Owner {
+
+    String name;
+    AnyMap _attributes;  // HashMap<(own)String,(own)String>
+    AnyList _children;  // List<Element>
+
+    [] __init() { this._initElement(); }
+    [] _initElement() {
+        name = this.createOwn(String:CLASSNAME);
+        _attributes = this.createOwn(AnyMap:CLASSNAME);
+        _children = this.createOwn(AnyList:CLASSNAME);
+    }
+    [Element] setName(String name) { this.name.assignString(name); return this; }
+    [Element] setCName(cstring name) { this.name.assignCString(name); return this; }
+    
+    [Element] addAttribute(String attribute, String value) { 
+        _attributes.set(this.createOwnStringFromString(attribute), this.createOwnStringFromString(value));
+        return this;
+    }
+    [Element] addCAttribute(cstring attribute, cstring value) { 
+        _attributes.set(this.createOwnStringFromCString(attribute), this.createOwnStringFromCString(value));
+        return this;
+    }
+    
+    [Element] newChild() {
+        Element child = _children.createOwn(Element:CLASSNAME);
+        _children.add(child);
+        return child;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        stream.printChar('<').print(name);
+        {
+            AnyMapEntryIterator it := _attributes.entries();
+            while (it.hasNext()) {
+                [String at, String val] := it.nextPair();
+                val.escapeToStream(stream.printChar(' ').print(at).printChar('='));
+            }
+            it.destroy();
+        }
+        if (_children.isEmpty()) {
+            return stream.printChar('/').printChar('>');
+        }
+        stream.printChar('>');
+        {
+            AnyIterator it = _children.iterator();
+            while (it.hasNext()) {
+                Element child = it.next();
+                child.printToStream(stream);
+            }
+            it.destroy();
+        }
+        return stream.printChar('<').printChar('/').print(name).printChar('>');
+    }
+    
+    [OStream] prettyToStream(OStream stream, int indent) {
+        { int i = indent; while (i-- > 0) { stream.printChar(' '); } }
+        stream.printChar('<').print(name);
+        {
+            AnyMapEntryIterator it := _attributes.entries();
+            while (it.hasNext()) {
+                [String at, String val] := it.nextPair();
+                val.escapeToStream(stream.printChar(' ').print(at).printChar('='));
+            }
+            it.destroy();
+        }
+        if (_children.isEmpty()) {
+            return stream.printChar('/').printChar('>');
+        }
+        stream.printChar('>').printNewline();
+        {
+            AnyIterator it = _children.iterator();
+            while (it.hasNext()) {
+                Element child = it.next();
+                child.prettyToStream(stream, indent+2);
+            }
+            it.destroy();
+        }
+        stream.printNewline();
+        { int i = indent; while (i-- > 0) { stream.printChar(' '); } }
+        return stream.printChar('<').printChar('/').print(name).printChar('>');
+    }
+
+}
