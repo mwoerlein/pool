@@ -6,18 +6,44 @@ version = 0.1.0
 namespace vector::svg;
 
 use sys::stream::OStream;
+use xml::Element;
 
 class Writer extends sys::core::Object {
     
     [OStream] svgToStream(OStream stream) {
-        return stream
-            .printCString("<svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"")
-                .printCString(" width=\"15cm\"")
-                .printCString(" height=\"15cm\"")
-                .printCString(" viewBox=\"-50.000000 -50.000000 100.000000 100.000000\"")
-            .printChar('>')
-                .printCString("<circle cx=\"0\" cy=\"0\" r=\"45\" fill=\"green\" fill-opacity=\"0.5\" fill-rule=\"evenodd\" stroke=\"black\" stroke-opacity=\"1\" stroke-width=\"1\"/>")
-            .printCString("</svg>");
+        Element xml = this.toXml();
+        xml.printToStream(stream);
+        //xml.prettyToStream(stream, 0);
+        xml.destroy();
+        return stream;
+    }
+    
+    [Element] toXml(/*Graphic $graphic, $width = 10., $height = 10., $keepRatio = true*/) {
+        Element xml = this.newSvg()
+            .addCAttribute("width", "15cm")
+            .addCAttribute("height", "15cm")
+            .addCAttribute("viewBox", "-50.000000 -50.000000 100.000000 100.000000");
+            
+        xml.newChild().setCName("circle")
+            .addCAttribute("cx", "0")
+            .addCAttribute("cy", "0")
+            .addCAttribute("r", "45")
+            .addCAttribute("fill", "red")
+            .addCAttribute("fill-opacity", "0.5")
+            .addCAttribute("fill-rule", "evenodd")
+            .addCAttribute("stroke", "black")
+            .addCAttribute("stroke-opacity", "1")
+            .addCAttribute("stroke-width", "1");
+        return xml;
+    }
+    
+    [Element] newSvg() {
+        Element xml = this.rt().createInstance(Element:CLASSNAME);
+        xml.setCName("svg")
+            .addCAttribute("version", "1.1")
+            .addCAttribute("xmlns", "http://www.w3.org/2000/svg")
+            .addCAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+        return xml;
     }
 
 }
