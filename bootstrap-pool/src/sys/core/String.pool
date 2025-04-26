@@ -189,6 +189,13 @@ class String extends OStream {
         return i;
     }
     
+    [int] toFlt() {
+        IStream is = this.toIStream();
+        int f = is.readFlt();
+        is.destroy();
+        return f;
+    }
+    
     [cstring] toCString() {
         return Address:string(null, _buffer.buf);
     }

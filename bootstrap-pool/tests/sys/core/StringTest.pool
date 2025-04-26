@@ -17,6 +17,7 @@ class StringTest extends test::TestCase {
         this.testSubString();
         this.testAt();
         this.testToInt();
+        this.testToFlt();
         this.testToCString();
         this.testConversions();
         this.testEscapeUnescape();
@@ -232,6 +233,38 @@ class StringTest extends test::TestCase {
         
         IStream in = testString.toIStream();
         if (in.readInt() != expected) { return this.failCase(message.ostream()); }
+        in.destroy();
+        
+        testString.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] testToFlt() {
+        this.startCases("testToFlt");
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        
+        this.caseToFlt("", 0x00000000);
+        this.caseToFlt("0", 0x00000000);
+        this.caseToFlt("4", 0x40800000);
+        this.caseToFlt("123.456", 0x42f6e979);
+        this.caseToFlt("-478909826789.25", 0xd2df0280);
+        this.caseToFlt("1.2345e-7", 0x34048dad);
+        this.caseToFlt("-123.45E36", 0xfeb9bf36);
+        
+        testString.destroy();
+        return this.successCases();
+    }
+    
+    [int] caseToFlt(cstring val, int expected) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case '").printCString(val).printCString("' => ").printInt(expected);
+        String testString = this.rt().createInstance(String:CLASSNAME); testString.assignCString(val);
+        
+        if (testString.toFlt() != expected) { return this.failCase(message.ostream()); }
+        
+        IStream in = testString.toIStream();
+        if (in.readFlt() != expected) { return this.failCase(message.ostream()); }
         in.destroy();
         
         testString.destroy();

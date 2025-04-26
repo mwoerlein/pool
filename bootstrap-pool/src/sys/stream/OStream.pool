@@ -34,6 +34,12 @@ class OStream extends Object {
         return this._printUHex(Address:from(i), 8);
     }
     
+    [OStream] printFlt(int f) {
+        // TODO: https://www.ryanjuckett.com/printing-floating-point-numbers/
+        // TODO: https://www.ryanjuckett.com/printing-floating-point-numbers-part-2-dragon4/
+        return this._printUHex(f, 0);
+    }
+    
     [OStream] printCString(cstring s) {
         return this._printCString(Address:fromString(s));
     }

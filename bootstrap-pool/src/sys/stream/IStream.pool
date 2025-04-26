@@ -25,13 +25,8 @@ class IStream extends Object {
     [int] readInt() {
         if (this.isEmpty()) { return 0; }
         
-        int sign = 1;
+        int sign = this._readSign(1, -1);
         int base = 10;
-        
-        if (this.peekChar() == '-') {
-            sign = -1;
-            this.readChar();
-        }
         
         if (this._peekDigit() == 0) {
             this.readChar();
@@ -59,6 +54,117 @@ class IStream extends Object {
             digit = this._peekDigit();
         }
         return sign * result;
+    }
+    
+    [int] readFlt() {
+        int base := 10;
+        
+        int sign = this._readSign(0, 0x80000000);
+        
+        // read integer part
+        {
+            // push 0 as initial integer part onto float stack
+            __pasm__(".byte 0xd9; .byte 0xee; #//fldz #page 929");
+                
+            int digit = this._peekDigit();
+            while (!this.isEmpty() && (digit >= 0 && digit < base)) {
+                __pasm__(<"
+                    pushl %ebx; .byte 0xda; .byte 0x0c; .byte 0x24; #//fimul (%esp) #page 935
+                    pushl %eax; .byte 0xda; .byte 0x04; .byte 0x24; #//fiadd (%esp) #page 886
+                    addl 8, %esp
+                ">, {"%eax": digit, "%ebx": base}, {});
+                this.readChar();
+                digit = this._peekDigit();
+            }
+        }
+        
+        // read decimal part
+        if (this.peekChar() == '.') {
+            this.readChar();
+            
+            // push 0 as initial decimal part onto float stack
+            __pasm__(".byte 0xd9; .byte 0xee; #//fldz #page 929");
+            
+            int digits = 0;
+            int digit = this._peekDigit();
+            while (!this.isEmpty() && (digit >= 0 && digit < base)) {
+                __pasm__(<"
+                    pushl %ebx; .byte 0xda; .byte 0x0c; .byte 0x24; #//fimul (%esp) #page 935
+                    pushl %eax; .byte 0xda; .byte 0x04; .byte 0x24; #//fiadd (%esp) #page 886
+                    addl 8, %esp
+                ">, {"%eax": digit, "%ebx": base}, {});
+                digits++;
+                this.readChar();
+                digit = this._peekDigit();
+            }
+            
+            // compute decimal*10^-digits as decimal*2^(rem(-digits*ld(10),1))*2^(floor(-digits*ld(10)))
+            __pasm__(<"
+                pushl %eax; .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 917
+                addl 4, %esp
+                .byte 0xd9; .byte 0xe9; #//fldl2t #page 929
+                .byte 0xde; .byte 0xc9; #//fmulp #page 935
+                // st(0) = -digits*ld(10)
+                .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+                .byte 0xd9; .byte 0xc1; #//fld st(1) #page 927
+                .byte 0xd9; .byte 0xf8; #//fprem #page 941
+                .byte 0xd9; .byte 0xf0; #//f2xm1 #page 883
+                .byte 0xde; .byte 0xc1; #//faddp #page 886
+                .byte 0xd9; .byte 0xfd; #//fscale #page 953
+                .byte 0xdd; .byte 0xd9; #//fstp st(1) #page 961
+                // st(0) = 10^-digits
+            ">, {"%eax": -digits}, {});
+            
+            // compute decimal part 
+            __pasm__(".byte 0xde; .byte 0xc9; #//fmulp #page 935");
+            
+            // combine integer and decimal part 
+            __pasm__(".byte 0xde; .byte 0xc1; #//faddp #page 886");
+        }
+        
+        // read exponent value
+        if (this.peekChar() == 'e' || this.peekChar() == 'E') {
+            this.readChar();
+            
+            int expSign = this._readSign(1, -1);
+            int exp = 0;
+            int digit = this._peekDigit();
+            while (!this.isEmpty() && (digit >= 0 && digit < base)) {
+                exp *= base;
+                exp += digit;
+                this.readChar();
+                digit = this._peekDigit();
+            }
+            
+            // compute float*10^signedExp as float*2^(rem(signedExp*ld(10),1))*2^(floor(signedExp*ld(10)))
+            __pasm__(<"
+                pushl %eax; .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 917
+                addl 4, %esp
+                .byte 0xd9; .byte 0xe9; #//fldl2t #page 929
+                .byte 0xde; .byte 0xc9; #//fmulp #page 935
+                // st(0) = signedExp*ld(10)
+                .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+                .byte 0xd9; .byte 0xc1; #//fld st(1) #page 927
+                .byte 0xd9; .byte 0xf8; #//fprem #page 941
+                .byte 0xd9; .byte 0xf0; #//f2xm1 #page 883
+                .byte 0xde; .byte 0xc1; #//faddp #page 886
+                .byte 0xd9; .byte 0xfd; #//fscale #page 953
+                .byte 0xdd; .byte 0xd9; #//fstp st(1) #page 961
+                // st(0) = 10^signedExp
+            ">, {"%eax": expSign * exp}, {});
+            
+            // combine float and exponent 
+            __pasm__(".byte 0xde; .byte 0xc9; #//fmulp #page 935");
+        }
+        
+        // pop float from float stack and apply sign
+        int ret = 0;
+        __pasm__(<"
+            subl 4, %esp; .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+            or %ebx, %eax
+        ">, {"%ebx": sign}, {"%eax": ret});
+        return ret;
     }
     
     [int] readRawInt() {
@@ -97,6 +203,13 @@ class IStream extends Object {
         if (c >= 'a' && c <= 'z') { return c - 'a' + 10; }
         if (c >= 'A' && c <= 'Z') { return c - 'A' + 10; }
         return -1;
+    }
+    
+    [int] _readSign(int pos, int neg) {
+        int c = this.peekChar();
+        if (c == '+') { this.readChar(); return pos; }
+        if (c == '-') { this.readChar(); return neg; }
+        return pos;
     }
     
     // TODO: remove with implicit cast
