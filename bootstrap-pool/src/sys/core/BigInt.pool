@@ -1,0 +1,257 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+use sys::core::utils::Bitset;
+use sys::memory::Address;
+use sys::memory::MemoryInfo;
+use sys::stream::IStream;
+use sys::stream::OStream;
+
+// TODO: extends Comparable<BigInt> for compare operator support, if available
+class BigInt extends Object {
+
+    // TODO: make auto growing or add overflow protection
+    global int MAX_BLOCKS := 32;
+    
+    MemoryInfo buffer;
+    int _blocks;
+    
+    [] __init() { this._initBigInt(); }
+    [] _initBigInt() {
+        this._blocks = 0;
+        this.buffer = this.rt().getAllocator().allocate(BigInt:MAX_BLOCKS * 4);
+    }
+    [] __destruct() {
+        this.rt().getAllocator().free(buffer);
+    }
+
+    // methods
+    [BigInt] assignBigInt(BigInt b) {
+        Address:copyDWords(b.buffer.buf, this.buffer.buf, BigInt:MAX_BLOCKS);
+        this._blocks = b._blocks;
+        return this;
+    }
+    [BigInt] assignInt(int n) {
+        if (n > 0) {
+            this._setBlock(0, n);
+            _blocks = 1;
+        } else {
+            _blocks = 0;
+        }
+        return this;
+    }
+    [BigInt] assignInteger(Integer n) { return this.assignInt(n.getInt()); }
+    [BigInt] fromCString(cstring c) {
+        sys::core::String s = this.rt().createInstance(sys::core::String:CLASSNAME);
+        s.assignCString(c);
+        IStream in = s.toIStream();
+        int digit = in._peekDigit();
+        while (!in.isEmpty() && (digit >= 0 && digit < 10)) {
+            this.shiftDigits(1);
+            this.addInt(digit);
+            in.readChar();
+            digit = in._peekDigit();
+        }
+        in.destroy();
+        s.destroy();
+        return this;
+    }
+    
+    [BigInt] add(BigInt b) {
+        int last = b._blocks;
+        int carry = 0;
+        int curBlock = 0;
+        while (curBlock < last || carry > 0) {
+            [int v, int c] = BigInt:_uadd(this._getBlock(curBlock), b._getBlock(curBlock), carry);
+            this._setBlock(curBlock, v);
+            carry = c;
+            curBlock++;
+        }
+        if (curBlock > _blocks) { _blocks = curBlock; }
+        return this;
+    }
+    
+    [BigInt] addInt(int i) {
+        int carry = i;
+        int curBlock = 0;
+        while (carry > 0) {
+            [int v, int c] = BigInt:_uadd(this._getBlock(curBlock), 0, carry);
+            this._setBlock(curBlock, v);
+            carry = c;
+            curBlock++;
+        }
+        if (curBlock > _blocks) { _blocks = curBlock; }
+        return this;
+    }
+    [BigInt] addInteger(Integer n) { return this.addInt(n.getInt()); }
+    
+    [BigInt] sub(BigInt b) {
+        if (this.compareBigInt(b) <= 0) {
+            this._blocks = 0;
+            return this;
+        }
+        return _saveSub(b);
+    }
+    
+    [BigInt] subInt(int i) {
+        BigInt tmp = this.rt().createInstance(BigInt:CLASSNAME);
+        this.sub(tmp.assignInt(i));
+        tmp.destroy();
+        return this;
+    }
+    [BigInt] subInteger(Integer n) { return this.subInt(n.getInt()); }
+    
+    [BigInt] shiftBits(int n) {
+        // TODO: optimize!
+        int i = n;
+        while (i-- > 0) {
+            this.add(this); 
+        }
+        return this;
+    }
+    
+    [BigInt] shiftDigits(int n) {
+        // TODO: optimize!
+        BigInt tmp = this.rt().createInstance(BigInt:CLASSNAME);
+        int i = n;
+        while (i-- > 0) {
+            tmp.assignBigInt(this.add(this));
+            this.add(tmp).add(tmp).add(tmp).add(tmp);
+        }
+        tmp.destroy();
+        return this;
+    }
+
+    [int] compareBigInt(BigInt b) {
+        int i = this._blocks;
+        int diff = this._blocks - b._blocks;
+        while (--i >= 0 && diff == 0) {
+            diff = Address:compareAddress(this._getBlock(i), b._getBlock(i));
+        }
+        return diff;
+    }
+    
+    [int] hash() {
+        int hash = _blocks;
+        int i = _blocks;
+        while (--i >= 0) {
+            hash = Bitset:xor(hash, this._getBlock(i));
+        }
+        return hash;
+    }
+    
+    [int] equals(__any__ obj) {
+        BigInt b = this.rt().cast(BigInt:CLASSNAME, obj);
+        if (b) {
+            return this.compareBigInt(b) == 0;
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        if (_blocks == 0) {
+            return stream.printChar('0');
+        }
+        
+        if (_blocks == 1) {
+            return stream._printUInt(this._getBlock(0), 10, 0);
+        }
+        
+        BigInt base = this.rt().createInstance(BigInt:CLASSNAME);
+        BigInt tmp = this.rt().createInstance(BigInt:CLASSNAME);
+        tmp.assignInt(1000000000);
+        int digits = 9;
+        while (this.compareBigInt(tmp) > 0) {
+            base.assignBigInt(tmp);
+            tmp.shiftDigits(1);
+            digits++;
+        }
+        tmp.assignBigInt(this);
+        while (digits-- > 0) {
+            stream.printChar(tmp.divToDigit(base) + '0');
+            tmp.shiftDigits(1);
+        }
+        tmp.destroy();
+        base.destroy();
+        return stream;
+    }
+    
+    [OStream] debugToStream(OStream stream) {
+        stream.printInt(_blocks).printChar(':');
+        {
+            int i = _blocks;
+            while (i-- > 0){
+                stream.printChar(' ').printUHex(this._getBlock(i));
+            }
+        }
+        return stream;
+    }
+    
+    [int] divToDigit(BigInt b) {
+        // TODO: optimize?!
+        int ret = 0;
+        while (b.compareBigInt(this) <= 0 && ret < 10) {
+            this._saveSub(b);
+            ret++;
+        }
+        return ret;
+    }
+    
+    [BigInt] _saveSub(BigInt b) {
+        int last = b._blocks;
+        int borrow = 0;
+        int curBlock = 0;
+        while (curBlock < last || borrow < 0) {
+            [int v, int b] = BigInt:_usub(this._getBlock(curBlock), b._getBlock(curBlock), borrow);
+            this._setBlock(curBlock, v);
+            borrow = b;
+            curBlock++;
+        }
+        if (curBlock == this._blocks) {
+            while (this._getBlock(--curBlock) == 0) {}
+            this._blocks = curBlock + 1;
+        }
+        return this;
+    }
+    
+    [int] _getBlock(int block) {
+        if (block < _blocks) {
+            return Address:loadDWord(buffer.buf + 4*block);
+        }
+        return 0;
+    }
+    
+    [] _setBlock(int block, int value) {
+        if (block < BigInt:MAX_BLOCKS) {
+            Address:storeDWord(buffer.buf + 4*block, value);
+        }
+    }
+    
+    global [int, int] _uadd(int a, int b, int carry) {
+        int v = 0;
+        int c = 0;
+        __pasm__(<"
+            addl %ebx, %eax
+            adcl 0, %edx
+            addl %ecx, %eax
+            adcl 0, %edx
+        ">, {"%eax": a, "%ebx": b, "%ecx": carry, "%edx": 0}, {"%eax": v, "%edx": c});
+        return [v, c];
+    }
+    
+    global [int, int] _usub(int a, int b, int borrow) {
+        int v = 0;
+        int c = 0;
+        __pasm__(<"
+            subl %ebx, %eax
+            sbbl 0, %edx
+            subl %ecx, %eax
+            sbbl 0, %edx
+        ">, {"%eax": a, "%ebx": b, "%ecx": -borrow, "%edx": 0}, {"%eax": v, "%edx": c});
+        return [v, c];
+    }
+}
