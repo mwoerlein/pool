@@ -50,7 +50,7 @@ class OStream extends Object {
             }
             return this.printCString("NaN");
         }
-        if (mantissa == 0) {
+        if (exp == 0 && mantissa == 0) {
             // 0 * 2^x => always 0
             if (sign == 1) { this.printChar('-'); }
             return this.printChar('0');
