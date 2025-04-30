@@ -1,0 +1,126 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+use sys::core::utils::Bitset;
+use sys::stream::OStream;
+
+// TODO: extends Comparable<Float> for compare operator support, if available
+class Float extends Object {
+    
+    global int NAN := 0xffffffff;
+    global int INF_POS := 0x7f800000;
+    global int INF_NEG := 0xff800000;
+    
+    int _f;
+    
+    // methods
+    [Float] assignFlt(int f) { _f = f; return this; }
+    [Float] assignFloat(Float f) { _f = f.getFlt(); return this; }
+    [Float] assignInt(int n) { _f = Float:intToFlt(n); return this; }
+    [Float] assignInteger(Integer n) { _f = Float:intToFlt(n.getInt()); return this; }
+    [Float] fromCString(cstring c) {
+        sys::core::String s = this.rt().createInstance(sys::core::String:CLASSNAME);
+        s.assignCString(c);
+        _f = s.toFlt();
+        s.destroy();
+        return this;
+    }
+    
+    [int] isNaN() { return Float:isNaNFlt(_f); }
+    [int] isInfPos() { return _f == Float:INF_POS; }
+    [int] isInfNeg() { return _f == Float:INF_NEG; }
+    [int] getFlt() { return _f; }
+    
+    [int] compareFlt(int f) { return Float:compareFlts(_f, f); }
+    [int] compareFloat(Float f) { return Float:compareFlts(_f, f.getFlt()); }
+    
+    [int] hash() { return _f; }
+    [int] equals(__any__ obj) {
+        Float f = this.rt().cast(Float:CLASSNAME, obj);
+        if (f && !this.isNaN()) {
+            return this.compareFloat(f) == 0;
+        }
+        return 0;
+    }
+    
+    [OStream] printToStream(OStream stream) { return stream.printFlt(_f); }
+    
+    global [int] intToFlt(int n) {
+        int f = 0;
+        __pasm__(<"
+            pushl %eax
+            .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": n}, {"%eax": f});
+        return f;
+    }
+    
+    global [int] isNaNFlt(int f) {
+        return (Bitset:and(Bitset:rshift(f, 23), 0xff) == 0xff) && (Bitset:and(f, 0x7fffff) != 0);
+    }
+    
+    // complete order: NaN < -Inf < number < +Inf
+    global [int] compareFlts(int a, int b) {
+    
+        int expA = Bitset:and(Bitset:rshift(a, 23), 0xff);
+        int expB = Bitset:and(Bitset:rshift(b, 23), 0xff);
+          
+        if (expA == 0xff) { // a is special
+            int signA = Bitset:rshift(a, 31);
+            int mantA = Bitset:and(a, 0x7fffff);
+            if (expB == 0xff) { // b is special
+                int signB = Bitset:rshift(b, 31);
+                int mantB = Bitset:and(b, 0x7fffff);
+                if (mantA) { // a == NaN
+                    if (mantB) { return 0; } //b == NaN
+                    return -1;
+                }
+                if (signA) { // a == -Inf
+                    if (mantB) { return 1; } // b == NaN
+                    if (signB) { return 0; } // b == -Inf
+                    return -1;
+                }
+                // a == +Inf
+                if (mantB) { return 1; } // b == NaN
+                if (!signB) { return 0; } // b == +Inf
+                return 1;
+            }
+            if (mantA) { return -1; } // a == NaN
+            if (signA) { return -1; } // a == -Inf
+            return 1; // a == +Inf
+        }
+        if (expB == 0xff) { // b is special
+            int signB = Bitset:rshift(b, 31);
+            int mantB = Bitset:and(b, 0x7fffff);
+            if (mantB) { return 1; } // b == NaN
+            if (signB) { return 1; } // b == -Inf
+            return -1; // b == +Inf
+        }
+        
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            pushl %ebx; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            addl 8, %esp
+            .byte 0xdf; .byte 0xd1; #//fcomip #page 902
+            .byte 0xdd; .byte 0xd8; #//fstp st(0) #page 961 # to clear stack
+            ja     _scf_fltcmp_ret_pos
+            jb     _scf_fltcmp_ret_neg
+            movl 0, %eax
+            jmp    _scf_fltcmp_ret
+        _scf_fltcmp_ret_neg:
+            movl -1, %eax
+            jmp    _scf_fltcmp_ret
+        _scf_fltcmp_ret_pos:
+            movl 1, %eax
+        _scf_fltcmp_ret:
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+
+}
