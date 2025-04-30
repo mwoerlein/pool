@@ -13,9 +13,10 @@ use sys::core::anycollection::AnyIterator;
 // TODO: implement ownership correctly
 class Owner extends Object {
 
-    [String] createOwnStringFromString(String value) {
+    [String] createOwnString(__any__ obj) {
+        if (!obj) { return null; }
         String s = this.createOwn(String:CLASSNAME);
-        s.assignString(value);
+        s.print(obj);
         return s;
     }
     
@@ -31,9 +32,10 @@ class Owner extends Object {
         return s;
     }
 
-    [String] createStringFromString(String value) {
+    [String] createString(__any__ obj) {
+        if (!obj) { return null; }
         String s = this.rt().createInstance(String:CLASSNAME);
-        s.assignString(value);
+        s.print(obj);
         return s;
     }
     

@@ -132,7 +132,7 @@ class PropertiesMarshaller extends sys::core::Object {
                 else { value.printChar(c); in.readChar(); state = 7; }
             } else if (state == 7) {
                 if ((c == '\n') || (c == '\r')) {
-                    container.setStringProperty(name, container.createOwnStringFromString(value));
+                    container.setStringProperty(name, container.createOwnString(value));
                     name.assignString(block);
                     name.printChar('.');
                     value.clear();

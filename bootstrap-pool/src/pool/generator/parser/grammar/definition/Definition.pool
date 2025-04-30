@@ -42,14 +42,14 @@ class Definition extends PropertyContainer {
     }
     
     [String] setSourceName(String sourceName) {
-        return _properties.set(this.createOwnStringFromCString("source.name"), this.createOwnStringFromString(sourceName));
+        return _properties.set(this.createOwnStringFromCString("source.name"), this.createOwnString(sourceName));
     }
     
     [Symbol] getSymbol(String name) {
         if (symbols.has(name)) { return symbols.get(name); }
         Symbol s = this.createOwn(Symbol:CLASSNAME);
         s.setName(name);
-        symbols.set(this.createOwnStringFromString(name), s);
+        symbols.set(this.createOwnString(name), s);
         return s;
     }
     
@@ -59,7 +59,7 @@ class Definition extends PropertyContainer {
         Symbol s = this.createOwn(Symbol:CLASSNAME);
         s.getName().printCString("INLINE_").printInt(symbols.size());
         s.setDebug(value);
-        symbols.set(this.createOwnStringFromString(value), s);
+        symbols.set(this.createOwnString(value), s);
         
         TokenDesc t = this.createOwn(TokenDesc:CLASSNAME);
         t.setSymbol(s).setDefinition(value);
@@ -72,7 +72,7 @@ class Definition extends PropertyContainer {
         if (precRefs.has(name)) { return precRefs.get(name); }
         Symbol s = this.createOwn(Symbol:CLASSNAME);
         s.setName(name);
-        precRefs.set(this.createOwnStringFromString(name), s);
+        precRefs.set(this.createOwnString(name), s);
         return s;
     }
     
