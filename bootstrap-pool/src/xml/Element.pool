@@ -28,11 +28,15 @@ class Element extends sys::core::utils::Owner {
     [Element] setName(String name) { this.name.assignString(name); return this; }
     [Element] setCName(cstring name) { this.name.assignCString(name); return this; }
     
-    [Element] addAttribute(String attribute, String value) { 
-        _attributes.set(this.createOwnStringFromString(attribute), this.createOwnStringFromString(value));
+    [Element] addAttribute(String attribute, __any__ value) { 
+        _attributes.set(this.createOwnString(attribute), this.createOwnString(value));
         return this;
     }
-    [Element] addCAttribute(cstring attribute, cstring value) { 
+    [Element] addCAttribute(cstring attribute, __any__ value) { 
+        _attributes.set(this.createOwnStringFromCString(attribute), this.createOwnString(value));
+        return this;
+    }
+    [Element] addCAttributeCString(cstring attribute, cstring value) { 
         _attributes.set(this.createOwnStringFromCString(attribute), this.createOwnStringFromCString(value));
         return this;
     }
