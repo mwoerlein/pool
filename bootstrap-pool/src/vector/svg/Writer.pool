@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::svg;
 
+use sys::core::Float;
 use sys::stream::OStream;
 use xml::Element;
 
@@ -20,29 +21,35 @@ class Writer extends sys::core::Object {
     
     [Element] toXml(/*Graphic $graphic, $width = 10., $height = 10., $keepRatio = true*/) {
         Element xml = this.newSvg()
-            .addCAttribute("width", "15cm")
-            .addCAttribute("height", "15cm")
-            .addCAttribute("viewBox", "-50.000000 -50.000000 100.000000 100.000000");
+            .addCAttributeCString("width", "15cm")
+            .addCAttributeCString("height", "15cm")
+            .addCAttributeCString("viewBox", "-50.000000 -50.000000 100.000000 100.000000");
             
+        Float x = this.createOwn(Float:CLASSNAME);
+        Float y = this.createOwn(Float:CLASSNAME);
+        Float r = this.createOwn(Float:CLASSNAME); r.fromCString("45");
+        Float fo = this.createOwn(Float:CLASSNAME); fo.fromCString("0.5");
+        Float so = this.createOwn(Float:CLASSNAME); so.fromCString("1");
+        Float sw = this.createOwn(Float:CLASSNAME); sw.fromCString("1");
         xml.newChild().setCName("circle")
-            .addCAttribute("cx", "0")
-            .addCAttribute("cy", "0")
-            .addCAttribute("r", "45")
-            .addCAttribute("fill", "red")
-            .addCAttribute("fill-opacity", "0.5")
-            .addCAttribute("fill-rule", "evenodd")
-            .addCAttribute("stroke", "black")
-            .addCAttribute("stroke-opacity", "1")
-            .addCAttribute("stroke-width", "1");
+            .addCAttribute("cx", x)
+            .addCAttribute("cy", y)
+            .addCAttribute("r", r)
+            .addCAttributeCString("fill", "red")
+            .addCAttribute("fill-opacity", fo)
+            .addCAttributeCString("fill-rule", "evenodd")
+            .addCAttributeCString("stroke", "black")
+            .addCAttribute("stroke-opacity", so)
+            .addCAttribute("stroke-width", sw);
         return xml;
     }
     
     [Element] newSvg() {
         Element xml = this.rt().createInstance(Element:CLASSNAME);
         xml.setCName("svg")
-            .addCAttribute("version", "1.1")
-            .addCAttribute("xmlns", "http://www.w3.org/2000/svg")
-            .addCAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+            .addCAttributeCString("version", "1.1")
+            .addCAttributeCString("xmlns", "http://www.w3.org/2000/svg")
+            .addCAttributeCString("xmlns:xlink", "http://www.w3.org/1999/xlink");
         return xml;
     }
 
