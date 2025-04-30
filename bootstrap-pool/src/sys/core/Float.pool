@@ -122,5 +122,39 @@ class Float extends Object {
         ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
         return ret;
     }
+    
+    global [int] firstDigitExponentFlt(int f) {
+        int ret = 0;
+        __pasm__(<"
+            // compute log10(abs(f)) as ld(abs(f))/ld(10) 
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            andl 0x7fffffff, %eax; pushl %eax //ignore sign
+            .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            //addl 4, %esp
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xd9; .byte 0xe9; #//fldl2t #page 929
+            .byte 0xde; .byte 0xf9; #//fdivp #page 908
+
+            // store fpu control register
+            //subl 4, %esp
+            .byte 0x9b; .byte 0xd9; .byte 0x3c; .byte 0x24; #// fstcw (%esp) #page 963
+            
+            // set round down mode
+            movl (%esp), %eax
+            andl 0xf3ff, %eax
+            orl 0x0400, %eax
+            pushl %eax
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            
+            // store floor(log10(abs(f)))
+            .byte 0xdb; .byte 0x1c; .byte 0x24; #// fistp (%esp) #page 922
+            popl %eax
+            
+            // restore fpu control register
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            addl 4, %esp
+        ">, {"%eax": f}, {"%eax": ret});
+        return ret;
+    }
 
 }

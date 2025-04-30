@@ -125,6 +125,10 @@ class BigInt extends Object {
         tmp.destroy();
         return this;
     }
+    
+    [int] isZero() {
+        return _blocks == 0;
+    }
 
     [int] compareBigInt(BigInt b) {
         int i = this._blocks;

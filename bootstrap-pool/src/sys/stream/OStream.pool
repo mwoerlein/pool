@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace sys::stream;
 
+use sys::core::BigInt;
+use sys::core::Float;
 use sys::core::Object;
 use sys::core::String;
 use sys::core::utils::Bitset;
@@ -34,10 +36,66 @@ class OStream extends Object {
         return this._printUHex(Address:from(i), 8);
     }
     
+    // float serialisation adopted from https://www.ryanjuckett.com/printing-floating-point-numbers/
     [OStream] printFlt(int f) {
-        // TODO: https://www.ryanjuckett.com/printing-floating-point-numbers/
-        // TODO: https://www.ryanjuckett.com/printing-floating-point-numbers-part-2-dragon4/
-        return this._printUHex(f, 0);
+        int sign = Bitset:rshift(f, 31);
+        int exp = Bitset:and(Bitset:rshift(f, 23), 0xff);
+        int mantissa = Bitset:and(f, 0x7fffff);
+        
+        if (exp == 0xff) {
+            // special values
+            if (mantissa == 0) {
+                if (sign == 1) { return this.printCString("-Inf"); }
+                return this.printCString("+Inf");
+            }
+            return this.printCString("NaN");
+        }
+        if (mantissa == 0) {
+            // 0 * 2^x => always 0
+            if (sign == 1) { this.printChar('-'); }
+            return this.printChar('0');
+        }
+        
+        // determine digits as big integer fraction:  numerator  /  denominator
+        BigInt numerator = this.rt().createInstance(BigInt:CLASSNAME);
+        BigInt denominator = this.rt().createInstance(BigInt:CLASSNAME);
+        if (exp == 0) {
+            // denormalized float =>  mant * 2^(1-127-23) => mant  /  2^-(1-127-23)
+            numerator.assignInt(mantissa);
+            denominator.assignInt(1).shiftBits(149);
+        } else if (exp > 150) {
+            // normalized float without fractional part =>  mant * 2^exp-127-23  /  1
+            numerator.assignInt(mantissa + 0x800000).shiftBits(exp - 150);
+            denominator.assignInt(1);
+        } else {
+            // normalized float with fractional part =>  mant  /  2^-(exp-127-23) 
+            numerator.assignInt(mantissa + 0x800000);
+            denominator.assignInt(1).shiftBits(150 - exp);
+        }
+        
+        // adjust fraction to get first non-zero digit
+        int firstDigitExponent = Float:firstDigitExponentFlt(f);
+        if (firstDigitExponent > 0) {
+            denominator.shiftDigits(firstDigitExponent);
+        } else {
+            numerator.shiftDigits(-firstDigitExponent);
+        }
+        
+        int maxDigits = 64;
+        int digits = 0;
+        // simple representation: 0.<DIGITS>e<EXPONENT+1> and -0.<DIGITS>e<EXPONENT+1> 
+        // TODO: generate common output
+        if (sign == 1) { this.printChar('-'); }
+        this.printChar('0').printChar('.');
+        while (!numerator.isZero() && digits++ < maxDigits) {
+            this.printChar(numerator.divToDigit(denominator) + '0');
+            numerator.shiftDigits(1);
+        }
+        this.printChar('e').printInt(firstDigitExponent+1);
+        
+        numerator.destroy();
+        denominator.destroy();
+        return this; 
     }
     
     [OStream] printCString(cstring s) {
