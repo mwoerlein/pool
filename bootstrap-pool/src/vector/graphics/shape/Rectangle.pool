@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::shape;
+
+use sys::core::Float;
+
+class Rectangle extends vector::graphics::GraphicElement {
+
+    Float x;
+    Float y;
+    Float width;
+    Float height;
+    
+    [Rectangle] _initCRectangle(cstring x, cstring y, cstring width, cstring height) {
+        this.x = this.createOwnFloatFromCString(x);
+        this.y = this.createOwnFloatFromCString(y);
+        this.width = this.createOwnFloatFromCString(width);
+        this.height = this.createOwnFloatFromCString(height);
+        return this;
+    }
+    
+    [Float] getX() { return x; }
+    [Float] getY() { return y; }
+    [Float] getWidth() { return width; }
+    [Float] getHeight() { return height; }
+
+}

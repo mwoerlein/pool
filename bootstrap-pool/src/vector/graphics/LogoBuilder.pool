@@ -51,7 +51,7 @@ class LogoBuilder extends sys::core::Object {
     
     [Graphic] createLogo() {
         Graphic logo = this.rt().createInstance(Graphic:CLASSNAME);
-        //logo.setCViewport("-250", "-250", "500", "500");
+        logo.setCViewport("-400", "-400", "400", "400");
         
         // Corners
         this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R1, LB:OUTLINE_COLOR);

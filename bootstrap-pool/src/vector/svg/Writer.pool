@@ -7,11 +7,13 @@ namespace vector::svg;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::Float;
+use sys::core::String;
 use sys::stream::OStream;
 
 use vector::graphics::Graphic;
 use vector::graphics::GraphicElement;
 use vector::graphics::shape::Circle;
+use vector::graphics::shape::Rectangle;
 use vector::graphics::style::FillStyle;
 use vector::graphics::style::StrokeStyle;
 
@@ -28,18 +30,31 @@ class Writer extends sys::core::utils::Owner {
     }
     
     [Element] toXml(Graphic graphic/*, $width = 10., $height = 10., $keepRatio = true*/) {
+        Rectangle viewport = graphic.getViewport();
+        
+        String viewBox = this.rt().createInstance(String:CLASSNAME);
+        viewBox.print(viewport.getX()).printChar(' ').print(viewport.getY())
+            .printChar(' ').print(viewport.getWidth()).printChar(' ').print(viewport.getHeight());
+        
         Element xml = this.newSvg()
             .addCAttributeCString("width", "15cm")
             .addCAttributeCString("height", "15cm")
-            .addCAttributeCString("viewBox", "-400.000000 -400.000000 800.000000 800.000000");
+            .addCAttribute("viewBox", viewBox);
+        viewBox.destroy();
             
-        int yBase = Float:ZERO_POS;
+         // 2. * viewport->getY() + viewport->getHeight();
+        int yBase = Float:addFlts(
+            Float:addFlts(viewport.getY().getFlt(), viewport.getY().getFlt()),
+            viewport.getHeight().getFlt()
+        );
         {
             Circle c = null;
+            Rectangle r = null;
             AnyIterator it := graphic.elements();
             while (it.hasNext()) {
                 GraphicElement e = it.next();
                 if (c = e.castTo(Circle:CLASSNAME)) { this.addCircleElement(xml, c, yBase); }
+                else if (r = e.castTo(Rectangle:CLASSNAME)) { this.addRectElement(xml, r, yBase); }
             }
             it.destroy();
         }
@@ -61,6 +76,15 @@ class Writer extends sys::core::utils::Owner {
             .addCAttributeFlt("cy", Float:subFlts(yBase, c.getY().getFlt()))
             .addCAttribute("r", c.getRadius());
         return this.applyShapeStyle(child, c.element());
+    }
+    
+    [Element] addRectElement(Element xml, Rectangle r, int yBase) {
+        Element child = xml.newChild().setCName("rect")
+            .addCAttribute("x", r.getX())
+            .addCAttributeFlt("y", Float:subFlts(yBase, r.getY().getFlt()))
+            .addCAttribute("width", r.getWidth())
+            .addCAttribute("height", r.getHeight());
+        return this.applyShapeStyle(child, r.element());
     }
     
     [Element] applyShapeStyle(Element e, GraphicElement ge) {

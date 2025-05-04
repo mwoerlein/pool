@@ -9,15 +9,27 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
 use vector::graphics::shape::Circle;
+use vector::graphics::shape::Rectangle;
 
 class Graphic extends sys::core::Object {
 
     AnyList _elements;  // List<GraphicElement>
+    Rectangle _viewport;
     
     [] __init() { this._initGraphic(); }
     [] _initGraphic() {
         _elements = this.createOwn(AnyList:CLASSNAME);
+        _viewport = this.createOwn(Rectangle:CLASSNAME);
+        _viewport._initCRectangle("0", "0", "1000", "1000");
     }
+    
+    [Graphic] setCViewport(cstring x1, cstring y1, cstring x2, cstring y2) {
+        _viewport.getX().fromCString(x1);
+        _viewport.getY().fromCString(y1);
+        _viewport.getWidth().fromCString(x2).subFloat(_viewport.getX());
+        _viewport.getHeight().fromCString(y2).subFloat(_viewport.getY());
+    }
+    [Rectangle] getViewport() { return _viewport; }
     
     [AnyIterator] elements() {
         return _elements.iterator();
@@ -28,6 +40,20 @@ class Graphic extends sys::core::Object {
         c._initCCircle(x, y, radius);
         _elements.add(c.element());
         return c;
+    }
+    
+    [Rectangle] addCSquare(cstring x, cstring y, cstring width) {
+        Rectangle r = this.createOwn(Rectangle:CLASSNAME);
+        r._initCRectangle(x, y, width, width);
+        _elements.add(r.element());
+        return r;
+    }
+    
+    [Rectangle] addCRectangle(cstring x, cstring y, cstring width, cstring height) {
+        Rectangle r = this.createOwn(Rectangle:CLASSNAME);
+        r._initCRectangle(x, y, width, height);
+        _elements.add(r.element());
+        return r;
     }
 
 }
