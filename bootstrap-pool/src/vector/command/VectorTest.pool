@@ -8,6 +8,7 @@ namespace vector::command;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
+use vector::graphics::LogoBuilder;
 use vector::svg::Writer;
 
 class VectorTest extends linux::Command {
@@ -47,9 +48,9 @@ Test for some vector features.
         }
         
         Writer svgWriter = this.createOwn(Writer:CLASSNAME);
-        
+        LogoBuilder lb = this.createOwn(LogoBuilder:CLASSNAME);
         SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
-        svgWriter.svgToStream(outfile.ostream());
+        svgWriter.svgToStream(outfile.ostream(), lb.createLogo());
         outfile.destroy();
         return 0;
     }

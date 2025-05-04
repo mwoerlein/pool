@@ -5,42 +5,44 @@ version = 0.1.0
 */
 namespace vector::svg;
 
+use sys::core::anycollection::AnyIterator;
 use sys::core::Float;
 use sys::stream::OStream;
+
+use vector::graphics::Graphic;
+use vector::graphics::GraphicElement;
+use vector::graphics::shape::Circle;
+use vector::graphics::style::FillStyle;
+use vector::graphics::style::StrokeStyle;
+
 use xml::Element;
 
-class Writer extends sys::core::Object {
+class Writer extends sys::core::utils::Owner {
     
-    [OStream] svgToStream(OStream stream) {
-        Element xml = this.toXml();
+    [OStream] svgToStream(OStream stream, Graphic graphic) {
+        Element xml = this.toXml(graphic);
         xml.printToStream(stream);
         //xml.prettyToStream(stream, 0);
         xml.destroy();
         return stream;
     }
     
-    [Element] toXml(/*Graphic $graphic, $width = 10., $height = 10., $keepRatio = true*/) {
+    [Element] toXml(Graphic graphic/*, $width = 10., $height = 10., $keepRatio = true*/) {
         Element xml = this.newSvg()
             .addCAttributeCString("width", "15cm")
             .addCAttributeCString("height", "15cm")
-            .addCAttributeCString("viewBox", "-50.000000 -50.000000 100.000000 100.000000");
+            .addCAttributeCString("viewBox", "-400.000000 -400.000000 800.000000 800.000000");
             
-        Float x = this.createOwn(Float:CLASSNAME);
-        Float y = this.createOwn(Float:CLASSNAME);
-        Float r = this.createOwn(Float:CLASSNAME); r.fromCString("45");
-        Float fo = this.createOwn(Float:CLASSNAME); fo.fromCString("0.5");
-        Float so = this.createOwn(Float:CLASSNAME); so.fromCString("1");
-        Float sw = this.createOwn(Float:CLASSNAME); sw.fromCString("1");
-        xml.newChild().setCName("circle")
-            .addCAttribute("cx", x)
-            .addCAttribute("cy", y)
-            .addCAttribute("r", r)
-            .addCAttributeCString("fill", "red")
-            .addCAttribute("fill-opacity", fo)
-            .addCAttributeCString("fill-rule", "evenodd")
-            .addCAttributeCString("stroke", "black")
-            .addCAttribute("stroke-opacity", so)
-            .addCAttribute("stroke-width", sw);
+        int yBase = Float:ZERO_POS;
+        {
+            Circle c = null;
+            AnyIterator it := graphic.elements();
+            while (it.hasNext()) {
+                GraphicElement e = it.next();
+                if (c = e.castTo(Circle:CLASSNAME)) { this.addCircleElement(xml, c, yBase); }
+            }
+            it.destroy();
+        }
         return xml;
     }
     
@@ -51,6 +53,43 @@ class Writer extends sys::core::Object {
             .addCAttributeCString("xmlns", "http://www.w3.org/2000/svg")
             .addCAttributeCString("xmlns:xlink", "http://www.w3.org/1999/xlink");
         return xml;
+    }
+    
+    [Element] addCircleElement(Element xml, Circle c, int yBase) {
+        Element child = xml.newChild().setCName("circle")
+            .addCAttribute("cx", c.getX())
+            .addCAttributeFlt("cy", Float:subFlts(yBase, c.getY().getFlt()))
+            .addCAttribute("r", c.getRadius());
+        return this.applyShapeStyle(child, c.element());
+    }
+    
+    [Element] applyShapeStyle(Element e, GraphicElement ge) {
+        this.addFillStyle(e, ge.getFillStyle());
+        this.addStrokeStyle(e, ge.getStrokeStyle());
+        if (ge.getOpacity().compareFlt(Float:ONE_POS) < 0) {
+            e.addCAttribute("opacity", ge.getOpacity());
+        }
+        return e;
+    }
+    
+    [] addFillStyle(Element e, FillStyle s) {
+        if (s.isVisible()) {
+            e.addCAttribute("fill", s.getColor());
+            e.addCAttribute("fill-opacity", s.getOpacity());
+            e.addCAttributeCString("fill-rule", "evenodd");
+        } else {
+            e.addCAttributeCString("fill", "none");
+        }
+    }
+    
+    [] addStrokeStyle(Element e, StrokeStyle s) {
+        if (s.isVisible()) {
+            e.addCAttribute("stroke", s.getColor());
+            e.addCAttribute("stroke-opacity", s.getOpacity());
+            e.addCAttribute("stroke-width", s.getWidth());
+        } else {
+            e.addCAttributeCString("stroke", "none");
+        }
     }
 
 }

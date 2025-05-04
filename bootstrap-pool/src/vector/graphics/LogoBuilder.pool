@@ -1,0 +1,124 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics;
+
+use sys::core::Float as F;
+
+use vector::graphics::shape::Circle;
+use vector::graphics::LogoBuilder as LB;
+
+class LogoBuilder extends sys::core::Object {
+
+    global cstring OUTLINE_COLOR := "#6d4120";
+    //global cstring OUTLINE_COLOR := "black";
+    global cstring RING_COLOR := "#f7a75f";
+    global cstring RING_SHADOW_COLOR := "#f78537";
+    global cstring BACKGROUND_COLOR := "#fcd4ee";
+    global cstring BACKGROUND_SHADOW_COLOR := "#f9c5e9";
+    
+    global cstring CORNER_CP := "150";
+    global cstring CORNER_CN := "-150";
+    global cstring CORNER_R1 := "100";
+    global cstring CORNER_R2 := "90";
+    global cstring CORNER_SCP := "127";
+    global cstring CORNER_SCN := "-127";
+    global cstring CORNER_SR := "95";
+
+    global cstring RING_RHO := "260";
+    global cstring RING_RHI := "250";
+    global cstring RING_ROO := "250";
+    global cstring RING_ROI := "240";
+    global cstring RING_RS := "160";
+    global cstring RING_RII := "145";
+    global cstring RING_RIO := "135";
+    
+    global cstring SHADOW_CX := "-65";
+    global cstring SHADOW_CY := "-35";
+    global cstring SHADOW_R := "275";
+
+    // Helper
+    global cstring HELPER_COLOR := "red";
+    
+    global cstring P1P := "165"; 
+    global cstring P1N := "-165"; 
+    global cstring P2P := "179.14"; 
+    global cstring P2N := "-179.14"; 
+    global cstring P3P := "250"; 
+    global cstring P3N := "-250";
+    
+    [Graphic] createLogo() {
+        Graphic logo = this.rt().createInstance(Graphic:CLASSNAME);
+        //logo.setCViewport("-250", "-250", "500", "500");
+        
+        // Corners
+        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R2, LB:BACKGROUND_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_SCP, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
+        
+        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R2, LB:BACKGROUND_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_SCP, LB:CORNER_SCN, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
+        
+        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R2, LB:BACKGROUND_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCN, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
+        
+        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R2, LB:BACKGROUND_COLOR);
+        this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
+        
+        // Ring
+        this.addLogoCircle(logo, "0", "0", LB:RING_ROO, LB:OUTLINE_COLOR);
+        this.addLogoCircle(logo, "0", "0", LB:RING_ROI, LB:RING_COLOR);
+        this.addLogoCircle(logo, "0", "0", LB:RING_RS, LB:RING_SHADOW_COLOR);
+        this.addLogoCircle(logo, "0", "0", LB:RING_RII, LB:OUTLINE_COLOR);
+        this.addLogoCircle(logo, "0", "0", LB:RING_RIO, LB:BACKGROUND_COLOR);
+
+        // Helper - Highlight
+        //*/
+        this.addHelperCircle(logo, "0", "0", LB:RING_RHO);
+        
+        this.addHelperLine(logo, LB:P1N, LB:P3P, LB:P3P, LB:P1N);
+        this.addHelperLine(logo, LB:P3N, LB:P1P, LB:P1P, LB:P3N);
+        this.addHelperLine(logo, LB:P1P, LB:P3P, LB:P3N, LB:P1N);
+        this.addHelperLine(logo, LB:P3P, LB:P1P, LB:P1N, LB:P3N);
+        
+        this.addHelperLine(logo, LB:P2N, LB:P3P, LB:P3P, LB:P2N);
+        this.addHelperLine(logo, LB:P3N, LB:P2P, LB:P2P, LB:P3N);
+        this.addHelperLine(logo, LB:P2P, LB:P3P, LB:P3N, LB:P2N);
+        this.addHelperLine(logo, LB:P3P, LB:P2P, LB:P2N, LB:P3N);
+        
+        // Helper - Shadow
+        this.addHelperCircle(logo, LB:SHADOW_CX, LB:SHADOW_CY, LB:SHADOW_R);
+        //*/
+        return logo;
+    }
+    
+    [Circle] addLogoCircle(Graphic logo, cstring x, cstring y, cstring r, cstring c) {
+        Circle shape = logo.addCCircle(x, y, r);
+        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        return shape;
+    }
+    
+    [Circle] addHelperCircle(Graphic logo, cstring x, cstring y, cstring r) {
+        Circle shape = logo.addCCircle(x, y, r);
+        shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
+        shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
+        return shape;
+    }
+    
+    [/*PathShape*/] addHelperLine(Graphic logo, cstring x1, cstring y1, cstring x2, cstring y2) {
+        /*
+        Path path = this.createOwn(Path:CLASSNAME);
+        PathShape shape = logo.addPath(path.moveCTo(x1, y1).lineCTo(x2, y2));
+        shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
+        shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
+        return shape;
+        */
+    }
+
+}
