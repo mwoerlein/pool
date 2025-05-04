@@ -1,0 +1,25 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::shape;
+
+use vector::graphics::path::Path;
+
+class AbstractShape extends vector::graphics::GraphicElement {
+
+    abstract [Path] getPath();
+    
+    [int] isVisible() {
+        return this._isVisibleShape();
+    }
+    
+    [int] _isVisibleShape() {
+        return this._isVisibleGraphicElement();
+    }
+    
+    // TODO: remove with implicit cast
+    [AbstractShape] shape() { return this; }
+
+}

@@ -1,0 +1,63 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::path;
+
+use sys::core::Float;
+
+class PathElement extends sys::core::utils::Owner {
+    
+    global int CLOSE_TO := 0;
+    global int MOVE_TO := 1;
+    global int LINE_TO := 2;
+    global int CURVE_TO := 3;
+    
+    int type;
+    Float x;
+    Float y;
+    Float cx1;
+    Float cy1;
+    Float cx2;
+    Float cy2;
+    
+    [PathElement] _initCloseTo(Float x, Float y) {
+        type = PathElement:CLOSE_TO;
+        this.x = x; this.y = y;
+        return this;
+    }
+    
+    [PathElement] _initMoveTo(Float x, Float y) {
+        type = PathElement:MOVE_TO;
+        this.x = x; this.y = y;
+        return this;
+    }
+    
+    [PathElement] _initLineTo(Float x, Float y) {
+        type = PathElement:LINE_TO;
+        this.x = x; this.y = y;
+        return this;
+    }
+    
+    [PathElement] _initCurveTo(Float cx1, Float cy1, Float cx2, Float cy2, Float x, Float y) {
+        type = PathElement:CURVE_TO;
+        this.cx1 = cx1; this.cy1 = cy1;
+        this.cx2 = cx2; this.cy2 = cy2;
+        this.x = x; this.y = y;
+        return this;
+    }
+    
+    [int] isClose() { return type == PathElement:CLOSE_TO; }
+    [int] isMoveTo() { return type == PathElement:MOVE_TO; }
+    [int] isLineTo() { return type == PathElement:LINE_TO; }
+    [int] isCurveTo() { return type == PathElement:CURVE_TO; }
+    
+    [Float] getX() { return x; }
+    [Float] getY() { return y; }
+    [Float] getCX1() { return cx1; }
+    [Float] getCY1() { return cy1; }
+    [Float] getCX2() { return cx2; }
+    [Float] getCY2() { return cy2; }
+
+}

@@ -1,0 +1,109 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::path;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+
+class Path extends sys::core::Object {
+
+    AnyList _elements;  // List<PathElement>
+    PathElement lastMoveTo;
+    int hasVisibleElements;
+    
+    [] __init() { this._initPath(); }
+    [] _initPath() {
+        _elements = this.createOwn(AnyList:CLASSNAME);
+        hasVisibleElements = false;
+    }
+    
+    [AnyIterator] elements() {
+        return _elements.iterator();
+    }
+
+    [Path] moveFltTo(int x, int y) {
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initMoveTo(
+            e.createOwnFloatFromFlt(x),
+            e.createOwnFloatFromFlt(y)
+        ));
+        lastMoveTo = e;
+        return this;
+    }
+    
+    [Path] lineFltTo(int x, int y) {
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initLineTo(
+            e.createOwnFloatFromFlt(x),
+            e.createOwnFloatFromFlt(y)
+        ));
+        hasVisibleElements = true;
+        return this;
+    }
+    
+    [Path] curveFltTo(int cx1, int cy1, int cx2, int cy2, int x, int y) {
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initCurveTo(
+            e.createOwnFloatFromFlt(cx1),
+            e.createOwnFloatFromFlt(cy1),
+            e.createOwnFloatFromFlt(cx2),
+            e.createOwnFloatFromFlt(cy2),
+            e.createOwnFloatFromFlt(x),
+            e.createOwnFloatFromFlt(y)
+        ));
+        hasVisibleElements = true;
+        return this;
+    }
+    
+    [Path] close() {
+        if (!lastMoveTo) { return this; }
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initCloseTo(
+            e.createOwnFloatFromFlt(lastMoveTo.getX().getFlt()),
+            e.createOwnFloatFromFlt(lastMoveTo.getY().getFlt())
+        ));
+        lastMoveTo = null;
+        return this;
+    }
+    
+    
+    [Path] moveCTo(cstring x, cstring y) {
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initMoveTo(
+            e.createOwnFloatFromCString(x),
+            e.createOwnFloatFromCString(y)
+        ));
+        lastMoveTo = e;
+        return this;
+    }
+    
+    [Path] lineCTo(cstring x, cstring y) {
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initLineTo(
+            e.createOwnFloatFromCString(x),
+            e.createOwnFloatFromCString(y)
+        ));
+        hasVisibleElements = true;
+        return this;
+    }
+    
+    [Path] curveCTo(cstring cx1, cstring cy1, cstring cx2, cstring cy2, cstring x, cstring y) {
+        PathElement e = this.createOwn(PathElement:CLASSNAME);
+        _elements.add(e._initCurveTo(
+            e.createOwnFloatFromCString(cx1),
+            e.createOwnFloatFromCString(cy1),
+            e.createOwnFloatFromCString(cx2),
+            e.createOwnFloatFromCString(cy2),
+            e.createOwnFloatFromCString(x),
+            e.createOwnFloatFromCString(y)
+        ));
+        hasVisibleElements = true;
+        return this;
+    }
+    
+    [int] isVisible() { return hasVisibleElements; }
+
+}

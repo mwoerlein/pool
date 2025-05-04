@@ -31,6 +31,16 @@ class GraphicElement extends sys::core::utils::Owner {
     [GraphicElement] setCOpacity(cstring o) { opacity.fromCString(o); return this; }
     [Float] getOpacity() { return opacity; }
     
+    [int] isVisible() {
+        return this._isVisibleGraphicElement();
+    }
+    
+    [int] _isVisibleGraphicElement() {
+        return (opacity.compareFlt(Float:ZERO_POS) > 0)
+            && fillStyle.isVisible()
+            && strokeStyle.isVisible();
+    }
+    
     // TODO: remove with implicit cast
     [GraphicElement] element() { return this; }
 

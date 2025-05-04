@@ -6,8 +6,9 @@ version = 0.1.0
 namespace vector::graphics::shape;
 
 use sys::core::Float;
+use vector::graphics::path::Path;
 
-class Rectangle extends vector::graphics::GraphicElement {
+class Rectangle extends AbstractShape {
 
     Float x;
     Float y;
@@ -26,5 +27,20 @@ class Rectangle extends vector::graphics::GraphicElement {
     [Float] getY() { return y; }
     [Float] getWidth() { return width; }
     [Float] getHeight() { return height; }
+    
+    [Path] getPath() {
+        int x1 := x.getFlt();
+        int y1 := x.getFlt();
+        int x2 := Float:addFlts(x1, width.getFlt());
+        int y2 := Float:addFlts(y1, height.getFlt());
+        
+        Path p = this.createOwn(Path:CLASSNAME);
+        return p
+            .moveFltTo(x1, y1)
+            .lineFltTo(x1, y2)
+            .lineFltTo(x2, y2)
+            .lineFltTo(x2, y1)
+            .close();
+    }
 
 }

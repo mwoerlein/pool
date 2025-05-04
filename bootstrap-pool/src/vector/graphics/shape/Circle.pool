@@ -6,9 +6,10 @@ version = 0.1.0
 namespace vector::graphics::shape;
 
 use sys::core::Float;
+use vector::graphics::path::Path;
 
-class Circle extends vector::graphics::GraphicElement {
-
+class Circle extends AbstractShape {
+    
     Float x;
     Float y;
     Float radius;
@@ -23,5 +24,40 @@ class Circle extends vector::graphics::GraphicElement {
     [Float] getX() { return x; }
     [Float] getY() { return y; }
     [Float] getRadius() { return radius; }
+    
+    // 4. * (sqrt(2.) - 1.) / 3.
+    global int S_FACTOR := 0x3f0d6288;
+    
+    [Path] getPath() {
+        int x := this.x.getFlt();
+        int y := this.y.getFlt();
+        int r := radius.getFlt();
+        int s := Float:mulFlts(r, Circle:S_FACTOR);
+        
+        Path p = this.createOwn(Path:CLASSNAME);
+        return p
+            .moveFltTo(x, Float:addFlts(y, r))
+            .curveFltTo(
+                Float:addFlts(x, s), Float:addFlts(y, r),
+                Float:addFlts(x, r), Float:addFlts(y, s),
+                Float:addFlts(x, r), y
+            )
+            .curveFltTo(
+                Float:addFlts(x, r), Float:subFlts(y, s),
+                Float:addFlts(x, s), Float:subFlts(y, r),
+                x, Float:subFlts(y, r)
+            )
+            .curveFltTo(
+                Float:subFlts(x, s), Float:subFlts(y, r),
+                Float:subFlts(x, r), Float:subFlts(y, s),
+                Float:subFlts(x, r), y
+            )
+            .curveFltTo(
+                Float:subFlts(x, r), Float:addFlts(y, s),
+                Float:subFlts(x, s), Float:addFlts(y, r),
+                x, Float:addFlts(y, r)
+            )
+            .close();
+    }
 
 }

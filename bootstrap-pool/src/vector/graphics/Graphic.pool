@@ -8,7 +8,9 @@ namespace vector::graphics;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
+use vector::graphics::path::Path;
 use vector::graphics::shape::Circle;
+use vector::graphics::shape::PathShape;
 use vector::graphics::shape::Rectangle;
 
 class Graphic extends sys::core::Object {
@@ -54,6 +56,13 @@ class Graphic extends sys::core::Object {
         r._initCRectangle(x, y, width, height);
         _elements.add(r.element());
         return r;
+    }
+    
+    [PathShape] addPath(Path path) {
+        PathShape p = this.createOwn(PathShape:CLASSNAME);
+        p._initPathShape(path);
+        _elements.add(p.element());
+        return p;
     }
 
 }

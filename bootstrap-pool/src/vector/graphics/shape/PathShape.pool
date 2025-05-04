@@ -1,0 +1,25 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::shape;
+
+use vector::graphics::path::Path;
+
+class PathShape extends AbstractShape {
+
+    Path path;
+    
+    [PathShape] _initPathShape(Path path) {
+        this.path = path;
+        return this;
+    }
+    
+    [Path] getPath() { return path; }
+    
+    [int] isVisible() {
+        return this._isVisibleShape() && path.isVisible();
+    }
+
+}
