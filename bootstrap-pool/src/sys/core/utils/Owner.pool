@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace sys::core::utils;
 
+use sys::core::Float;
 use sys::core::Object;
 use sys::core::String;
 use sys::core::anycollection::AnyList;
@@ -31,6 +32,12 @@ class Owner extends Object {
         s.printChar(value);
         return s;
     }
+    
+    [String] createOwnStringFromFlt(int value) {
+        String s = this.createOwn(String:CLASSNAME);
+        s.printFlt(value);
+        return s;
+    }
 
     [String] createString(__any__ obj) {
         if (!obj) { return null; }
@@ -43,5 +50,17 @@ class Owner extends Object {
         String s = this.rt().createInstance(String:CLASSNAME);
         s.assignCString(value);
         return s;
+    }
+    
+    [Float] createOwnFloatFromCString(cstring value) {
+        Float f = this.createOwn(Float:CLASSNAME);
+        f.fromCString(value);
+        return f;
+    }
+    
+    [Float] createOwnFloatFromFlt(int value) {
+        Float f = this.createOwn(Float:CLASSNAME);
+        f.assignFlt(value);
+        return f;
     }
 }
