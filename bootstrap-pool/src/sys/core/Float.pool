@@ -15,6 +15,13 @@ class Float extends Object {
     global int INF_POS := 0x7f800000;
     global int INF_NEG := 0xff800000;
     
+    global int ZERO_POS := 0x00000000;
+    global int ZERO_NEG := 0x80000000;
+    global int ONE_POS := 0x3f800000;
+    global int ONE_NEG := 0xbf800000;
+    global int SQRT_TWO_POS := 0x3fb504f3;
+    global int SQRT_TWO_NEG := 0xbfb504f3;
+    
     int _f;
     
     // methods
@@ -33,7 +40,20 @@ class Float extends Object {
     [int] isNaN() { return Float:isNaNFlt(_f); }
     [int] isInfPos() { return _f == Float:INF_POS; }
     [int] isInfNeg() { return _f == Float:INF_NEG; }
+    [int] isZero() { return _f == Float:ZERO_POS || _f == Float:ZERO_NEG; }
     [int] getFlt() { return _f; }
+
+    [] addFlt(int f) { _f = Float:addFlts(_f, f); }
+    [] subFlt(int f) { _f = Float:subFlts(_f, f); }
+    [] mulFlt(int f) { _f = Float:mulFlts(_f, f); }
+    [] divFlt(int f) { _f = Float:divFlts(_f, f); }
+    
+    [] addFloat(Float f) { _f = Float:addFlts(_f, f.getFlt()); }
+    [] subFloat(Float f) { _f = Float:subFlts(_f, f.getFlt()); }
+    [] mulFloat(Float f) { _f = Float:mulFlts(_f, f.getFlt()); }
+    [] divFloat(Float f) { _f = Float:divFlts(_f, f.getFlt()); }
+    
+    [] sqrt() { _f = Float:sqrtFlt(_f); }
     
     [int] compareFlt(int f) { return Float:compareFlts(_f, f); }
     [int] compareFloat(Float f) { return Float:compareFlts(_f, f.getFlt()); }
@@ -62,6 +82,61 @@ class Float extends Object {
     
     global [int] isNaNFlt(int f) {
         return (Bitset:and(Bitset:rshift(f, 23), 0xff) == 0xff) && (Bitset:and(f, 0x7fffff) != 0);
+    }
+    
+    global [int] addFlts(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x04; .byte 0x24; #//fadd (%esp) #page 886
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] subFlts(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x24; .byte 0x24; #//fsub (%esp) #page 969
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] mulFlts(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x0c; .byte 0x24; #//fmul (%esp) #page 935
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] sqrtFlt(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xfa; #//fsqrt #page 995
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] divFlts(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x3c; .byte 0x24; #//fdiv (%esp) #page 911
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
     }
     
     // complete order: NaN < -Inf < number < +Inf
