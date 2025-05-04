@@ -40,6 +40,10 @@ class Element extends sys::core::utils::Owner {
         _attributes.set(this.createOwnStringFromCString(attribute), this.createOwnStringFromCString(value));
         return this;
     }
+    [Element] addCAttributeFlt(cstring attribute, int value) { 
+        _attributes.set(this.createOwnStringFromCString(attribute), this.createOwnStringFromFlt(value));
+        return this;
+    }
     
     [Element] newChild() {
         Element child = _children.createOwn(Element:CLASSNAME);
@@ -91,11 +95,10 @@ class Element extends sys::core::utils::Owner {
             AnyIterator it = _children.iterator();
             while (it.hasNext()) {
                 Element child = it.next();
-                child.prettyToStream(stream, indent+2);
+                child.prettyToStream(stream, indent+2).printNewline();
             }
             it.destroy();
         }
-        stream.printNewline();
         { int i = indent; while (i-- > 0) { stream.printChar(' '); } }
         return stream.printChar('<').printChar('/').print(name).printChar('>');
     }
