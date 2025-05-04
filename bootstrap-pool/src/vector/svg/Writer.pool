@@ -12,6 +12,9 @@ use sys::stream::OStream;
 
 use vector::graphics::Graphic;
 use vector::graphics::GraphicElement;
+use vector::graphics::path::Path;
+use vector::graphics::path::PathElement;
+use vector::graphics::shape::AbstractShape;
 use vector::graphics::shape::Circle;
 use vector::graphics::shape::Rectangle;
 use vector::graphics::style::FillStyle;
@@ -50,11 +53,15 @@ class Writer extends sys::core::utils::Owner {
         {
             Circle c = null;
             Rectangle r = null;
+            AbstractShape s = null;
             AnyIterator it := graphic.elements();
             while (it.hasNext()) {
                 GraphicElement e = it.next();
-                if (c = e.castTo(Circle:CLASSNAME)) { this.addCircleElement(xml, c, yBase); }
+                if (!e.isVisible()) { /* skip invisible elements */ }
+                else if (c = e.castTo(Circle:CLASSNAME)) { this.addCircleElement(xml, c, yBase); }
                 else if (r = e.castTo(Rectangle:CLASSNAME)) { this.addRectElement(xml, r, yBase); }
+                else if (s = e.castTo(AbstractShape:CLASSNAME)) { this.addShapeElement(xml, s, yBase); }
+                else { /* skip unsupported elements */ }
             }
             it.destroy();
         }
@@ -75,23 +82,56 @@ class Writer extends sys::core::utils::Owner {
             .addCAttribute("cx", c.getX())
             .addCAttributeFlt("cy", Float:subFlts(yBase, c.getY().getFlt()))
             .addCAttribute("r", c.getRadius());
-        return this.applyShapeStyle(child, c.element());
+        return this.applyShapeStyle(child, c.shape());
     }
     
     [Element] addRectElement(Element xml, Rectangle r, int yBase) {
         Element child = xml.newChild().setCName("rect")
             .addCAttribute("x", r.getX())
-            .addCAttributeFlt("y", Float:subFlts(yBase, r.getY().getFlt()))
+            .addCAttributeFlt("y", Float:subFlts(Float:subFlts(yBase, r.getY().getFlt()), r.getHeight().getFlt()))
             .addCAttribute("width", r.getWidth())
             .addCAttribute("height", r.getHeight());
-        return this.applyShapeStyle(child, r.element());
+        return this.applyShapeStyle(child, r.shape());
     }
     
-    [Element] applyShapeStyle(Element e, GraphicElement ge) {
-        this.addFillStyle(e, ge.getFillStyle());
-        this.addStrokeStyle(e, ge.getStrokeStyle());
-        if (ge.getOpacity().compareFlt(Float:ONE_POS) < 0) {
-            e.addCAttribute("opacity", ge.getOpacity());
+    [Element] addShapeElement(Element xml, AbstractShape s, int yBase) {
+        Element child = this.addPathElement(xml, s.getPath(), yBase);
+        return this.applyShapeStyle(child, s.shape());
+    }
+    
+    [Element] addPathElement(Element xml, Path p, int yBase) {
+        String d = this.rt().createInstance(String:CLASSNAME);
+        {
+            AnyIterator it := p.elements();
+            while (it.hasNext()) {
+                PathElement e = it.next();
+                if (e.isMoveTo()) {
+                    d.printChar('M')
+                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Float:subFlts(yBase, e.getY().getFlt()));
+                } else if (e.isLineTo()) {
+                    d.printChar('L')
+                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Float:subFlts(yBase, e.getY().getFlt())); 
+                } else if (e.isCurveTo()) {
+                    d.printChar('C')
+                        .printChar(' ').print(e.getCX1()).printChar(',').printFlt(Float:subFlts(yBase, e.getCY1().getFlt()))
+                        .printChar(' ').print(e.getCX2()).printChar(',').printFlt(Float:subFlts(yBase, e.getCY2().getFlt()))
+                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Float:subFlts(yBase, e.getY().getFlt()));
+                } else if (e.isClose()) { d.printChar('Z'); }
+                else { /* unknown element */ }
+                d.printChar(' ');
+            }
+            it.destroy();
+        }
+        Element child = xml.newChild().setCName("path").addCAttribute("d", d);
+        d.destroy();
+        return child;
+    }
+    
+    [Element] applyShapeStyle(Element e, AbstractShape s) {
+        this.addFillStyle(e, s.getFillStyle());
+        this.addStrokeStyle(e, s.getStrokeStyle());
+        if (s.getOpacity().compareFlt(Float:ONE_POS) < 0) {
+            e.addCAttribute("opacity", s.getOpacity());
         }
         return e;
     }

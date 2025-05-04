@@ -8,6 +8,8 @@ namespace vector::command;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
+use vector::graphics::path::Path;
+use vector::graphics::Graphic;
 use vector::graphics::LogoBuilder;
 use vector::svg::Writer;
 
@@ -57,4 +59,87 @@ Test for some vector features.
         return 0;
     }
     
+    [Graphic] pentagram() {
+        Graphic graphic = this.rt().createInstance(Graphic:CLASSNAME);
+        graphic.setCViewport("-50", "-50", "50", "50");
+        
+        graphic.addCSquare("-49", "-49", "98").getStrokeStyle().setCWidth("2");
+        graphic.addCCircle("0", "0", "45").getFillStyle().setCColor("red").setCOpacity("0.5");
+        
+        int r1 := 40;
+        int r2 := 20;
+        Path path = graphic.createOwn(Path:CLASSNAME);
+        path.moveFltTo(this.pentX(r1, 0), this.pentY(r1, 0));
+        //*
+        path.curveFltTo(
+            this.pentX(r2, 1), this.pentY(r2, 1),
+            this.pentX(r2, 3), this.pentY(r2, 3),
+            this.pentX(r1, 4), this.pentY(r1, 4)
+        );
+        path.curveFltTo(
+            this.pentX(r2, 5), this.pentY(r2, 5),
+            this.pentX(r2, 7), this.pentY(r2, 7),
+            this.pentX(r1, 8), this.pentY(r1, 8)
+        );
+        path.curveFltTo(
+            this.pentX(r2, 9), this.pentY(r2, 9),
+            this.pentX(r2, 1), this.pentY(r2, 1),
+            this.pentX(r1, 2), this.pentY(r1, 2)
+        );
+        path.curveFltTo(
+            this.pentX(r2, 3), this.pentY(r2, 3),
+            this.pentX(r2, 5), this.pentY(r2, 5),
+            this.pentX(r1, 6), this.pentY(r1, 6)
+        );
+        path.curveFltTo(
+            this.pentX(r2, 7), this.pentY(r2, 7),
+            this.pentX(r2, 9), this.pentY(r2, 9),
+            this.pentX(r1, 0), this.pentY(r1, 0)
+        );
+        /*/
+        path.lineFltTo(this.pentX(r1, 4), this.pentY(r1, 4));
+        path.lineFltTo(this.pentX(r1, 8), this.pentY(r1, 8));
+        path.lineFltTo(this.pentX(r1, 2), this.pentY(r1, 2));
+        path.lineFltTo(this.pentX(r1, 6), this.pentY(r1, 6));
+        //*/
+        path.close();
+        graphic.addPath(path);
+        
+        return graphic;
+    }
+    
+    // r * sin(pos/5 * pi)
+    [int] pentX(int r, int pos) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
+            .byte 0xd9; .byte 0xeb; #//fldpi #page 929
+            movl 5, (%esp); .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
+            movl %ebx, (%esp); .byte 0xda; .byte 0x3c; .byte 0x24; #//fidiv (%esp) #page 911
+            .byte 0xde; .byte 0xc9; #//fmulp #page 935
+            .byte 0xd9; .byte 0xfe; #//fsin #page 955
+            .byte 0xde; .byte 0xc9; #//fmulp #page 935
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": r, "%ebx": pos}, {"%eax": ret});
+        return ret;
+    }
+    
+    // r * cos(pos/5 * pi)
+    [int] pentY(int r, int pos) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
+            .byte 0xd9; .byte 0xeb; #//fldpi #page 929
+            movl 5, (%esp); .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
+            movl %ebx, (%esp); .byte 0xda; .byte 0x3c; .byte 0x24; #//fidiv (%esp) #page 911
+            .byte 0xde; .byte 0xc9; #//fmulp #page 935
+            .byte 0xd9; .byte 0xff; #//fcos #page 905
+            .byte 0xde; .byte 0xc9; #//fmulp #page 935
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": r, "%ebx": pos}, {"%eax": ret});
+        return ret;
+    }
+        
 }

@@ -7,7 +7,9 @@ namespace vector::graphics;
 
 use sys::core::Float as F;
 
+use vector::graphics::path::Path;
 use vector::graphics::shape::Circle;
+use vector::graphics::shape::PathShape;
 use vector::graphics::LogoBuilder as LB;
 
 class LogoBuilder extends sys::core::Object {
@@ -111,14 +113,12 @@ class LogoBuilder extends sys::core::Object {
         return shape;
     }
     
-    [/*PathShape*/] addHelperLine(Graphic logo, cstring x1, cstring y1, cstring x2, cstring y2) {
-        /*
+    [PathShape] addHelperLine(Graphic logo, cstring x1, cstring y1, cstring x2, cstring y2) {
         Path path = this.createOwn(Path:CLASSNAME);
         PathShape shape = logo.addPath(path.moveCTo(x1, y1).lineCTo(x2, y2));
         shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
         shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
         return shape;
-        */
     }
 
 }
