@@ -1,0 +1,27 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::shape;
+
+use sys::core::Float;
+
+class Circle extends vector::graphics::GraphicElement {
+
+    Float x;
+    Float y;
+    Float radius;
+    
+    [Circle] _initCCircle(cstring x, cstring y, cstring radius) {
+        this.x = this.createOwnFloatFromCString(x);
+        this.y = this.createOwnFloatFromCString(y);
+        this.radius = this.createOwnFloatFromCString(radius);
+        return this;
+    }
+    
+    [Float] getX() { return x; }
+    [Float] getY() { return y; }
+    [Float] getRadius() { return radius; }
+
+}

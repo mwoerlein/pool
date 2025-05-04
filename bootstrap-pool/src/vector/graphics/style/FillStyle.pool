@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::style;
+
+use sys::core::Float;
+use sys::core::String;
+
+class FillStyle extends sys::core::utils::Owner {
+
+    String color;
+    Float opacity;
+
+    [] __init() { this._initFillStyle(); }
+    [] _initFillStyle() {
+        this.color = this.createOwnStringFromCString("black");
+        this.opacity = this.createOwnFloatFromFlt(Float:ZERO_POS);
+    }
+    
+    [FillStyle] setColor(String c) { color.assignString(c); return this; }
+    [FillStyle] setCColor(cstring c) { color.assignCString(c); return this; }
+    [String] getColor() { return color; }
+    
+    [FillStyle] setOpacity(Float o) { opacity.assignFloat(o); return this; }
+    [FillStyle] setOpacityFlt(int o) { opacity.assignFlt(o); return this; }
+    [FillStyle] setCOpacity(cstring o) { opacity.fromCString(o); return this; }
+    [Float] getOpacity() { return opacity; }
+    
+    [int] isVisible() { return opacity.compareFlt(Float:ZERO_POS) > 0; }
+
+}
