@@ -50,7 +50,9 @@ Test for some vector features.
         Writer svgWriter = this.createOwn(Writer:CLASSNAME);
         LogoBuilder lb = this.createOwn(LogoBuilder:CLASSNAME);
         SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
-        svgWriter.svgToStream(outfile.ostream(), lb.createLogo());
+        vector::graphics::Graphic logo = lb.createLogo();
+        svgWriter.svgToStream(outfile.ostream(), logo);
+        logo.destroy();
         outfile.destroy();
         return 0;
     }
