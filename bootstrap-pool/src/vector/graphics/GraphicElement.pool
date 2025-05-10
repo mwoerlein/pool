@@ -37,8 +37,7 @@ class GraphicElement extends sys::core::utils::Owner {
     
     [int] _isVisibleGraphicElement() {
         return (opacity.compareFlt(Float:ZERO_POS) > 0)
-            && fillStyle.isVisible()
-            && strokeStyle.isVisible();
+            && (fillStyle.isVisible() || strokeStyle.isVisible());
     }
     
     // TODO: remove with implicit cast
