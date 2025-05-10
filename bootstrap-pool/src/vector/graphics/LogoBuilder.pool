@@ -8,7 +8,7 @@ namespace vector::graphics;
 use sys::core::Float as F;
 
 use vector::graphics::path::Path;
-use vector::graphics::shape::Circle;
+use vector::graphics::shape::Ring;
 use vector::graphics::shape::PathShape;
 use vector::graphics::LogoBuilder as LB;
 
@@ -56,28 +56,28 @@ class LogoBuilder extends sys::core::Object {
         logo.setCViewport("-400", "-400", "400", "400");
         
         // Corners
-        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoRing(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
         this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R2, LB:BACKGROUND_COLOR);
         this.addLogoCircle(logo, LB:CORNER_SCP, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
         
-        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoRing(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
         this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R2, LB:BACKGROUND_COLOR);
         this.addLogoCircle(logo, LB:CORNER_SCP, LB:CORNER_SCN, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
         
-        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoRing(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
         this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R2, LB:BACKGROUND_COLOR);
         this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCN, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
         
-        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R1, LB:OUTLINE_COLOR);
+        this.addLogoRing(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
         this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R2, LB:BACKGROUND_COLOR);
         this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
         
         // Ring
-        this.addLogoCircle(logo, "0", "0", LB:RING_ROO, LB:OUTLINE_COLOR);
-        this.addLogoCircle(logo, "0", "0", LB:RING_ROI, LB:RING_COLOR);
-        this.addLogoCircle(logo, "0", "0", LB:RING_RS, LB:RING_SHADOW_COLOR);
-        this.addLogoCircle(logo, "0", "0", LB:RING_RII, LB:OUTLINE_COLOR);
         this.addLogoCircle(logo, "0", "0", LB:RING_RIO, LB:BACKGROUND_COLOR);
+        this.addLogoRing(logo, "0", "0", LB:RING_ROO, LB:RING_ROI, LB:OUTLINE_COLOR);
+        this.addLogoRing(logo, "0", "0", LB:RING_RII, LB:RING_RIO, LB:OUTLINE_COLOR);
+        this.addLogoRing(logo, "0", "0", LB:RING_ROI, LB:RING_RII, LB:RING_COLOR);
+        this.addLogoRing(logo, "0", "0", LB:RING_RS, LB:RING_RII, LB:RING_SHADOW_COLOR);
 
         // Helper - Highlight
         //*/
@@ -99,15 +99,22 @@ class LogoBuilder extends sys::core::Object {
         return logo;
     }
     
-    [Circle] addLogoCircle(Graphic logo, cstring x, cstring y, cstring r, cstring c) {
-        Circle shape = logo.addCCircle(x, y, r);
+    [Ring] addLogoRing(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring c) {
+        Ring shape = logo.addCRing(x, y, o, i);
         shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
         shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
         return shape;
     }
     
-    [Circle] addHelperCircle(Graphic logo, cstring x, cstring y, cstring r) {
-        Circle shape = logo.addCCircle(x, y, r);
+    [Ring] addLogoCircle(Graphic logo, cstring x, cstring y, cstring r, cstring c) {
+        Ring shape = logo.addCCircle(x, y, r);
+        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        return shape;
+    }
+    
+    [Ring] addHelperCircle(Graphic logo, cstring x, cstring y, cstring r) {
+        Ring shape = logo.addCCircle(x, y, r);
         shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
         shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
         return shape;

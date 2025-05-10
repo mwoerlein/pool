@@ -9,7 +9,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
 use vector::graphics::path::Path;
-use vector::graphics::shape::Circle;
+use vector::graphics::shape::Ring;
 use vector::graphics::shape::PathShape;
 use vector::graphics::shape::Rectangle;
 
@@ -37,11 +37,18 @@ class Graphic extends sys::core::Object {
         return _elements.iterator();
     }
     
-    [Circle] addCCircle(cstring x, cstring y, cstring radius) {
-        Circle c = this.createOwn(Circle:CLASSNAME);
-        c._initCCircle(x, y, radius);
-        _elements.add(c.element());
-        return c;
+    [Ring] addCCircle(cstring x, cstring y, cstring radius) {
+        Ring r = this.createOwn(Ring:CLASSNAME);
+        r._initCCircle(x, y, radius);
+        _elements.add(r.element());
+        return r;
+    }
+    
+    [Ring] addCRing(cstring x, cstring y, cstring outer, cstring inner) {
+        Ring r = this.createOwn(Ring:CLASSNAME);
+        r._initCRing(x, y, outer, inner);
+        _elements.add(r.element());
+        return r;
     }
     
     [Rectangle] addCSquare(cstring x, cstring y, cstring width) {
