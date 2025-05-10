@@ -179,10 +179,10 @@ class Float extends Object {
         
         int ret = 0;
         __pasm__(<"
-            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
             pushl %ebx; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
             addl 8, %esp
-            .byte 0xdf; .byte 0xd1; #//fcomip #page 902
+            .byte 0xdf; .byte 0xf1; #//fcomip #page 902
             .byte 0xdd; .byte 0xd8; #//fstp st(0) #page 961 # to clear stack
             ja     _scf_fltcmp_ret_pos
             jb     _scf_fltcmp_ret_neg
