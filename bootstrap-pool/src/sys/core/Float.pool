@@ -131,8 +131,8 @@ class Float extends Object {
     global [int] divFlts(int a, int b) {
         int ret = 0;
         __pasm__(<"
-            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
-            movl %ebx, (%esp); .byte 0xd8; .byte 0x3c; .byte 0x24; #//fdiv (%esp) #page 911
+            pushl %ebx; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %eax, (%esp); .byte 0xd8; .byte 0x3c; .byte 0x24; #//fdivr (%esp) #page 911
             .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
             popl %eax
         ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
