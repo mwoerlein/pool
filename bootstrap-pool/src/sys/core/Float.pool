@@ -139,6 +139,44 @@ class Float extends Object {
         return ret;
     }
     
+    global [int] negFlt(int a) {
+        return Float:subFlts(Float:ZERO_POS, a);
+    }
+    
+    global [int] absFlt(int a) {
+        if (Float:compareFlts(a, ZERO_POS) < 0) {
+            return Float:negFlt(a);
+        }
+        return a;
+    }
+    
+    global [int] floorFlt(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+
+            // store fpu control register
+            //subl 4, %esp
+            .byte 0x9b; .byte 0xd9; .byte 0x3c; .byte 0x24; #// fstcw (%esp) #page 963
+            
+            // set round down mode
+            movl (%esp), %eax
+            andl 0xf3ff, %eax
+            orl 0x0400, %eax
+            pushl %eax
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            
+            // store floor(log10(abs(f)))
+            .byte 0xdb; .byte 0x1c; .byte 0x24; #// fistp (%esp) #page 922
+            popl %eax
+            
+            // restore fpu control register
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            addl 4, %esp
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
     global [int] sinFlt(int a) {
         int ret = 0;
         __pasm__(<"
