@@ -110,6 +110,37 @@ class Path extends sys::core::Object {
         return this;
     }
     
+    [Path] circleFltTo(int cx, int cy, int r, int lineTo) {
+        if (lineTo) {
+            this.lineFltTo(cx, Float:addFlts(cy, r));
+        } else {
+            this.moveFltTo(cx, Float:addFlts(cy, r));
+        }
+
+        int s := Float:mulFlts(r, Path:CIRCLE_FACTOR);
+        this.curveFltTo(
+            Float:addFlts(cx, s), Float:addFlts(cy, r),
+            Float:addFlts(cx, r), Float:addFlts(cy, s),
+            Float:addFlts(cx, r), cy
+        );
+        this.curveFltTo(
+            Float:addFlts(cx, r), Float:subFlts(cy, s),
+            Float:addFlts(cx, s), Float:subFlts(cy, r),
+            cx, Float:subFlts(cy, r)
+        );
+        this.curveFltTo(
+            Float:subFlts(cx, s), Float:subFlts(cy, r),
+            Float:subFlts(cx, r), Float:subFlts(cy, s),
+            Float:subFlts(cx, r), cy
+        );
+        this.curveFltTo(
+            Float:subFlts(cx, r), Float:addFlts(cy, s),
+            Float:subFlts(cx, s), Float:addFlts(cy, r),
+            cx, Float:addFlts(cy, r)
+        );
+        return this;
+    }
+    
     
     [Path] moveCTo(cstring x, cstring y) {
         PathElement e = this.createOwn(PathElement:CLASSNAME);
@@ -147,10 +178,10 @@ class Path extends sys::core::Object {
     
     [int] isVisible() { return hasVisibleElements; }
 
-    // arc helper
-
+    // arc and circle helper
     global int RADIAN_FACTOR := 0x3c8efa35; // PI / 180.
     
+    global int CIRCLE_FACTOR := 0x3f0d6288; // 4./3. * (sqrt(2.) - 1.)
     global int SCALE_FACTOR := 0x3faaaaab; // 4./3.
     global int SCALE_DENOMINATOR := 0x40800000; // 4.
     
