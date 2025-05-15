@@ -1,0 +1,96 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::shape;
+
+use sys::core::Float;
+use vector::graphics::path::Path;
+
+class AskewArc extends AbstractShape {
+    
+    Float xOuter;
+    Float yOuter;
+    Float radiusOuter;
+    Float alphaOuter;
+    Float angleOuter;
+    
+    Float xInner;
+    Float yInner;
+    Float radiusInner;
+    Float alphaInner;
+    Float angleInner;
+    
+    [AskewArc] _initCRingArc(cstring x, cstring y, cstring outer, cstring inner, cstring alpha, cstring angle) {
+        this.xOuter = this.xInner = this.createOwnFloatFromCString(x);
+        this.yOuter = this.yInner = this.createOwnFloatFromCString(y);
+        this.radiusOuter = this.createOwnFloatFromCString(outer);
+        this.radiusInner = this.createOwnFloatFromCString(inner);
+        this.alphaOuter = this.alphaInner = this.createOwnFloatFromCString(alpha);
+        this.angleOuter = this.angleInner = this.createOwnFloatFromCString(angle);
+        // assert radiusOuter > radiusInner >= 0.0
+        // assert -360.0 < angle < 360.0
+        
+        if (angleOuter.compareFlt(Float:ZERO_POS) < 0) {
+            alphaOuter.addFloat(angleOuter);
+            angleOuter.mulFlt(Float:ONE_NEG);
+        }
+        // TODO: normalizeDegree(alpha)
+        return this;
+    }
+    
+    [AskewArc] _initCAskewArc(
+        cstring xo, cstring yo, cstring ro, cstring alo, cstring ano,
+        cstring xi, cstring yi, cstring ri, cstring ali, cstring ani
+    ) {
+        this.xOuter = this.createOwnFloatFromCString(xo);
+        this.yOuter = this.createOwnFloatFromCString(yo);
+        this.radiusOuter = this.createOwnFloatFromCString(ro);
+        this.alphaOuter = this.createOwnFloatFromCString(alo);
+        this.angleOuter = this.createOwnFloatFromCString(ano);
+        this.xInner = this.createOwnFloatFromCString(xi);
+        this.yInner = this.createOwnFloatFromCString(yi);
+        this.radiusInner = this.createOwnFloatFromCString(ri);
+        this.alphaInner = this.createOwnFloatFromCString(ali);
+        this.angleInner = this.createOwnFloatFromCString(ani);
+        // assert radiusOuter > radiusInner >= 0.0
+        // assert -360.0 < angle < 360.0
+        
+        if (angleOuter.compareFlt(Float:ZERO_POS) < 0) {
+            alphaOuter.addFloat(angleOuter);
+            angleOuter.mulFlt(Float:ONE_NEG);
+        }
+        if (angleInner.compareFlt(Float:ZERO_POS) < 0) {
+            alphaInner.addFloat(angleInner);
+            angleInner.mulFlt(Float:ONE_NEG);
+        }
+        // TODO: normalizeDegree(alpha)
+        return this;
+    }
+    
+    
+    [Path] getPath() {
+        Path p = this.createOwn(Path:CLASSNAME);
+        
+        p.arcFltTo(
+            xOuter.getFlt(),
+            yOuter.getFlt(),
+            radiusOuter.getFlt(),
+            alphaOuter.getFlt(),
+            Float:addFlts(alphaOuter.getFlt(), angleOuter.getFlt()),
+            false
+        );
+        p.arcFltTo(
+            xInner.getFlt(),
+            yInner.getFlt(),
+            radiusInner.getFlt(),
+            Float:addFlts(alphaInner.getFlt(), angleInner.getFlt()),
+            alphaInner.getFlt(),
+            true
+        );
+
+        return p.close();
+    }
+
+}

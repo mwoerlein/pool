@@ -7,6 +7,7 @@ namespace vector::graphics::path;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::core::Float;
 
 class Path extends sys::core::Object {
 
@@ -69,6 +70,46 @@ class Path extends sys::core::Object {
         return this;
     }
     
+    [Path] arcFltTo(int cx, int cy, int r, int alpha, int beta, int lineTo) {
+        int aRad := Path:toRadian(alpha);
+        int bRad := Path:toRadian(beta);
+        [int ax, int ay] := Path:getPolarPoint(r, aRad);
+        
+        if (lineTo) {
+            this.lineFltTo(Float:addFlts(cx, ax), Float:addFlts(cy, ay));
+        } else {
+            this.moveFltTo(Float:addFlts(cx, ax), Float:addFlts(cy, ay));
+        }
+        
+        int stepCount = 1 + Float:floorFlt(Float:divFlts(
+            Float:absFlt(Float:subFlts(alpha, beta)),
+            Float:intToFlt(90)
+        ));
+        int stepSize := Float:divFlts(
+            Float:subFlts(bRad, aRad),
+            Float:intToFlt(stepCount)
+        );
+        int curX = ax; int curY = ay;
+        int nextRad = Float:addFlts(aRad, stepSize);
+        int nextScale := Path:getScale(aRad, nextRad);
+        int curScale := Float:negFlt(nextScale);
+        while (stepCount--) {
+            [int nextX, int nextY] := Path:getPolarPoint(r, nextRad);
+            [int curBCx, int curBCy] := Path:getBezierControl(curX, curY, curScale);
+            [int nextBCx, int nextBCy] := Path:getBezierControl(nextX, nextY, nextScale);
+            
+            this.curveFltTo(
+                Float:addFlts(cx, curBCx), Float:addFlts(cy, curBCy),
+                Float:addFlts(cx, nextBCx), Float:addFlts(cy, nextBCy),
+                Float:addFlts(cx, nextX), Float:addFlts(cy, nextY)
+            );
+            curX = nextX; curY = nextY;
+            nextRad = Float:addFlts(nextRad, stepSize);
+        }
+
+        return this;
+    }
+    
     
     [Path] moveCTo(cstring x, cstring y) {
         PathElement e = this.createOwn(PathElement:CLASSNAME);
@@ -106,4 +147,34 @@ class Path extends sys::core::Object {
     
     [int] isVisible() { return hasVisibleElements; }
 
+    // arc helper
+
+    global int RADIAN_FACTOR := 0x3c8efa35; // PI / 180.
+    
+    global int SCALE_FACTOR := 0x3faaaaab; // 4./3.
+    global int SCALE_DENOMINATOR := 0x40800000; // 4.
+    
+    global [int] toRadian(int alpha) { return Float:mulFlts(alpha, Path:RADIAN_FACTOR); }
+    global [int, int] getPolarPoint(int radius, int radian) {
+        return [
+            Float:mulFlts(radius, Float:sinFlt(radian)),
+            Float:mulFlts(radius, Float:cosFlt(radian))
+        ];
+    }
+    global [int] getScale(int r1, int r2) {
+        //return (4./3.) * tan(($radians[1] - $radians[0]) / 4.);
+        return Float:mulFlts(
+            Path:SCALE_FACTOR,
+            Float:tanFlt(
+                Float:divFlts(Float:subFlts(r2, r1), Path:SCALE_DENOMINATOR)
+            )
+        );
+    }
+    global [int, int] getBezierControl(int x, int y, int scale)
+    {
+        return [
+            Float:subFlts(x, Float:mulFlts(scale, y)),
+            Float:addFlts(y, Float:mulFlts(scale, x))
+        ];
+    }
 }

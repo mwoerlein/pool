@@ -9,6 +9,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 
 use vector::graphics::path::Path;
+use vector::graphics::shape::AskewArc;
 use vector::graphics::shape::Ring;
 use vector::graphics::shape::PathShape;
 use vector::graphics::shape::Rectangle;
@@ -47,6 +48,26 @@ class Graphic extends sys::core::Object {
     [Ring] addCRing(cstring x, cstring y, cstring outer, cstring inner) {
         Ring r = this.createOwn(Ring:CLASSNAME);
         r._initCRing(x, y, outer, inner);
+        _elements.add(r.element());
+        return r;
+    }
+    
+    [AskewArc] addCRingArc(cstring x, cstring y, cstring outer, cstring inner, cstring alpha, cstring angle) {
+        AskewArc r = this.createOwn(AskewArc:CLASSNAME);
+        r._initCRingArc(x, y, outer, inner, alpha, angle);
+        _elements.add(r.element());
+        return r;
+    }
+    
+    [AskewArc] addCAskewArc(
+        cstring xo, cstring yo, cstring ro, cstring alo, cstring ano,
+        cstring xi, cstring yi, cstring ri, cstring ali, cstring ani
+    ) {
+        AskewArc r = this.createOwn(AskewArc:CLASSNAME);
+        r._initCAskewArc(
+            xo, yo, ro, alo, ano,
+            xi, yi, ri, ali, ani
+        );
         _elements.add(r.element());
         return r;
     }
