@@ -8,6 +8,7 @@ namespace vector::graphics;
 use sys::core::Float as F;
 
 use vector::graphics::path::Path;
+use vector::graphics::shape::AskewArc;
 use vector::graphics::shape::Ring;
 use vector::graphics::shape::PathShape;
 use vector::graphics::LogoBuilder as LB;
@@ -16,17 +17,19 @@ class LogoBuilder extends sys::core::Object {
 
     global cstring OUTLINE_COLOR := "#6d4120";
     //global cstring OUTLINE_COLOR := "black";
-    global cstring RING_COLOR := "#f7a75f";
+    global cstring RING_COLOR := "#fc9b4c";
     global cstring RING_SHADOW_COLOR := "#f78537";
+    global cstring RING_BACKGROUND_COLOR := "#fcd4e1";
     global cstring BACKGROUND_COLOR := "#fcd4ee";
     global cstring BACKGROUND_SHADOW_COLOR := "#f9c5e9";
+    global cstring HIGHLIGHT_COLOR := "#ffffff";
     
     global cstring CORNER_CP := "150";
     global cstring CORNER_CN := "-150";
     global cstring CORNER_R1 := "100";
     global cstring CORNER_R2 := "90";
-    global cstring CORNER_SCP := "127";
-    global cstring CORNER_SCN := "-127";
+    global cstring CORNER_SCP := "129";
+    global cstring CORNER_SCN := "-129";
     global cstring CORNER_SR := "95";
 
     global cstring RING_RHO := "260";
@@ -73,14 +76,116 @@ class LogoBuilder extends sys::core::Object {
         this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
         
         // Ring
-        this.addLogoCircle(logo, "0", "0", LB:RING_RIO, LB:BACKGROUND_COLOR);
+        this.addLogoCircle(logo, "0", "0", LB:RING_RIO, LB:RING_BACKGROUND_COLOR);
         this.addLogoRing(logo, "0", "0", LB:RING_ROO, LB:RING_ROI, LB:OUTLINE_COLOR);
         this.addLogoRing(logo, "0", "0", LB:RING_RII, LB:RING_RIO, LB:OUTLINE_COLOR);
         this.addLogoRing(logo, "0", "0", LB:RING_ROI, LB:RING_RII, LB:RING_COLOR);
         this.addLogoRing(logo, "0", "0", LB:RING_RS, LB:RING_RII, LB:RING_SHADOW_COLOR);
+        
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_ROI, "353", "137",
+            LB:SHADOW_CX, LB:SHADOW_CY, LB:SHADOW_R, "7", "109,5",
+            LB:RING_SHADOW_COLOR
+        );
 
-        // Helper - Highlight
+        // highlight
         //*/
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_RHO, "31.6340618133544921875", "26.731876373291015625",
+            "0", "0", LB:RING_RIO, "18.5628814697265625", "52.874237060546875",
+            LB:OUTLINE_COLOR
+        );
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_ROO, "33.43834686279296875", "23.1233062744140625",
+            "0", "0", LB:RING_RII, "24.784275054931640625", "40.43144989013671875",
+            LB:HIGHLIGHT_COLOR
+        );
+        
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_RHO, "121.6340618133544921875", "26.731876373291015625",
+            "0", "0", LB:RING_RIO, "108.5628814697265625", "52.874237060546875",
+            LB:OUTLINE_COLOR
+        );
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_ROO, "123.43834686279296875", "23.1233062744140625",
+            "0", "0", LB:RING_RII, "114.784275054931640625", "40.43144989013671875",
+            LB:HIGHLIGHT_COLOR
+        );
+        
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_RHO, "211.6340618133544921875", "26.731876373291015625",
+            "0", "0", LB:RING_RIO, "198.5628814697265625", "52.874237060546875",
+            LB:OUTLINE_COLOR
+        );
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_ROO, "213.43834686279296875", "23.1233062744140625",
+            "0", "0", LB:RING_RII, "204.784275054931640625", "40.43144989013671875",
+            LB:HIGHLIGHT_COLOR
+        );
+        
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_RHO, "301.6340618133544921875", "26.731876373291015625",
+            "0", "0", LB:RING_RIO, "288.5628814697265625", "52.874237060546875",
+            LB:OUTLINE_COLOR
+        );
+        this.addLogoAskewArc(logo,
+            "0", "0", LB:RING_ROO, "303.43834686279296875", "23.1233062744140625",
+            "0", "0", LB:RING_RII, "294.784275054931640625", "40.43144989013671875",
+            LB:HIGHLIGHT_COLOR
+        );
+        //*/
+        
+        /*/
+//        this.addHelperLine(logo, LB:P1P, LB:P3P, LB:P3N, LB:P1N);
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RHO),
+            this.toFlt(LB:P1P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P1N)
+        );
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RIO),
+            this.toFlt(LB:P1P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P1N)
+        );
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_ROO),
+            this.toFlt(LB:P2P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P2N)
+        );
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RII),
+            this.toFlt(LB:P2P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P2N)
+        );
+        // => 0x43085e33/0x435d5e33 0xc35d5e33/0xc3085e33
+        // => 136.36797/221.36797 -221.36797/-136.36797
+        // => 0x422be80c/0x42fff406 0xc2fff406/0xc22be80c
+        // => 42.97661/127.97661 -127.97661/-42.97661
+        // => 0x4309c284/0x43509eac 0xc3509eac/0xc309c284
+        // => 137.75983/208.61981 -208.61981/-137.75983
+        // => 0x42732341/0x4303a4f9 0xc303a4f9/0xc2732341
+        // => 60.784428/131.64442 -131.64442/-60.784428
+        //this.addHelperLine(logo, "136.36797", "221.36797", "42.97661", "127.97661");
+        //this.addHelperLine(logo, "221.36797", "136.36797", "127.97661", "42.97661");
+        //this.addHelperLine(logo, "137.75983", "208.61981", "60.784428", "131.64442");
+        //this.addHelperLine(logo, "208.61981", "137.75983", "131.64442", "60.784428");
+
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RHO),
+            this.toFlt(LB:P1N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P1N)
+        );
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RIO),
+            this.toFlt(LB:P1N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P1N)
+        );
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_ROO),
+            this.toFlt(LB:P2N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P2N)
+        );
+        this.debugIntersectionCircleLine(
+            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RII),
+            this.toFlt(LB:P2N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P2N)
+        );
+        //*/
+        
+        // Helper - Highlight
+        /*/
         this.addHelperCircle(logo, "0", "0", LB:RING_RHO);
         
         this.addHelperLine(logo, LB:P1N, LB:P3P, LB:P3P, LB:P1N);
@@ -97,6 +202,29 @@ class LogoBuilder extends sys::core::Object {
         this.addHelperCircle(logo, LB:SHADOW_CX, LB:SHADOW_CY, LB:SHADOW_R);
         //*/
         return logo;
+    }
+    
+    [AskewArc] addLogoRingArc(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring alpha, cstring angle, cstring c) {
+        AskewArc shape = logo.addCRingArc(x, y, o, i, alpha, angle);
+        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
+        //shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        return shape;
+    }
+    
+    [AskewArc] addLogoAskewArc(Graphic logo, 
+        cstring xo, cstring yo, cstring ro, cstring alo, cstring ano,
+        cstring xi, cstring yi, cstring ri, cstring ali, cstring ani,
+        cstring c
+    ) {
+        AskewArc shape = logo.addCAskewArc(
+            xo, yo, ro, alo, ano,
+            xi, yi, ri, ali, ani
+        );
+        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
+        //shape.getStrokeStyle().setCColor("green");
+        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        return shape;
     }
     
     [Ring] addLogoRing(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring c) {
@@ -126,6 +254,70 @@ class LogoBuilder extends sys::core::Object {
         shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
         shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
         return shape;
+    }
+
+    
+    [] debugIntersectionCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by) {
+        sys::stream::OStream debug = this.rt().err();
+    
+        int dx := F:subFlts(ax, bx);
+        int dy := F:subFlts(ay, by);
+        
+        int a := F:mulFlts(F:ONE_NEG, F:divFlts(dy, dx));
+        int a2 := F:mulFlts(a, a);
+        int b := F:ONE_POS;
+        int b2 := F:mulFlts(b, b);
+        int a2b2 := F:addFlts(a2, b2);
+        int c := F:divFlts(
+            F:subFlts(F:mulFlts(ay, dx), F:mulFlts(ax, dy)),
+            dx
+        );
+        int d := F:subFlts(
+            c,
+            F:addFlts(
+                F:mulFlts(a, mx),
+                F:mulFlts(b, my)
+            )
+        );
+        int d2 := F:mulFlts(d, d);
+        int r2 := F:mulFlts(r, r);
+        int ad := F:mulFlts(a, d);
+        int bd := F:mulFlts(b, d);
+        int s2 := F:subFlts(F:mulFlts(r2, a2b2), d2);
+        int comp := F:compareFlts(s2, F:ZERO_POS);
+        
+        if (comp < 0) {
+            debug.printCString("Keine Schnittstellen").printNewline();
+        } else if (comp == 0) {
+            debug.printCString("Eine Schnittstelle").printNewline();
+            int x := F:addFlts(mx, F:divFlts(ad, a2b2));
+            int y := F:addFlts(my, F:divFlts(bd, a2b2));
+            int alpha := F:divFlts(F:arctanFlt(x, y), Path:RADIAN_FACTOR);
+            debug
+                .printPtr(F:addFlts(mx, x)).printChar('/').printPtr(F:addFlts(my, y)).printChar('/').printFlt(alpha).printNewline();
+        } else {
+            debug.printCString("Zwei Schnittstellen").printNewline();
+            int s := F:sqrtFlt(s2);
+            int x1 := F:divFlts(F:addFlts(ad, F:mulFlts(b, s)), a2b2);
+            int x2 := F:divFlts(F:subFlts(ad, F:mulFlts(b, s)), a2b2);
+            int y1 := F:divFlts(F:subFlts(bd, F:mulFlts(a, s)), a2b2);
+            int y2 := F:divFlts(F:addFlts(bd, F:mulFlts(a, s)), a2b2);
+            int alpha1 := F:divFlts(F:arctanFlt(x1, y1), Path:RADIAN_FACTOR);
+            int alpha2 := F:divFlts(F:arctanFlt(x2, y2), Path:RADIAN_FACTOR);
+            debug
+                .printPtr(F:addFlts(mx, x1)).printChar('/').printPtr(F:addFlts(my, y1)).printChar('/')
+                .printFlt(alpha1).printChar('/').printFlt(F:subFlts(0x42b40000,F:addFlts(alpha1,alpha1))).printChar(' ')
+                .printPtr(F:addFlts(mx, x2)).printChar('/').printPtr(F:addFlts(my, y2)).printChar('/')
+                .printFlt(alpha2).printChar('/').printFlt(F:subFlts(0x42b40000,F:addFlts(alpha2,alpha2))).printNewline();
+        }
+    }
+    
+    [int] toFlt(cstring s) {
+        F tmp = this.rt().createInstance(F:CLASSNAME);
+        tmp.fromCString(s);
+        int ret = tmp.getFlt();
+        tmp.destroy();
+        return ret;
     }
 
 }
