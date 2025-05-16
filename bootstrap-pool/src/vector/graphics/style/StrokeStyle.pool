@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::graphics::style;
 
+use sys::core::Flt;
 use sys::core::Float;
 use sys::core::String;
 
@@ -17,8 +18,8 @@ class StrokeStyle extends sys::core::utils::Owner {
     [] __init() { this._initStrokeStyle(); }
     [] _initStrokeStyle() {
         this.color = this.createOwnStringFromCString("black");
-        this.opacity = this.createOwnFloatFromFlt(Float:ONE_POS);
-        this.width = this.createOwnFloatFromFlt(Float:ONE_POS);
+        this.opacity = this.createOwnFloatFromFlt(Flt:ONE_POS);
+        this.width = this.createOwnFloatFromFlt(Flt:ONE_POS);
     }
     
     [StrokeStyle] setColor(String c) { color.assignString(c); return this; }
@@ -34,6 +35,6 @@ class StrokeStyle extends sys::core::utils::Owner {
     [StrokeStyle] setCWidth(cstring o) { width.fromCString(o); return this; }
     [Float] getWidth() { return width; }
     
-    [int] isVisible() { return opacity.compareFlt(Float:ZERO_POS) > 0 && width.compareFlt(Float:ZERO_POS) > 0; }
+    [int] isVisible() { return opacity.compareFlt(Flt:ZERO_POS) > 0 && width.compareFlt(Flt:ZERO_POS) > 0; }
 
 }

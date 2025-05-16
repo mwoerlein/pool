@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::graphics;
 
+use sys::core::Flt;
 use sys::core::Float;
 
 use vector::graphics::style::FillStyle;
@@ -20,7 +21,7 @@ class GraphicElement extends sys::core::utils::Owner {
     [] _initGraphicElement() {
         this.fillStyle = this.createOwn(FillStyle:CLASSNAME);
         this.strokeStyle = this.createOwn(StrokeStyle:CLASSNAME);
-        this.opacity = this.createOwnFloatFromFlt(Float:ONE_POS);
+        this.opacity = this.createOwnFloatFromFlt(Flt:ONE_POS);
     }
     
     [FillStyle] getFillStyle() { return fillStyle; }
@@ -36,7 +37,7 @@ class GraphicElement extends sys::core::utils::Owner {
     }
     
     [int] _isVisibleGraphicElement() {
-        return (opacity.compareFlt(Float:ZERO_POS) > 0)
+        return (opacity.compareFlt(Flt:ZERO_POS) > 0)
             && (fillStyle.isVisible() || strokeStyle.isVisible());
     }
     

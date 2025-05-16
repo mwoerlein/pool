@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::graphics::shape;
 
+use sys::core::Flt;
 use sys::core::Float;
 use vector::graphics::path::Path;
 
@@ -39,7 +40,7 @@ class Ring extends AbstractShape {
     [Float] getOuterRadius() { return outer; }
     [Float] getInnerRadius() { return inner; }
     
-    [int] hasInnerRadius() { return inner && (inner.compareFlt(Float:ZERO_POS) > 0); }
+    [int] hasInnerRadius() { return inner && (inner.compareFlt(Flt:ZERO_POS) > 0); }
     
     [Path] getPath() {
         Path p = this.createOwn(Path:CLASSNAME);

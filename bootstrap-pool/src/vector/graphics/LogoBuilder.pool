@@ -5,7 +5,8 @@ version = 0.1.0
 */
 namespace vector::graphics;
 
-use sys::core::Float as F;
+use sys::core::Flt;
+use sys::core::Float;
 
 use vector::graphics::path::Path;
 use vector::graphics::shape::AskewArc;
@@ -206,9 +207,9 @@ class LogoBuilder extends sys::core::Object {
     
     [AskewArc] addLogoRingArc(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring alpha, cstring angle, cstring c) {
         AskewArc shape = logo.addCRingArc(x, y, o, i, alpha, angle);
-        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
+        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
         //shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
-        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
         return shape;
     }
     
@@ -221,30 +222,30 @@ class LogoBuilder extends sys::core::Object {
             xo, yo, ro, alo, ano,
             xi, yi, ri, ali, ani
         );
-        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
+        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
         //shape.getStrokeStyle().setCColor("green");
-        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
         return shape;
     }
     
     [Ring] addLogoRing(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring c) {
         Ring shape = logo.addCRing(x, y, o, i);
-        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
-        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
         return shape;
     }
     
     [Ring] addLogoCircle(Graphic logo, cstring x, cstring y, cstring r, cstring c) {
         Ring shape = logo.addCCircle(x, y, r);
-        shape.getStrokeStyle().setOpacityFlt(F:ZERO_POS);
-        shape.getFillStyle().setCColor(c).setOpacityFlt(F:ONE_POS);
+        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
+        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
         return shape;
     }
     
     [Ring] addHelperCircle(Graphic logo, cstring x, cstring y, cstring r) {
         Ring shape = logo.addCCircle(x, y, r);
         shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
-        shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
+        shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
         return shape;
     }
     
@@ -252,7 +253,7 @@ class LogoBuilder extends sys::core::Object {
         Path path = this.createOwn(Path:CLASSNAME);
         PathShape shape = logo.addPath(path.moveCTo(x1, y1).lineCTo(x2, y2));
         shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
-        shape.getFillStyle().setOpacityFlt(F:ZERO_POS);
+        shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
         return shape;
     }
 
@@ -260,60 +261,60 @@ class LogoBuilder extends sys::core::Object {
     [] debugIntersectionCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by) {
         sys::stream::OStream debug = this.rt().err();
     
-        int dx := F:subFlts(ax, bx);
-        int dy := F:subFlts(ay, by);
+        int dx := Flt:sub(ax, bx);
+        int dy := Flt:sub(ay, by);
         
-        int a := F:mulFlts(F:ONE_NEG, F:divFlts(dy, dx));
-        int a2 := F:mulFlts(a, a);
-        int b := F:ONE_POS;
-        int b2 := F:mulFlts(b, b);
-        int a2b2 := F:addFlts(a2, b2);
-        int c := F:divFlts(
-            F:subFlts(F:mulFlts(ay, dx), F:mulFlts(ax, dy)),
+        int a := Flt:mul(Flt:ONE_NEG, Flt:div(dy, dx));
+        int a2 := Flt:mul(a, a);
+        int b := Flt:ONE_POS;
+        int b2 := Flt:mul(b, b);
+        int a2b2 := Flt:add(a2, b2);
+        int c := Flt:div(
+            Flt:sub(Flt:mul(ay, dx), Flt:mul(ax, dy)),
             dx
         );
-        int d := F:subFlts(
+        int d := Flt:sub(
             c,
-            F:addFlts(
-                F:mulFlts(a, mx),
-                F:mulFlts(b, my)
+            Flt:add(
+                Flt:mul(a, mx),
+                Flt:mul(b, my)
             )
         );
-        int d2 := F:mulFlts(d, d);
-        int r2 := F:mulFlts(r, r);
-        int ad := F:mulFlts(a, d);
-        int bd := F:mulFlts(b, d);
-        int s2 := F:subFlts(F:mulFlts(r2, a2b2), d2);
-        int comp := F:compareFlts(s2, F:ZERO_POS);
+        int d2 := Flt:mul(d, d);
+        int r2 := Flt:mul(r, r);
+        int ad := Flt:mul(a, d);
+        int bd := Flt:mul(b, d);
+        int s2 := Flt:sub(Flt:mul(r2, a2b2), d2);
+        int comp := Flt:compare(s2, Flt:ZERO_POS);
         
         if (comp < 0) {
             debug.printCString("Keine Schnittstellen").printNewline();
         } else if (comp == 0) {
             debug.printCString("Eine Schnittstelle").printNewline();
-            int x := F:addFlts(mx, F:divFlts(ad, a2b2));
-            int y := F:addFlts(my, F:divFlts(bd, a2b2));
-            int alpha := F:divFlts(F:arctanFlt(x, y), Path:RADIAN_FACTOR);
+            int x := Flt:add(mx, Flt:div(ad, a2b2));
+            int y := Flt:add(my, Flt:div(bd, a2b2));
+            int alpha := Flt:div(Flt:arctan(x, y), Path:RADIAN_FACTOR);
             debug
-                .printPtr(F:addFlts(mx, x)).printChar('/').printPtr(F:addFlts(my, y)).printChar('/').printFlt(alpha).printNewline();
+                .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
         } else {
             debug.printCString("Zwei Schnittstellen").printNewline();
-            int s := F:sqrtFlt(s2);
-            int x1 := F:divFlts(F:addFlts(ad, F:mulFlts(b, s)), a2b2);
-            int x2 := F:divFlts(F:subFlts(ad, F:mulFlts(b, s)), a2b2);
-            int y1 := F:divFlts(F:subFlts(bd, F:mulFlts(a, s)), a2b2);
-            int y2 := F:divFlts(F:addFlts(bd, F:mulFlts(a, s)), a2b2);
-            int alpha1 := F:divFlts(F:arctanFlt(x1, y1), Path:RADIAN_FACTOR);
-            int alpha2 := F:divFlts(F:arctanFlt(x2, y2), Path:RADIAN_FACTOR);
+            int s := Flt:sqrt(s2);
+            int x1 := Flt:div(Flt:add(ad, Flt:mul(b, s)), a2b2);
+            int x2 := Flt:div(Flt:sub(ad, Flt:mul(b, s)), a2b2);
+            int y1 := Flt:div(Flt:sub(bd, Flt:mul(a, s)), a2b2);
+            int y2 := Flt:div(Flt:add(bd, Flt:mul(a, s)), a2b2);
+            int alpha1 := Flt:div(Flt:arctan(x1, y1), Path:RADIAN_FACTOR);
+            int alpha2 := Flt:div(Flt:arctan(x2, y2), Path:RADIAN_FACTOR);
             debug
-                .printPtr(F:addFlts(mx, x1)).printChar('/').printPtr(F:addFlts(my, y1)).printChar('/')
-                .printFlt(alpha1).printChar('/').printFlt(F:subFlts(0x42b40000,F:addFlts(alpha1,alpha1))).printChar(' ')
-                .printPtr(F:addFlts(mx, x2)).printChar('/').printPtr(F:addFlts(my, y2)).printChar('/')
-                .printFlt(alpha2).printChar('/').printFlt(F:subFlts(0x42b40000,F:addFlts(alpha2,alpha2))).printNewline();
+                .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
+                .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
+                .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
+                .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
         }
     }
     
     [int] toFlt(cstring s) {
-        F tmp = this.rt().createInstance(F:CLASSNAME);
+        Float tmp = this.rt().createInstance(Float:CLASSNAME);
         tmp.fromCString(s);
         int ret = tmp.getFlt();
         tmp.destroy();

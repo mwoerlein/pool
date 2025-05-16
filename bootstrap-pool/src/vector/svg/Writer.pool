@@ -6,7 +6,7 @@ version = 0.1.0
 namespace vector::svg;
 
 use sys::core::anycollection::AnyIterator;
-use sys::core::Float;
+use sys::core::Flt;
 use sys::core::String;
 use sys::stream::OStream;
 
@@ -46,8 +46,8 @@ class Writer extends sys::core::utils::Owner {
         viewBox.destroy();
             
          // 2. * viewport->getY() + viewport->getHeight();
-        int yBase = Float:addFlts(
-            Float:addFlts(viewport.getY().getFlt(), viewport.getY().getFlt()),
+        int yBase = Flt:add(
+            Flt:add(viewport.getY().getFlt(), viewport.getY().getFlt()),
             viewport.getHeight().getFlt()
         );
         {
@@ -80,7 +80,7 @@ class Writer extends sys::core::utils::Owner {
     [Element] addCircleElement(Element xml, Ring r, int yBase) {
         Element child = xml.newChild().setCName("circle")
             .addCAttribute("cx", r.getX())
-            .addCAttributeFlt("cy", Float:subFlts(yBase, r.getY().getFlt()))
+            .addCAttributeFlt("cy", Flt:sub(yBase, r.getY().getFlt()))
             .addCAttribute("r", r.getRadius());
         return this.applyShapeStyle(child, r.shape());
     }
@@ -88,7 +88,7 @@ class Writer extends sys::core::utils::Owner {
     [Element] addRectElement(Element xml, Rectangle r, int yBase) {
         Element child = xml.newChild().setCName("rect")
             .addCAttribute("x", r.getX())
-            .addCAttributeFlt("y", Float:subFlts(Float:subFlts(yBase, r.getY().getFlt()), r.getHeight().getFlt()))
+            .addCAttributeFlt("y", Flt:sub(Flt:sub(yBase, r.getY().getFlt()), r.getHeight().getFlt()))
             .addCAttribute("width", r.getWidth())
             .addCAttribute("height", r.getHeight());
         return this.applyShapeStyle(child, r.shape());
@@ -107,15 +107,15 @@ class Writer extends sys::core::utils::Owner {
                 PathElement e = it.next();
                 if (e.isMoveTo()) {
                     d.printChar('M')
-                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Float:subFlts(yBase, e.getY().getFlt()));
+                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Flt:sub(yBase, e.getY().getFlt()));
                 } else if (e.isLineTo()) {
                     d.printChar('L')
-                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Float:subFlts(yBase, e.getY().getFlt())); 
+                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Flt:sub(yBase, e.getY().getFlt())); 
                 } else if (e.isCurveTo()) {
                     d.printChar('C')
-                        .printChar(' ').print(e.getCX1()).printChar(',').printFlt(Float:subFlts(yBase, e.getCY1().getFlt()))
-                        .printChar(' ').print(e.getCX2()).printChar(',').printFlt(Float:subFlts(yBase, e.getCY2().getFlt()))
-                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Float:subFlts(yBase, e.getY().getFlt()));
+                        .printChar(' ').print(e.getCX1()).printChar(',').printFlt(Flt:sub(yBase, e.getCY1().getFlt()))
+                        .printChar(' ').print(e.getCX2()).printChar(',').printFlt(Flt:sub(yBase, e.getCY2().getFlt()))
+                        .printChar(' ').print(e.getX()).printChar(',').printFlt(Flt:sub(yBase, e.getY().getFlt()));
                 } else if (e.isClose()) { d.printChar('Z'); }
                 else { /* unknown element */ }
                 d.printChar(' ');
@@ -130,7 +130,7 @@ class Writer extends sys::core::utils::Owner {
     [Element] applyShapeStyle(Element e, AbstractShape s) {
         this.addFillStyle(e, s.getFillStyle());
         this.addStrokeStyle(e, s.getStrokeStyle());
-        if (s.getOpacity().compareFlt(Float:ONE_POS) < 0) {
+        if (s.getOpacity().compareFlt(Flt:ONE_POS) < 0) {
             e.addCAttribute("opacity", s.getOpacity());
         }
         return e;

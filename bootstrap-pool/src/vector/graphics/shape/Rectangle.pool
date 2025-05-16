@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::graphics::shape;
 
+use sys::core::Flt;
 use sys::core::Float;
 use vector::graphics::path::Path;
 
@@ -31,8 +32,8 @@ class Rectangle extends AbstractShape {
     [Path] getPath() {
         int x1 := x.getFlt();
         int y1 := x.getFlt();
-        int x2 := Float:addFlts(x1, width.getFlt());
-        int y2 := Float:addFlts(y1, height.getFlt());
+        int x2 := Flt:add(x1, width.getFlt());
+        int y2 := Flt:add(y1, height.getFlt());
         
         Path p = this.createOwn(Path:CLASSNAME);
         return p

@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::graphics::shape;
 
+use sys::core::Flt;
 use sys::core::Float;
 use vector::graphics::path::Path;
 
@@ -32,9 +33,9 @@ class AskewArc extends AbstractShape {
         // assert radiusOuter > radiusInner >= 0.0
         // assert -360.0 < angle < 360.0
         
-        if (angleOuter.compareFlt(Float:ZERO_POS) < 0) {
+        if (angleOuter.compareFlt(Flt:ZERO_POS) < 0) {
             alphaOuter.addFloat(angleOuter);
-            angleOuter.mulFlt(Float:ONE_NEG);
+            angleOuter.mulFlt(Flt:ONE_NEG);
         }
         // TODO: normalizeDegree(alpha)
         return this;
@@ -57,13 +58,13 @@ class AskewArc extends AbstractShape {
         // assert radiusOuter > radiusInner >= 0.0
         // assert -360.0 < angle < 360.0
         
-        if (angleOuter.compareFlt(Float:ZERO_POS) < 0) {
+        if (angleOuter.compareFlt(Flt:ZERO_POS) < 0) {
             alphaOuter.addFloat(angleOuter);
-            angleOuter.mulFlt(Float:ONE_NEG);
+            angleOuter.mulFlt(Flt:ONE_NEG);
         }
-        if (angleInner.compareFlt(Float:ZERO_POS) < 0) {
+        if (angleInner.compareFlt(Flt:ZERO_POS) < 0) {
             alphaInner.addFloat(angleInner);
-            angleInner.mulFlt(Float:ONE_NEG);
+            angleInner.mulFlt(Flt:ONE_NEG);
         }
         // TODO: normalizeDegree(alpha)
         return this;
@@ -78,14 +79,14 @@ class AskewArc extends AbstractShape {
             yOuter.getFlt(),
             radiusOuter.getFlt(),
             alphaOuter.getFlt(),
-            Float:addFlts(alphaOuter.getFlt(), angleOuter.getFlt()),
+            Flt:add(alphaOuter.getFlt(), angleOuter.getFlt()),
             false
         );
         p.arcFltTo(
             xInner.getFlt(),
             yInner.getFlt(),
             radiusInner.getFlt(),
-            Float:addFlts(alphaInner.getFlt(), angleInner.getFlt()),
+            Flt:add(alphaInner.getFlt(), angleInner.getFlt()),
             alphaInner.getFlt(),
             true
         );

@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace vector::graphics::style;
 
+use sys::core::Flt;
 use sys::core::Float;
 use sys::core::String;
 
@@ -16,7 +17,7 @@ class FillStyle extends sys::core::utils::Owner {
     [] __init() { this._initFillStyle(); }
     [] _initFillStyle() {
         this.color = this.createOwnStringFromCString("black");
-        this.opacity = this.createOwnFloatFromFlt(Float:ZERO_POS);
+        this.opacity = this.createOwnFloatFromFlt(Flt:ZERO_POS);
     }
     
     [FillStyle] setColor(String c) { color.assignString(c); return this; }
@@ -28,6 +29,6 @@ class FillStyle extends sys::core::utils::Owner {
     [FillStyle] setCOpacity(cstring o) { opacity.fromCString(o); return this; }
     [Float] getOpacity() { return opacity; }
     
-    [int] isVisible() { return opacity.compareFlt(Float:ZERO_POS) > 0; }
+    [int] isVisible() { return opacity.compareFlt(Flt:ZERO_POS) > 0; }
 
 }
