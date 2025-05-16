@@ -1,0 +1,274 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+use sys::core::utils::Bitset;
+
+class Flt {
+
+    int NAN := 0xffffffff;
+    int INF_POS := 0x7f800000;
+    int INF_NEG := 0xff800000;
+    
+    int ZERO_POS := 0x00000000;
+    int ZERO_NEG := 0x80000000;
+    int ONE_POS := 0x3f800000;
+    int ONE_NEG := 0xbf800000;
+    int SQRT_TWO_POS := 0x3fb504f3;
+    int SQRT_TWO_NEG := 0xbfb504f3;
+
+    //// creation functions ////
+    global [int] fromInt(int n) {
+        int f = 0;
+        __pasm__(<"
+            pushl %eax
+            .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": n}, {"%eax": f});
+        return f;
+    }
+    
+    global [int] neg(int a) {
+        return Flt:sub(Flt:ZERO_POS, a);
+    }
+    
+    global [int] abs(int a) {
+        if (Flt:compare(a, Flt:ZERO_POS) < 0) { return Flt:neg(a); }
+        return a;
+    }
+    
+    //// arithmetic functions ////
+    global [int] add(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x04; .byte 0x24; #//fadd (%esp) #page 886
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] sub(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x24; .byte 0x24; #//fsub (%esp) #page 969
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] mul(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd8; .byte 0x0c; .byte 0x24; #//fmul (%esp) #page 935
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] div(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %ebx; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %eax, (%esp); .byte 0xd8; .byte 0x3c; .byte 0x24; #//fdivr (%esp) #page 911
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] sqrt(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xfa; #//fsqrt #page 995
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    //// trigonometric functions ////
+    global [int] sin(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xfe; #//fsin #page 955
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] cos(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xff; #//fcos #page 905
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] tan(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf2; #//fptan #page 944
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] arctan(int a, int b) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %ebx, (%esp); .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf3; #//fpatan #page 939
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    //// round functions ////
+    global [int] floor(int a) {
+        int ret = 0;
+        __pasm__(<"
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+
+            // store fpu control register
+            //subl 4, %esp
+            .byte 0x9b; .byte 0xd9; .byte 0x3c; .byte 0x24; #// fstcw (%esp) #page 963
+            
+            // set round down mode
+            movl (%esp), %eax
+            andl 0xf3ff, %eax
+            orl 0x0400, %eax
+            pushl %eax
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            
+            // store floor(log10(abs(f)))
+            .byte 0xdb; .byte 0x1c; .byte 0x24; #// fistp (%esp) #page 922
+            popl %eax
+            
+            // restore fpu control register
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            addl 4, %esp
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    //// comparator functions ////
+    global [int] isNaN(int a) {
+        return (Bitset:and(Bitset:rshift(a, 23), 0xff) == 0xff) && (Bitset:and(a, 0x7fffff) != 0);
+    }
+    
+    // complete order: NaN < -Inf < number < +Inf
+    global [int] compare(int a, int b) {
+    
+        int expA = Bitset:and(Bitset:rshift(a, 23), 0xff);
+        int expB = Bitset:and(Bitset:rshift(b, 23), 0xff);
+          
+        if (expA == 0xff) { // a is special
+            int signA = Bitset:rshift(a, 31);
+            int mantA = Bitset:and(a, 0x7fffff);
+            if (expB == 0xff) { // b is special
+                int signB = Bitset:rshift(b, 31);
+                int mantB = Bitset:and(b, 0x7fffff);
+                if (mantA) { // a == NaN
+                    if (mantB) { return 0; } //b == NaN
+                    return -1;
+                }
+                if (signA) { // a == -Inf
+                    if (mantB) { return 1; } // b == NaN
+                    if (signB) { return 0; } // b == -Inf
+                    return -1;
+                }
+                // a == +Inf
+                if (mantB) { return 1; } // b == NaN
+                if (!signB) { return 0; } // b == +Inf
+                return 1;
+            }
+            if (mantA) { return -1; } // a == NaN
+            if (signA) { return -1; } // a == -Inf
+            return 1; // a == +Inf
+        }
+        if (expB == 0xff) { // b is special
+            int signB = Bitset:rshift(b, 31);
+            int mantB = Bitset:and(b, 0x7fffff);
+            if (mantB) { return 1; } // b == NaN
+            if (signB) { return 1; } // b == -Inf
+            return -1; // b == +Inf
+        }
+        
+        int ret = 0;
+        __pasm__(<"
+            pushl %ebx; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            addl 8, %esp
+            .byte 0xdf; .byte 0xf1; #//fcomip #page 902
+            .byte 0xdd; .byte 0xd8; #//fstp st(0) #page 961 # to clear stack
+            ja     _scf_fltcmp_ret_pos
+            jb     _scf_fltcmp_ret_neg
+            movl 0, %eax
+            jmp    _scf_fltcmp_ret
+        _scf_fltcmp_ret_neg:
+            movl -1, %eax
+            jmp    _scf_fltcmp_ret
+        _scf_fltcmp_ret_pos:
+            movl 1, %eax
+        _scf_fltcmp_ret:
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
+    //// other functions ////
+    global [int] firstDigitExponent(int a) {
+        int ret = 0;
+        __pasm__(<"
+            // compute log10(abs(f)) as ld(abs(f))/ld(10) 
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            andl 0x7fffffff, %eax; pushl %eax //ignore sign
+            .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            //addl 4, %esp
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xd9; .byte 0xe9; #//fldl2t #page 929
+            .byte 0xde; .byte 0xf9; #//fdivp #page 908
+
+            // store fpu control register
+            //subl 4, %esp
+            .byte 0x9b; .byte 0xd9; .byte 0x3c; .byte 0x24; #// fstcw (%esp) #page 963
+            
+            // set round down mode
+            movl (%esp), %eax
+            andl 0xf3ff, %eax
+            orl 0x0400, %eax
+            pushl %eax
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            
+            // store floor(log10(abs(f)))
+            .byte 0xdb; .byte 0x1c; .byte 0x24; #// fistp (%esp) #page 922
+            popl %eax
+            
+            // restore fpu control register
+            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
+            addl 4, %esp
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+}

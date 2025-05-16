@@ -6,7 +6,7 @@ version = 0.1.0
 namespace sys::stream;
 
 use sys::core::BigInt;
-use sys::core::Float;
+use sys::core::Flt;
 use sys::core::Object;
 use sys::core::String;
 use sys::core::utils::Bitset;
@@ -74,7 +74,7 @@ class OStream extends Object {
         }
         
         // adjust fraction to get first non-zero digit
-        int firstDigitExponent = Float:firstDigitExponentFlt(f);
+        int firstDigitExponent = Flt:firstDigitExponent(f);
         if (firstDigitExponent > 0) {
             denominator.shiftDigits(firstDigitExponent);
         } else {
