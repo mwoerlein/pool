@@ -17,8 +17,12 @@ class Flt {
     int ZERO_NEG := 0x80000000;
     int ONE_POS := 0x3f800000;
     int ONE_NEG := 0xbf800000;
+    int TWO_POS := 0x40000000;
+    int TWO_NEG := 0xc0000000;
     int SQRT_TWO_POS := 0x3fb504f3;
     int SQRT_TWO_NEG := 0xbfb504f3;
+    
+    int RADIAN_FACTOR := 0x3c8efa35; // PI / 180.
 
     //// creation functions ////
     global [int] fromInt(int n) {
@@ -38,6 +42,16 @@ class Flt {
     
     global [int] abs(int a) {
         if (Flt:compare(a, Flt:ZERO_POS) < 0) { return Flt:neg(a); }
+        return a;
+    }
+    
+    global [int] min(int a, int b) {
+        if (Flt:compare(a, b) < 0) { return a; }
+        return b;
+    }
+    
+    global [int] max(int a, int b) {
+        if (Flt:compare(a, b) < 0) { return b; }
         return a;
     }
     
@@ -132,7 +146,21 @@ class Flt {
         return ret;
     }
     
-    global [int] arctan(int a, int b) {
+    global [int] arcsin(int a) {
+        int s := Flt:sqrt(Flt:sub(Flt:ONE_POS, Flt:mul(a, a)));
+        return Flt:arctan2(a, s);
+    }
+    
+    global [int] arccos(int a) {
+        int s := Flt:sqrt(Flt:sub(Flt:ONE_POS, Flt:mul(a, a)));
+        return Flt:arctan2(s, a);
+    }
+    
+    global [int] arctan(int a) {
+        return Flt:arctan2(a, Flt:ONE_POS);
+    }
+    
+    global [int] arctan2(int a, int b) {
         int ret = 0;
         __pasm__(<"
             pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
@@ -142,6 +170,14 @@ class Flt {
             popl %eax
         ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
         return ret;
+    }
+    
+    global [int] degToRad(int a) {
+        return Flt:mul(a, Flt:RADIAN_FACTOR);
+    }
+    
+    global [int] radToDeg(int a) {
+        return Flt:div(a, Flt:RADIAN_FACTOR);
     }
     
     //// round functions ////
