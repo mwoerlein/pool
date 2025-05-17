@@ -6,261 +6,402 @@ version = 0.1.0
 namespace vector::graphics;
 
 use sys::core::Flt;
-use sys::core::Float;
+use sys::core::String;
 
 use vector::graphics::path::Path;
-use vector::graphics::shape::AskewArc;
-use vector::graphics::shape::Ring;
 use vector::graphics::shape::PathShape;
-use vector::graphics::LogoBuilder as LB;
 
-class LogoBuilder extends sys::core::Object {
+class LogoBuilder extends sys::core::utils::Owner {
 
-    global cstring OUTLINE_COLOR := "#6d4120";
-    //global cstring OUTLINE_COLOR := "black";
-    global cstring RING_COLOR := "#fc9b4c";
-    global cstring RING_SHADOW_COLOR := "#f78537";
-    global cstring RING_BACKGROUND_COLOR := "#fcd4e1";
-    global cstring BACKGROUND_COLOR := "#fcd4ee";
-    global cstring BACKGROUND_SHADOW_COLOR := "#f9c5e9";
-    global cstring HIGHLIGHT_COLOR := "#ffffff";
+    int viewWidth;
+    int shiftX;
+    int shiftY;
+    int outlineWidth;
+    int ringRadius;
+    int ringWidth;
+    int ringShadowScale1;
+    int ringShadowScale2;
+    int cornerRadius;
+    int cornerShadowScale;
+    int highlightWidth;
     
-    global cstring CORNER_CP := "150";
-    global cstring CORNER_CN := "-150";
-    global cstring CORNER_R1 := "100";
-    global cstring CORNER_R2 := "90";
-    global cstring CORNER_SCP := "129";
-    global cstring CORNER_SCN := "-129";
-    global cstring CORNER_SR := "95";
-
-    global cstring RING_RHO := "260";
-    global cstring RING_RHI := "250";
-    global cstring RING_ROO := "250";
-    global cstring RING_ROI := "240";
-    global cstring RING_RS := "160";
-    global cstring RING_RII := "145";
-    global cstring RING_RIO := "135";
+    sys::stream::OStream debug;
     
-    global cstring SHADOW_CX := "-65";
-    global cstring SHADOW_CY := "-35";
-    global cstring SHADOW_R := "275";
-
-    // Helper
-    global cstring HELPER_COLOR := "red";
+    String outlineColor;
+    String ringColor;
+    String ringShadowColor;
+    String ringBackgroundColor;
+    String cornerColor;
+    String cornerShadowColor;
+    String highlightColor;
     
-    global cstring P1P := "165"; 
-    global cstring P1N := "-165"; 
-    global cstring P2P := "179.14"; 
-    global cstring P2N := "-179.14"; 
-    global cstring P3P := "250"; 
-    global cstring P3N := "-250";
+    // Corner Coordinates
+    int cx;
+    int cy;
+    int csx;
+    int csy;
+    int cor;
+    int cir;
+    int csr;
+    int coa;
+    int cia;
+    int csa;
+    
+    // Ring Coordinates
+    int rx; 
+    int ry;
+    int rsx; 
+    int rsy;
+     
+    int r1r; // inner 
+    int r2r; // inner + outlineWidth
+    int r3r; // inner + 2.5*outlineWidth = inner shadow
+    int r4r; // outer - outlineWidth
+    int r5r; // outer
+    int r6r; // outer + outlineWidth = highlight outer
+    int rsr;
+    
+    int r1a1;
+    int r1a2;
+    int r2a1;
+    int r2a2;
+    int r3a1;
+    int r3a2;
+    int r4a1;
+    int r4a2;
+    int r5a1;
+    int r5a2;
+    int r5a3;
+    int r5a4;
+    int r5a5;
+    int r6a1;
+    int r6a2;
+    
+    int r4as1;
+    int r4as2;
+    
+    int rsa1;
+    int rsa2;
+    int rsa3;
+    int rsa4;
+    int rsa5;
+    
+    [] __init() { this._initBuilder(); }
+    [] _initBuilder() {
+        shiftX = shiftY = Flt:fromInt(0);
+        viewWidth = Flt:fromInt(400);
+        outlineWidth = Flt:fromInt(10);
+        ringRadius = Flt:fromInt(250);
+        ringWidth = Flt:fromInt(115);
+        ringShadowScale1 = 0x3fc00000; // 1.5
+        ringShadowScale2 = 0x3dae147b; // 0.085
+        cornerRadius = Flt:fromInt(100);
+        cornerShadowScale = Flt:fromInt(20);
+        highlightWidth = Flt:fromInt(60);
+        
+        //debug = this.rt().err();
+        
+        this.colored();
+        //this.asIcon();
+        //this.monoLight().asIcon();
+        //this.monoDark().asIcon();
+        
+    }
+    
+    [LogoBuilder] asIcon() {
+        if (Flt:compare(viewWidth, Flt:fromInt(16)) > 0) {
+            int scale := Flt:div(Flt:fromInt(14), ringRadius);
+            shiftX = shiftY = viewWidth = Flt:fromInt(16);
+            
+            outlineWidth = Flt:mul(outlineWidth, scale);
+            ringRadius = Flt:mul(ringRadius, scale);
+            ringWidth = Flt:mul(ringWidth, scale);
+            cornerRadius = Flt:mul(cornerRadius, scale);
+            highlightWidth = Flt:mul(highlightWidth, scale);
+        }
+        return this;
+    }
+    
+    [LogoBuilder] colored() {
+        outlineColor = this.createStringFromCString("#6d4120");
+        ringColor = this.createStringFromCString("#fc9b4c");
+        ringShadowColor = this.createStringFromCString("#f78537");
+        ringBackgroundColor = this.createStringFromCString("#fcd4e1");
+        cornerColor = this.createStringFromCString("#fcd4ee");
+        cornerShadowColor = this.createStringFromCString("#f9c5e9");
+        highlightColor = this.createStringFromCString("#ffffff");
+        return this;
+    }
+    
+    [LogoBuilder] monoLight() {
+        outlineColor = highlightColor = null;
+        ringColor = ringShadowColor = ringBackgroundColor = null;
+        cornerColor = cornerShadowColor = null;
+        
+        outlineColor = ringColor = this.createStringFromCString("#6c707e");
+        return this;
+    }
+    
+    [LogoBuilder] monoDark() {
+        outlineColor = highlightColor = null;
+        ringColor = ringShadowColor = ringBackgroundColor = null;
+        cornerColor = cornerShadowColor = null;
+        
+        outlineColor = ringColor = this.createStringFromCString("#ced0d6");
+        return this;
+    }
     
     [Graphic] createLogo() {
         Graphic logo = this.rt().createInstance(Graphic:CLASSNAME);
-        logo.setCViewport("-400", "-400", "400", "400");
-        
-        // Corners
-        this.addLogoRing(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CP, LB:CORNER_R2, LB:BACKGROUND_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_SCP, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
-        
-        this.addLogoRing(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_CP, LB:CORNER_CN, LB:CORNER_R2, LB:BACKGROUND_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_SCP, LB:CORNER_SCN, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
-        
-        this.addLogoRing(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CN, LB:CORNER_R2, LB:BACKGROUND_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCN, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
-        
-        this.addLogoRing(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R1, LB:CORNER_R2, LB:OUTLINE_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_CN, LB:CORNER_CP, LB:CORNER_R2, LB:BACKGROUND_COLOR);
-        this.addLogoCircle(logo, LB:CORNER_SCN, LB:CORNER_SCP, LB:CORNER_SR, LB:BACKGROUND_SHADOW_COLOR);
-        
-        // Ring
-        this.addLogoCircle(logo, "0", "0", LB:RING_RIO, LB:RING_BACKGROUND_COLOR);
-        this.addLogoRing(logo, "0", "0", LB:RING_ROO, LB:RING_ROI, LB:OUTLINE_COLOR);
-        this.addLogoRing(logo, "0", "0", LB:RING_RII, LB:RING_RIO, LB:OUTLINE_COLOR);
-        this.addLogoRing(logo, "0", "0", LB:RING_ROI, LB:RING_RII, LB:RING_COLOR);
-        this.addLogoRing(logo, "0", "0", LB:RING_RS, LB:RING_RII, LB:RING_SHADOW_COLOR);
-        
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_ROI, "353", "137",
-            LB:SHADOW_CX, LB:SHADOW_CY, LB:SHADOW_R, "7", "109,5",
-            LB:RING_SHADOW_COLOR
+        logo.setFltViewport(
+            Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth),
+            Flt:add(shiftX, viewWidth), Flt:add(shiftY, viewWidth)
         );
+        
+        this._initializeCoordinates();
+        
+        int f0 = Flt:fromInt(0);
+        int f45 = Flt:fromInt(45);
+        int f90 = Flt:fromInt(90);
+        int f135 = Flt:fromInt(135);
+        int f180 = Flt:fromInt(180);
+        int f225 = Flt:fromInt(225);
+        int f270 = Flt:fromInt(270);
+        int f315 = Flt:fromInt(315);
+        
+        Path outline = logo.createOwn(Path:CLASSNAME);
+        Path corner = logo.createOwn(Path:CLASSNAME);
+        Path cornerShadow = logo.createOwn(Path:CLASSNAME);
+        Path highlight = logo.createOwn(Path:CLASSNAME);
+        Path ring = logo.createOwn(Path:CLASSNAME);
+        Path ringShadow = logo.createOwn(Path:CLASSNAME);
+        Path ringBackground = logo.createOwn(Path:CLASSNAME);
+        
+        // scaffolding
+        if (debug) {
+            cstring c1 = "red";
+            cstring c2 = "green";
+            
+            logo.addFltCircle(rx, ry, r1r).getStrokeStyle().setCColor(c1);
+            logo.addFltCircle(rx, ry, r2r).getStrokeStyle().setCColor(c1);
+            logo.addFltCircle(rx, ry, r3r).getStrokeStyle().setCColor(c2);
+            logo.addFltCircle(rx, ry, r4r).getStrokeStyle().setCColor(c1);
+            logo.addFltCircle(rx, ry, r5r).getStrokeStyle().setCColor(c1);
+            logo.addFltCircle(rx, ry, r6r).getStrokeStyle().setCColor(c1);
+            logo.addFltLine(r5r, r5r, Flt:neg(r5r), Flt:neg(r5r)).getStrokeStyle().setCColor(c1);
+            logo.addFltLine(r5r, Flt:neg(r5r), Flt:neg(r5r), r5r).getStrokeStyle().setCColor(c1);
+            
+            logo.addFltCircle(rsx, rsy, rsr).getStrokeStyle().setCColor(c2);
+            logo.addFltLine(rx, ry, rsx, rsy).getStrokeStyle().setCColor(c2);
+            //logo.addFltLine(Flt:add(rsx, rsr), Flt:add(rsy, rsr), Flt:sub(rsx, rsr), Flt:sub(rsy, rsr)).getStrokeStyle().setCColor(c2);
+            //logo.addFltLine(Flt:add(rsx, rsr), Flt:sub(rsy, rsr), Flt:sub(rsx, rsr), Flt:add(rsy, rsr)).getStrokeStyle().setCColor(c2);
+            
+            logo.addFltCircle(cx, cy, cor).getStrokeStyle().setCColor(c1);
+            logo.addFltCircle(cx, cy, cir).getStrokeStyle().setCColor(c1);
+            logo.addFltLine(Flt:add(cx, cor), Flt:sub(cy, cor), Flt:sub(cx, cor), Flt:add(cy, cor)).getStrokeStyle().setCColor(c1);
+            
+            logo.addFltCircle(csx, csy, csr).getStrokeStyle().setCColor(c2);
+            logo.addFltLine(Flt:add(csx, csr), Flt:sub(csy, csr), Flt:sub(csx, csr), Flt:add(csy, csr)).getStrokeStyle().setCColor(c2);
+            
+            int hd1 = Flt:mul(highlightWidth, Flt:SQRT_TWO_POS);
+            int hd2 = Flt:mul(Flt:sub(highlightWidth, outlineWidth), Flt:SQRT_TWO_POS);
+            logo.addFltLine(r5r, Flt:sub(r5r, hd1), Flt:sub(hd1, r5r), Flt:neg(r5r)).getStrokeStyle().setCColor(c1);
+            logo.addFltLine(r5r, Flt:sub(r5r, hd2), Flt:sub(hd2, r5r), Flt:neg(r5r)).getStrokeStyle().setCColor(c1);
+            logo.addFltLine(Flt:sub(r5r, hd1), r5r, Flt:neg(r5r), Flt:sub(hd1, r5r)).getStrokeStyle().setCColor(c1);
+            logo.addFltLine(Flt:sub(r5r, hd2), r5r, Flt:neg(r5r), Flt:sub(hd2, r5r)).getStrokeStyle().setCColor(c1);
+        }
+    
+        int r1a2s = Flt:sub(f45, r1a2);
+        int r2a2s = Flt:sub(f45, r2a2);
+        int r3a2s = Flt:sub(f45, r3a2);
+        int r4a2s = Flt:sub(f45, r4a2);
+        int r5a4s = Flt:sub(f45, r5a4);
 
-        // highlight
-        //*/
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_RHO, "31.6340618133544921875", "26.731876373291015625",
-            "0", "0", LB:RING_RIO, "18.5628814697265625", "52.874237060546875",
-            LB:OUTLINE_COLOR
-        );
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_ROO, "33.43834686279296875", "23.1233062744140625",
-            "0", "0", LB:RING_RII, "24.784275054931640625", "40.43144989013671875",
-            LB:HIGHLIGHT_COLOR
-        );
+        // build outer shape
+        outline
+            .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(f0, r5a4s), Flt:add(f0, r5a4s), false)
+            .arcFltTo(Flt:add(shiftX, cx), Flt:add(shiftY, cy), cor, Flt:sub(f45, coa), Flt:add(f45, coa), true)
+            .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(f90, r5a4s), Flt:add(f90, r5a4s), true)
+            .arcFltTo(Flt:add(shiftX, cx), Flt:sub(shiftY, cy), cor, Flt:sub(f135, coa), Flt:add(f135, coa), true)
+            .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(f180, r5a4s), Flt:add(f180, r5a4s), true)
+            .arcFltTo(Flt:sub(shiftX, cx), Flt:sub(shiftY, cy), cor, Flt:sub(f225, coa), Flt:add(f225, coa), true)
+            .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(f270, r5a4s), Flt:add(f270, r5a4s), true)
+            .arcFltTo(Flt:sub(shiftX, cx), Flt:add(shiftY, cy), cor, Flt:sub(f315, coa), Flt:add(f315, coa), true)
+            .close();
         
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_RHO, "121.6340618133544921875", "26.731876373291015625",
-            "0", "0", LB:RING_RIO, "108.5628814697265625", "52.874237060546875",
-            LB:OUTLINE_COLOR
-        );
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_ROO, "123.43834686279296875", "23.1233062744140625",
-            "0", "0", LB:RING_RII, "114.784275054931640625", "40.43144989013671875",
-            LB:HIGHLIGHT_COLOR
-        );
+        // cut central ring
+        outline
+            .circleFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r1r, false)
+            .close();
+        ringBackground
+            .circleFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r1r, false)
+            .close();
         
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_RHO, "211.6340618133544921875", "26.731876373291015625",
-            "0", "0", LB:RING_RIO, "198.5628814697265625", "52.874237060546875",
-            LB:OUTLINE_COLOR
-        );
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_ROO, "213.43834686279296875", "23.1233062744140625",
-            "0", "0", LB:RING_RII, "204.784275054931640625", "40.43144989013671875",
-            LB:HIGHLIGHT_COLOR
-        );
+        int curX = cx;
+        int curY = cy;
+        int curSX = csx;
+        int curSY = csy;
+        int alpha = 0;
+        int lineTo = false;
+        while (alpha < 360) {
+            int curA = Flt:fromInt(alpha + 45);
+            int curB = Flt:fromInt(alpha);
+            // build corner
+            if (cornerColor && cornerColor.equals(outlineColor)) { /* skip corner */  }
+            else {
+                outline
+                    .arcFltTo(Flt:add(shiftX, curX), Flt:add(shiftY, curY), cir, Flt:sub(curA, cia), Flt:add(curA, cia), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:add(curA, r5a4), Flt:add(curA, r5a2), true)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r6r, Flt:add(curA, r6a2), Flt:sub(curA, r6a2), true)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(curA, r5a2), Flt:sub(curA, r5a4), true)
+                    .close();
+                corner
+                    .arcFltTo(Flt:add(shiftX, curX), Flt:add(shiftY, curY), cir, Flt:sub(curA, cia), Flt:add(curA, cia), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:add(curA, r5a4), Flt:add(curA, r5a2), true)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r6r, Flt:add(curA, r6a2), Flt:sub(curA, r6a2), true)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(curA, r5a2), Flt:sub(curA, r5a4), true)
+                    .close();
+                cornerShadow
+                    .arcFltTo(Flt:add(shiftX, curSX), Flt:add(shiftY, curSY), csr, Flt:sub(curA, csa), Flt:add(curA, csa), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:add(curA, r5a3), Flt:add(curA, r5a2), true)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r6r, Flt:add(curA, r6a2), Flt:sub(curA, r6a2), true)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:sub(curA, r5a2), Flt:sub(curA, r5a3), true)
+                    .close();
+            }
+            
+            // build highlight 
+            if (highlightColor && highlightColor.equals(outlineColor)) { /* skip highlight */ }
+            else {
+                outline
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:add(curA, r5a1), Flt:sub(curA, r5a1), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r, Flt:sub(curA, r2a1), Flt:add(curA, r2a1), true)
+                    .close();
+                highlight
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r, Flt:add(curA, r5a1), Flt:sub(curA, r5a1), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r, Flt:sub(curA, r2a1), Flt:add(curA, r2a1), true)
+                    .close();
+            }
+            
+            // build ring
+            if (ringColor && ringColor.equals(outlineColor)) { /* skip ring */ }
+            else {
+                outline
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r, Flt:add(curB, r4a2s), Flt:sub(curB, r4a2s), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r, Flt:sub(curB, r2a2s), Flt:add(curB, r2a2s), true)
+                    .close();
+                ring
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r, Flt:add(curB, r4a2s), Flt:sub(curB, r4a2s), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r, Flt:sub(curB, r2a2s), Flt:add(curB, r2a2s), true)
+                    .close();
+                ringShadow
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r3r, Flt:add(curB, r3a2s), Flt:sub(curB, r3a2s), false)
+                    .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r, Flt:sub(curB, r2a2s), Flt:add(curB, r2a2s), true)
+                    .close();
+            }
+            
+            int tmp = curY; curY = Flt:neg(curX); curX = tmp;
+            int tmpS = curSY; curSY = Flt:neg(curSX); curSX = tmpS;
+            alpha += 90;
+        }
         
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_RHO, "301.6340618133544921875", "26.731876373291015625",
-            "0", "0", LB:RING_RIO, "288.5628814697265625", "52.874237060546875",
-            LB:OUTLINE_COLOR
-        );
-        this.addLogoAskewArc(logo,
-            "0", "0", LB:RING_ROO, "303.43834686279296875", "23.1233062744140625",
-            "0", "0", LB:RING_RII, "294.784275054931640625", "40.43144989013671875",
-            LB:HIGHLIGHT_COLOR
-        );
-        //*/
+        // add global shadow to ring
+        if (ringColor && ringColor.equals(outlineColor)) { /* skip ring */ }
+        else {
+            ringShadow
+                .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r, r4as1, Flt:sub(f45, r4a2), false)
+                .arcFltTo(Flt:add(shiftX, rsx), Flt:add(shiftY, rsy), rsr, rsa2, rsa1, true)
+                .close();
+            ringShadow
+                .arcFltTo(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r, Flt:add(f45, r4a2), Flt:min(r4as2, Flt:sub(f135, r4a2)), false)
+                .arcFltTo(Flt:add(shiftX, rsx), Flt:add(shiftY, rsy), rsr, Flt:min(rsa4, rsa5), rsa3, true)
+                .close();
+        }
         
-        /*/
-//        this.addHelperLine(logo, LB:P1P, LB:P3P, LB:P3N, LB:P1N);
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RHO),
-            this.toFlt(LB:P1P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P1N)
-        );
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RIO),
-            this.toFlt(LB:P1P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P1N)
-        );
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_ROO),
-            this.toFlt(LB:P2P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P2N)
-        );
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RII),
-            this.toFlt(LB:P2P), this.toFlt(LB:P3P), this.toFlt(LB:P3N), this.toFlt(LB:P2N)
-        );
-        // => 0x43085e33/0x435d5e33 0xc35d5e33/0xc3085e33
-        // => 136.36797/221.36797 -221.36797/-136.36797
-        // => 0x422be80c/0x42fff406 0xc2fff406/0xc22be80c
-        // => 42.97661/127.97661 -127.97661/-42.97661
-        // => 0x4309c284/0x43509eac 0xc3509eac/0xc309c284
-        // => 137.75983/208.61981 -208.61981/-137.75983
-        // => 0x42732341/0x4303a4f9 0xc303a4f9/0xc2732341
-        // => 60.784428/131.64442 -131.64442/-60.784428
-        //this.addHelperLine(logo, "136.36797", "221.36797", "42.97661", "127.97661");
-        //this.addHelperLine(logo, "221.36797", "136.36797", "127.97661", "42.97661");
-        //this.addHelperLine(logo, "137.75983", "208.61981", "60.784428", "131.64442");
-        //this.addHelperLine(logo, "208.61981", "137.75983", "131.64442", "60.784428");
-
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RHO),
-            this.toFlt(LB:P1N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P1N)
-        );
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RIO),
-            this.toFlt(LB:P1N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P1N)
-        );
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_ROO),
-            this.toFlt(LB:P2N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P2N)
-        );
-        this.debugIntersectionCircleLine(
-            this.toFlt("0"), this.toFlt("0"), this.toFlt(LB:RING_RII),
-            this.toFlt(LB:P2N), this.toFlt(LB:P3P), this.toFlt(LB:P3P), this.toFlt(LB:P2N)
-        );
-        //*/
+        // insert paths
+        this.addPath(logo, corner, cornerColor);
+        this.addPath(logo, cornerShadow, cornerShadowColor);
+        this.addPath(logo, ringBackground, ringBackgroundColor);
+        this.addPath(logo, ring, ringColor);
+        this.addPath(logo, ringShadow, ringShadowColor);
+        this.addPath(logo, highlight, highlightColor);
+        this.addPath(logo, outline, outlineColor);
         
-        // Helper - Highlight
-        /*/
-        this.addHelperCircle(logo, "0", "0", LB:RING_RHO);
-        
-        this.addHelperLine(logo, LB:P1N, LB:P3P, LB:P3P, LB:P1N);
-        this.addHelperLine(logo, LB:P3N, LB:P1P, LB:P1P, LB:P3N);
-        this.addHelperLine(logo, LB:P1P, LB:P3P, LB:P3N, LB:P1N);
-        this.addHelperLine(logo, LB:P3P, LB:P1P, LB:P1N, LB:P3N);
-        
-        this.addHelperLine(logo, LB:P2N, LB:P3P, LB:P3P, LB:P2N);
-        this.addHelperLine(logo, LB:P3N, LB:P2P, LB:P2P, LB:P3N);
-        this.addHelperLine(logo, LB:P2P, LB:P3P, LB:P3N, LB:P2N);
-        this.addHelperLine(logo, LB:P3P, LB:P2P, LB:P2N, LB:P3N);
-        
-        // Helper - Shadow
-        this.addHelperCircle(logo, LB:SHADOW_CX, LB:SHADOW_CY, LB:SHADOW_R);
-        //*/
         return logo;
     }
     
-    [AskewArc] addLogoRingArc(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring alpha, cstring angle, cstring c) {
-        AskewArc shape = logo.addCRingArc(x, y, o, i, alpha, angle);
-        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-        //shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
-        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
-        return shape;
+    [PathShape] addPath(Graphic logo, Path path, String color) {
+        if (color) {
+            PathShape shape = logo.addPath(path);
+            shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
+            shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
+            if (debug) { shape.getFillStyle().setCOpacity("0.3"); }
+            return shape;
+        }
+        return null;
     }
     
-    [AskewArc] addLogoAskewArc(Graphic logo, 
-        cstring xo, cstring yo, cstring ro, cstring alo, cstring ano,
-        cstring xi, cstring yi, cstring ri, cstring ali, cstring ani,
-        cstring c
-    ) {
-        AskewArc shape = logo.addCAskewArc(
-            xo, yo, ro, alo, ano,
-            xi, yi, ri, ali, ani
-        );
-        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-        //shape.getStrokeStyle().setCColor("green");
-        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
-        return shape;
+    [] _initializeCoordinates() {
+        rx = ry = Flt:ZERO_POS;
+        
+        rsy = Flt:neg(Flt:mul(ringShadowScale2, Flt:add(ringRadius, ringWidth)));
+        rsx = Flt:mul(Flt:add(Flt:ONE_POS, ringShadowScale1), rsy);
+        cx = cy = Flt:sub(ringRadius, cornerRadius);
+        csx = csy = Flt:sub(ringRadius, Flt:mul(Flt:add(Flt:ONE_POS, Flt:div(cornerShadowScale, Flt:fromInt(100))), cornerRadius));
+         
+        r1r = Flt:sub(ringRadius, ringWidth);
+        r2r = Flt:add(r1r, outlineWidth);
+        r3r = Flt:add(r2r, Flt:mul(ringShadowScale1, outlineWidth));
+        r4r = Flt:sub(ringRadius, outlineWidth);
+        r5r = ringRadius;
+        r6r = Flt:add(ringRadius, outlineWidth);
+        rsr = Flt:mul(Flt:add(Flt:ONE_POS, Flt:mul(ringShadowScale1, ringShadowScale2)), ringRadius);
+        
+        cor = cornerRadius;
+        cir = Flt:sub(cornerRadius, outlineWidth);
+        csr = Flt:mul(Flt:sub(Flt:ONE_POS, Flt:div(Flt:div(Flt:fromInt(100), cornerShadowScale),Flt:fromInt(100))), cornerRadius);
+        
+        int hli = Flt:sub(highlightWidth, outlineWidth);
+        int hlo = highlightWidth;
+        int f45 = Flt:fromInt(45);
+        int f90 = Flt:fromInt(90);
+        int f180 = Flt:fromInt(180);
+        
+        r1a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r1r, Flt:neg(r1r), hli, r1r, hli, false));
+        r2a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r2r, Flt:neg(r2r), hli, r2r, hli, false));
+        r3a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r3r, Flt:neg(r3r), hli, r3r, hli, false));
+        r4a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r4r, Flt:neg(r4r), hli, r4r, hli, false));
+        r5a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r5r, Flt:neg(r5r), hli, r5r, hli, false));
+        r6a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r6r, Flt:neg(r6r), hli, r6r, hli, false));
+        
+        r1a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r1r, Flt:neg(r1r), hlo, r1r, hlo, false));
+        r2a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r2r, Flt:neg(r2r), hlo, r2r, hlo, false));
+        r3a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r3r, Flt:neg(r3r), hlo, r3r, hlo, false));
+        r4a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r4r, Flt:neg(r4r), hlo, r4r, hlo, false));
+        r5a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r5r, Flt:neg(r5r), hlo, r5r, hlo, false));
+        r6a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r6r, Flt:neg(r6r), hlo, r6r, hlo, false));
+        
+        int rsBase = Flt:radToDeg(Flt:arctan2(Flt:sub(rx, rsx), Flt:sub(ry, rsy)));
+        int r4as = Flt:sub(f180, this.interAngleCircleCircle(rx, ry, r4r, rsx, rsy, rsr));
+        r4as1 = Flt:sub(rsBase, r4as);
+        r4as2 = Flt:add(rsBase, r4as);
+        r5a3 = this.interAngleCircleCircle(rx, ry, r5r, csx, csy, csr);
+        r5a4 = this.interAngleCircleCircle(rx, ry, r5r, cx, cy, cir);
+        r5a5 = this.interAngleCircleCircle(rx, ry, r5r, cx, cy, cor);
+        
+        int rsa = this.interAngleCircleCircle(rsx, rsy, rsr, rx, ry, r4r);
+        int hlo2 = Flt:mul(hlo, Flt:SQRT_TWO_POS);
+        rsa1 = Flt:sub(rsBase, rsa);
+        rsa2 = this.interAngleCircleLine(rsx, rsy, rsr, Flt:sub(r5r, hlo2), r5r, Flt:neg(r5r), Flt:sub(hlo2, r5r), false);
+        rsa3 = this.interAngleCircleLine(rsx, rsy, rsr, r5r, Flt:sub(r5r, hlo2), Flt:sub(hlo2, r5r), Flt:neg(r5r), false);
+        rsa4 = this.interAngleCircleLine(rsx, rsy, rsr, r5r, Flt:sub(hlo2, r5r), Flt:sub(hlo2, r5r), r5r, false);
+        rsa5 = Flt:add(rsBase, rsa);
+        
+        cia = Flt:sub(f180, this.interAngleCircleCircle(cx, cy, cir, rx, ry, r5r));
+        coa = Flt:sub(f180, this.interAngleCircleCircle(cx, cy, cor, rx, ry, r5r));
+        csa = Flt:sub(f180, this.interAngleCircleCircle(csx, csy, csr, rx, ry, r5r));
     }
     
-    [Ring] addLogoRing(Graphic logo, cstring x, cstring y, cstring o, cstring i, cstring c) {
-        Ring shape = logo.addCRing(x, y, o, i);
-        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
-        return shape;
-    }
-    
-    [Ring] addLogoCircle(Graphic logo, cstring x, cstring y, cstring r, cstring c) {
-        Ring shape = logo.addCCircle(x, y, r);
-        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-        shape.getFillStyle().setCColor(c).setOpacityFlt(Flt:ONE_POS);
-        return shape;
-    }
-    
-    [Ring] addHelperCircle(Graphic logo, cstring x, cstring y, cstring r) {
-        Ring shape = logo.addCCircle(x, y, r);
-        shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
-        shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
-        return shape;
-    }
-    
-    [PathShape] addHelperLine(Graphic logo, cstring x1, cstring y1, cstring x2, cstring y2) {
-        Path path = this.createOwn(Path:CLASSNAME);
-        PathShape shape = logo.addPath(path.moveCTo(x1, y1).lineCTo(x2, y2));
-        shape.getStrokeStyle().setCColor(LB:HELPER_COLOR);
-        shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
-        return shape;
-    }
-
-    
-    [] debugIntersectionCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by) {
-        sys::stream::OStream debug = this.rt().err();
-    
+    [int] interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
         int dx := Flt:sub(ax, bx);
         int dy := Flt:sub(ay, by);
         
@@ -288,37 +429,60 @@ class LogoBuilder extends sys::core::Object {
         int comp := Flt:compare(s2, Flt:ZERO_POS);
         
         if (comp < 0) {
-            debug.printCString("Keine Schnittstellen").printNewline();
+            if (debug) { debug.printCString("Keine Schnittstellen").printNewline(); }
         } else if (comp == 0) {
-            debug.printCString("Eine Schnittstelle").printNewline();
+            if (debug) { debug.printCString("Eine Schnittstelle").printNewline(); }
             int x := Flt:add(mx, Flt:div(ad, a2b2));
             int y := Flt:add(my, Flt:div(bd, a2b2));
-            int alpha := Flt:div(Flt:arctan(x, y), Path:RADIAN_FACTOR);
-            debug
-                .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
+            int alpha := Flt:radToDeg(Flt:arctan2(x, y));
+            if (debug) { 
+                debug
+                    .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
+            }
+            return alpha;
         } else {
-            debug.printCString("Zwei Schnittstellen").printNewline();
+            if (debug) { debug.printCString("Zwei Schnittstellen").printNewline(); }
             int s := Flt:sqrt(s2);
             int x1 := Flt:div(Flt:add(ad, Flt:mul(b, s)), a2b2);
             int x2 := Flt:div(Flt:sub(ad, Flt:mul(b, s)), a2b2);
             int y1 := Flt:div(Flt:sub(bd, Flt:mul(a, s)), a2b2);
             int y2 := Flt:div(Flt:add(bd, Flt:mul(a, s)), a2b2);
-            int alpha1 := Flt:div(Flt:arctan(x1, y1), Path:RADIAN_FACTOR);
-            int alpha2 := Flt:div(Flt:arctan(x2, y2), Path:RADIAN_FACTOR);
-            debug
-                .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
-                .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
-                .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
-                .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
+            int alpha1 := Flt:radToDeg(Flt:arctan2(x1, y1));
+            int alpha2 := Flt:radToDeg(Flt:arctan2(x2, y2));
+            if (debug) {
+                debug
+                    .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
+                    .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
+                    .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
+                    .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
+            }
+            if (second) { return alpha2; }
+            return alpha1;
         }
+        return Flt:NAN;
     }
     
-    [int] toFlt(cstring s) {
-        Float tmp = this.rt().createInstance(Float:CLASSNAME);
-        tmp.fromCString(s);
-        int ret = tmp.getFlt();
-        tmp.destroy();
-        return ret;
+    [int] interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
+        int ar2 := Flt:mul(ar, ar);
+        int br2 := Flt:mul(br, br);
+        int dx := Flt:sub(ax, bx);
+        int dy := Flt:sub(ay, by);
+        int cr2 := Flt:add(Flt:mul(dx, dx), Flt:mul(dy, dy));
+        int cr := Flt:sqrt(cr2);
+        if (Flt:compare(cr, Flt:add(ar, br)) < 0) {
+            int cos := Flt:div(
+                Flt:sub(Flt:add(ar2, cr2), br2),
+                Flt:mul(Flt:TWO_POS, Flt:mul(ar, cr))
+            );
+            int alpha = Flt:radToDeg(Flt:arccos(cos));
+            if (debug) {
+                debug
+                    .printFlt(ar).printChar('/').printFlt(br).printChar('/').printFlt(cr).printChar(' ')
+                    .printFlt(cos).printChar('/').printFlt(alpha).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha,alpha))).printNewline();
+            }
+            return alpha;
+        }
+        return Flt:NAN;
     }
-
+    
 }

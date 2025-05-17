@@ -40,8 +40,8 @@ class Writer extends sys::core::utils::Owner {
             .printChar(' ').print(viewport.getWidth()).printChar(' ').print(viewport.getHeight());
         
         Element xml = this.newSvg()
-            .addCAttributeCString("width", "15cm")
-            .addCAttributeCString("height", "15cm")
+            //.addCAttributeCString("width", "15cm")
+            //.addCAttributeCString("height", "15cm")
             .addCAttribute("viewBox", viewBox);
         viewBox.destroy();
             

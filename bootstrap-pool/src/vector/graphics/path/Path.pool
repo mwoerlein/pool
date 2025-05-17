@@ -71,8 +71,8 @@ class Path extends sys::core::Object {
     }
     
     [Path] arcFltTo(int cx, int cy, int r, int alpha, int beta, int lineTo) {
-        int aRad := Path:toRadian(alpha);
-        int bRad := Path:toRadian(beta);
+        int aRad := Flt:degToRad(alpha);
+        int bRad := Flt:degToRad(beta);
         [int ax, int ay] := Path:getPolarPoint(r, aRad);
         
         if (lineTo) {
@@ -179,13 +179,10 @@ class Path extends sys::core::Object {
     [int] isVisible() { return hasVisibleElements; }
 
     // arc and circle helper
-    global int RADIAN_FACTOR := 0x3c8efa35; // PI / 180.
-    
     global int CIRCLE_FACTOR := 0x3f0d6288; // 4./3. * (sqrt(2.) - 1.)
     global int SCALE_FACTOR := 0x3faaaaab; // 4./3.
     global int SCALE_DENOMINATOR := 0x40800000; // 4.
     
-    global [int] toRadian(int alpha) { return Flt:mul(alpha, Path:RADIAN_FACTOR); }
     global [int, int] getPolarPoint(int radius, int radian) {
         return [
             Flt:mul(radius, Flt:sin(radian)),

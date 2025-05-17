@@ -32,12 +32,34 @@ class Graphic extends sys::core::Object {
         _viewport.getWidth().fromCString(x2).subFloat(_viewport.getX());
         _viewport.getHeight().fromCString(y2).subFloat(_viewport.getY());
     }
+    [Graphic] setFltViewport(int x1, int y1, int x2, int y2) {
+        _viewport.getX().assignFlt(x1);
+        _viewport.getY().assignFlt(y1);
+        _viewport.getWidth().assignFlt(x2).subFloat(_viewport.getX());
+        _viewport.getHeight().assignFlt(y2).subFloat(_viewport.getY());
+    }
     [Rectangle] getViewport() { return _viewport; }
     
     [AnyIterator] elements() {
         return _elements.iterator();
     }
     
+    [PathShape] addFltLine(int x1, int y1, int x2, int y2) {
+        PathShape p = this.createOwn(PathShape:CLASSNAME);
+        Path path = p.createOwn(Path:CLASSNAME);
+        path.moveFltTo(x1, y1).lineFltTo(x2, y2);
+        p._initPathShape(path);
+        _elements.add(p.element());
+        return p;
+    }
+    
+    [Ring] addFltCircle(int x, int y, int radius) {
+        Ring r = this.createOwn(Ring:CLASSNAME);
+        r._initFltCircle(x, y, radius);
+        _elements.add(r.element());
+        return r;
+    }
+
     [Ring] addCCircle(cstring x, cstring y, cstring radius) {
         Ring r = this.createOwn(Ring:CLASSNAME);
         r._initCCircle(x, y, radius);

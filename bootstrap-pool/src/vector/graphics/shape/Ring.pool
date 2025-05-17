@@ -16,6 +16,24 @@ class Ring extends AbstractShape {
     Float outer;
     Float inner;
     
+    [Ring] _initFltCircle(int x, int y, int radius) {
+        this.x = this.createOwnFloatFromFlt(x);
+        this.y = this.createOwnFloatFromFlt(y);
+        this.outer = this.createOwnFloatFromFlt(radius);
+        this.inner = null;
+        // assert outer > 0.0
+        return this;
+    }
+    
+    [Ring] _initFltRing(int x, int y, int inner, int outer) {
+        this.x = this.createOwnFloatFromFlt(x);
+        this.y = this.createOwnFloatFromFlt(y);
+        this.outer = this.createOwnFloatFromFlt(outer);
+        this.inner = this.createOwnFloatFromFlt(inner);
+        // assert outer > inner >= 0.0
+        return this;
+    }
+    
     [Ring] _initCCircle(cstring x, cstring y, cstring radius) {
         this.x = this.createOwnFloatFromCString(x);
         this.y = this.createOwnFloatFromCString(y);
