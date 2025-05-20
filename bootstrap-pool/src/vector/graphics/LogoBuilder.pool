@@ -152,70 +152,44 @@ class LogoBuilder extends sys::core::utils::Owner {
     }
     
     [Graphic] createLogo() {
-        Graphic logo = this.rt().createInstance(Graphic:CLASSNAME);
+        this._initializeCoordinates();
+        
+        Graphic logo := this.rt().createInstance(Graphic:CLASSNAME);
         logo.setFltViewport(
             Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth),
             Flt:add(shiftX, viewWidth), Flt:add(shiftY, viewWidth)
         );
+        if (debug) { this._addScaffolding(logo, "red", "green"); }
         
-        this._initializeCoordinates();
+        Path corner := this._addNewFilledPath(logo, cornerColor);
+        Path cornerShadow := this._addNewFilledPath(logo, cornerShadowColor);
+        Path ringBackground := this._addNewFilledPath(logo, ringBackgroundColor);
+        Path ring := this._addNewFilledPath(logo, ringColor);
+        Path ringShadow := this._addNewFilledPath(logo, ringShadowColor);
+        Path highlight := this._addNewFilledPath(logo, highlightColor);
+        Path outline := this._addNewFilledPath(logo, outlineColor);
         
-        int f0 = Flt:fromInt(0);
-        int f45 = Flt:fromInt(45);
-        int f90 = Flt:fromInt(90);
-        int f135 = Flt:fromInt(135);
-        int f180 = Flt:fromInt(180);
-        int f225 = Flt:fromInt(225);
-        int f270 = Flt:fromInt(270);
-        int f315 = Flt:fromInt(315);
+        this._generatePaths(outline, corner, cornerShadow, highlight, ring, ringShadow, ringBackground);
         
-        Path outline = logo.createOwn(Path:CLASSNAME);
-        Path corner = logo.createOwn(Path:CLASSNAME);
-        Path cornerShadow = logo.createOwn(Path:CLASSNAME);
-        Path highlight = logo.createOwn(Path:CLASSNAME);
-        Path ring = logo.createOwn(Path:CLASSNAME);
-        Path ringShadow = logo.createOwn(Path:CLASSNAME);
-        Path ringBackground = logo.createOwn(Path:CLASSNAME);
-        
-        // scaffolding
-        if (debug) {
-            cstring c1 = "red";
-            cstring c2 = "green";
-            
-            logo.addFltCircle(rx, ry, r1r).getStrokeStyle().setCColor(c1);
-            logo.addFltCircle(rx, ry, r2r).getStrokeStyle().setCColor(c1);
-            logo.addFltCircle(rx, ry, r3r).getStrokeStyle().setCColor(c2);
-            logo.addFltCircle(rx, ry, r4r).getStrokeStyle().setCColor(c1);
-            logo.addFltCircle(rx, ry, r5r).getStrokeStyle().setCColor(c1);
-            logo.addFltCircle(rx, ry, r6r).getStrokeStyle().setCColor(c1);
-            logo.addFltLine(r5r, r5r, Flt:neg(r5r), Flt:neg(r5r)).getStrokeStyle().setCColor(c1);
-            logo.addFltLine(r5r, Flt:neg(r5r), Flt:neg(r5r), r5r).getStrokeStyle().setCColor(c1);
-            
-            logo.addFltCircle(rsx, rsy, rsr).getStrokeStyle().setCColor(c2);
-            logo.addFltLine(rx, ry, rsx, rsy).getStrokeStyle().setCColor(c2);
-            //logo.addFltLine(Flt:add(rsx, rsr), Flt:add(rsy, rsr), Flt:sub(rsx, rsr), Flt:sub(rsy, rsr)).getStrokeStyle().setCColor(c2);
-            //logo.addFltLine(Flt:add(rsx, rsr), Flt:sub(rsy, rsr), Flt:sub(rsx, rsr), Flt:add(rsy, rsr)).getStrokeStyle().setCColor(c2);
-            
-            logo.addFltCircle(cx, cy, cor).getStrokeStyle().setCColor(c1);
-            logo.addFltCircle(cx, cy, cir).getStrokeStyle().setCColor(c1);
-            logo.addFltLine(Flt:add(cx, cor), Flt:sub(cy, cor), Flt:sub(cx, cor), Flt:add(cy, cor)).getStrokeStyle().setCColor(c1);
-            
-            logo.addFltCircle(csx, csy, csr).getStrokeStyle().setCColor(c2);
-            logo.addFltLine(Flt:add(csx, csr), Flt:sub(csy, csr), Flt:sub(csx, csr), Flt:add(csy, csr)).getStrokeStyle().setCColor(c2);
-            
-            int hd1 = Flt:mul(highlightWidth, Flt:SQRT_TWO_POS);
-            int hd2 = Flt:mul(Flt:sub(highlightWidth, outlineWidth), Flt:SQRT_TWO_POS);
-            logo.addFltLine(r5r, Flt:sub(r5r, hd1), Flt:sub(hd1, r5r), Flt:neg(r5r)).getStrokeStyle().setCColor(c1);
-            logo.addFltLine(r5r, Flt:sub(r5r, hd2), Flt:sub(hd2, r5r), Flt:neg(r5r)).getStrokeStyle().setCColor(c1);
-            logo.addFltLine(Flt:sub(r5r, hd1), r5r, Flt:neg(r5r), Flt:sub(hd1, r5r)).getStrokeStyle().setCColor(c1);
-            logo.addFltLine(Flt:sub(r5r, hd2), r5r, Flt:neg(r5r), Flt:sub(hd2, r5r)).getStrokeStyle().setCColor(c1);
-        }
+        return logo;
+    }
     
-        int r1a2s = Flt:sub(f45, r1a2);
-        int r2a2s = Flt:sub(f45, r2a2);
-        int r3a2s = Flt:sub(f45, r3a2);
-        int r4a2s = Flt:sub(f45, r4a2);
-        int r5a4s = Flt:sub(f45, r5a4);
+    [] _generatePaths(Path outline, Path corner, Path cornerShadow,
+            Path highlight, Path ring, Path ringShadow, Path ringBackground) {
+        int f0 := Flt:fromInt(0);
+        int f45 := Flt:fromInt(45);
+        int f90 := Flt:fromInt(90);
+        int f135 := Flt:fromInt(135);
+        int f180 := Flt:fromInt(180);
+        int f225 := Flt:fromInt(225);
+        int f270 := Flt:fromInt(270);
+        int f315 := Flt:fromInt(315);
+    
+        int r1a2s := Flt:sub(f45, r1a2);
+        int r2a2s := Flt:sub(f45, r2a2);
+        int r3a2s := Flt:sub(f45, r3a2);
+        int r4a2s := Flt:sub(f45, r4a2);
+        int r5a4s := Flt:sub(f45, r5a4);
 
         // build outer shape
         outline
@@ -242,7 +216,6 @@ class LogoBuilder extends sys::core::utils::Owner {
         int curSX = csx;
         int curSY = csy;
         int alpha = 0;
-        int lineTo = false;
         while (alpha < 360) {
             int curA = Flt:fromInt(alpha + 45);
             int curB = Flt:fromInt(alpha);
@@ -316,28 +289,93 @@ class LogoBuilder extends sys::core::utils::Owner {
                 .arcFltTo(Flt:add(shiftX, rsx), Flt:add(shiftY, rsy), rsr, Flt:min(rsa4, rsa5), rsa3, true)
                 .close();
         }
-        
-        // insert paths
-        this.addPath(logo, corner, cornerColor);
-        this.addPath(logo, cornerShadow, cornerShadowColor);
-        this.addPath(logo, ringBackground, ringBackgroundColor);
-        this.addPath(logo, ring, ringColor);
-        this.addPath(logo, ringShadow, ringShadowColor);
-        this.addPath(logo, highlight, highlightColor);
-        this.addPath(logo, outline, outlineColor);
-        
-        return logo;
     }
     
-    [PathShape] addPath(Graphic logo, Path path, String color) {
+    [Path] _addNewFilledPath(Graphic logo, String color) {
+        Path path := logo.newPath();
         if (color) {
-            PathShape shape = logo.addPath(path);
+            PathShape shape := logo.addPath(path);
             shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
             shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
             if (debug) { shape.getFillStyle().setCOpacity("0.3"); }
-            return shape;
         }
-        return null;
+        return path;
+    }
+    
+    [] _addScaffolding(Graphic logo, cstring bodyColor, cstring shadowColor) {
+    
+        // ring
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r1r).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r3r).getStrokeStyle().setCColor(shadowColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r6r).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltLine(
+            Flt:add(shiftX, r5r), Flt:add(shiftY, r5r),
+            Flt:sub(shiftX, r5r), Flt:sub(shiftY, r5r)
+        ).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltLine(
+            Flt:add(shiftX, r5r), Flt:sub(shiftY, r5r),
+            Flt:sub(shiftX, r5r), Flt:add(shiftY, r5r)
+        ).getStrokeStyle().setCColor(bodyColor);
+        
+        // ring shadow
+        logo.addFltCircle(Flt:add(shiftX, rsx), Flt:add(shiftY, rsy), rsr).getStrokeStyle().setCColor(shadowColor);
+        logo.addFltLine(
+            Flt:add(shiftX, rx), Flt:add(shiftY, ry),
+            Flt:add(shiftX, rsx), Flt:add(shiftY, rsy)
+        ).getStrokeStyle().setCColor(shadowColor);
+        /*
+        logo.addFltLine(
+            Flt:add(shiftX, Flt:add(rsx, rsr)), Flt:add(shiftY, Flt:add(rsy, rsr)),
+            Flt:add(shiftX, Flt:sub(rsx, rsr)), Flt:add(shiftY, Flt:sub(rsy, rsr))
+        ).getStrokeStyle().setCColor(shadowColor);
+        logo.addFltLine(
+            Flt:add(shiftX, Flt:add(rsx, rsr)), Flt:add(shiftY, Flt:sub(rsy, rsr)),
+            Flt:add(shiftX, Flt:sub(rsx, rsr)), Flt:add(shiftY, Flt:add(rsy, rsr))
+        ).getStrokeStyle().setCColor(shadowColor);
+        //*/
+        
+        // corner
+        int _cx := Flt:add(shiftX, cx);
+        int _cy := Flt:add(shiftY, cy);
+        logo.addFltCircle(_cx, _cy, cor).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(_cx, _cy, cir).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltLine(
+            Flt:add(_cx, cor), Flt:sub(_cy, cor),
+            Flt:sub(_cx, cor), Flt:add(_cy, cor)
+        ).getStrokeStyle().setCColor(bodyColor);
+        
+        // corner shadow
+        int _csx := Flt:add(shiftX, csx);
+        int _csy := Flt:add(shiftY, csy);
+        logo.addFltCircle(_csx, _csy, csr).getStrokeStyle().setCColor(shadowColor);
+        logo.addFltLine(
+            Flt:add(_csx, csr), Flt:sub(_csy, csr),
+            Flt:sub(_csx, csr), Flt:add(_csy, csr)
+        ).getStrokeStyle().setCColor(shadowColor);
+        
+        // highlight
+        int hd1 = Flt:mul(highlightWidth, Flt:SQRT_TWO_POS);
+        int hd2 = Flt:mul(Flt:sub(highlightWidth, outlineWidth), Flt:SQRT_TWO_POS);
+        logo.addFltLine(
+            Flt:add(shiftX, r5r), Flt:add(shiftY, Flt:sub(r5r, hd1)),
+            Flt:add(shiftX, Flt:sub(hd1, r5r)), Flt:sub(shiftY, r5r)
+        ).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltLine(
+            Flt:add(shiftX, r5r), Flt:add(shiftY, Flt:sub(r5r, hd2)),
+            Flt:add(shiftX, Flt:sub(hd2, r5r)), Flt:sub(shiftY, r5r)
+        ).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltLine(
+            Flt:add(shiftX, Flt:sub(r5r, hd1)), Flt:add(shiftY, r5r),
+            Flt:sub(shiftX, r5r), Flt:add(shiftY, Flt:sub(hd1, r5r))
+        ).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltLine(
+            Flt:add(shiftX, Flt:sub(r5r, hd2)), Flt:add(shiftY, r5r),
+            Flt:sub(shiftX, r5r), Flt:add(shiftY, Flt:sub(hd2, r5r))
+        ).getStrokeStyle().setCColor(bodyColor);
+        
     }
     
     [] _initializeCoordinates() {
@@ -366,42 +404,42 @@ class LogoBuilder extends sys::core::utils::Owner {
         int f90 = Flt:fromInt(90);
         int f180 = Flt:fromInt(180);
         
-        r1a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r1r, Flt:neg(r1r), hli, r1r, hli, false));
-        r2a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r2r, Flt:neg(r2r), hli, r2r, hli, false));
-        r3a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r3r, Flt:neg(r3r), hli, r3r, hli, false));
-        r4a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r4r, Flt:neg(r4r), hli, r4r, hli, false));
-        r5a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r5r, Flt:neg(r5r), hli, r5r, hli, false));
-        r6a1 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r6r, Flt:neg(r6r), hli, r6r, hli, false));
+        r1a1 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r1r, Flt:neg(r1r), hli, r1r, hli, false));
+        r2a1 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r2r, Flt:neg(r2r), hli, r2r, hli, false));
+        r3a1 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r3r, Flt:neg(r3r), hli, r3r, hli, false));
+        r4a1 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r4r, Flt:neg(r4r), hli, r4r, hli, false));
+        r5a1 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r5r, Flt:neg(r5r), hli, r5r, hli, false));
+        r6a1 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r6r, Flt:neg(r6r), hli, r6r, hli, false));
         
-        r1a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r1r, Flt:neg(r1r), hlo, r1r, hlo, false));
-        r2a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r2r, Flt:neg(r2r), hlo, r2r, hlo, false));
-        r3a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r3r, Flt:neg(r3r), hlo, r3r, hlo, false));
-        r4a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r4r, Flt:neg(r4r), hlo, r4r, hlo, false));
-        r5a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r5r, Flt:neg(r5r), hlo, r5r, hlo, false));
-        r6a2 = Flt:sub(f90, this.interAngleCircleLine(rx, ry, r6r, Flt:neg(r6r), hlo, r6r, hlo, false));
+        r1a2 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r1r, Flt:neg(r1r), hlo, r1r, hlo, false));
+        r2a2 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r2r, Flt:neg(r2r), hlo, r2r, hlo, false));
+        r3a2 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r3r, Flt:neg(r3r), hlo, r3r, hlo, false));
+        r4a2 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r4r, Flt:neg(r4r), hlo, r4r, hlo, false));
+        r5a2 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r5r, Flt:neg(r5r), hlo, r5r, hlo, false));
+        r6a2 = Flt:sub(f90, this.__interAngleCircleLine(rx, ry, r6r, Flt:neg(r6r), hlo, r6r, hlo, false));
         
         int rsBase = Flt:radToDeg(Flt:arctan2(Flt:sub(rx, rsx), Flt:sub(ry, rsy)));
-        int r4as = Flt:sub(f180, this.interAngleCircleCircle(rx, ry, r4r, rsx, rsy, rsr));
+        int r4as = Flt:sub(f180, this.__interAngleCircleCircle(rx, ry, r4r, rsx, rsy, rsr));
         r4as1 = Flt:sub(rsBase, r4as);
         r4as2 = Flt:add(rsBase, r4as);
-        r5a3 = this.interAngleCircleCircle(rx, ry, r5r, csx, csy, csr);
-        r5a4 = this.interAngleCircleCircle(rx, ry, r5r, cx, cy, cir);
-        r5a5 = this.interAngleCircleCircle(rx, ry, r5r, cx, cy, cor);
+        r5a3 = this.__interAngleCircleCircle(rx, ry, r5r, csx, csy, csr);
+        r5a4 = this.__interAngleCircleCircle(rx, ry, r5r, cx, cy, cir);
+        r5a5 = this.__interAngleCircleCircle(rx, ry, r5r, cx, cy, cor);
         
-        int rsa = this.interAngleCircleCircle(rsx, rsy, rsr, rx, ry, r4r);
+        int rsa = this.__interAngleCircleCircle(rsx, rsy, rsr, rx, ry, r4r);
         int hlo2 = Flt:mul(hlo, Flt:SQRT_TWO_POS);
         rsa1 = Flt:sub(rsBase, rsa);
-        rsa2 = this.interAngleCircleLine(rsx, rsy, rsr, Flt:sub(r5r, hlo2), r5r, Flt:neg(r5r), Flt:sub(hlo2, r5r), false);
-        rsa3 = this.interAngleCircleLine(rsx, rsy, rsr, r5r, Flt:sub(r5r, hlo2), Flt:sub(hlo2, r5r), Flt:neg(r5r), false);
-        rsa4 = this.interAngleCircleLine(rsx, rsy, rsr, r5r, Flt:sub(hlo2, r5r), Flt:sub(hlo2, r5r), r5r, false);
+        rsa2 = this.__interAngleCircleLine(rsx, rsy, rsr, Flt:sub(r5r, hlo2), r5r, Flt:neg(r5r), Flt:sub(hlo2, r5r), false);
+        rsa3 = this.__interAngleCircleLine(rsx, rsy, rsr, r5r, Flt:sub(r5r, hlo2), Flt:sub(hlo2, r5r), Flt:neg(r5r), false);
+        rsa4 = this.__interAngleCircleLine(rsx, rsy, rsr, r5r, Flt:sub(hlo2, r5r), Flt:sub(hlo2, r5r), r5r, false);
         rsa5 = Flt:add(rsBase, rsa);
         
-        cia = Flt:sub(f180, this.interAngleCircleCircle(cx, cy, cir, rx, ry, r5r));
-        coa = Flt:sub(f180, this.interAngleCircleCircle(cx, cy, cor, rx, ry, r5r));
-        csa = Flt:sub(f180, this.interAngleCircleCircle(csx, csy, csr, rx, ry, r5r));
+        cia = Flt:sub(f180, this.__interAngleCircleCircle(cx, cy, cir, rx, ry, r5r));
+        coa = Flt:sub(f180, this.__interAngleCircleCircle(cx, cy, cor, rx, ry, r5r));
+        csa = Flt:sub(f180, this.__interAngleCircleCircle(csx, csy, csr, rx, ry, r5r));
     }
     
-    [int] interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
+    [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
         int dx := Flt:sub(ax, bx);
         int dy := Flt:sub(ay, by);
         
@@ -462,7 +500,7 @@ class LogoBuilder extends sys::core::utils::Owner {
         return Flt:NAN;
     }
     
-    [int] interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
+    [int] __interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
         int ar2 := Flt:mul(ar, ar);
         int br2 := Flt:mul(br, br);
         int dx := Flt:sub(ax, bx);

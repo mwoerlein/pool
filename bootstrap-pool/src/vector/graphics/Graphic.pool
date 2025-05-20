@@ -114,5 +114,7 @@ class Graphic extends sys::core::Object {
         _elements.add(p.element());
         return p;
     }
+    
+    [Path] newPath() { return this.createOwn(Path:CLASSNAME); }
 
 }
