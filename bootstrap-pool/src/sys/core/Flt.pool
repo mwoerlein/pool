@@ -41,8 +41,7 @@ class Flt {
     }
     
     global [int] abs(int a) {
-        if (Flt:compare(a, Flt:ZERO_POS) < 0) { return Flt:neg(a); }
-        return a;
+        return Bitset:and(a, 0x7fffffff); // ignore sign bit
     }
     
     global [int] min(int a, int b) {
