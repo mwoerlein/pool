@@ -74,7 +74,7 @@ class OStream extends Object {
         }
         
         // adjust fraction to get first non-zero digit
-        int firstDigitExponent = Flt:firstDigitExponent(f);
+        int firstDigitExponent = Flt:floor(Flt:log10(Flt:abs(f)));
         if (firstDigitExponent > 0) {
             denominator.shiftDigits(firstDigitExponent);
         } else {

@@ -111,6 +111,66 @@ class Flt {
         return ret;
     }
     
+    //// logarithm functions ////
+    global [int] ld(int a) {
+        int ret = 0;
+        __pasm__(<"
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] ln(int a) {
+        int ret = 0;
+        __pasm__(<"
+            // compute ln(a) as ld(a)/ld(e) 
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xd9; .byte 0xea; #//fldl2e #page 929
+            .byte 0xde; .byte 0xf9; #//fdivp #page 908
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] log10(int a) {
+        int ret = 0;
+        __pasm__(<"
+            // compute log10(a) as ld(a)/ld(10) 
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xd9; .byte 0xe9; #//fldl2t #page 929
+            .byte 0xde; .byte 0xf9; #//fdivp #page 908
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a}, {"%eax": ret});
+        return ret;
+    }
+    
+    global [int] log(int a, int base) {
+        int ret = 0;
+        __pasm__(<"
+            // compute logBASE(a) as ld(a)/ld(base) 
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            pushl %eax; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            movl %ebx, (%esp); .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            .byte 0xde; .byte 0xf9; #//fdivp #page 908
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": base}, {"%eax": ret});
+        return ret;
+    }
+    
     //// trigonometric functions ////
     global [int] sin(int a) {
         int ret = 0;
@@ -269,41 +329,6 @@ class Flt {
             movl 1, %eax
         _scf_fltcmp_ret:
         ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
-        return ret;
-    }
-    
-    //// other functions ////
-    global [int] firstDigitExponent(int a) {
-        int ret = 0;
-        __pasm__(<"
-            // compute log10(abs(f)) as ld(abs(f))/ld(10) 
-            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
-            andl 0x7fffffff, %eax; pushl %eax //ignore sign
-            .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
-            //addl 4, %esp
-            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
-            .byte 0xd9; .byte 0xe9; #//fldl2t #page 929
-            .byte 0xde; .byte 0xf9; #//fdivp #page 908
-
-            // store fpu control register
-            //subl 4, %esp
-            .byte 0x9b; .byte 0xd9; .byte 0x3c; .byte 0x24; #// fstcw (%esp) #page 963
-            
-            // set round down mode
-            movl (%esp), %eax
-            andl 0xf3ff, %eax
-            orl 0x0400, %eax
-            pushl %eax
-            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
-            
-            // store floor(log10(abs(f)))
-            .byte 0xdb; .byte 0x1c; .byte 0x24; #// fistp (%esp) #page 922
-            popl %eax
-            
-            // restore fpu control register
-            .byte 0xd9; .byte 0x2c; .byte 0x24; #// fldcw (%esp) #page 931
-            addl 4, %esp
-        ">, {"%eax": a}, {"%eax": ret});
         return ret;
     }
     
