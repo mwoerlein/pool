@@ -11,6 +11,7 @@ class IntegerTest extends test::TestCase {
         this.testInitialization();
         this.testHashAndEquals();
         this.testComparable();
+        this.testArithmetic();
         this.testPrintToStream();
     }
     
@@ -43,6 +44,7 @@ class IntegerTest extends test::TestCase {
         
         if (!i1.equals(i1)) { return this.fail("Identity check"); }
         if (!i1.equals(i2)) { return this.fail("Integers with same int value are not equal"); }
+        if (!i1.equalsInt(-19)) { return this.fail("Integer and same int value are not equal"); }
         if (i1.equals(i3)) { return this.fail("Integers with different int value are equal"); }
         if (i1.equals(this)) { return this.fail("Integer is equal to non-Integer"); }
         
@@ -93,22 +95,22 @@ class IntegerTest extends test::TestCase {
     [int] testArithmetic() {
         this.start("testArithmetic");
         
-        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(1);
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(-1);
         Integer i2 = this.rt().createInstance(Integer:CLASSNAME); i2.assignInt(2);
+        i1.neg();           if (!i1.equalsInt(  1)) { return this.fail("Negate Integer"); }
+        i1.inc();           if (!i1.equalsInt(  2)) { return this.fail("Increment Integer"); }
+        i1.dec();           if (!i1.equalsInt(  1)) { return this.fail("Decrement Integer"); }
         
-        i1.inc();           if (!i1.compareInt(  2)) { return this.fail("Increment Integer"); }
-        i1.dec();           if (!i1.compareInt(  1)) { return this.fail("Decrement Integer"); }
-        
-        i1.addInteger(i1);  if (!i1.compareInt(  2)) { return this.fail("Add Integer to Integer"); }
-        i1.addInt(2);       if (!i1.compareInt(  4)) { return this.fail("Add int to Integer"); }
-        i1.subInteger(i2);  if (!i1.compareInt(  2)) { return this.fail("Sub Integer from Integer"); }
-        i1.subInt(1);       if (!i1.compareInt(  1)) { return this.fail("Sub int from Integer"); }
-        i1.mulInteger(i2);  if (!i1.compareInt(  2)) { return this.fail("Mul Integer with Integer"); }
-        i1.mulInt(99);      if (!i1.compareInt(198)) { return this.fail("Mul Integer with int"); }
-        i1.divInteger(i2);  if (!i1.compareInt( 99)) { return this.fail("Div Integer by Integer"); }
-        i1.divInt(7);       if (!i1.compareInt( 14)) { return this.fail("Div Integer by int"); }
-        i1.modInt(9);       if (!i1.compareInt(  5)) { return this.fail("Mod Integer by int"); }
-        i1.modInteger(i2);  if (!i1.compareInt(  1)) { return this.fail("Mod Integer by Integer"); }
+        i1.addInteger(i1);  if (!i1.equalsInt(  2)) { return this.fail("Add Integer to Integer"); }
+        i1.addInt(2);       if (!i1.equalsInt(  4)) { return this.fail("Add int to Integer"); }
+        i1.subInteger(i2);  if (!i1.equalsInt(  2)) { return this.fail("Sub Integer from Integer"); }
+        i1.subInt(1);       if (!i1.equalsInt(  1)) { return this.fail("Sub int from Integer"); }
+        i1.mulInteger(i2);  if (!i1.equalsInt(  2)) { return this.fail("Mul Integer with Integer"); }
+        i1.mulInt(99);      if (!i1.equalsInt(198)) { return this.fail("Mul Integer with int"); }
+        i1.divInteger(i2);  if (!i1.equalsInt( 99)) { return this.fail("Div Integer by Integer"); }
+        i1.divInt(7);       if (!i1.equalsInt( 14)) { return this.fail("Div Integer by int"); }
+        i1.modInt(9);       if (!i1.equalsInt(  5)) { return this.fail("Mod Integer by int"); }
+        i1.modInteger(i2);  if (!i1.equalsInt(  1)) { return this.fail("Mod Integer by Integer"); }
         
         i2.destroy();
         i1.destroy();

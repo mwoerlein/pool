@@ -17,7 +17,8 @@ class Integer extends Object {
     [] assignInteger(Integer n) { _n = n.getInt(); }
     
     [] inc() { _n++; }
-    [] dec() { _n++; }
+    [] dec() { _n--; }
+    [] neg() { _n = -_n; }
     
     [] addInt(int n) { _n += n; }
     [] subInt(int n) { _n -= n; }
@@ -37,6 +38,7 @@ class Integer extends Object {
     [int] compareInteger(Integer n) { return _n - n.getInt(); }
     
     [int] hash() { return _n; }
+    [int] equalsInt(int n) { return this.compareInt(n) == 0; }
     [int] equals(__any__ obj) {
         Integer n = this.rt().cast(Integer:CLASSNAME, obj);
         if (n) {
