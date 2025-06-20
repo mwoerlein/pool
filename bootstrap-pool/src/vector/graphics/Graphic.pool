@@ -60,6 +60,20 @@ class Graphic extends sys::core::Object {
         return r;
     }
 
+    [Rectangle] addFltSquare(int x, int y, int width) {
+        Rectangle r = this.createOwn(Rectangle:CLASSNAME);
+        r._initFltRectangle(x, y, width, width);
+        _elements.add(r.element());
+        return r;
+    }
+    
+    [Rectangle] addFltRectangle(int x, int y, int width, int height) {
+        Rectangle r = this.createOwn(Rectangle:CLASSNAME);
+        r._initFltRectangle(x, y, width, height);
+        _elements.add(r.element());
+        return r;
+    }
+    
     [Ring] addCCircle(cstring x, cstring y, cstring radius) {
         Ring r = this.createOwn(Ring:CLASSNAME);
         r._initCCircle(x, y, radius);

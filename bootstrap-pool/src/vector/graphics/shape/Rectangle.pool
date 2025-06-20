@@ -16,6 +16,14 @@ class Rectangle extends AbstractShape {
     Float width;
     Float height;
     
+    [Rectangle] _initFltRectangle(int x, int y, int width, int height) {
+        this.x = this.createOwnFloatFromFlt(x);
+        this.y = this.createOwnFloatFromFlt(y);
+        this.width = this.createOwnFloatFromFlt(width);
+        this.height = this.createOwnFloatFromFlt(height);
+        return this;
+    }
+    
     [Rectangle] _initCRectangle(cstring x, cstring y, cstring width, cstring height) {
         this.x = this.createOwnFloatFromCString(x);
         this.y = this.createOwnFloatFromCString(y);
