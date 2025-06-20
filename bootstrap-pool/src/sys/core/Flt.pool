@@ -110,6 +110,28 @@ class Flt {
         return ret;
     }
     
+    global [int] pow(int a, int b) {
+        int ret = 0;
+        // compute a^b as 2^(rem(b*ld(a),1))*2^(floor(b*ld(a)))
+        __pasm__(<"
+            pushl %ebx; .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            movl %eax, (%esp); .byte 0xd9; .byte 0x04; .byte 0x24; #//fld (%esp) #page 927
+            .byte 0xd9; .byte 0xf1; #//fyl2x #page 997
+            // st(0) = b*ld(a)
+            .byte 0xd9; .byte 0xe8; #//fld1 #page 929
+            .byte 0xd9; .byte 0xc1; #//fld st(1) #page 927
+            .byte 0xd9; .byte 0xf8; #//fprem #page 941
+            .byte 0xd9; .byte 0xf0; #//f2xm1 #page 883
+            .byte 0xde; .byte 0xc1; #//faddp #page 886
+            .byte 0xd9; .byte 0xfd; #//fscale #page 953
+            .byte 0xdd; .byte 0xd9; #//fstp st(1) #page 961
+            // st(0) = 10^n
+            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
+            popl %eax
+        ">, {"%eax": a, "%ebx": b}, {"%eax": ret});
+        return ret;
+    }
+    
     //// logarithm functions ////
     global [int] ld(int a) {
         int ret = 0;

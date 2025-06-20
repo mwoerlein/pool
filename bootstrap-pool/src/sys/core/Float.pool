@@ -41,19 +41,30 @@ class Float extends Object {
     [] mulFloat(Float f) { _f = Flt:mul(_f, f.getFlt()); }
     [] divFloat(Float f) { _f = Flt:div(_f, f.getFlt()); }
     
+    [] neg() { _f = Flt:neg(_f); }
     [] sqrt() { _f = Flt:sqrt(_f); }
     
     [int] compareFlt(int f) { return Flt:compare(_f, f); }
     [int] compareFloat(Float f) { return Flt:compare(_f, f.getFlt()); }
+    [int] compareInt(int n) { return Flt:compare(_f, Flt:fromInt(n)); }
+    [int] compareInteger(Integer n) { return Flt:compare(_f, Flt:fromInt(n.getInt())); }
     
     [int] hash() { return _f; }
+    [int] equalsFlt(int f) { return !this.isNaN() && this.compareFlt(f) == 0; }
+    [int] equalsInt(int n) { return !this.isNaN() && this.compareInt(n) == 0; }
     [int] equals(__any__ obj) {
         Float f = this.rt().cast(Float:CLASSNAME, obj);
-        if (f && !this.isNaN()) {
-            return this.compareFloat(f) == 0;
+        if (f) {
+            return !this.isNaN() && this.compareFloat(f) == 0;
+        }
+        Integer n = this.rt().cast(Integer:CLASSNAME, obj);
+        if (n) {
+            return !this.isNaN() && this.compareInteger(n) == 0;
         }
         return 0;
     }
+    
+    [int] floorToInt() { return Flt:floor(_f); }
     
     [OStream] printToStream(OStream stream) { return stream.printFlt(_f); }
 
