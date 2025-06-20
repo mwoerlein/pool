@@ -1,0 +1,734 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics;
+
+use sys::core::Flt;
+use sys::core::String;
+
+use vector::graphics::path::Path;
+use vector::graphics::shape::PathShape;
+
+class RangnarBuilder extends sys::core::utils::Owner {
+
+    sys::stream::OStream debug;
+    
+    int viewWidth;
+    int shiftX;
+    int shiftY;
+    
+    String ravenColor;
+    String mystraColor;
+    String mystraHighlightColor;
+    String lathandarColor;
+    String gondColor;
+    String gondArrowColor;
+    
+    int cx;
+    int cy;
+    
+    int m1r;
+    int m2r; 
+    int m3r; 
+    int m4r;
+    int m5r;
+    int m6r;
+    int m7r;
+    int m8r;
+     
+    int m1a; 
+    int m2a; 
+    int m2as; 
+    int m3a;
+    int m3as;
+    int m4a; 
+    int m6a;
+    int m6as;
+    int m7a;
+    int m7as;
+    
+    int lWidth;
+    int l1r;
+    int l2r;
+    int l3r;
+    int l4r;
+    
+    int l2a;
+    int l3a;
+    int l4a;
+    int l5x;
+    int l5y;
+    int l6x;
+    int l6y;
+    
+    int gWidth;
+    int g1r;
+    int g2r; 
+    int g3r;
+    int g4r;
+    int g5r;
+    int g6r;
+    int g7r;
+    int g8r;
+    int g9r;
+    int g10r;
+    int g11r;
+    int g12r;
+    
+    int gStep;
+    int g1a;
+    int g2a;
+    int g3a1;
+    int g3a1s;
+    int g3a2;
+    int g3a2s;
+    int g4a;
+    int g4as;
+    int g5a;
+    int g6a1;
+    int g6a1s;
+    int g6a2;
+    int g6a2s;
+    int g7a;
+    int g7as;
+    int g8a;
+    int g8as;
+    int g11a;
+    int g11as;
+    int g12a;
+    int g12as;
+     
+    [] __init() { this._initBuilder(); }
+    [] _initBuilder() {
+        
+        shiftX = Flt:fromInt(0);
+        shiftY = Flt:fromInt(50);
+        viewWidth = Flt:fromInt(500);
+        
+        ravenColor = this.createStringFromCString("black");
+        //mystraColor = this.createStringFromCString("#A5A9CC");
+        mystraColor = this.createStringFromCString("#9599BC");
+        mystraHighlightColor = this.createStringFromCString("#E0E0E0");
+        lathandarColor = this.createStringFromCString("#F0C0B0");
+        gondColor = this.createStringFromCString("#FDCC0D");
+        gondArrowColor = this.createStringFromCString("#AE6E55");
+        
+        //debug = this.rt().err();
+        
+    }
+    
+    
+    [Graphic] createLogo() {
+        this._initializeCoordinates();
+        
+        Graphic logo := this.rt().createInstance(Graphic:CLASSNAME);
+        logo.setFltViewport(
+            Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth),
+            Flt:add(shiftX, viewWidth), Flt:add(shiftY, viewWidth)
+        );
+        if (debug) { this._addScaffolding(logo, "red", "green"); }
+        
+        Path raven := this._addNewFilledPath(logo, ravenColor);
+        Path mystra := this._addNewFilledPath(logo, mystraColor);
+        Path lathandar := this._addNewFilledPath(logo, lathandarColor);
+        Path mystraHighlight := this._addNewFilledPath(logo, mystraHighlightColor);
+        Path gondGear := this._addNewFilledPath(logo, gondColor);
+        Path gondArrow := this._addNewFilledPath(logo, gondArrowColor);
+        
+        /*
+        this._generateRaven(raven, true);
+        /*/
+        this._generateRaven(raven, false);
+        this._generateMystra(mystra, mystraHighlight);
+        this._generateLathandar(lathandar);
+        this._generateGond(gondGear, gondArrow);
+        //*/
+        
+        return logo;
+    }
+    
+    [] _generateRaven(Path raven, int withScales) {
+        raven
+            .moveCTo("-70", "165")
+            .lineCTo("-495", "470")
+            .lineCTo("-485", "365")
+            .lineCTo("-295", "205")
+            .lineCTo("-455", "225")
+            .lineCTo("-375", "140")
+            .lineCTo("-255", "110")
+            
+            .lineCTo("-335", "60")
+            .lineCTo("-290", "35")
+            .lineCTo("-205", "55")
+            .lineCTo("-290", "-35")
+            .lineCTo("-230", "-20")
+            .lineCTo("-150", "35")
+            .lineCTo("-185", "-50")
+            .lineCTo("-150", "-35")
+            .lineCTo("-95", "40")
+            .lineCTo("-85", "-70")
+            .lineCTo("-45", "-50")
+            .lineCTo("-50", "-90");
+            
+        if (withScales) {
+            raven
+                .lineCTo("-190", "-95")
+                .lineCTo("-190", "-100")
+                .lineCTo("-170", "-100")
+                .lineCTo("-195", "-152")
+                .lineCTo("-165", "-175")
+                .lineCTo("-135", "-152")
+                .lineCTo("-160", "-100");
+        }
+             
+        raven
+            .lineCTo("-50", "-100")
+            .lineCTo("-50", "-105")
+            .lineCTo("-155", "-220")
+            .lineCTo("-110", "-220")
+            .lineCTo("-75", "-185")
+            .lineCTo("-95", "-235")
+            .lineCTo("-85", "-290")
+            .lineCTo("-60", "-225")
+            .lineCTo("-65", "-320")
+            .lineCTo("-35", "-350")
+            .lineCTo("-25", "-305")
+            
+            .lineCTo("0", "-370")
+             
+            .lineCTo("25", "-305")
+            .lineCTo("35", "-350")
+            .lineCTo("65", "-320")
+            .lineCTo("60", "-225")
+            .lineCTo("85", "-290")
+            .lineCTo("95", "-235")
+            .lineCTo("75", "-185")
+            .lineCTo("110", "-220")
+            .lineCTo("155", "-220")
+            .lineCTo("50", "-105")
+            .lineCTo("50", "-100");
+            
+        if (withScales) {
+            raven
+                .lineCTo("160", "-100")
+                .lineCTo("135", "-152")
+                .lineCTo("165", "-175")
+                .lineCTo("195", "-152")
+                .lineCTo("170", "-100")
+                .lineCTo("190", "-100")
+                .lineCTo("190", "-95");
+        }
+        
+        raven
+            .lineCTo("50", "-90")
+            .lineCTo("45", "-50")
+            .lineCTo("85", "-70")
+            .lineCTo("95", "40")
+            .lineCTo("150", "-35")
+            .lineCTo("185", "-50")
+            .lineCTo("150", "35")
+            .lineCTo("230", "-20")
+            .lineCTo("290", "-35")
+            .lineCTo("205", "55")
+            .lineCTo("290", "35")
+            .lineCTo("335", "60")
+
+            .lineCTo("255", "110")
+            .lineCTo("375", "140")
+            .lineCTo("455", "225")
+            .lineCTo("295", "205")
+            .lineCTo("485", "365")
+            .lineCTo("495", "470")
+            .lineCTo("70", "165");
+            
+        // head
+        raven
+            .lineCTo("30", "255")
+            .lineCTo("25", "275")
+            .lineCTo("10", "300")
+            .lineCTo("-25", "310")
+            .lineCTo("-55", "310")
+            .lineCTo("-90", "325")
+            .lineCTo("-140", "325")
+            .lineCTo("-90", "295")
+            .lineCTo("-65", "270")
+            .lineCTo("-60", "255")
+            .lineCTo("-50", "240")
+            .close();
+            
+        if (withScales) {
+            raven
+                .moveCTo("-165", "-100")
+                .lineCTo("-140", "-150")
+                .lineCTo("-190", "-150")
+                .close();
+            raven
+                .moveCTo("190", "-150")
+                .lineCTo("140", "-150")
+                .lineCTo("165", "-100")
+                .close();
+        }
+    }
+    
+    [] _generateMystra(Path star, Path highlight) {
+        {
+            int moveTo = true;
+            int alpha = 0;
+            while (alpha < 360) {
+                int cur = Flt:fromInt(alpha);
+                [int x1, int y1] := Path:getPolarPoint(m1r, Flt:degToRad(cur));
+                [int x5, int y5] := Path:getPolarPoint(m5r, Flt:degToRad(cur));
+                if (moveTo) {
+                    star.moveFltTo(x1, y1);
+                    highlight.moveFltTo(x5, y5);
+                    moveTo = false;
+                } else {
+                    star.lineFltTo(x1, y1);
+                    highlight.lineFltTo(x5, y5);
+                }
+                star.arcFltTo(cx, cy, m2r, Flt:add(cur, m2a), Flt:add(cur, m2as), true);
+                highlight.arcFltTo(cx, cy, m6r, Flt:add(cur, m6a), Flt:add(cur, m6as), true);
+                
+                alpha += 45;
+            }
+            star.close();
+            highlight.close();
+        }
+        {
+            int moveTo = true;
+            int alpha = 0;
+            while (alpha < 360) {
+                int cur = Flt:fromInt(alpha);
+                [int x, int y] := Path:getPolarPoint(m4r, Flt:degToRad(Flt:add(cur, m4a)));
+                [int x8, int y8] := Path:getPolarPoint(m8r, Flt:degToRad(cur));
+                star.arcFltTo(cx, cy, m3r, Flt:add(cur, m3a), Flt:add(cur, m3as), false)
+                    .lineFltTo(x, y)
+                    .close();
+                if (moveTo) {
+                    highlight.moveFltTo(x8, y8);
+                    moveTo = false;
+                } else {
+                    highlight.lineFltTo(x8, y8);
+                }
+                highlight.arcFltTo(cx, cy, m7r, Flt:add(cur, m7a), Flt:add(cur, m7as), true);
+                
+                alpha += 45;
+            }
+            highlight.close();
+        }
+    }
+    
+    [] _generateLathandar(Path outline) {
+        outline
+            .circleFltTo(cx, cy, l1r, false)
+            .close();
+        int f0 = Flt:fromInt(0);
+        int f45 = Flt:fromInt(45);
+        int f45n = Flt:fromInt(-45);
+        int f90 = Flt:fromInt(90);
+        int f135 = Flt:fromInt(135);
+        int f225 = Flt:fromInt(225);
+        int f270 = Flt:fromInt(270);
+        
+        outline
+            .arcFltTo(cx, cy, l2r, l2a, Flt:sub(f45, l2a), false)
+            .arcFltTo(cx, cy, l3r, Flt:sub(f45, l3a), l3a, true)
+            .close();
+        outline
+            .arcFltTo(cx, cy, l2r, Flt:sub(f90, l2a), Flt:add(f45, l2a), false)
+            .arcFltTo(cx, cy, l3r, Flt:add(f45, l3a), Flt:sub(f90, l3a), true)
+            .close();
+        outline
+            .arcFltTo(cx, cy, l2r, Flt:neg(l2a), Flt:sub(l2a, f45), false)
+            .arcFltTo(cx, cy, l3r, Flt:sub(l3a, f45), Flt:neg(l3a), true)
+            .close();
+        outline
+            .arcFltTo(cx, cy, l2r, Flt:sub(l2a, f90), Flt:sub(f45n, l2a), false)
+            .arcFltTo(cx, cy, l3r, Flt:sub(f45n, l3a), Flt:sub(l3a, f90), true)
+            .close();
+        outline
+            .arcFltTo(cx, cy, l4r, Flt:sub(l4a, f90), Flt:sub(f90, l4a), false)
+            .close();
+            
+        outline
+            .arcFltTo(cx, cy, l2r, Flt:add(f90, l2a), Flt:sub(f135, l2a), false)
+            .lineFltTo(l5x, l5y)
+            .close();
+        outline
+            .arcFltTo(cx, cy, l2r, Flt:add(f135, l2a), Flt:sub(f225, l2a), false)
+            .lineFltTo(Flt:neg(l6x), l6y)
+            .lineFltTo(l6x, l6y)
+            .close();
+        outline
+            .arcFltTo(cx, cy, l2r, Flt:add(f225, l2a), Flt:sub(f270, l2a), false)
+            .lineFltTo(Flt:neg(l5x), l5y)
+            .close();
+    }
+    
+    [] _generateGond(Path gear, Path arrow) {
+        {
+            int moveTo = true;
+            int i = 0;
+            int cur = Flt:ZERO_POS;
+            while (i++ < 32) {
+                [int x1, int y1] := Path:getPolarPoint(g1r, Flt:degToRad(Flt:add(cur, g1a)));
+                [int x2, int y2] := Path:getPolarPoint(g2r, Flt:degToRad(Flt:add(cur, g2a)));
+                if (moveTo) {
+                    gear.moveFltTo(x1, y1);
+                    moveTo = false;
+                } else {
+                    gear.lineFltTo(x1, y1);
+                }
+                gear.lineFltTo(x2, y2);
+                
+                cur = Flt:add(cur, gStep);
+            }
+            gear.close();
+        }
+        {
+            int alpha = 0;
+            while (alpha < 360) {
+                int cur = Flt:fromInt(alpha);
+                [int x5, int y5] := Path:getPolarPoint(g5r, Flt:degToRad(Flt:add(cur, g5a)));
+                [int x4, int y4] := Path:getPolarPoint(g4r, Flt:degToRad(Flt:add(cur, g4a)));
+                [int x4s, int y4s] := Path:getPolarPoint(g4r, Flt:degToRad(Flt:add(cur, g4as)));
+                gear.moveFltTo(x5, y5)
+                    .arcFltTo(cx, cy, g6r, Flt:add(cur, g6a2), Flt:add(cur, g6a1), true)
+                    .lineFltTo(x4, y4)
+                    .arcFltTo(cx, cy, g3r, Flt:add(cur, g3a2), Flt:add(cur, g3a2s), true)
+                    .lineFltTo(x4s, y4s)
+                    .arcFltTo(cx, cy, g6r, Flt:add(cur, g6a1s), Flt:add(cur, g6a2s), true)
+                    .close();
+                alpha += 90;
+            }
+        }
+        {
+            int moveTo = true;
+            int alpha = 0;
+            while (alpha < 360) {
+                int cur = Flt:fromInt(alpha);
+                int cur2 = Flt:fromInt(alpha + 45);
+                [int x2, int y2] := Path:getPolarPoint(g10r, Flt:degToRad(cur));
+                [int x3, int y3] := Path:getPolarPoint(g3r, Flt:degToRad(Flt:add(cur, g3a1)));
+                [int x3s, int y3s] := Path:getPolarPoint(g3r, Flt:degToRad(Flt:add(cur, g3a1s)));
+                [int x6, int y6] := Path:getPolarPoint(g6r, Flt:degToRad(cur2));
+                [int x8, int y8] := Path:getPolarPoint(g8r, Flt:degToRad(Flt:add(cur, g8a)));
+                [int x8s, int y8s] := Path:getPolarPoint(g8r, Flt:degToRad(Flt:add(cur, g8as)));
+                if (moveTo) {
+                    arrow.moveFltTo(x2, y2);
+                    moveTo = false;
+                } else {
+                    arrow.lineFltTo(x2, y2);
+                }
+                arrow
+                    .lineFltTo(x3, y3)
+                    .lineFltTo(x8, y8)
+                    .arcFltTo(cx, cy, g7r, Flt:add(cur, g7a), Flt:sub(cur2, g7a), true)
+                    .lineFltTo(x6, y6)
+                    .arcFltTo(cx, cy, g7r, Flt:add(cur2, g7a), Flt:add(cur, g7as), true)
+                    .lineFltTo(x8s, y8s)
+                    .lineFltTo(x3s, y3s)
+                ;
+                alpha += 90;
+            }
+            arrow.close();
+            arrow.circleFltTo(cx, cy, g9r, false).close();
+        }
+        {
+            int alpha = 0;
+            while (alpha < 360) {
+                int cur = Flt:fromInt(alpha);
+                arrow
+                    .arcFltTo(cx, cy, g11r, Flt:add(cur, g11a), Flt:add(cur, g11as), false)
+                    .arcFltTo(cx, cy, g12r, Flt:add(cur, g12as), Flt:add(cur, g12a), true)
+                    .close()
+                ;
+                alpha += 90;
+            }
+        }
+    }
+    
+    [Path] _addNewFilledPath(Graphic logo, String color) {
+        Path path := logo.newPath();
+        if (color) {
+            PathShape shape := logo.addPath(path);
+            shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
+            shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
+            if (debug) { 
+                shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
+                shape.getFillStyle().setCOpacity("0.3");
+            }
+        }
+        return path;
+    }
+    
+    [] _addScaffolding(Graphic logo, cstring firstColor, cstring secondColor) {
+        logo.addFltSquare(Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth), Flt:add(viewWidth, viewWidth)).getStrokeStyle().setCColor(firstColor);
+        int f2 = Flt:fromInt(2);
+        
+        {
+            // mystra
+            logo.addFltCircle(cx, cy, m1r).getStrokeStyle().setCColor(secondColor);
+            logo.addFltCircle(cx, cy, m2r).getStrokeStyle().setCColor(secondColor);
+            logo.addFltCircle(cx, cy, m3r).getStrokeStyle().setCColor(secondColor);
+            logo.addFltCircle(cx, cy, m4r).getStrokeStyle().setCColor(secondColor);
+            
+            int m1rn = Flt:neg(m1r);
+            logo.addFltLine(cx,m1r,cx,m1rn).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(m1r,cy,m1rn,cy).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(m1r,m1r,m1rn,m1rn).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(m1r,m1rn,m1rn,m1r).getStrokeStyle().setCColor(secondColor);
+            
+            [int x, int y] := Path:getPolarPoint(m4r, Flt:degToRad(m4a));
+            logo.addFltLine(cx, m1r, x, y).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(cx, m1r, Flt:neg(x), y).getStrokeStyle().setCColor(secondColor);
+        }
+        
+        {
+            // lathandar
+            logo.addFltCircle(cx, cy, l1r).getStrokeStyle().setCColor(secondColor);
+            logo.addFltCircle(cx, cy, l2r).getStrokeStyle().setCColor(secondColor);
+            logo.addFltCircle(cx, cy, l3r).getStrokeStyle().setCColor(secondColor);
+            logo.addFltCircle(cx, cy, l4r).getStrokeStyle().setCColor(secondColor);
+            
+            int w = Flt:div(lWidth, f2);
+            int wn = Flt:neg(w);
+            int w2 = Flt:mul(w, Flt:SQRT_TWO_POS);
+            int l1rn = Flt:neg(l1r);
+            
+            logo.addFltLine(w, l1r, w, l1rn).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(wn, l1r, wn, l1rn).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(l1r, w, l1rn, w).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(l1r, wn, l1rn, wn).getStrokeStyle().setCColor(secondColor);
+            
+            logo.addFltLine(Flt:sub(l1r, w2), l1r, l1rn, Flt:add(l1rn, w2)).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(l1r, Flt:sub(l1r, w2), Flt:add(l1rn, w2), l1rn).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(Flt:add(l1rn, w2), l1r, l1r, Flt:add(l1rn, w2)).getStrokeStyle().setCColor(secondColor);
+            logo.addFltLine(l1rn, Flt:sub(l1r, w2), Flt:sub(l1r, w2), l1rn).getStrokeStyle().setCColor(secondColor);
+            
+        }
+        {
+            // gond
+            logo.addFltCircle(cx, cy, g1r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g2r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g3r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g4r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g5r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g6r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g7r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g8r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g9r).getStrokeStyle().setCColor(firstColor);
+            
+            logo.addFltCircle(cx, cy, g11r).getStrokeStyle().setCColor(firstColor);
+            logo.addFltCircle(cx, cy, g12r).getStrokeStyle().setCColor(firstColor);
+            
+            {    
+                [int x, int y] := Path:getPolarPoint(g1r, Flt:degToRad(Flt:fromInt(135)));
+                logo.addFltLine(cx, g1r, x, y).getStrokeStyle().setCColor(firstColor);
+                logo.addFltLine(cx, g1r, Flt:neg(x), y).getStrokeStyle().setCColor(firstColor);
+            }
+            
+            int w = Flt:div(gWidth, f2);
+            logo.addFltLine(w, g1r, w, Flt:neg(g1r)).getStrokeStyle().setCColor(firstColor);
+            logo.addFltLine(Flt:neg(w), g1r, Flt:neg(w), Flt:neg(g1r)).getStrokeStyle().setCColor(firstColor);
+            logo.addFltLine(g1r, w, Flt:neg(g1r), w).getStrokeStyle().setCColor(firstColor);
+            logo.addFltLine(g1r, Flt:neg(w), Flt:neg(g1r), Flt:neg(w)).getStrokeStyle().setCColor(firstColor);
+        }
+        
+    }
+    
+    [] _initializeCoordinates() {
+        int f0 = Flt:fromInt(0);
+        int f2 = Flt:fromInt(2);
+        int f20 = Flt:fromInt(25);
+        int f45 = Flt:fromInt(45);
+        int f90 = Flt:fromInt(90);
+        int f135 = Flt:fromInt(135);
+        int f180 = Flt:fromInt(180);
+        int f360 = Flt:fromInt(360);
+
+        cx = cy = Flt:fromInt(0);
+        {
+            // mystra
+            m1r = Flt:fromInt(230);
+            m2r = Flt:fromInt(170);
+            m3r = Flt:fromInt(150);
+            m4r = Flt:fromInt(90);
+            
+            m5r = Flt:fromInt(190);
+            m6r = Flt:fromInt(162);
+            m7r = Flt:fromInt(158);
+            m8r = Flt:fromInt(70);
+            
+            m1a = Flt:fromInt(0);
+            m4a = Flt:div(f360,Flt:fromInt(16));
+            
+            [int x, int y] := Path:getPolarPoint(m4r, Flt:degToRad(m4a));
+            m2a = this.__interAngleCircleLine(cx, cy, m2r, cx, m1r, x, y, true);
+            m2as = Flt:sub(f45, m2a);
+            m3a = this.__interAngleCircleLine(cx, cy, m3r, cx, m1r, x, y, true);
+            m3as = Flt:sub(f45, m3a);
+            
+            m6a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, m6r, m1r, f2, Flt:neg(m1r), f2, false));
+            m6as = Flt:sub(f45, m6a);
+            m7a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, m7r, m1r, f2, Flt:neg(m1r), f2, false));
+            m7as = Flt:sub(f45, m7a);
+        }
+        {
+            // lathandar
+            lWidth = Flt:fromInt(8);
+            l1r = Flt:fromInt(150);
+            l2r = Flt:sub(l1r, lWidth);
+            l3r = Flt:div(Flt:add(l1r, lWidth), f2);
+            l4r = Flt:sub(l3r, lWidth);
+            
+            int w = Flt:div(lWidth, f2);
+            l2a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, l2r, l1r, w, Flt:neg(l1r), w, false));
+            l3a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, l3r, l1r, w, Flt:neg(l1r), w, false));
+            l4a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, l4r, l1r, w, Flt:neg(l1r), w, false));
+            l6x = Flt:div(l1r, Flt:fromInt(6));
+            //l6y = Flt:neg(Flt:mul(w, Flt:SQRT_TWO_POS));
+            l6y = Flt:neg(w);
+            l5x = Flt:add(l6x, Flt:add(w, Flt:mul(w, Flt:SQRT_TWO_POS)));
+            l5y = Flt:neg(w);
+        }
+        {
+            // gond
+            gWidth = Flt:fromInt(16);
+            g1r = Flt:fromInt(164);
+            g2r = Flt:fromInt(150);
+            g10r = Flt:fromInt(142);
+            g11r = Flt:fromInt(130);
+            g12r = Flt:fromInt(126);
+            g3r = Flt:fromInt(120);
+            g8r = Flt:fromInt(105);
+            g4r = Flt:fromInt(95);
+            g5r = Flt:fromInt(55);
+            
+            g6r = Flt:fromInt(35);
+            g7r = Flt:fromInt(25);
+            g9r = Flt:fromInt(20);
+            gStep = Flt:div(f360, Flt:fromInt(32));
+            
+            int w = Flt:div(gWidth, f2);
+            int w2 = Flt:div(w, Flt:fromInt(4));
+            
+            g1a = f0;
+            g2a = Flt:div(f360, Flt:fromInt(64));
+            g4a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g4r, g1r, w, Flt:neg(g1r), w, false));
+            g4as = Flt:sub(f90, g4a);
+            g3a1 = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g3r, g1r, w, Flt:neg(g1r), w, false));
+            g3a1s = Flt:sub(f90, g3a1);
+            /*
+            g3a2 = Flt:add(g4a, g4a);
+            g3a2s = Flt:sub(f90, g3a2);
+            */
+            g5a = f45;
+            g6a1 = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g6r, g1r, w, Flt:neg(g1r), w, false));
+            g6a1s = Flt:sub(f90, g6a1);
+            g6a2 = Flt:sub(f45, g6a1);
+            g6a2s = Flt:add(f45, g6a1);
+            {
+                [int x, int y] := Path:getPolarPoint(g1r, Flt:degToRad(f135));
+                g3a2 = this.__interAngleCircleLine(cx, cy, g3r, cx, g1r, x, y, true);
+                g3a2s = Flt:sub(f90, g3a2);
+                g11a = this.__interAngleCircleLine(cx, cy, g11r, cx, g1r, x, y, true);
+                g11as = Flt:sub(f90, g11a);
+                g12a = this.__interAngleCircleLine(cx, cy, g12r, cx, g1r, x, y, true);
+                g12as = Flt:sub(f90, g12a);
+            }
+            
+            g7a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g7r, g1r, w2, Flt:neg(g1r), w2, false));
+            g7as = Flt:sub(f90, g7a);
+            g8a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g8r, g1r, w2, Flt:neg(g1r), w2, false));
+            g8as = Flt:sub(f90, g8a);
+        }
+    }
+    
+    [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
+        int dx := Flt:sub(ax, bx);
+        int dy := Flt:sub(ay, by);
+        
+        int a := Flt:mul(Flt:ONE_NEG, Flt:div(dy, dx));
+        int a2 := Flt:mul(a, a);
+        int b := Flt:ONE_POS;
+        int b2 := Flt:mul(b, b);
+        int a2b2 := Flt:add(a2, b2);
+        int c := Flt:div(
+            Flt:sub(Flt:mul(ay, dx), Flt:mul(ax, dy)),
+            dx
+        );
+        int d := Flt:sub(
+            c,
+            Flt:add(
+                Flt:mul(a, mx),
+                Flt:mul(b, my)
+            )
+        );
+        int d2 := Flt:mul(d, d);
+        int r2 := Flt:mul(r, r);
+        int ad := Flt:mul(a, d);
+        int bd := Flt:mul(b, d);
+        int s2 := Flt:sub(Flt:mul(r2, a2b2), d2);
+        int comp := Flt:compare(s2, Flt:ZERO_POS);
+        
+        if (comp < 0) {
+            if (debug) { debug.printCString("Keine Schnittstellen").printNewline(); }
+        } else if (comp == 0) {
+            if (debug) { debug.printCString("Eine Schnittstelle").printNewline(); }
+            int x := Flt:add(mx, Flt:div(ad, a2b2));
+            int y := Flt:add(my, Flt:div(bd, a2b2));
+            int alpha := Flt:radToDeg(Flt:arctan2(x, y));
+            if (debug) { 
+                debug
+                    .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
+            }
+            return alpha;
+        } else {
+            if (debug) { debug.printCString("Zwei Schnittstellen").printNewline(); }
+            int s := Flt:sqrt(s2);
+            int x1 := Flt:div(Flt:add(ad, Flt:mul(b, s)), a2b2);
+            int x2 := Flt:div(Flt:sub(ad, Flt:mul(b, s)), a2b2);
+            int y1 := Flt:div(Flt:sub(bd, Flt:mul(a, s)), a2b2);
+            int y2 := Flt:div(Flt:add(bd, Flt:mul(a, s)), a2b2);
+            int alpha1 := Flt:radToDeg(Flt:arctan2(x1, y1));
+            int alpha2 := Flt:radToDeg(Flt:arctan2(x2, y2));
+            if (debug) {
+                debug
+                    .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
+                    .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
+                    .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
+                    .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
+            }
+            if (second) { return alpha2; }
+            return alpha1;
+        }
+        return Flt:NAN;
+    }
+    
+    [int] __interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
+        int ar2 := Flt:mul(ar, ar);
+        int br2 := Flt:mul(br, br);
+        int dx := Flt:sub(ax, bx);
+        int dy := Flt:sub(ay, by);
+        int cr2 := Flt:add(Flt:mul(dx, dx), Flt:mul(dy, dy));
+        int cr := Flt:sqrt(cr2);
+        if (Flt:compare(cr, Flt:add(ar, br)) < 0) {
+            int cos := Flt:div(
+                Flt:sub(Flt:add(ar2, cr2), br2),
+                Flt:mul(Flt:TWO_POS, Flt:mul(ar, cr))
+            );
+            int alpha = Flt:radToDeg(Flt:arccos(cos));
+            if (debug) {
+                debug
+                    .printFlt(ar).printChar('/').printFlt(br).printChar('/').printFlt(cr).printChar(' ')
+                    .printFlt(cos).printChar('/').printFlt(alpha).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha,alpha))).printNewline();
+            }
+            return alpha;
+        }
+        return Flt:NAN;
+    }
+
+}
