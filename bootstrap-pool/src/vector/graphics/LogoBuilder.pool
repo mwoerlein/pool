@@ -11,11 +11,8 @@ use sys::core::String;
 use vector::graphics::path::Path;
 use vector::graphics::shape::PathShape;
 
-class LogoBuilder extends sys::core::utils::Owner {
+class LogoBuilder extends vector::graphics::Builder {
 
-    int viewWidth;
-    int shiftX;
-    int shiftY;
     int outlineWidth;
     int ringRadius;
     int ringWidth;
@@ -24,8 +21,6 @@ class LogoBuilder extends sys::core::utils::Owner {
     int cornerRadius;
     int cornerShadowScale;
     int highlightWidth;
-    
-    sys::stream::OStream debug;
     
     String outlineColor;
     String ringColor;
@@ -86,10 +81,10 @@ class LogoBuilder extends sys::core::utils::Owner {
     int rsa4;
     int rsa5;
     
-    [] __init() { this._initBuilder(); }
-    [] _initBuilder() {
-        shiftX = shiftY = Flt:fromInt(0);
-        viewWidth = Flt:fromInt(400);
+    [] __init() { this._initLogoBuilder(); }
+    [] _initLogoBuilder() {
+        this._initSimpleBuilder(400);
+        
         outlineWidth = Flt:fromInt(10);
         ringRadius = Flt:fromInt(250);
         ringWidth = Flt:fromInt(115);
@@ -99,7 +94,7 @@ class LogoBuilder extends sys::core::utils::Owner {
         cornerShadowScale = Flt:fromInt(20);
         highlightWidth = Flt:fromInt(60);
         
-        //debug = this.rt().err();
+        //this.withDebug();
         
         this.colored();
         //this.asIcon();
@@ -111,7 +106,7 @@ class LogoBuilder extends sys::core::utils::Owner {
     [LogoBuilder] asIcon() {
         if (Flt:compare(viewWidth, Flt:fromInt(16)) > 0) {
             int scale := Flt:div(Flt:fromInt(14), ringRadius);
-            shiftX = shiftY = viewWidth = Flt:fromInt(16);
+            shiftX = shiftY = viewWidth = viewHeight = Flt:fromInt(16);
             
             outlineWidth = Flt:mul(outlineWidth, scale);
             ringRadius = Flt:mul(ringRadius, scale);
@@ -151,15 +146,10 @@ class LogoBuilder extends sys::core::utils::Owner {
         return this;
     }
     
-    [Graphic] createLogo() {
+    [Graphic] buildGraphic() {
         this._initializeCoordinates();
         
-        Graphic logo := this.rt().createInstance(Graphic:CLASSNAME);
-        logo.setFltViewport(
-            Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth),
-            Flt:add(shiftX, viewWidth), Flt:add(shiftY, viewWidth)
-        );
-        if (debug) { this._addScaffolding(logo, "red", "green"); }
+        Graphic logo := this._newGraphic();
         
         Path corner := this._addNewFilledPath(logo, cornerColor);
         Path cornerShadow := this._addNewFilledPath(logo, cornerShadowColor);
@@ -291,70 +281,61 @@ class LogoBuilder extends sys::core::utils::Owner {
         }
     }
     
-    [Path] _addNewFilledPath(Graphic logo, String color) {
-        Path path := logo.newPath();
-        if (color) {
-            PathShape shape := logo.addPath(path);
-            shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-            shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
-            if (debug) { shape.getFillStyle().setCOpacity("0.3"); }
-        }
-        return path;
-    }
-    
-    [] _addScaffolding(Graphic logo, cstring bodyColor, cstring shadowColor) {
+    [] _addScaffolding(Graphic logo) {
+        String bodyColor := scaffoldingColor1;
+        String shadowColor := scaffoldingColor2;
     
         // ring
-        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r1r).getStrokeStyle().setCColor(bodyColor);
-        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r).getStrokeStyle().setCColor(bodyColor);
-        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r3r).getStrokeStyle().setCColor(shadowColor);
-        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r).getStrokeStyle().setCColor(bodyColor);
-        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r).getStrokeStyle().setCColor(bodyColor);
-        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r6r).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r1r).getStrokeStyle().setColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r2r).getStrokeStyle().setColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r3r).getStrokeStyle().setColor(shadowColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r4r).getStrokeStyle().setColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r5r).getStrokeStyle().setColor(bodyColor);
+        logo.addFltCircle(Flt:add(shiftX, rx), Flt:add(shiftY, ry), r6r).getStrokeStyle().setColor(bodyColor);
         logo.addFltLine(
             Flt:add(shiftX, r5r), Flt:add(shiftY, r5r),
             Flt:sub(shiftX, r5r), Flt:sub(shiftY, r5r)
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         logo.addFltLine(
             Flt:add(shiftX, r5r), Flt:sub(shiftY, r5r),
             Flt:sub(shiftX, r5r), Flt:add(shiftY, r5r)
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         
         // ring shadow
-        logo.addFltCircle(Flt:add(shiftX, rsx), Flt:add(shiftY, rsy), rsr).getStrokeStyle().setCColor(shadowColor);
+        logo.addFltCircle(Flt:add(shiftX, rsx), Flt:add(shiftY, rsy), rsr).getStrokeStyle().setColor(shadowColor);
         logo.addFltLine(
             Flt:add(shiftX, rx), Flt:add(shiftY, ry),
             Flt:add(shiftX, rsx), Flt:add(shiftY, rsy)
-        ).getStrokeStyle().setCColor(shadowColor);
+        ).getStrokeStyle().setColor(shadowColor);
         /*
         logo.addFltLine(
             Flt:add(shiftX, Flt:add(rsx, rsr)), Flt:add(shiftY, Flt:add(rsy, rsr)),
             Flt:add(shiftX, Flt:sub(rsx, rsr)), Flt:add(shiftY, Flt:sub(rsy, rsr))
-        ).getStrokeStyle().setCColor(shadowColor);
+        ).getStrokeStyle().setColor(shadowColor);
         logo.addFltLine(
             Flt:add(shiftX, Flt:add(rsx, rsr)), Flt:add(shiftY, Flt:sub(rsy, rsr)),
             Flt:add(shiftX, Flt:sub(rsx, rsr)), Flt:add(shiftY, Flt:add(rsy, rsr))
-        ).getStrokeStyle().setCColor(shadowColor);
+        ).getStrokeStyle().setColor(shadowColor);
         //*/
         
         // corner
         int _cx := Flt:add(shiftX, cx);
         int _cy := Flt:add(shiftY, cy);
-        logo.addFltCircle(_cx, _cy, cor).getStrokeStyle().setCColor(bodyColor);
-        logo.addFltCircle(_cx, _cy, cir).getStrokeStyle().setCColor(bodyColor);
+        logo.addFltCircle(_cx, _cy, cor).getStrokeStyle().setColor(bodyColor);
+        logo.addFltCircle(_cx, _cy, cir).getStrokeStyle().setColor(bodyColor);
         logo.addFltLine(
             Flt:add(_cx, cor), Flt:sub(_cy, cor),
             Flt:sub(_cx, cor), Flt:add(_cy, cor)
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         
         // corner shadow
         int _csx := Flt:add(shiftX, csx);
         int _csy := Flt:add(shiftY, csy);
-        logo.addFltCircle(_csx, _csy, csr).getStrokeStyle().setCColor(shadowColor);
+        logo.addFltCircle(_csx, _csy, csr).getStrokeStyle().setColor(shadowColor);
         logo.addFltLine(
             Flt:add(_csx, csr), Flt:sub(_csy, csr),
             Flt:sub(_csx, csr), Flt:add(_csy, csr)
-        ).getStrokeStyle().setCColor(shadowColor);
+        ).getStrokeStyle().setColor(shadowColor);
         
         // highlight
         int hd1 = Flt:mul(highlightWidth, Flt:SQRT_TWO_POS);
@@ -362,19 +343,19 @@ class LogoBuilder extends sys::core::utils::Owner {
         logo.addFltLine(
             Flt:add(shiftX, r5r), Flt:add(shiftY, Flt:sub(r5r, hd1)),
             Flt:add(shiftX, Flt:sub(hd1, r5r)), Flt:sub(shiftY, r5r)
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         logo.addFltLine(
             Flt:add(shiftX, r5r), Flt:add(shiftY, Flt:sub(r5r, hd2)),
             Flt:add(shiftX, Flt:sub(hd2, r5r)), Flt:sub(shiftY, r5r)
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         logo.addFltLine(
             Flt:add(shiftX, Flt:sub(r5r, hd1)), Flt:add(shiftY, r5r),
             Flt:sub(shiftX, r5r), Flt:add(shiftY, Flt:sub(hd1, r5r))
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         logo.addFltLine(
             Flt:add(shiftX, Flt:sub(r5r, hd2)), Flt:add(shiftY, r5r),
             Flt:sub(shiftX, r5r), Flt:add(shiftY, Flt:sub(hd2, r5r))
-        ).getStrokeStyle().setCColor(bodyColor);
+        ).getStrokeStyle().setColor(bodyColor);
         
     }
     
@@ -437,90 +418,6 @@ class LogoBuilder extends sys::core::utils::Owner {
         cia = Flt:sub(f180, this.__interAngleCircleCircle(cx, cy, cir, rx, ry, r5r));
         coa = Flt:sub(f180, this.__interAngleCircleCircle(cx, cy, cor, rx, ry, r5r));
         csa = Flt:sub(f180, this.__interAngleCircleCircle(csx, csy, csr, rx, ry, r5r));
-    }
-    
-    [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
-        int dx := Flt:sub(ax, bx);
-        int dy := Flt:sub(ay, by);
-        
-        int a := Flt:mul(Flt:ONE_NEG, Flt:div(dy, dx));
-        int a2 := Flt:mul(a, a);
-        int b := Flt:ONE_POS;
-        int b2 := Flt:mul(b, b);
-        int a2b2 := Flt:add(a2, b2);
-        int c := Flt:div(
-            Flt:sub(Flt:mul(ay, dx), Flt:mul(ax, dy)),
-            dx
-        );
-        int d := Flt:sub(
-            c,
-            Flt:add(
-                Flt:mul(a, mx),
-                Flt:mul(b, my)
-            )
-        );
-        int d2 := Flt:mul(d, d);
-        int r2 := Flt:mul(r, r);
-        int ad := Flt:mul(a, d);
-        int bd := Flt:mul(b, d);
-        int s2 := Flt:sub(Flt:mul(r2, a2b2), d2);
-        int comp := Flt:compare(s2, Flt:ZERO_POS);
-        
-        if (comp < 0) {
-            if (debug) { debug.printCString("Keine Schnittstellen").printNewline(); }
-        } else if (comp == 0) {
-            if (debug) { debug.printCString("Eine Schnittstelle").printNewline(); }
-            int x := Flt:add(mx, Flt:div(ad, a2b2));
-            int y := Flt:add(my, Flt:div(bd, a2b2));
-            int alpha := Flt:radToDeg(Flt:arctan2(x, y));
-            if (debug) { 
-                debug
-                    .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
-            }
-            return alpha;
-        } else {
-            if (debug) { debug.printCString("Zwei Schnittstellen").printNewline(); }
-            int s := Flt:sqrt(s2);
-            int x1 := Flt:div(Flt:add(ad, Flt:mul(b, s)), a2b2);
-            int x2 := Flt:div(Flt:sub(ad, Flt:mul(b, s)), a2b2);
-            int y1 := Flt:div(Flt:sub(bd, Flt:mul(a, s)), a2b2);
-            int y2 := Flt:div(Flt:add(bd, Flt:mul(a, s)), a2b2);
-            int alpha1 := Flt:radToDeg(Flt:arctan2(x1, y1));
-            int alpha2 := Flt:radToDeg(Flt:arctan2(x2, y2));
-            if (debug) {
-                debug
-                    .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
-                    .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
-                    .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
-                    .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
-            }
-            if (second) { return alpha2; }
-            return alpha1;
-        }
-        return Flt:NAN;
-    }
-    
-    [int] __interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
-        int ar2 := Flt:mul(ar, ar);
-        int br2 := Flt:mul(br, br);
-        int dx := Flt:sub(ax, bx);
-        int dy := Flt:sub(ay, by);
-        int cr2 := Flt:add(Flt:mul(dx, dx), Flt:mul(dy, dy));
-        int cr := Flt:sqrt(cr2);
-        if (Flt:compare(cr, Flt:add(ar, br)) < 0) {
-            int cos := Flt:div(
-                Flt:sub(Flt:add(ar2, cr2), br2),
-                Flt:mul(Flt:TWO_POS, Flt:mul(ar, cr))
-            );
-            int alpha = Flt:radToDeg(Flt:arccos(cos));
-            if (debug) {
-                debug
-                    .printFlt(ar).printChar('/').printFlt(br).printChar('/').printFlt(cr).printChar(' ')
-                    .printFlt(cos).printChar('/').printFlt(alpha).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha,alpha))).printNewline();
-            }
-            return alpha;
-        }
-        return Flt:NAN;
     }
     
 }

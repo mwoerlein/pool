@@ -1,0 +1,158 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics;
+
+use sys::core::Flt;
+use sys::core::String;
+
+use vector::graphics::path::Path;
+use vector::graphics::shape::PathShape;
+
+class Builder extends sys::core::utils::Owner {
+
+    int viewWidth;
+    int viewHeight;
+    int shiftX;
+    int shiftY;
+    
+    sys::stream::OStream debug;
+    
+    String scaffoldingColor1;
+    String scaffoldingColor2;
+    String scaffoldingColor3;
+    
+    [] _initSimpleBuilder(int width) {
+        this._initBuilder(Flt:fromInt(0), Flt:fromInt(0), Flt:fromInt(width), Flt:fromInt(width));
+    }
+    [] _initBuilder(int shiftX, int shiftY, int viewWidth, int viewHeight) {
+        this.shiftX = shiftX;
+        this.shiftY = shiftY;
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
+        this.scaffoldingColor1 = this.createStringFromCString("red");
+        this.scaffoldingColor2 = this.createStringFromCString("green");
+        this.scaffoldingColor3 = this.createStringFromCString("blue");
+    }
+    
+    [Builder] withDebug() {
+        this.debug = this.rt().err();
+        return this;
+    }
+    // TODO: remove with implicit cast
+    [Builder] builder() { return this; }
+    
+    abstract [Graphic] buildGraphic();
+    [] _addScaffolding(Graphic g) {}
+    
+    [Graphic] _newGraphic() {
+        Graphic g := this.rt().createInstance(Graphic:CLASSNAME);
+        g.setFltViewport(
+            Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewHeight),
+            Flt:add(shiftX, viewWidth), Flt:add(shiftY, viewHeight)
+        );
+        if (debug) { this._addScaffolding(g); }
+        return g;
+    }
+    
+    [Path] _addNewFilledPath(Graphic g, String color) {
+        Path path := g.newPath();
+        if (color) {
+            PathShape shape := g.addPath(path);
+            shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
+            shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
+            if (debug) { 
+                shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
+                shape.getFillStyle().setCOpacity("0.3");
+            }
+        }
+        return path;
+    }
+    
+    [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
+        int dx := Flt:sub(ax, bx);
+        int dy := Flt:sub(ay, by);
+        
+        int a := Flt:mul(Flt:ONE_NEG, Flt:div(dy, dx));
+        int a2 := Flt:mul(a, a);
+        int b := Flt:ONE_POS;
+        int b2 := Flt:mul(b, b);
+        int a2b2 := Flt:add(a2, b2);
+        int c := Flt:div(
+            Flt:sub(Flt:mul(ay, dx), Flt:mul(ax, dy)),
+            dx
+        );
+        int d := Flt:sub(
+            c,
+            Flt:add(
+                Flt:mul(a, mx),
+                Flt:mul(b, my)
+            )
+        );
+        int d2 := Flt:mul(d, d);
+        int r2 := Flt:mul(r, r);
+        int ad := Flt:mul(a, d);
+        int bd := Flt:mul(b, d);
+        int s2 := Flt:sub(Flt:mul(r2, a2b2), d2);
+        int comp := Flt:compare(s2, Flt:ZERO_POS);
+        
+        if (comp < 0) {
+            if (debug) { debug.printCString("Keine Schnittstellen").printNewline(); }
+        } else if (comp == 0) {
+            if (debug) { debug.printCString("Eine Schnittstelle").printNewline(); }
+            int x := Flt:add(mx, Flt:div(ad, a2b2));
+            int y := Flt:add(my, Flt:div(bd, a2b2));
+            int alpha := Flt:radToDeg(Flt:arctan2(x, y));
+            if (debug) { 
+                debug
+                    .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
+            }
+            return alpha;
+        } else {
+            if (debug) { debug.printCString("Zwei Schnittstellen").printNewline(); }
+            int s := Flt:sqrt(s2);
+            int x1 := Flt:div(Flt:add(ad, Flt:mul(b, s)), a2b2);
+            int x2 := Flt:div(Flt:sub(ad, Flt:mul(b, s)), a2b2);
+            int y1 := Flt:div(Flt:sub(bd, Flt:mul(a, s)), a2b2);
+            int y2 := Flt:div(Flt:add(bd, Flt:mul(a, s)), a2b2);
+            int alpha1 := Flt:radToDeg(Flt:arctan2(x1, y1));
+            int alpha2 := Flt:radToDeg(Flt:arctan2(x2, y2));
+            if (debug) {
+                debug
+                    .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
+                    .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
+                    .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
+                    .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
+            }
+            if (second) { return alpha2; }
+            return alpha1;
+        }
+        return Flt:NAN;
+    }
+    
+    [int] __interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
+        int ar2 := Flt:mul(ar, ar);
+        int br2 := Flt:mul(br, br);
+        int dx := Flt:sub(ax, bx);
+        int dy := Flt:sub(ay, by);
+        int cr2 := Flt:add(Flt:mul(dx, dx), Flt:mul(dy, dy));
+        int cr := Flt:sqrt(cr2);
+        if (Flt:compare(cr, Flt:add(ar, br)) < 0) {
+            int cos := Flt:div(
+                Flt:sub(Flt:add(ar2, cr2), br2),
+                Flt:mul(Flt:TWO_POS, Flt:mul(ar, cr))
+            );
+            int alpha = Flt:radToDeg(Flt:arccos(cos));
+            if (debug) {
+                debug
+                    .printFlt(ar).printChar('/').printFlt(br).printChar('/').printFlt(cr).printChar(' ')
+                    .printFlt(cos).printChar('/').printFlt(alpha).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha,alpha))).printNewline();
+            }
+            return alpha;
+        }
+        return Flt:NAN;
+    }
+    
+}

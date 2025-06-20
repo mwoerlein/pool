@@ -11,13 +11,7 @@ use sys::core::String;
 use vector::graphics::path::Path;
 use vector::graphics::shape::PathShape;
 
-class RangnarBuilder extends sys::core::utils::Owner {
-
-    sys::stream::OStream debug;
-    
-    int viewWidth;
-    int shiftX;
-    int shiftY;
+class RangnarBuilder extends vector::graphics::Builder {
     
     String ravenColor;
     String mystraColor;
@@ -100,35 +94,25 @@ class RangnarBuilder extends sys::core::utils::Owner {
     int g12a;
     int g12as;
      
-    [] __init() { this._initBuilder(); }
-    [] _initBuilder() {
-        
-        shiftX = Flt:fromInt(0);
-        shiftY = Flt:fromInt(50);
-        viewWidth = Flt:fromInt(500);
+    [] __init() { this._initRangnarBuilder(); }
+    [] _initRangnarBuilder() {
+        _initBuilder(Flt:fromInt(0), Flt:fromInt(50), Flt:fromInt(500), Flt:fromInt(500));
         
         ravenColor = this.createStringFromCString("black");
-        //mystraColor = this.createStringFromCString("#A5A9CC");
         mystraColor = this.createStringFromCString("#9599BC");
         mystraHighlightColor = this.createStringFromCString("#E0E0E0");
         lathandarColor = this.createStringFromCString("#F0C0B0");
         gondColor = this.createStringFromCString("#FDCC0D");
         gondArrowColor = this.createStringFromCString("#AE6E55");
         
-        //debug = this.rt().err();
-        
+        //this.withDebug();
     }
     
     
-    [Graphic] createLogo() {
+    [Graphic] buildGraphic() {
         this._initializeCoordinates();
         
-        Graphic logo := this.rt().createInstance(Graphic:CLASSNAME);
-        logo.setFltViewport(
-            Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth),
-            Flt:add(shiftX, viewWidth), Flt:add(shiftY, viewWidth)
-        );
-        if (debug) { this._addScaffolding(logo, "red", "green"); }
+        Graphic logo := this._newGraphic();
         
         Path raven := this._addNewFilledPath(logo, ravenColor);
         Path mystra := this._addNewFilledPath(logo, mystraColor);
@@ -450,91 +434,83 @@ class RangnarBuilder extends sys::core::utils::Owner {
         }
     }
     
-    [Path] _addNewFilledPath(Graphic logo, String color) {
-        Path path := logo.newPath();
-        if (color) {
-            PathShape shape := logo.addPath(path);
-            shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-            shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
-            if (debug) { 
-                shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
-                shape.getFillStyle().setCOpacity("0.3");
-            }
-        }
-        return path;
-    }
-    
-    [] _addScaffolding(Graphic logo, cstring firstColor, cstring secondColor) {
-        logo.addFltSquare(Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth), Flt:add(viewWidth, viewWidth)).getStrokeStyle().setCColor(firstColor);
+    [] _addScaffolding(Graphic g) {
+        String c1 := scaffoldingColor1;
+        String c2 := scaffoldingColor2;
+        String c3 := scaffoldingColor3;
+        
+        g.addFltSquare(Flt:sub(shiftX, viewWidth), Flt:sub(shiftY, viewWidth), Flt:add(viewWidth, viewWidth))
+            .getStrokeStyle().setColor(c1);
+            
         int f2 = Flt:fromInt(2);
         
         {
             // mystra
-            logo.addFltCircle(cx, cy, m1r).getStrokeStyle().setCColor(secondColor);
-            logo.addFltCircle(cx, cy, m2r).getStrokeStyle().setCColor(secondColor);
-            logo.addFltCircle(cx, cy, m3r).getStrokeStyle().setCColor(secondColor);
-            logo.addFltCircle(cx, cy, m4r).getStrokeStyle().setCColor(secondColor);
+            g.addFltCircle(cx, cy, m1r).getStrokeStyle().setColor(c2);
+            g.addFltCircle(cx, cy, m2r).getStrokeStyle().setColor(c2);
+            g.addFltCircle(cx, cy, m3r).getStrokeStyle().setColor(c2);
+            g.addFltCircle(cx, cy, m4r).getStrokeStyle().setColor(c2);
             
             int m1rn = Flt:neg(m1r);
-            logo.addFltLine(cx,m1r,cx,m1rn).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(m1r,cy,m1rn,cy).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(m1r,m1r,m1rn,m1rn).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(m1r,m1rn,m1rn,m1r).getStrokeStyle().setCColor(secondColor);
+            g.addFltLine(cx,m1r,cx,m1rn).getStrokeStyle().setColor(c2);
+            g.addFltLine(m1r,cy,m1rn,cy).getStrokeStyle().setColor(c2);
+            g.addFltLine(m1r,m1r,m1rn,m1rn).getStrokeStyle().setColor(c2);
+            g.addFltLine(m1r,m1rn,m1rn,m1r).getStrokeStyle().setColor(c2);
             
             [int x, int y] := Path:getPolarPoint(m4r, Flt:degToRad(m4a));
-            logo.addFltLine(cx, m1r, x, y).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(cx, m1r, Flt:neg(x), y).getStrokeStyle().setCColor(secondColor);
+            g.addFltLine(cx, m1r, x, y).getStrokeStyle().setColor(c2);
+            g.addFltLine(cx, m1r, Flt:neg(x), y).getStrokeStyle().setColor(c2);
         }
         
         {
             // lathandar
-            logo.addFltCircle(cx, cy, l1r).getStrokeStyle().setCColor(secondColor);
-            logo.addFltCircle(cx, cy, l2r).getStrokeStyle().setCColor(secondColor);
-            logo.addFltCircle(cx, cy, l3r).getStrokeStyle().setCColor(secondColor);
-            logo.addFltCircle(cx, cy, l4r).getStrokeStyle().setCColor(secondColor);
+            g.addFltCircle(cx, cy, l1r).getStrokeStyle().setColor(c3);
+            g.addFltCircle(cx, cy, l2r).getStrokeStyle().setColor(c3);
+            g.addFltCircle(cx, cy, l3r).getStrokeStyle().setColor(c3);
+            g.addFltCircle(cx, cy, l4r).getStrokeStyle().setColor(c3);
             
             int w = Flt:div(lWidth, f2);
             int wn = Flt:neg(w);
             int w2 = Flt:mul(w, Flt:SQRT_TWO_POS);
             int l1rn = Flt:neg(l1r);
             
-            logo.addFltLine(w, l1r, w, l1rn).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(wn, l1r, wn, l1rn).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(l1r, w, l1rn, w).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(l1r, wn, l1rn, wn).getStrokeStyle().setCColor(secondColor);
+            g.addFltLine(w, l1r, w, l1rn).getStrokeStyle().setColor(c3);
+            g.addFltLine(wn, l1r, wn, l1rn).getStrokeStyle().setColor(c3);
+            g.addFltLine(l1r, w, l1rn, w).getStrokeStyle().setColor(c3);
+            g.addFltLine(l1r, wn, l1rn, wn).getStrokeStyle().setColor(c3);
             
-            logo.addFltLine(Flt:sub(l1r, w2), l1r, l1rn, Flt:add(l1rn, w2)).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(l1r, Flt:sub(l1r, w2), Flt:add(l1rn, w2), l1rn).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(Flt:add(l1rn, w2), l1r, l1r, Flt:add(l1rn, w2)).getStrokeStyle().setCColor(secondColor);
-            logo.addFltLine(l1rn, Flt:sub(l1r, w2), Flt:sub(l1r, w2), l1rn).getStrokeStyle().setCColor(secondColor);
+            g.addFltLine(Flt:sub(l1r, w2), l1r, l1rn, Flt:add(l1rn, w2)).getStrokeStyle().setColor(c3);
+            g.addFltLine(l1r, Flt:sub(l1r, w2), Flt:add(l1rn, w2), l1rn).getStrokeStyle().setColor(c3);
+            g.addFltLine(Flt:add(l1rn, w2), l1r, l1r, Flt:add(l1rn, w2)).getStrokeStyle().setColor(c3);
+            g.addFltLine(l1rn, Flt:sub(l1r, w2), Flt:sub(l1r, w2), l1rn).getStrokeStyle().setColor(c3);
             
         }
         {
             // gond
-            logo.addFltCircle(cx, cy, g1r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g2r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g3r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g4r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g5r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g6r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g7r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g8r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g9r).getStrokeStyle().setCColor(firstColor);
+            g.addFltCircle(cx, cy, g1r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g2r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g3r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g4r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g5r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g6r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g7r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g8r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g9r).getStrokeStyle().setColor(c1);
             
-            logo.addFltCircle(cx, cy, g11r).getStrokeStyle().setCColor(firstColor);
-            logo.addFltCircle(cx, cy, g12r).getStrokeStyle().setCColor(firstColor);
+            g.addFltCircle(cx, cy, g11r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx, cy, g12r).getStrokeStyle().setColor(c1);
             
             {    
                 [int x, int y] := Path:getPolarPoint(g1r, Flt:degToRad(Flt:fromInt(135)));
-                logo.addFltLine(cx, g1r, x, y).getStrokeStyle().setCColor(firstColor);
-                logo.addFltLine(cx, g1r, Flt:neg(x), y).getStrokeStyle().setCColor(firstColor);
+                g.addFltLine(cx, g1r, x, y).getStrokeStyle().setColor(c1);
+                g.addFltLine(cx, g1r, Flt:neg(x), y).getStrokeStyle().setColor(c1);
             }
             
             int w = Flt:div(gWidth, f2);
-            logo.addFltLine(w, g1r, w, Flt:neg(g1r)).getStrokeStyle().setCColor(firstColor);
-            logo.addFltLine(Flt:neg(w), g1r, Flt:neg(w), Flt:neg(g1r)).getStrokeStyle().setCColor(firstColor);
-            logo.addFltLine(g1r, w, Flt:neg(g1r), w).getStrokeStyle().setCColor(firstColor);
-            logo.addFltLine(g1r, Flt:neg(w), Flt:neg(g1r), Flt:neg(w)).getStrokeStyle().setCColor(firstColor);
+            g.addFltLine(w, g1r, w, Flt:neg(g1r)).getStrokeStyle().setColor(c1);
+            g.addFltLine(Flt:neg(w), g1r, Flt:neg(w), Flt:neg(g1r)).getStrokeStyle().setColor(c1);
+            g.addFltLine(g1r, w, Flt:neg(g1r), w).getStrokeStyle().setColor(c1);
+            g.addFltLine(g1r, Flt:neg(w), Flt:neg(g1r), Flt:neg(w)).getStrokeStyle().setColor(c1);
         }
         
     }
@@ -645,90 +621,6 @@ class RangnarBuilder extends sys::core::utils::Owner {
             g8a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g8r, g1r, w2, Flt:neg(g1r), w2, false));
             g8as = Flt:sub(f90, g8a);
         }
-    }
-    
-    [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
-        int dx := Flt:sub(ax, bx);
-        int dy := Flt:sub(ay, by);
-        
-        int a := Flt:mul(Flt:ONE_NEG, Flt:div(dy, dx));
-        int a2 := Flt:mul(a, a);
-        int b := Flt:ONE_POS;
-        int b2 := Flt:mul(b, b);
-        int a2b2 := Flt:add(a2, b2);
-        int c := Flt:div(
-            Flt:sub(Flt:mul(ay, dx), Flt:mul(ax, dy)),
-            dx
-        );
-        int d := Flt:sub(
-            c,
-            Flt:add(
-                Flt:mul(a, mx),
-                Flt:mul(b, my)
-            )
-        );
-        int d2 := Flt:mul(d, d);
-        int r2 := Flt:mul(r, r);
-        int ad := Flt:mul(a, d);
-        int bd := Flt:mul(b, d);
-        int s2 := Flt:sub(Flt:mul(r2, a2b2), d2);
-        int comp := Flt:compare(s2, Flt:ZERO_POS);
-        
-        if (comp < 0) {
-            if (debug) { debug.printCString("Keine Schnittstellen").printNewline(); }
-        } else if (comp == 0) {
-            if (debug) { debug.printCString("Eine Schnittstelle").printNewline(); }
-            int x := Flt:add(mx, Flt:div(ad, a2b2));
-            int y := Flt:add(my, Flt:div(bd, a2b2));
-            int alpha := Flt:radToDeg(Flt:arctan2(x, y));
-            if (debug) { 
-                debug
-                    .printPtr(Flt:add(mx, x)).printChar('/').printPtr(Flt:add(my, y)).printChar('/').printFlt(alpha).printNewline();
-            }
-            return alpha;
-        } else {
-            if (debug) { debug.printCString("Zwei Schnittstellen").printNewline(); }
-            int s := Flt:sqrt(s2);
-            int x1 := Flt:div(Flt:add(ad, Flt:mul(b, s)), a2b2);
-            int x2 := Flt:div(Flt:sub(ad, Flt:mul(b, s)), a2b2);
-            int y1 := Flt:div(Flt:sub(bd, Flt:mul(a, s)), a2b2);
-            int y2 := Flt:div(Flt:add(bd, Flt:mul(a, s)), a2b2);
-            int alpha1 := Flt:radToDeg(Flt:arctan2(x1, y1));
-            int alpha2 := Flt:radToDeg(Flt:arctan2(x2, y2));
-            if (debug) {
-                debug
-                    .printPtr(Flt:add(mx, x1)).printChar('/').printPtr(Flt:add(my, y1)).printChar('/')
-                    .printFlt(alpha1).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha1,alpha1))).printChar(' ')
-                    .printPtr(Flt:add(mx, x2)).printChar('/').printPtr(Flt:add(my, y2)).printChar('/')
-                    .printFlt(alpha2).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha2,alpha2))).printNewline();
-            }
-            if (second) { return alpha2; }
-            return alpha1;
-        }
-        return Flt:NAN;
-    }
-    
-    [int] __interAngleCircleCircle(int ax, int ay, int ar, int bx, int by, int br) {
-        int ar2 := Flt:mul(ar, ar);
-        int br2 := Flt:mul(br, br);
-        int dx := Flt:sub(ax, bx);
-        int dy := Flt:sub(ay, by);
-        int cr2 := Flt:add(Flt:mul(dx, dx), Flt:mul(dy, dy));
-        int cr := Flt:sqrt(cr2);
-        if (Flt:compare(cr, Flt:add(ar, br)) < 0) {
-            int cos := Flt:div(
-                Flt:sub(Flt:add(ar2, cr2), br2),
-                Flt:mul(Flt:TWO_POS, Flt:mul(ar, cr))
-            );
-            int alpha = Flt:radToDeg(Flt:arccos(cos));
-            if (debug) {
-                debug
-                    .printFlt(ar).printChar('/').printFlt(br).printChar('/').printFlt(cr).printChar(' ')
-                    .printFlt(cos).printChar('/').printFlt(alpha).printChar('/').printFlt(Flt:sub(0x42b40000,Flt:add(alpha,alpha))).printNewline();
-            }
-            return alpha;
-        }
-        return Flt:NAN;
     }
 
 }
