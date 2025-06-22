@@ -74,13 +74,10 @@ class RangnarBuilder extends vector::graphics::Builder {
     int gStep;
     int g1a;
     int g2a;
-    int g3a1;
-    int g3a1s;
-    int g3a2;
-    int g3a2s;
     int g4a;
     int g4as;
     int g5a;
+    int g5as;
     int g6a1;
     int g6a1s;
     int g6a2;
@@ -89,10 +86,10 @@ class RangnarBuilder extends vector::graphics::Builder {
     int g7as;
     int g8a;
     int g8as;
+    int g10a;
+    int g10as;
     int g11a;
     int g11as;
-    int g12a;
-    int g12as;
      
     [] __init() { this._initRangnarBuilder(); }
     [] _initRangnarBuilder() {
@@ -116,8 +113,8 @@ class RangnarBuilder extends vector::graphics::Builder {
         
         Path raven := this._addNewFilledPath(logo, ravenColor);
         Path mystra := this._addNewFilledPath(logo, mystraColor);
-        Path lathandar := this._addNewFilledPath(logo, lathandarColor);
         Path mystraHighlight := this._addNewFilledPath(logo, mystraHighlightColor);
+        Path lathandar := this._addNewFilledPath(logo, lathandarColor);
         Path gondGear := this._addNewFilledPath(logo, gondColor);
         Path gondArrow := this._addNewFilledPath(logo, gondArrowColor);
         
@@ -375,15 +372,16 @@ class RangnarBuilder extends vector::graphics::Builder {
             int alpha = 0;
             while (alpha < 360) {
                 int cur = Flt:fromInt(alpha);
-                [int x5, int y5] := Path:getPolarPoint(g5r, Flt:degToRad(Flt:add(cur, g5a)));
-                [int x4, int y4] := Path:getPolarPoint(g4r, Flt:degToRad(Flt:add(cur, g4a)));
-                [int x4s, int y4s] := Path:getPolarPoint(g4r, Flt:degToRad(Flt:add(cur, g4as)));
-                gear.moveFltTo(x5, y5)
-                    .arcFltTo(cx, cy, g6r, Flt:add(cur, g6a2), Flt:add(cur, g6a1), true)
-                    .lineFltTo(x4, y4)
-                    .arcFltTo(cx, cy, g3r, Flt:add(cur, g3a2), Flt:add(cur, g3a2s), true)
-                    .lineFltTo(x4s, y4s)
-                    .arcFltTo(cx, cy, g6r, Flt:add(cur, g6a1s), Flt:add(cur, g6a2s), true)
+                int cur2 = Flt:fromInt(alpha + 45);
+                [int x9, int y9] := Path:getPolarPoint(g9r, Flt:degToRad(cur2));
+                [int x8, int y8] := Path:getPolarPoint(g8r, Flt:degToRad(Flt:add(cur, g8a)));
+                [int x8s, int y8s] := Path:getPolarPoint(g8r, Flt:degToRad(Flt:add(cur, g8as)));
+                gear.moveFltTo(x9, y9)
+                    .arcFltTo(cx, cy, g10r, Flt:sub(cur2, g10a), Flt:add(cur, g10a), true)
+                    .lineFltTo(x8, y8)
+                    .arcFltTo(cx, cy, g6r, Flt:add(cur, g6a2), Flt:add(cur, g6a2s), true)
+                    .lineFltTo(x8s, y8s)
+                    .arcFltTo(cx, cy, g10r, Flt:add(cur, g10as), Flt:add(cur2, g10a), true)
                     .close();
                 alpha += 90;
             }
@@ -394,39 +392,39 @@ class RangnarBuilder extends vector::graphics::Builder {
             while (alpha < 360) {
                 int cur = Flt:fromInt(alpha);
                 int cur2 = Flt:fromInt(alpha + 45);
-                [int x2, int y2] := Path:getPolarPoint(g10r, Flt:degToRad(cur));
-                [int x3, int y3] := Path:getPolarPoint(g3r, Flt:degToRad(Flt:add(cur, g3a1)));
-                [int x3s, int y3s] := Path:getPolarPoint(g3r, Flt:degToRad(Flt:add(cur, g3a1s)));
-                [int x6, int y6] := Path:getPolarPoint(g6r, Flt:degToRad(cur2));
-                [int x8, int y8] := Path:getPolarPoint(g8r, Flt:degToRad(Flt:add(cur, g8a)));
-                [int x8s, int y8s] := Path:getPolarPoint(g8r, Flt:degToRad(Flt:add(cur, g8as)));
+                [int x3, int y3] := Path:getPolarPoint(g3r, Flt:degToRad(cur));
+                [int x6, int y6] := Path:getPolarPoint(g6r, Flt:degToRad(Flt:add(cur, g6a1)));
+                [int x6s, int y6s] := Path:getPolarPoint(g6r, Flt:degToRad(Flt:add(cur, g6a1s)));
+                [int x10, int y10] := Path:getPolarPoint(g10r, Flt:degToRad(cur2));
+                [int x7, int y7] := Path:getPolarPoint(g7r, Flt:degToRad(Flt:add(cur, g7a)));
+                [int x7s, int y7s] := Path:getPolarPoint(g7r, Flt:degToRad(Flt:add(cur, g7as)));
                 if (moveTo) {
-                    arrow.moveFltTo(x2, y2);
+                    arrow.moveFltTo(x3, y3);
                     moveTo = false;
                 } else {
-                    arrow.lineFltTo(x2, y2);
+                    arrow.lineFltTo(x3, y3);
                 }
                 arrow
-                    .lineFltTo(x3, y3)
-                    .lineFltTo(x8, y8)
-                    .arcFltTo(cx, cy, g7r, Flt:add(cur, g7a), Flt:sub(cur2, g7a), true)
                     .lineFltTo(x6, y6)
-                    .arcFltTo(cx, cy, g7r, Flt:add(cur2, g7a), Flt:add(cur, g7as), true)
-                    .lineFltTo(x8s, y8s)
-                    .lineFltTo(x3s, y3s)
+                    .lineFltTo(x7, y7)
+                    .arcFltTo(cx, cy, g11r, Flt:add(cur, g11a), Flt:sub(cur2, g11a), true)
+                    .lineFltTo(x10, y10)
+                    .arcFltTo(cx, cy, g11r, Flt:add(cur2, g11a), Flt:add(cur, g11as), true)
+                    .lineFltTo(x7s, y7s)
+                    .lineFltTo(x6s, y6s)
                 ;
                 alpha += 90;
             }
             arrow.close();
-            arrow.circleFltTo(cx, cy, g9r, false).close();
+            arrow.circleFltTo(cx, cy, g12r, false).close();
         }
         {
             int alpha = 0;
             while (alpha < 360) {
                 int cur = Flt:fromInt(alpha);
                 arrow
-                    .arcFltTo(cx, cy, g11r, Flt:add(cur, g11a), Flt:add(cur, g11as), false)
-                    .arcFltTo(cx, cy, g12r, Flt:add(cur, g12as), Flt:add(cur, g12a), true)
+                    .arcFltTo(cx, cy, g4r, Flt:add(cur, g4a), Flt:add(cur, g4as), false)
+                    .arcFltTo(cx, cy, g5r, Flt:add(cur, g5as), Flt:add(cur, g5a), true)
                     .close()
                 ;
                 alpha += 90;
@@ -496,7 +494,7 @@ class RangnarBuilder extends vector::graphics::Builder {
             g.addFltCircle(cx, cy, g7r).getStrokeStyle().setColor(c1);
             g.addFltCircle(cx, cy, g8r).getStrokeStyle().setColor(c1);
             g.addFltCircle(cx, cy, g9r).getStrokeStyle().setColor(c1);
-            
+            g.addFltCircle(cx, cy, g10r).getStrokeStyle().setColor(c1);
             g.addFltCircle(cx, cy, g11r).getStrokeStyle().setColor(c1);
             g.addFltCircle(cx, cy, g12r).getStrokeStyle().setColor(c1);
             
@@ -572,54 +570,54 @@ class RangnarBuilder extends vector::graphics::Builder {
         }
         {
             // gond
-            gWidth = Flt:fromInt(16);
-            g1r = Flt:fromInt(164);
-            g2r = Flt:fromInt(150);
-            g10r = Flt:fromInt(142);
-            g11r = Flt:fromInt(130);
-            g12r = Flt:fromInt(126);
-            g3r = Flt:fromInt(120);
-            g8r = Flt:fromInt(105);
-            g4r = Flt:fromInt(95);
-            g5r = Flt:fromInt(55);
+            int arrow2 := Flt:fromInt(2);
+            int arrow := Flt:add(arrow2, arrow2);
+            int border := Flt:mul(arrow2, Flt:fromInt(3));
+            int width2 := Flt:add(arrow2, border);
+            int ab := Flt:add(arrow, border);
             
-            g6r = Flt:fromInt(35);
-            g7r = Flt:fromInt(25);
-            g9r = Flt:fromInt(20);
+            gWidth = Flt:add(width2, width2);
             gStep = Flt:div(f360, Flt:fromInt(32));
+            g1r = Flt:fromInt(165);
+            g2r = Flt:fromInt(150);
+            g6r = Flt:fromInt(120);
+            g12r = Flt:fromInt(20);
             
-            int w = Flt:div(gWidth, f2);
-            int w2 = Flt:div(w, Flt:fromInt(4));
+            g5r = Flt:add(g6r, border);
+            g4r = Flt:add(g5r, arrow);
+            g3r = Flt:add(g4r, Flt:add(border, border));
+            g7r = Flt:sub(g6r, Flt:add(width2, border));
+            g8r = Flt:sub(g7r, ab);
+            
+            g11r = Flt:add(g12r, border);
+            g10r = Flt:add(g11r, ab);
+            g9r = Flt:add(g10r, Flt:add(ab, ab));
             
             g1a = f0;
-            g2a = Flt:div(f360, Flt:fromInt(64));
-            g4a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g4r, g1r, w, Flt:neg(g1r), w, false));
-            g4as = Flt:sub(f90, g4a);
-            g3a1 = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g3r, g1r, w, Flt:neg(g1r), w, false));
-            g3a1s = Flt:sub(f90, g3a1);
-            /*
-            g3a2 = Flt:add(g4a, g4a);
-            g3a2s = Flt:sub(f90, g3a2);
-            */
-            g5a = f45;
-            g6a1 = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g6r, g1r, w, Flt:neg(g1r), w, false));
-            g6a1s = Flt:sub(f90, g6a1);
-            g6a2 = Flt:sub(f45, g6a1);
-            g6a2s = Flt:add(f45, g6a1);
+            g2a = Flt:div(gStep, f2);
+            {
+                g6a1 = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g6r, g1r, width2, Flt:neg(g1r), width2, false));
+                g6a1s = Flt:sub(f90, g6a1);
+                g8a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g8r, g1r, width2, Flt:neg(g1r), width2, false));
+                g8as = Flt:sub(f90, g8a);
+                g10a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g10r, g1r, width2, Flt:neg(g1r), width2, false));
+                g10as = Flt:sub(f90, g10a);
+            }
             {
                 [int x, int y] := Path:getPolarPoint(g1r, Flt:degToRad(f135));
-                g3a2 = this.__interAngleCircleLine(cx, cy, g3r, cx, g1r, x, y, true);
-                g3a2s = Flt:sub(f90, g3a2);
-                g11a = this.__interAngleCircleLine(cx, cy, g11r, cx, g1r, x, y, true);
-                g11as = Flt:sub(f90, g11a);
-                g12a = this.__interAngleCircleLine(cx, cy, g12r, cx, g1r, x, y, true);
-                g12as = Flt:sub(f90, g12a);
+                g4a = this.__interAngleCircleLine(cx, cy, g4r, cx, g1r, x, y, true);
+                g4as = Flt:sub(f90, g4a);
+                g5a = this.__interAngleCircleLine(cx, cy, g5r, cx, g1r, x, y, true);
+                g5as = Flt:sub(f90, g5a);
+                g6a2 = this.__interAngleCircleLine(cx, cy, g6r, cx, g1r, x, y, true);
+                g6a2s = Flt:sub(f90, g6a2);
             }
-            
-            g7a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g7r, g1r, w2, Flt:neg(g1r), w2, false));
-            g7as = Flt:sub(f90, g7a);
-            g8a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g8r, g1r, w2, Flt:neg(g1r), w2, false));
-            g8as = Flt:sub(f90, g8a);
+            {
+                g7a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g7r, g1r, arrow2, Flt:neg(g1r), arrow2, false));
+                g7as = Flt:sub(f90, g7a);
+                g11a = Flt:sub(f90, this.__interAngleCircleLine(cx, cy, g11r, g1r, arrow2, Flt:neg(g1r), arrow2, false));
+                g11as = Flt:sub(f90, g11a);
+            }
         }
     }
 
