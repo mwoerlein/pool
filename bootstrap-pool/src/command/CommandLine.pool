@@ -105,6 +105,7 @@ class CommandLine extends CommandLineParserTarget, sys::core::utils::Owner {
     
     [int] getArgumentsSize() { return this._arguments.size(); }
     [AnyIterator] getArguments() { return this._arguments.iterator(); }
+    [String] getArgument() { return this._arguments.first(); }
     
     [int] pushCLArgument(String arg) {
         String argument = this.createOwnString(arg);

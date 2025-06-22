@@ -5,13 +5,15 @@ version = 0.1.0
 */
 namespace vector::command;
 
+use sys::core::String;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 
-use vector::graphics::path::Path;
 use vector::graphics::Graphic;
-use vector::graphics::LogoBuilder as Builder;
-//use vector::graphics::RangnarBuilder as Builder;
+use vector::graphics::Builder;
+use vector::graphics::builder::Pentagram;
+use vector::graphics::builder::PoolLogo;
+use vector::graphics::builder::Rangnar;
 use vector::svg::Writer;
 
 class VectorTest extends linux::Command {
@@ -23,15 +25,17 @@ class VectorTest extends linux::Command {
 Test for some vector features.
 
     Usage:
-      screentest [options] -o file
+      vectortest [options] -o <file> <builder>
 
     Options:
       -h --help                     Show this screen.
       --version                     Show version.
       -o <file> --output <file>     Place the output into <file>.
+      -d --debug                    Generate debug scaffolding
 ">);
         this.registerOptionAlias('h', "help")
             .registerOptionAlias('o', "output")
+            .registerOptionAlias('d', "debug")
         ;
     }
 
@@ -45,102 +49,74 @@ Test for some vector features.
             out.printCString(name).printChar(' ').printCString(version).printNewline();
             return 0;
         }
-        if (!this.hasValueOption("output") ) {
+        if (!this.hasValueOption("output") || this.getArgumentsSize() != 1) {
             out.printCString(usage).printNewline();
             return -1;
         }
         
-        Writer svgWriter = this.createOwn(Writer:CLASSNAME);
-        Builder build = this.createOwn(Builder:CLASSNAME);
-        SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
-        vector::graphics::Graphic logo = lb.createLogo();
-        svgWriter.svgToStream(outfile.ostream(), logo);
-        logo.destroy();
-        outfile.destroy();
+        Builder builder = this.getBuilder(this.getArgument());
+        if (builder) {
+            if (this.hasOption("debug")) { builder.withDebug(); }
+            
+            Writer svgWriter = this.createOwn(Writer:CLASSNAME);
+            SeekableIOStream outfile = this.openFile(this.getValueOption("output"), linux::fs::File:MODE_WRITE);
+            Graphic g = builder.buildGraphic(); 
+            svgWriter.svgToStream(outfile.ostream(), g);
+            g.destroy();
+            outfile.destroy();
+        }
         return 0;
     }
     
-    [Graphic] pentagram() {
-        Graphic graphic = this.rt().createInstance(Graphic:CLASSNAME);
-        graphic.setCViewport("-50", "-50", "50", "50");
+    [Builder] getBuilder(String builderType) {
+        if (builderType.cequals("pool")) {
+            PoolLogo b = this.createOwn(PoolLogo:CLASSNAME);
+            return b.colored().builder();
+        }
+        if (builderType.cequals("pool-icon")) {
+            PoolLogo b = this.createOwn(PoolLogo:CLASSNAME);
+            return b.colored().asIcon().builder();
+        }
+        if (builderType.cequals("pool-light")) {
+            PoolLogo b = this.createOwn(PoolLogo:CLASSNAME);
+            return b.monoLight().asIcon().builder();
+        }
+        if (builderType.cequals("pool-dark")) {
+            PoolLogo b = this.createOwn(PoolLogo:CLASSNAME);
+            return b.monoDark().asIcon().builder();
+        }
         
-        graphic.addCSquare("-49", "-49", "98").getStrokeStyle().setCWidth("2");
-        graphic.addCCircle("0", "0", "45").getFillStyle().setCColor("red").setCOpacity("0.5");
+        if (builderType.cequals("pentagram")) {
+            Pentagram b = this.createOwn(Pentagram:CLASSNAME);
+            return b.builder();
+        }
+        if (builderType.cequals("pentagram-curved")) {
+            Pentagram b = this.createOwn(Pentagram:CLASSNAME);
+            return b.curved().builder();
+        }
         
-        int r1 := 40;
-        int r2 := 20;
-        Path path = graphic.createOwn(Path:CLASSNAME);
-        path.moveFltTo(this.pentX(r1, 0), this.pentY(r1, 0));
-        //*
-        path.curveFltTo(
-            this.pentX(r2, 1), this.pentY(r2, 1),
-            this.pentX(r2, 3), this.pentY(r2, 3),
-            this.pentX(r1, 4), this.pentY(r1, 4)
-        );
-        path.curveFltTo(
-            this.pentX(r2, 5), this.pentY(r2, 5),
-            this.pentX(r2, 7), this.pentY(r2, 7),
-            this.pentX(r1, 8), this.pentY(r1, 8)
-        );
-        path.curveFltTo(
-            this.pentX(r2, 9), this.pentY(r2, 9),
-            this.pentX(r2, 1), this.pentY(r2, 1),
-            this.pentX(r1, 2), this.pentY(r1, 2)
-        );
-        path.curveFltTo(
-            this.pentX(r2, 3), this.pentY(r2, 3),
-            this.pentX(r2, 5), this.pentY(r2, 5),
-            this.pentX(r1, 6), this.pentY(r1, 6)
-        );
-        path.curveFltTo(
-            this.pentX(r2, 7), this.pentY(r2, 7),
-            this.pentX(r2, 9), this.pentY(r2, 9),
-            this.pentX(r1, 0), this.pentY(r1, 0)
-        );
-        /*/
-        path.lineFltTo(this.pentX(r1, 4), this.pentY(r1, 4));
-        path.lineFltTo(this.pentX(r1, 8), this.pentY(r1, 8));
-        path.lineFltTo(this.pentX(r1, 2), this.pentY(r1, 2));
-        path.lineFltTo(this.pentX(r1, 6), this.pentY(r1, 6));
-        //*/
-        path.close();
-        graphic.addPath(path);
+        if (builderType.cequals("rangnar")) {
+            Rangnar b = this.createOwn(Rangnar:CLASSNAME);
+            return b.builder();
+        }
+        if (builderType.cequals("rangnar-tyr")) {
+            Rangnar b = this.createOwn(Rangnar:CLASSNAME);
+            return b.withScales().builder();
+        }
+        if (builderType.cequals("rangnar-gond-mystra")) {
+            Rangnar b = this.createOwn(Rangnar:CLASSNAME);
+            return b.withGond().withMystra().builder();
+        }
+        if (builderType.cequals("rangnar-gond-mystra-lathandar")) {
+            Rangnar b = this.createOwn(Rangnar:CLASSNAME);
+            return b.withGond().withMystra().withLathandar().builder();
+        }
+        if (builderType.cequals("rangnar-full")) {
+            Rangnar b = this.createOwn(Rangnar:CLASSNAME);
+            return b.withGond().withMystra().withLathandar().withScales().builder();
+        }
         
-        return graphic;
-    }
-    
-    // r * sin(pos/5 * pi)
-    [int] pentX(int r, int pos) {
-        int ret = 0;
-        __pasm__(<"
-            pushl %eax; .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
-            .byte 0xd9; .byte 0xeb; #//fldpi #page 929
-            movl 5, (%esp); .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
-            movl %ebx, (%esp); .byte 0xda; .byte 0x3c; .byte 0x24; #//fidiv (%esp) #page 911
-            .byte 0xde; .byte 0xc9; #//fmulp #page 935
-            .byte 0xd9; .byte 0xfe; #//fsin #page 955
-            .byte 0xde; .byte 0xc9; #//fmulp #page 935
-            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
-            popl %eax
-        ">, {"%eax": r, "%ebx": pos}, {"%eax": ret});
-        return ret;
-    }
-    
-    // r * cos(pos/5 * pi)
-    [int] pentY(int r, int pos) {
-        int ret = 0;
-        __pasm__(<"
-            pushl %eax; .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
-            .byte 0xd9; .byte 0xeb; #//fldpi #page 929
-            movl 5, (%esp); .byte 0xdb; .byte 0x04; .byte 0x24; #//fild (%esp) #page 886
-            movl %ebx, (%esp); .byte 0xda; .byte 0x3c; .byte 0x24; #//fidiv (%esp) #page 911
-            .byte 0xde; .byte 0xc9; #//fmulp #page 935
-            .byte 0xd9; .byte 0xff; #//fcos #page 905
-            .byte 0xde; .byte 0xc9; #//fmulp #page 935
-            .byte 0xd9; .byte 0x1c; .byte 0x24; #//fstp (%esp) #page 961
-            popl %eax
-        ">, {"%eax": r, "%ebx": pos}, {"%eax": ret});
-        return ret;
+        return null;
     }
         
 }

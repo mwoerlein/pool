@@ -33,19 +33,21 @@ class Writer extends sys::core::utils::Owner {
     }
     
     [Element] toXml(Graphic graphic/*, $width = 10., $height = 10., $keepRatio = true*/) {
-        Rectangle viewport = graphic.getViewport();
-        
-        String viewBox = this.rt().createInstance(String:CLASSNAME);
-        viewBox.print(viewport.getX()).printChar(' ').print(viewport.getY())
-            .printChar(' ').print(viewport.getWidth()).printChar(' ').print(viewport.getHeight());
-        
-        Element xml = this.newSvg()
+        Element xml = this.newSvg();
             //.addCAttributeCString("width", "15cm")
             //.addCAttributeCString("height", "15cm")
-            .addCAttribute("viewBox", viewBox);
-        viewBox.destroy();
+        
+        Rectangle viewport = graphic.getViewport();
+        
+        {
+            String viewBox = this.rt().createInstance(String:CLASSNAME);
+            viewBox.print(viewport.getX()).printChar(' ').print(viewport.getY())
+                .printChar(' ').print(viewport.getWidth()).printChar(' ').print(viewport.getHeight());
+            xml.addCAttribute("viewBox", viewBox);
+            viewBox.destroy();
+        }
             
-         // 2. * viewport->getY() + viewport->getHeight();
+        // 2. * viewport->getY() + viewport->getHeight();
         int yBase = Flt:add(
             Flt:add(viewport.getY().getFlt(), viewport.getY().getFlt()),
             viewport.getHeight().getFlt()

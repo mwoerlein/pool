@@ -1,0 +1,93 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::builder;
+
+use sys::core::Flt;
+use sys::core::String;
+
+use vector::graphics::Graphic;
+use vector::graphics::path::Path;
+use vector::graphics::shape::PathShape;
+use vector::graphics::shape::Rectangle;
+use vector::graphics::shape::Ring;
+
+class Pentagram extends vector::graphics::Builder {
+    
+    String lineColor;
+    String backgroundColor;
+    
+    int curved;
+    int r1;
+    int r2;
+     
+    [] __init() { this._initPentagram(); }
+    [] _initPentagram() {
+        _initSimpleBuilder(50);
+        
+        lineColor = this.createStringFromCString("black");
+        backgroundColor = this.createStringFromCString("red");
+        
+        curved = false;
+        r1 = Flt:fromInt(40);
+        r2 = Flt:fromInt(20);
+        
+    }
+    
+    [Pentagram] curved() { this.curved = true; return this; }
+    
+    [Graphic] buildGraphic() {
+        Graphic graphic := this._newGraphic();
+        
+        Rectangle border = graphic.addCSquare("-49", "-49", "98");
+        border.getStrokeStyle().setColor(lineColor).setCWidth("2");
+        
+        Ring background = graphic.addCCircle("0", "0", "45");
+        background.getStrokeStyle().setColor(lineColor);
+        background.getFillStyle().setColor(backgroundColor).setCOpacity("0.5");
+
+        Path pentagram := this._addNewLinePath(graphic, lineColor);
+        [int x10, int y10] := Path:getPolarPoint(r1, Flt:degToRad(Flt:fromInt(0 * 36)));
+        [int x12, int y12] := Path:getPolarPoint(r1, Flt:degToRad(Flt:fromInt(2 * 36)));
+        [int x14, int y14] := Path:getPolarPoint(r1, Flt:degToRad(Flt:fromInt(4 * 36)));
+        [int x16, int y16] := Path:getPolarPoint(r1, Flt:degToRad(Flt:fromInt(6 * 36)));
+        [int x18, int y18] := Path:getPolarPoint(r1, Flt:degToRad(Flt:fromInt(8 * 36)));
+        [int x21, int y21] := Path:getPolarPoint(r2, Flt:degToRad(Flt:fromInt(1 * 36)));
+        [int x23, int y23] := Path:getPolarPoint(r2, Flt:degToRad(Flt:fromInt(3 * 36)));
+        [int x25, int y25] := Path:getPolarPoint(r2, Flt:degToRad(Flt:fromInt(5 * 36)));
+        [int x27, int y27] := Path:getPolarPoint(r2, Flt:degToRad(Flt:fromInt(7 * 36)));
+        [int x29, int y29] := Path:getPolarPoint(r2, Flt:degToRad(Flt:fromInt(9 * 36)));
+        
+        pentagram.moveFltTo(x10, y10);
+        if (curved) {
+            pentagram.curveFltTo(x21, y21, x23, y23, x14, y14);
+            pentagram.curveFltTo(x25, y25, x27, y27, x18, y18);
+            pentagram.curveFltTo(x29, y29, x21, y21, x12, y12);
+            pentagram.curveFltTo(x23, y23, x25, y25, x16, y16);
+            pentagram.curveFltTo(x27, y27, x29, y29, x10, y10);
+        } else {
+            pentagram.lineFltTo(x14, y14);
+            pentagram.lineFltTo(x18, y18);
+            pentagram.lineFltTo(x12, y12);
+            pentagram.lineFltTo(x16, y16);
+        }
+        pentagram.close();
+        
+        return graphic;
+    }
+    
+    [] _addScaffolding(Graphic g) {
+        String c1 := scaffoldingColor1;
+        String c2 := scaffoldingColor2;
+        String c3 := scaffoldingColor3;
+        
+        g.addFltCircle(Flt:ZERO_POS, Flt:ZERO_POS, r1).getStrokeStyle().setColor(c1);
+        if (curved) {
+            g.addFltCircle(Flt:ZERO_POS, Flt:ZERO_POS, r2).getStrokeStyle().setColor(c1);
+        }
+        
+    }
+
+}

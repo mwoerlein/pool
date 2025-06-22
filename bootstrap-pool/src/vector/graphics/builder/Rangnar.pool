@@ -3,15 +3,16 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace vector::graphics;
+namespace vector::graphics::builder;
 
 use sys::core::Flt;
 use sys::core::String;
 
+use vector::graphics::Graphic;
 use vector::graphics::path::Path;
 use vector::graphics::shape::PathShape;
 
-class RangnarBuilder extends vector::graphics::Builder {
+class Rangnar extends vector::graphics::Builder {
     
     String ravenColor;
     String mystraColor;
@@ -19,6 +20,8 @@ class RangnarBuilder extends vector::graphics::Builder {
     String lathandarColor;
     String gondColor;
     String gondArrowColor;
+    
+    int scales;
     
     int cx;
     int cy;
@@ -91,19 +94,29 @@ class RangnarBuilder extends vector::graphics::Builder {
     int g11a;
     int g11as;
      
-    [] __init() { this._initRangnarBuilder(); }
-    [] _initRangnarBuilder() {
+    [] __init() { this._initRangnar(); }
+    [] _initRangnar() {
         _initBuilder(Flt:fromInt(0), Flt:fromInt(50), Flt:fromInt(500), Flt:fromInt(500));
         
         ravenColor = this.createStringFromCString("black");
-        mystraColor = this.createStringFromCString("#9599BC");
-        mystraHighlightColor = this.createStringFromCString("#E0E0E0");
-        lathandarColor = this.createStringFromCString("#F0C0B0");
+        scales = false;
+    }
+    
+    [Rangnar] withGond() {
         gondColor = this.createStringFromCString("#FDCC0D");
         gondArrowColor = this.createStringFromCString("#AE6E55");
-        
-        //this.withDebug();
+        return this;
     }
+    [Rangnar] withMystra() {
+        mystraColor = this.createStringFromCString("#9599BC");
+        mystraHighlightColor = this.createStringFromCString("#E0E0E0");
+        return this;
+    }
+    [Rangnar] withLathandar() {
+        lathandarColor = this.createStringFromCString("#F0C0B0");
+        return this;
+    }
+    [Rangnar] withScales() { this.scales = true; return this; }
     
     
     [Graphic] buildGraphic() {
@@ -118,19 +131,15 @@ class RangnarBuilder extends vector::graphics::Builder {
         Path gondGear := this._addNewFilledPath(logo, gondColor);
         Path gondArrow := this._addNewFilledPath(logo, gondArrowColor);
         
-        /*
-        this._generateRaven(raven, true);
-        /*/
-        this._generateRaven(raven, false);
+        this._generateRaven(raven);
         this._generateMystra(mystra, mystraHighlight);
         this._generateLathandar(lathandar);
         this._generateGond(gondGear, gondArrow);
-        //*/
         
         return logo;
     }
     
-    [] _generateRaven(Path raven, int withScales) {
+    [] _generateRaven(Path raven) {
         raven
             .moveCTo("-70", "165")
             .lineCTo("-495", "470")
@@ -153,7 +162,7 @@ class RangnarBuilder extends vector::graphics::Builder {
             .lineCTo("-45", "-50")
             .lineCTo("-50", "-90");
             
-        if (withScales) {
+        if (this.scales) {
             raven
                 .lineCTo("-190", "-95")
                 .lineCTo("-190", "-100")
@@ -191,7 +200,7 @@ class RangnarBuilder extends vector::graphics::Builder {
             .lineCTo("50", "-105")
             .lineCTo("50", "-100");
             
-        if (withScales) {
+        if (this.scales) {
             raven
                 .lineCTo("160", "-100")
                 .lineCTo("135", "-152")
@@ -239,7 +248,7 @@ class RangnarBuilder extends vector::graphics::Builder {
             .lineCTo("-50", "240")
             .close();
             
-        if (withScales) {
+        if (this.scales) {
             raven
                 .moveCTo("-165", "-100")
                 .lineCTo("-140", "-150")
@@ -430,6 +439,44 @@ class RangnarBuilder extends vector::graphics::Builder {
                 alpha += 90;
             }
         }
+        {
+            int moveTo = true;
+            int i = 0;
+            int cur = Flt:ZERO_POS;
+            while (i++ < 32) {
+                [int x1, int y1] := Path:getPolarPoint(g1r, Flt:degToRad(Flt:add(cur, g1a)));
+                [int x2, int y2] := Path:getPolarPoint(g2r, Flt:degToRad(Flt:add(cur, g2a)));
+                if (moveTo) {
+                    arrow.moveFltTo(x1, y1);
+                    moveTo = false;
+                } else {
+                    arrow.lineFltTo(x1, y1);
+                }
+                arrow.lineFltTo(x2, y2);
+                
+                cur = Flt:add(cur, gStep);
+            }
+            arrow.close();
+        }
+        {
+            int moveTo = true;
+            int i = 0;
+            int cur = Flt:ZERO_POS;
+            while (i++ < 32) {
+                [int x1, int y1] := Path:getPolarPoint(Flt:sub(g1r,Flt:fromInt(8)), Flt:degToRad(Flt:add(cur, g1a)));
+                [int x2, int y2] := Path:getPolarPoint(Flt:sub(g2r,Flt:fromInt(4)), Flt:degToRad(Flt:add(cur, g2a)));
+                if (moveTo) {
+                    arrow.moveFltTo(x1, y1);
+                    moveTo = false;
+                } else {
+                    arrow.lineFltTo(x1, y1);
+                }
+                arrow.lineFltTo(x2, y2);
+                
+                cur = Flt:add(cur, gStep);
+            }
+            arrow.close();
+        }
     }
     
     [] _addScaffolding(Graphic g) {
@@ -442,7 +489,7 @@ class RangnarBuilder extends vector::graphics::Builder {
             
         int f2 = Flt:fromInt(2);
         
-        {
+        if (mystraColor) {
             // mystra
             g.addFltCircle(cx, cy, m1r).getStrokeStyle().setColor(c2);
             g.addFltCircle(cx, cy, m2r).getStrokeStyle().setColor(c2);
@@ -460,7 +507,7 @@ class RangnarBuilder extends vector::graphics::Builder {
             g.addFltLine(cx, m1r, Flt:neg(x), y).getStrokeStyle().setColor(c2);
         }
         
-        {
+        if (lathandarColor) {
             // lathandar
             g.addFltCircle(cx, cy, l1r).getStrokeStyle().setColor(c3);
             g.addFltCircle(cx, cy, l2r).getStrokeStyle().setColor(c3);
@@ -483,7 +530,8 @@ class RangnarBuilder extends vector::graphics::Builder {
             g.addFltLine(l1rn, Flt:sub(l1r, w2), Flt:sub(l1r, w2), l1rn).getStrokeStyle().setColor(c3);
             
         }
-        {
+        
+        if (gondColor) {
             // gond
             g.addFltCircle(cx, cy, g1r).getStrokeStyle().setColor(c1);
             g.addFltCircle(cx, cy, g2r).getStrokeStyle().setColor(c1);

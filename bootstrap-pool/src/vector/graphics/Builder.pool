@@ -71,6 +71,19 @@ class Builder extends sys::core::utils::Owner {
         return path;
     }
     
+    [Path] _addNewLinePath(Graphic g, String color) {
+        Path path := g.newPath();
+        if (color) {
+            PathShape shape := g.addPath(path);
+            shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
+            shape.getStrokeStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
+            if (debug) { 
+                shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
+            }
+        }
+        return path;
+    }
+    
     [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {
         int dx := Flt:sub(ax, bx);
         int dy := Flt:sub(ay, by);

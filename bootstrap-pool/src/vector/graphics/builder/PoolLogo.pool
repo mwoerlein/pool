@@ -3,15 +3,16 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace vector::graphics;
+namespace vector::graphics::builder;
 
 use sys::core::Flt;
 use sys::core::String;
 
+use vector::graphics::Graphic;
 use vector::graphics::path::Path;
 use vector::graphics::shape::PathShape;
 
-class LogoBuilder extends vector::graphics::Builder {
+class PoolLogo extends vector::graphics::Builder {
 
     int outlineWidth;
     int ringRadius;
@@ -81,8 +82,8 @@ class LogoBuilder extends vector::graphics::Builder {
     int rsa4;
     int rsa5;
     
-    [] __init() { this._initLogoBuilder(); }
-    [] _initLogoBuilder() {
+    [] __init() { this._initPoolLogo(); }
+    [] _initPoolLogo() {
         this._initSimpleBuilder(400);
         
         outlineWidth = Flt:fromInt(10);
@@ -94,16 +95,9 @@ class LogoBuilder extends vector::graphics::Builder {
         cornerShadowScale = Flt:fromInt(20);
         highlightWidth = Flt:fromInt(60);
         
-        //this.withDebug();
-        
-        this.colored();
-        //this.asIcon();
-        //this.monoLight().asIcon();
-        //this.monoDark().asIcon();
-        
     }
     
-    [LogoBuilder] asIcon() {
+    [PoolLogo] asIcon() {
         if (Flt:compare(viewWidth, Flt:fromInt(16)) > 0) {
             int scale := Flt:div(Flt:fromInt(14), ringRadius);
             shiftX = shiftY = viewWidth = viewHeight = Flt:fromInt(16);
@@ -117,7 +111,7 @@ class LogoBuilder extends vector::graphics::Builder {
         return this;
     }
     
-    [LogoBuilder] colored() {
+    [PoolLogo] colored() {
         outlineColor = this.createStringFromCString("#6d4120");
         ringColor = this.createStringFromCString("#fc9b4c");
         ringShadowColor = this.createStringFromCString("#f78537");
@@ -128,7 +122,7 @@ class LogoBuilder extends vector::graphics::Builder {
         return this;
     }
     
-    [LogoBuilder] monoLight() {
+    [PoolLogo] monoLight() {
         outlineColor = highlightColor = null;
         ringColor = ringShadowColor = ringBackgroundColor = null;
         cornerColor = cornerShadowColor = null;
@@ -137,7 +131,7 @@ class LogoBuilder extends vector::graphics::Builder {
         return this;
     }
     
-    [LogoBuilder] monoDark() {
+    [PoolLogo] monoDark() {
         outlineColor = highlightColor = null;
         ringColor = ringShadowColor = ringBackgroundColor = null;
         cornerColor = cornerShadowColor = null;
