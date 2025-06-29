@@ -176,6 +176,8 @@ class Factory extends sys::core::Object {
         if (op.cequals("leave"))    { return this._buildNoOperand(0xC9, 0x00, 0x00,  0); }
         if (op.cequals("ret"))      { return this._buildNoOperand(0xC3, 0x00, 0x00,  0); }
         if (op.cequals("iret"))     { return this._buildNoOperand(0xCF, 0x00, 0x00,  0); }
+        if (op.cequals("cwd"))      { return this._buildNoOperand(0x99, 0x00, 0x00, 16); }
+        if (op.cequals("cdq"))      { return this._buildNoOperand(0x99, 0x00, 0x00, 32); }
         
         return null;
     }
@@ -201,8 +203,9 @@ class Factory extends sys::core::Object {
     }
      
     [Instruction] _buildIMul(int size) {
-        // TODO: generate explicit imul instruction with full operands support
-        return this._buildGroupThree(5, size);
+        In i = this.rt().createInstance(IMul:CLASSNAME);
+        i.setOperandSize(size);
+        return i.instruction();
     } 
     
     [Instruction] _buildIn(int size) {

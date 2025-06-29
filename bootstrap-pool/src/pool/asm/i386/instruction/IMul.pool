@@ -1,0 +1,147 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::asm::i386::instruction;
+
+use pool::asm::value::NumericValue;
+use pool::asm::i386::value::IndirectValue;
+use pool::asm::i386::value::RegisterValue;
+
+use sys::stream::OStream;
+
+class IMul extends pool::asm::i386::Instruction {
+
+    [] checkOperands() {
+        if (!o1) { this.newError().printCString("Missing operand in '").print(node).printChar('\''); }
+        if (o3 && !o2) { this.newError().printCString("Unexpected operand: ").print(node.getOperand3()); }
+    }
+    
+    [] prepareInstruction() {
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        RegisterValue r3 = this.rt().cast(RegisterValue:CLASSNAME, o3);
+        if (!operandSize) {
+            if (r1) {
+                operandSize = r1.getWidth();
+                if (r2 && (r2.getWidth() != operandSize)) {
+                    this.newError().printCString("Ambigious operand sizes: ").print(node);
+                }
+                if (r3 && (r3.getWidth() != operandSize)) {
+                    this.newError().printCString("Ambigious operand sizes: ").print(node);
+                }
+            } else if (r2) {
+                operandSize = r2.getWidth();
+                if (r3 && (r3.getWidth() != operandSize)) {
+                    this.newError().printCString("Ambigious operand sizes: ").print(node);
+                }
+            } else if (r3) { operandSize = r3.getWidth(); }
+            else { this.newError().printCString("Missing operand size and no register to determine it from: ").print(node); }
+        }
+        if (r1) {
+            if (!r1.isGeneral()) { this.newError().printCString("Invalid register: ").print(node.getOperand1()); }
+            else { r1.wideTo(operandSize, block.getUnit()); }
+        }
+        if (r2) {
+            if (!r2.isGeneral()) { this.newError().printCString("Invalid register: ").print(node.getOperand2()); }
+            else { r2.wideTo(operandSize, block.getUnit()); }
+        }
+        if (r3) {
+            if (!r3.isGeneral()) { this.newError().printCString("Invalid register: ").print(node.getOperand2()); }
+            else { r3.wideTo(operandSize, block.getUnit()); }
+        }
+        if (block.getUnit().hasErrors()) { return; }
+
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        
+        if (!o3 && !o2 && (r1 || i1)) { return; } // r/m * (e)ax => (e)dx:(e)ax
+        if (!o3 && r2 && (r1 || i1)) { return; }  // r/m * r => r (truncated)
+        if (r3 && o2 && o2.asNumeric() && (r1 || i1)) { return; } // r/m * imm => r (truncated)
+
+        this.newError().printCString("Unsupported operands in '").print(node).printChar('\'');
+    }
+    
+    [int] approximateSize() {
+        int size = 2; // op1 + modrm
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        RegisterValue r3 = this.rt().cast(RegisterValue:CLASSNAME, o3);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        
+        if (this.requiresOperandSizeOverride(operandSize)) { size++; }
+        
+        if (o2 && o2.asNumeric()) { // r/m * imm => r (truncated)
+            NumericValue num2 = o2.asNumeric();
+            if (num2.isConstant() && (this.getBitWidth(num2.getValue()) == 8)) {
+                size++; 
+            } else {
+                size += operandSize / 8;
+            }
+        }
+        if (r2) { // r/m * r => r (truncated)
+            size++; // 2byte opcode
+        }
+        if (i1) {
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { size++; }
+            size += i1.getSibSize();
+            size += i1.getDispSize();
+        }
+        return size;
+    }
+    
+    [int] compileInstruction() {
+        int size = 1;
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        RegisterValue r3 = this.rt().cast(RegisterValue:CLASSNAME, o3);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        
+        if (this.requiresOperandSizeOverride(operandSize)) { pre3 = 0x66; size++; }
+        
+        if (o2 && o2.asNumeric()) { // r/m * imm => r (truncated)
+            NumericValue num2 = o2.asNumeric();
+            if (num2.isConstant() && (this.getBitWidth(num2.getValue()) == 8)) {
+                op1 = 0x6B;
+                immSize = 1;
+            } else {
+                op1 = 0x69;
+                immSize = operandSize / 8;
+            }
+        } else if (r2) { // r/m * r => r (truncated)
+            op1 = 0x0F;
+            op2 = 0xAF; size++;
+        } else { // r/m * (e)ax => (e)dx:(e)ax
+            if (operandSize == 8) { op1 = 0xF6; } else { op1 = 0xF7; }
+        }
+        modrmSize = 1;
+        if (i1) {
+            if (this.requiresAddressSizeOverride(i1.getAddrWidth())) { pre4 = 0x67; size++; }    
+            this.useIndirectSizes(i1);
+        }
+        return size + modrmSize + sibSize + dispSize + immSize;
+    }
+    
+    [OStream] rawOperandsToStream(OStream stream) {
+        RegisterValue r1 = this.rt().cast(RegisterValue:CLASSNAME, o1);
+        RegisterValue r2 = this.rt().cast(RegisterValue:CLASSNAME, o2);
+        RegisterValue r3 = this.rt().cast(RegisterValue:CLASSNAME, o3);
+        IndirectValue i1 = this.rt().cast(IndirectValue:CLASSNAME, o1);
+        IndirectValue i2 = this.rt().cast(IndirectValue:CLASSNAME, o2);
+        
+        if (o2 && o2.asNumeric()) { // r/m * imm => r (truncated)
+            if (r1) { this.rawModRMToStream(stream, r3.getOpCodeRegister(), r1.getOpCodeRegister()); }
+            if (i1) { this.rawIndirectToStream(stream, i1, r3.getOpCodeRegister()); }
+            this.rawImmediateToStream(stream, o2.asNumeric());
+        } else if (r2) { // r/m * r => r (truncated)
+            if (r1) { this.rawModRMToStream(stream, r2.getOpCodeRegister(), r1.getOpCodeRegister()); }
+            if (i1) { this.rawIndirectToStream(stream, i1, r2.getOpCodeRegister()); }
+        } else { // r/m * (e)ax => (e)dx:(e)ax
+            if (r1) { this.rawModRMToStream(stream, 5, r1.getOpCodeRegister()); }
+            if (i1) { this.rawIndirectToStream(stream, i1, 5); }
+        }
+        return stream;
+    }
+}

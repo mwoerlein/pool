@@ -445,38 +445,31 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
             this._inst2("movl", this._reg("eax"), dest);
         } else if (stmt.isMul()) {
             this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
-            /*/
-            this._inst1("imul", this._location(stmt.getRight()));
-            /*/
-            this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
-            this._comment().printCString(" imul %ebx, %eax");
-            this._byteI(0x0f); this._byteI(0xaf); this._byteI(0xc3);
-            //*/
+            if (stmt.getRight().isConst()) {
+                //this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
+                //this._inst1("imull", this._reg("ebx")); // %eax * %ebx => %edx:%eax
+                //this._inst2("imull", this._reg("ebx"), this._reg("eax")); // %eax * %ebx => %eax (truncated)
+                this._inst3("imull", this._reg("eax"), this._location(stmt.getRight()), this._reg("eax")); // %eax * CONST => %eax (truncated)
+            } else {
+                //this._inst1("imull", this._location(stmt.getRight())); // %eax * right-side => %edx:%eax
+                this._inst2("imull", this._location(stmt.getRight()), this._reg("eax")); // %eax * right-side => %eax (truncated)
+            }
             this._inst2("movl", this._reg("eax"), dest);
         } else if (stmt.isDiv()) {
             this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
-            /*/
             this._inst0("cdq");
-            /*/
-            this._comment().printCString(" cdq");
-            this._byteI(0x99);
-            //*/
             this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
-            this._inst1("idiv", this._reg("ebx"));
+            this._inst1("idiv", this._reg("ebx"));  // %eax / %ebx => %eax remainer %edx
             this._inst2("movl", this._reg("eax"), dest);
         } else if (stmt.isMod()) {
             this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
-            /*/
             this._inst0("cdq");
-            /*/
-            this._comment().printCString(" cdq");
-            this._byteI(0x99);
-            //*/
             this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
-            this._inst1("idiv", this._reg("ebx"));
+            this._inst1("idiv", this._reg("ebx"));  // %eax / %ebx => %eax remainer %edx
             this._inst2("movl", this._reg("edx"), dest);
         }
     }
+
     [] visitAsm(AsmStatement stmt) {
         {
             AnyMapEntryIterator it = stmt.getIn().entries();

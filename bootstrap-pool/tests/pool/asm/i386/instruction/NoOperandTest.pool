@@ -81,6 +81,8 @@ class NoOperandTest extends pool::asm::test::TestCase {
         t.in("    lodsb");
         t.in("    lodsw");
         t.in("    lodsd");
+        t.in("    cwd");
+        t.in("    cdq");
         
         t.bin(0x66).bin(0x60);
         t.bin(0x60);
@@ -93,6 +95,8 @@ class NoOperandTest extends pool::asm::test::TestCase {
         t.bin(0xAC);
         t.bin(0x66).bin(0xAD);
         t.bin(0xAD);
+        t.bin(0x66).bin(0x99);
+        t.bin(0x99);
 
         return this.runTest(t);
     }
@@ -112,6 +116,8 @@ class NoOperandTest extends pool::asm::test::TestCase {
         t.in("    lodsb");
         t.in("    lodsw");
         t.in("    lodsd");
+        t.in("    cwd");
+        t.in("    cdq");
         
         t.bin(0x60);
         t.bin(0x66).bin(0x60);
@@ -124,6 +130,8 @@ class NoOperandTest extends pool::asm::test::TestCase {
         t.bin(0xAC);
         t.bin(0xAD);
         t.bin(0x66).bin(0xAD);
+        t.bin(0x99);
+        t.bin(0x66).bin(0x99);
 
         return this.runTest(t);
     }
