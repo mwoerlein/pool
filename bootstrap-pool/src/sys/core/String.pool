@@ -189,6 +189,13 @@ class String extends OStream {
         return i;
     }
     
+    [int, int] toLng() {
+        IStream is = this.toIStream();
+        [int low, int high] = is.readLng();
+        is.destroy();
+        return [low, high];
+    }
+    
     [int] toFlt() {
         IStream is = this.toIStream();
         int f = is.readFlt();

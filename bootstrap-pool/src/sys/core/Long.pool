@@ -1,0 +1,130 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+use sys::stream::OStream;
+
+class Long extends sys::core::Object {
+    
+    int _low;
+    int _high;
+    
+    // methods
+    [Long] assignLng(int low, int high) { _low = low; _high = high; return this; }
+    [Long] assignLong(Long l) { this.assignLng(l._low, l._high); return this; }
+    [Long] assignInt(int n) { _low = n; _high = Lng:getHigh(n); return this; }
+    [Long] assignInteger(Integer n) { this.assignInt(n.getInt()); return this; }
+    [Long] fromCString(cstring c) {
+        sys::core::String s = this.rt().createInstance(sys::core::String:CLASSNAME);
+        s.assignCString(c);
+        [int low, int high] := s.toLng();
+        _low = low;
+        _high = high;
+        s.destroy();
+        return this;
+    }
+    
+    [] inc() { this.addInt(1); }
+    [] dec() { this.subInt(1); }
+    [] neg() {
+        [int low, int high] = Lng:sub(0, 0, _low, _high);
+        _low = low;
+        _high = high;
+    }
+    
+    [] addInt(int n) {
+        [int low, int high] = Lng:add(_low, _high, n, Lng:getHigh(n));
+        _low = low;
+        _high = high;
+    }
+    [] subInt(int n) {
+        [int low, int high] = Lng:sub(_low, _high, n, Lng:getHigh(n));
+        _low = low;
+        _high = high;
+    }
+    [] mulInt(int n) { 
+        [int low, int high] = Lng:mul(_low, _high, n, Lng:getHigh(n));
+        _low = low;
+        _high = high;
+    }
+    [] divInt(int n) { 
+        [int lowQ, int highQ, int lowR, int highR] = Lng:div(_low, _high, n, Lng:getHigh(n));
+        _low = lowQ;
+        _high = highQ;
+    }
+    [] modInt(int n) { 
+        [int lowQ, int highQ, int lowR, int highR] = Lng:div(_low, _high, n, Lng:getHigh(n));
+        _low = lowR;
+        _high = highR;
+    }
+    
+    [] addLong(Long l) {
+        [int low, int high] = Lng:add(_low, _high, l._low, l._high);
+        _low = low;
+        _high = high;
+    }
+    [] subLong(Long l) {
+        [int low, int high] = Lng:sub(_low, _high, l._low, l._high);
+        _low = low;
+        _high = high;
+    }
+    [] mulLong(Long l) { 
+        [int low, int high] = Lng:mul(_low, _high, l._low, l._high);
+        _low = low;
+        _high = high;
+    }
+    [] divLong(Long l) { 
+        [int lowQ, int highQ, int lowR, int highR] = Lng:div(_low, _high, l._low, l._high);
+        _low = lowQ;
+        _high = highQ;
+    }
+    [] modLong(Long l) { 
+        [int lowQ, int highQ, int lowR, int highR] = Lng:div(_low, _high, l._low, l._high);
+        _low = lowR;
+        _high = highR;
+    }
+    
+    [int] getLow() { return _low; }
+    [int] getHigh() { return _high; }
+    [int] getInt() { return _low; }
+    
+    [int] compareLng(int low, int high) { return Lng:compare(_low, _high, low, high); }
+    [int] compareLong(Long l) { return this.compareLng(l._low, l._high); }
+    [int] compareInt(int n) { return Lng:compare(_low, _high, n, Lng:getHigh(n)); }
+    [int] compareInteger(Integer n) { return this.compareInt(n.getInt()); }
+    
+    [int] hash() { return _low; }
+    [int] equals(__any__ obj) {
+        Long l = this.rt().cast(Long:CLASSNAME, obj);
+        if (l) {
+            return this.compareLong(l) == 0;
+        }
+        Integer n = this.rt().cast(Integer:CLASSNAME, obj);
+        if (n) {
+            return this.compareInteger(n) == 0;
+        }
+        return 0;
+    }
+    [int] equalsLng(int low, int high) {
+        return this.compareLng(low, high) == 0;
+    }
+    [int] equalsInt(int n) {
+        return this.compareInt(n) == 0;
+    }
+    
+    [int] diffAsInt(Long l) {
+        [int high, int low] = Lng:sub(_low, _high, l._low, l._high);
+        return low;
+    }
+    
+    [OStream] printToStream(OStream stream) {
+        return stream.printLng(_low, _high);
+    }
+    [OStream] debugToStream(OStream stream) {
+        return stream.printChar('0').printChar('x')._printUInt(_high, 16, 8)._printUInt(_low, 16, 8);
+    }
+    
+}

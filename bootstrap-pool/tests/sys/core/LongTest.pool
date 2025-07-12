@@ -1,0 +1,197 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class LongTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testArithmetic();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+        
+        Long l1 = this.rt().createInstance(Long:CLASSNAME);
+        l1.assignInt(-7);
+        if (l1.getInt() != -7) { return this.fail("Assign native int"); }
+        if (l1.getLow() != -7) { return this.fail("Assign native int"); }
+        if (l1.getHigh() != -1) { return this.fail("Assign native int"); }
+        
+        Integer i = this.rt().createInstance(Integer:CLASSNAME);
+        i.assignInt(0x1234);
+        Long l2 = this.rt().createInstance(Long:CLASSNAME);
+        l2.assignInteger(i);
+        if (l2.getInt() != 0x1234) { return this.fail("Assign Integer"); }
+        if (l2.getLow() != 0x1234) { return this.fail("Assign Integer"); }
+        if (l2.getHigh() != 0) { return this.fail("Assign Integer"); }
+        
+        Long l3 = this.rt().createInstance(Long:CLASSNAME);
+        l3.assignLng(0x1234, 0x5678);
+        if (l3.getInt() != 0x1234) { return this.fail("Assign Lng"); }
+        if (l3.getLow() != 0x1234) { return this.fail("Assign Lng"); }
+        if (l3.getHigh() != 0x5678) { return this.fail("Assign Lng"); }
+        
+        Long l4 = this.rt().createInstance(Long:CLASSNAME);
+        l4.assignLong(l3);
+        if (l4.getInt() != 0x1234) { return this.fail("Assign Integer"); }
+        if (l4.getLow() != 0x1234) { return this.fail("Assign Integer"); }
+        if (l4.getHigh() != 0x5678) { return this.fail("Assign Integer"); }
+        
+        Long l5 = this.rt().createInstance(Long:CLASSNAME);
+        l5.fromCString("123456789012345");
+        if (l5.getInt() != 0x860DDF79) { return this.fail("Assign Integer"); }
+        if (l5.getLow() != 0x860DDF79) { return this.fail("Assign Integer"); }
+        if (l5.getHigh() != 0x7048) { return this.fail("Assign Integer"); }
+        
+        l5.destroy();
+        l4.destroy();
+        l3.destroy();
+        l2.destroy();
+        i.destroy();
+        l1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        
+        Long l1 = this.rt().createInstance(Long:CLASSNAME); l1.assignInt(-19);
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(-19);
+        Long l2 = this.rt().createInstance(Long:CLASSNAME); l2.assignInt(-19);
+        Long l3 = this.rt().createInstance(Long:CLASSNAME); l3.assignLng(0x1234, 0x5678);
+        
+        if (l1.hash() != l1.hash()) { return this.fail("Hash value is not constant"); }
+        if (l1.hash() != l2.hash()) { return this.fail("Hash value of Longs differs for same lng values"); }
+        if (l1.hash() == l3.hash()) { return this.fail("Hash value of Longs is identical for different lng values"); }
+        
+        if (!l1.equals(l1)) { return this.fail("Identity check"); }
+        if (!l1.equals(l2)) { return this.fail("Longs with same int value are not equal"); }
+        if (!l1.equalsInt(-19)) { return this.fail("Long and same int value are not equal"); }
+        if (!l1.equals(i1)) { return this.fail("Long and same Integer are not equal"); }
+        if (!l3.equalsLng(0x1234, 0x5678)) { return this.fail("Long and same lng value are not equal"); }
+        if (l1.equals(l3)) { return this.fail("Longs with different int value are equal"); }
+        if (l1.equals(this)) { return this.fail("Long is equal to non-Long"); }
+        
+        l3.destroy();
+        l2.destroy();
+        i1.destroy();
+        l1.destroy();
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        
+        Long l0 = this.rt().createInstance(Long:CLASSNAME); l0.assignLng(0x76543210, 0xFEDCBA98);
+        Long l1 = this.rt().createInstance(Long:CLASSNAME); l1.assignInt(-7);
+        Long l2 = this.rt().createInstance(Long:CLASSNAME); l2.assignInt(0);
+        Long l3 = this.rt().createInstance(Long:CLASSNAME); l3.assignInt(0);
+        Long l4 = this.rt().createInstance(Long:CLASSNAME); l4.assignLng(0x4, 0);
+        Long l5 = this.rt().createInstance(Long:CLASSNAME); l5.assignLng(0x89ABCDEF, 0x01234567);
+        
+        if (l0.compareLong(l2) == 0) { return this.fail("Test 0xFEDCBA9876543210 !=  0"); }
+        if (l0.compareLong(l2) >= 0) { return this.fail("Test 0xFEDCBA9876543210 <   0"); }
+        if (l0.compareLong(l2) >  0) { return this.fail("Test 0xFEDCBA9876543210 <=  0"); }
+        if (l1.compareLong(l2) == 0) { return this.fail("Test -7 !=  0"); }
+        if (l1.compareLong(l2) >= 0) { return this.fail("Test -7 <   0"); }
+        if (l1.compareLong(l2) >  0) { return this.fail("Test -7 <=  0"); }
+        if (l2.compareLong(l2) >  0) { return this.fail("Test  0 <=  0 (identity)"); }
+        if (l3.compareLong(l2) >  0) { return this.fail("Test  0 <=  0 (different Longs)"); }
+        if (l2.compareLong(l2) != 0) { return this.fail("Test  0 ==  0 (identity)"); }
+        if (l3.compareLong(l2) != 0) { return this.fail("Test  0 ==  0 (different Longs)"); }
+        if (l2.compareLong(l2) <  0) { return this.fail("Test  0 >=  0 (identity)"); }
+        if (l3.compareLong(l2) <  0) { return this.fail("Test  0 >=  0 (different Longs)"); }
+        if (l4.compareLong(l2) <= 0) { return this.fail("Test  4 >   0"); }
+        if (l4.compareLong(l2) <  0) { return this.fail("Test  4 >=  0"); }
+        if (l4.compareLong(l2) == 0) { return this.fail("Test  4 !=  0"); }
+        if (l5.compareLong(l2) <= 0) { return this.fail("Test  0x0123456789ABCDEF >   0"); }
+        if (l5.compareLong(l2) <  0) { return this.fail("Test  0x0123456789ABCDEF >=  0"); }
+        if (l5.compareLong(l2) == 0) { return this.fail("Test  0x0123456789ABCDEF !=  0"); }
+        
+        if (l1.compareInt(0) == 0) { return this.fail("Test -7 !=  0 (int)"); }
+        if (l1.compareInt(0) >= 0) { return this.fail("Test -7 <   0 (int)"); }
+        if (l1.compareInt(0) >  0) { return this.fail("Test -7 <=  0 (int)"); }
+        if (l2.compareInt(0) != 0) { return this.fail("Test  0 ==  0 (int)"); }
+        if (l2.compareInt(0) <  0) { return this.fail("Test  0 >=  0 (int)"); }
+        if (l4.compareInt(0) <= 0) { return this.fail("Test  4 >   0 (int)"); }
+        
+        if (l1.compareLong(l4) != -11) { return this.fail("Invalid distance from -7 to  4"); }
+        if (l4.compareInt(-7)  !=  11) { return this.fail("Invalid distance from  4 to -7"); }
+        
+        l5.destroy();
+        l4.destroy();
+        l3.destroy();
+        l2.destroy();
+        l1.destroy();
+        l0.destroy();
+        return this.success();
+    }
+    
+    [int] testArithmetic() {
+        this.start("testArithmetic");
+        
+        Long l1 = this.rt().createInstance(Long:CLASSNAME); l1.assignInt(1);
+        l1.inc();           if (!l1.equalsLng(2, 0)) { return this.fail("Increment Long"); }
+        l1.dec();           if (!l1.equalsLng(1, 0)) { return this.fail("Decrement Long"); }
+        
+        Long l2 = this.rt().createInstance(Long:CLASSNAME); l2.assignInt(0x7890ABCD);
+        Long l3 = this.rt().createInstance(Long:CLASSNAME); l3.assignLng(0x69B20368, 0x0000001E);
+        
+        l1.addLong(l2);     if (!l1.equalsLng(0x7890ABCE, 0)) { return this.fail("Add without overflow"); }
+        l1.addLong(l2);     if (!l1.equalsLng(0xF121579B, 0)) { return this.fail("Add with sign overflow"); }
+        l1.addLong(l2);     if (!l1.equalsLng(0x69B20368, 1)) { return this.fail("Add with overflow"); }
+        l1.addLong(l3);     if (!l1.equalsLng(0xD36406D0, 0x0000001F)) { return this.fail("Add long"); }
+        l1.subLong(l3);     if (!l1.equalsLng(0x69B20368, 1)) { return this.fail("Sub long"); }
+        l1.subLong(l2);     if (!l1.equalsLng(0xF121579B, 0)) { return this.fail("Sub with underflow"); }
+        l1.subLong(l2);     if (!l1.equalsLng(0x7890ABCE, 0)) { return this.fail("Sub without underflow"); }
+        
+        l1.mulInt(5);       if (!l1.equalsLng(0x5AD35B06, 2)) { return this.fail("Mul int with overflow"); }
+        l1.divInt(5);       if (!l1.equalsLng(0x7890ABCE, 0)) { return this.fail("Div int with underflow"); }
+        l1.mulInt(-5);      if (!l1.equalsLng(0xA52CA4FA, 0xFFFFFFFD)) { return this.fail("Mul neg int with overflow"); }
+        l1.divInt(-5);      if (!l1.equalsLng(0x7890ABCE, 0)) { return this.fail("Div neg int with underflow"); }
+        l1.modInt(5);       if (!l1.equalsInt(1)) { return this.fail("Mod int"); }
+        
+        l1.assignLng(0x7890ABCE, 0);
+        l1.mulLong(l3);     if (!l1.equalsLng(0xA00535B0, 0x52BB4ECD)) { return this.fail("Mul long with overflow"); }
+        l1.divLong(l3);     if (!l1.equalsLng(0x02B86493, 0)) { return this.fail("Div long"); }
+        l1.assignLng(0xA00535B0, 0x52BB4ECD);
+        l1.modLong(l3);     if (!l1.equalsLng(0x22B8A0F8, 0x14)) { return this.fail("Mod long"); }
+        
+        l3.destroy();
+        l2.destroy();
+        l1.destroy();
+        return this.success();
+    }
+    
+    [int] testPrintToStream() {
+        this.start("testPrintToStream");
+        
+        Long l = this.rt().createInstance(Long:CLASSNAME);
+        String s = this.rt().createInstance(String:CLASSNAME);
+        l.assignLng(0x1234, 0x5678);
+        l.printToStream(s.ostream());
+        if (!s.cequals("95073396068916")) { return this.fail("Invalid value printed for low:0x1234 high:0x5678"); }
+        
+        l.assignInt(-7);
+        s.clear();
+        l.printToStream(s.ostream());
+        if (!s.cequals("-7")) { return this.fail("Invalid value printed for -7"); }
+        
+        l.fromCString("-123456789012345");
+        s.clear();
+        l.printToStream(s.ostream());
+        if (!s.cequals("-123456789012345")) { return this.fail("Invalid value printed for -123456789012345"); }
+        
+        s.destroy();
+        l.destroy();
+        return this.success();
+    }
+}

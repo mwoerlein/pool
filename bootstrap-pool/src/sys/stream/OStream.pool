@@ -7,6 +7,7 @@ namespace sys::stream;
 
 use sys::core::BigInt;
 use sys::core::Flt;
+use sys::core::Lng;
 use sys::core::Object;
 use sys::core::String;
 use sys::core::utils::Bitset;
@@ -34,6 +35,10 @@ class OStream extends Object {
     
     [OStream] printAddr(__any__ i) {
         return this._printUHex(Address:from(i), 8);
+    }
+    
+    [OStream] printLng(int low, int high) {
+        return this._printLng(low, high, 10, 0);
     }
     
     // float serialisation adopted from https://www.ryanjuckett.com/printing-floating-point-numbers/
@@ -141,6 +146,10 @@ class OStream extends Object {
         return this;
     }
     
+    [OStream] printRawLng(int low, int high) {
+        return this.printRawInt(low).printRawInt(high);
+    }
+    
     [OStream] lowerString(String s) {
         return s.printToLowerStream(this);
     }
@@ -218,6 +227,49 @@ class OStream extends Object {
     
     [OStream] _printUHex(int d, int pad) {
         return this.printChar('0').printChar('x')._printUInt(d, 16, pad);
+    }
+    
+    [OStream] _printLng(int lowD, int highD, int base, int pad) {
+        if (highD < 0) {
+            this.printChar('-');
+            [int lD, int hD] := Lng:sub(0, 0, lowD, highD); lowD = lD; highD = hD;
+        }
+        return this._printULng(lowD, highD, base, pad);
+    }
+    
+    [OStream] _printULng(int lowD, int highD, int base, int pad) {
+        int p = 0;
+        // allocate buffer on stack
+        int buf_size = 64;
+        if (pad > buf_size) { buf_size = pad; }
+        buf_size++; // terminal \0 
+        __pasm__("subl %eax, %esp", {"%eax": buf_size} , {"%esp": p});
+        
+        p += buf_size;          // goto end of buffer..
+        Address:storeChar(--p, 0);  // .. and terminate temporal cstring
+        int padded_start = p - pad;
+        int lowCur = lowD;
+        int highCur = highD;
+        
+        /*  Divide D by BASE until D == 0. */
+        do {
+            [int lowQ, int highQ, int lowR, int highR] := Lng:div(lowCur, highCur, base, 0);
+            lowCur = lowQ; highCur = highQ;
+            if (lowR < 10) {
+                Address:storeChar(--p, lowR + '0');
+            } else {
+                Address:storeChar(--p, lowR + 'a' - 10);
+            }
+        } while (lowCur || highCur);
+        while (p > padded_start) {
+            Address:storeChar(--p, '0');
+        }
+    
+        this._printCString(p);
+        
+        // free stack
+        __pasm__("addl %eax, %esp", {"%eax": buf_size});
+        return this;
     }
     
     [OStream] _printCString(int cstringAddress) {

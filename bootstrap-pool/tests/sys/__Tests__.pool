@@ -12,6 +12,7 @@ class __Tests__ {
         suite.register(sys::core::Boolean:CLASSNAME, sys::core::BooleanTest:CLASSNAME);
         suite.register(sys::core::Character:CLASSNAME, sys::core::CharacterTest:CLASSNAME);
         suite.register(sys::core::Integer:CLASSNAME, sys::core::IntegerTest:CLASSNAME);
+        suite.register(sys::core::Long:CLASSNAME, sys::core::LongTest:CLASSNAME);
         suite.register(sys::core::String:CLASSNAME, sys::core::StringTest:CLASSNAME);
         
         suite.register(sys::core::anycollection::AnyArray:CLASSNAME, sys::core::anycollection::AnyArrayTest:CLASSNAME);

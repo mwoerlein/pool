@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::stream;
 
 use sys::core::Object;
+use sys::core::Lng;
 
 // TODO: refactor blocking/non-blocking input handling
 class IStream extends Object {
@@ -54,6 +55,45 @@ class IStream extends Object {
             digit = this._peekDigit();
         }
         return sign * result;
+    }
+    
+    [int, int] readLng() {
+        if (this.isEmpty()) { return [0, 0]; }
+        
+        int sign = this._readSign(false, true);
+        int base = 10;
+        
+        if (this._peekDigit() == 0) {
+            this.readChar();
+            if (this.isEmpty()) { return [0, 0]; }
+            int d = this._peekDigit();
+            if (d == 11) { // 'b' or 'B'
+                base = 2;
+                this.readChar();
+            } else if (d == 33) { // 'x' or 'X'
+                base = 16;
+                this.readChar();
+            } else if (d >= 0 && d < 8) {
+                base = 8;
+            } else {
+                return [0, 0];
+            }
+        }
+        
+        int lowR = 0;
+        int highR = 0;
+        int digit = this._peekDigit();
+        while (!this.isEmpty() && (digit >= 0 && digit < base)) {
+            [int lM, int hM] := Lng:mul(lowR, highR, base, 0);
+            [int lA, int hA] := Lng:add(lM, hM, digit, 0);
+            lowR = lA; highR = hA;
+            this.readChar();
+            digit = this._peekDigit();
+        }
+        if (sign) {
+            [int lR, int hR] := Lng:sub(0, 0, lowR, highR); lowR = lR; highR = hR;
+        }
+        return [lowR, highR];
     }
     
     [int] readFlt() {
@@ -169,6 +209,10 @@ class IStream extends Object {
     
     [int] readRawInt() {
         return this.readChar() + this.readChar() * 0x100 + this.readChar() * 0x10000 + this.readChar() * 0x1000000;
+    }
+    
+    [int, int] readRawLng() {
+        return [this.readRawInt(), this.readRawInt()];
     }
     
     [OStream] printToStream(OStream stream) {

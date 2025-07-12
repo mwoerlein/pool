@@ -17,6 +17,7 @@ class StringTest extends test::TestCase {
         this.testSubString();
         this.testAt();
         this.testToInt();
+        this.testToLng();
         this.testToFlt();
         this.testToCString();
         this.testConversions();
@@ -233,6 +234,57 @@ class StringTest extends test::TestCase {
         
         IStream in = testString.toIStream();
         if (in.readInt() != expected) { return this.failCase(message.ostream()); }
+        in.destroy();
+        
+        testString.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] testToLng() {
+        this.startCases("testToLng");
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        
+        this.caseToLng(""       , 0    , 0);
+        this.caseToLng("0"      , 0    , 0);
+        this.caseToLng("12345"  , 12345, 0);
+        this.caseToLng("-2345"  , -2345, -1);
+        this.caseToLng("01234"  , 668  , 0);
+        this.caseToLng("-0234"  , -156 , -1);
+        this.caseToLng("0B0"    , 0    , 0);
+        this.caseToLng("0b10101", 21   , 0);
+        this.caseToLng("-0b1111", -15  , -1);
+        this.caseToLng("0X0"    , 0    , 0);
+        this.caseToLng("0xaBc"  , 2748 , 0);
+        this.caseToLng("-0x12"  , -18  , -1);
+        
+        this.caseToLng("0x7FFFFFFF", 0x7FFFFFFF, 0);
+        this.caseToLng("0xFFFFFFFF", 0xFFFFFFFF, 0);
+        this.caseToLng("0x80000000", 0x80000000, 0);
+        this.caseToLng("0x7FFFFFFFFFFFFFFF", 0xFFFFFFFF, 0x7FFFFFFF);
+        this.caseToLng("0xFFFFFFFFFFFFFFFF", 0xFFFFFFFF, 0xFFFFFFFF);
+        this.caseToLng("0x8000000000000000", 0, 0x80000000);
+        this.caseToLng( "81985529216486895", 0x89ABCDEF, 0x01234567);
+        this.caseToLng("-81985529216486896", 0x76543210, 0xFEDCBA98);
+                            
+        testString.destroy();
+        return this.successCases();
+    }
+    
+    [int] caseToLng(cstring val, int expectedLow, int expectedHigh) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case '").printCString(val).printCString("' => ").printPtr(expectedLow).printChar(' ').printPtr(expectedHigh);
+        String testString = this.rt().createInstance(String:CLASSNAME); testString.assignCString(val);
+        {
+            [int lowR, int highR] := testString.toLng();
+            if (lowR != expectedLow || highR != expectedHigh) { return this.failCase(message.ostream()); }
+        }
+        
+        IStream in = testString.toIStream();
+        {
+            [int lowR, int highR] := in.readLng();
+            if (lowR != expectedLow || highR != expectedHigh) { return this.failCase(message.ostream()); }
+        }
         in.destroy();
         
         testString.destroy();

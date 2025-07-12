@@ -1,0 +1,105 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+use sys::core::utils::Bitset;
+
+class Lng {
+
+    global [int, int] add(int lowA, int highA, int lowB, int highB) {
+        int low = 0;
+        int high = 0;
+        __pasm__(
+            "addl %ecx, %eax; adcl %edx, %ebx",
+             {"%eax": lowA, "%ebx": highA, "%ecx": lowB, "%edx": highB},
+             {"%eax": low, "%ebx": high}
+        );
+        return [low, high];
+    }
+
+    global [int, int] sub(int lowA, int highA, int lowB, int highB) {
+        int low = 0;
+        int high = 0;
+        __pasm__(
+            "subl %ecx, %eax; sbbl %edx, %ebx",
+             {"%eax": lowA, "%ebx": highA, "%ecx": lowB, "%edx": highB},
+             {"%eax": low, "%ebx": high}
+        );
+        return [low, high];
+    }
+    
+    // https://stackoverflow.com/questions/87771/how-can-i-multiply-two-64-bit-numbers-using-x86-assembly-language
+    global [int, int] mul(int lowA, int highA, int lowB, int highB) {
+        int low = 0;
+        int high = 0;
+        __pasm__(<"
+                mull %ebx
+                .byte 0x93 #// xch %eax, %ebx #page 2396  #// keep lower 32 bits of lowA * highB as top 32 bits
+                mull %esi
+                .byte 0x96 #// xch %eax, %esi #page 2396  #// keep lower 32 bits of lowA * lowB as lower 32 bits
+                addl %edx, %ebx #// add top 32 bits of lowA * lowB to top 32 bits
+                mull %ecx
+                addl %eax, %ebx #// add lower 32 bits of highA * lowB to top 32 bits
+            ">,
+             {"%ebx": lowA, "%ecx": highA, "%esi": lowB, "%eax": highB},
+             {"%esi": low, "%ebx": high, "%eax": null, "%edx": null}
+        );
+        return [low, high];
+    }
+    
+    // https://masm32.com/board/index.php?topic=11164.0
+    global [int, int, int, int] div(int lowA, int highA, int lowB, int highB) {
+        if (lowB == 0 && highB == 0) {
+            int bailout := lowA / lowB;
+            return [0, 0, 0, 0];
+        } 
+        int sign = false;
+        if (highA < 0) {
+            sign = !sign;
+            [int lA, int hA] := Lng:sub(0, 0, lowA, highA); lowA = lA; highA = hA;
+        }
+        if (highB < 0) {
+            sign = !sign;
+            [int lB, int hB] := Lng:sub(0, 0, lowB, highB); lowB = lB; highB = hB;
+        }
+        int lowQ = 0;
+        int highQ = 0;
+        int lowR = 0;
+        int highR = 0;
+        int lowM = 0;
+        int highM = 0x40000000;
+        while (highM || lowM) {
+            // R << 1;
+            __pasm__(".byte 0xD1; .byte 0xE0; .byte 0xD1; .byte 0xD3  #// shll %eax, 1, rcll %ebx, 1 #page 1704 & 1643", {"%eax": lowR, "%ebx": highR}, {"%eax": lowR, "%ebx": highR});
+            // R(0) = A(i)
+            if (Bitset:has(lowA, lowM) && Bitset:has(highA, highM)) { lowR += 1; }
+            // if (R >= B)
+            if (Lng:compare(lowR, highR, lowB, highB) >= 0) {
+                // R = R - B
+                [int lR, int hR] := Lng:sub(lowR, highR, lowB, highB); lowR = lR; highR = hR;
+                // Q(i) = 1
+                [int lQ, int hQ] := Lng:add(lowQ, highQ, lowM, highM); lowQ = lQ; highQ = hQ;
+            }
+            // M >> 1;
+            __pasm__(".byte 0xD1; .byte 0xE8; .byte 0xD1; .byte 0xDB  #// shrl %eax, 1, rcrl %ebx, 1 #page 1704 & 1643", {"%eax": highM, "%ebx": lowM}, {"%eax": highM, "%ebx": lowM});
+        }
+        if (sign) {
+            [int lR, int hR] := Lng:sub(0, 0, lowR, highR); lowR = lR; highR = hR;
+            [int lQ, int hQ] := Lng:sub(0, 0, lowQ, highQ); lowQ = lQ; highQ = hQ;
+        }
+        return [lowQ, highQ, lowR, highR];
+    }
+    
+    global [int] compare(int lowA, int highA, int lowB, int highB) {
+        [int l, int h] = Lng:sub(lowA, highA, lowB, highB);
+        if (h == 0) { return Bitset:and(0x7fffffff, l); }
+        if (h == -1) { return Bitset:or(0x80000000, l); }
+        return h;
+    }
+    
+    global [int] getHigh(int n) { if (n < 0) { return -1; } else { return 0; } }
+    
+}
