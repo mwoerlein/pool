@@ -35,11 +35,13 @@ class Float extends Object {
     [] subFlt(int f) { _f = Flt:sub(_f, f); }
     [] mulFlt(int f) { _f = Flt:mul(_f, f); }
     [] divFlt(int f) { _f = Flt:div(_f, f); }
+    [] powFlt(int f) { _f = Flt:pow(_f, f); }
     
     [] addFloat(Float f) { _f = Flt:add(_f, f.getFlt()); }
     [] subFloat(Float f) { _f = Flt:sub(_f, f.getFlt()); }
     [] mulFloat(Float f) { _f = Flt:mul(_f, f.getFlt()); }
     [] divFloat(Float f) { _f = Flt:div(_f, f.getFlt()); }
+    [] powFloat(Float f) { _f = Flt:pow(_f, f.getFlt()); }
     
     [] neg() { _f = Flt:neg(_f); }
     [] sqrt() { _f = Flt:sqrt(_f); }

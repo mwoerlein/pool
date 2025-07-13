@@ -40,15 +40,15 @@ class LongTest extends test::TestCase {
         
         Long l4 = this.rt().createInstance(Long:CLASSNAME);
         l4.assignLong(l3);
-        if (l4.getInt() != 0x1234) { return this.fail("Assign Integer"); }
-        if (l4.getLow() != 0x1234) { return this.fail("Assign Integer"); }
-        if (l4.getHigh() != 0x5678) { return this.fail("Assign Integer"); }
+        if (l4.getInt() != 0x1234) { return this.fail("Assign Long"); }
+        if (l4.getLow() != 0x1234) { return this.fail("Assign Long"); }
+        if (l4.getHigh() != 0x5678) { return this.fail("Assign Long"); }
         
         Long l5 = this.rt().createInstance(Long:CLASSNAME);
         l5.fromCString("123456789012345");
-        if (l5.getInt() != 0x860DDF79) { return this.fail("Assign Integer"); }
-        if (l5.getLow() != 0x860DDF79) { return this.fail("Assign Integer"); }
-        if (l5.getHigh() != 0x7048) { return this.fail("Assign Integer"); }
+        if (l5.getInt() != 0x860DDF79) { return this.fail("From cstring"); }
+        if (l5.getLow() != 0x860DDF79) { return this.fail("From cstring"); }
+        if (l5.getHigh() != 0x7048) { return this.fail("From cstring"); }
         
         l5.destroy();
         l4.destroy();

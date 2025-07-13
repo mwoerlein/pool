@@ -310,13 +310,19 @@ class StringTest extends test::TestCase {
     
     [int] caseToFlt(cstring val, int expected) {
         String message = this.rt().createInstance(String:CLASSNAME);
-        message.printCString("Case '").printCString(val).printCString("' => ").printInt(expected);
+        message.printCString("Case '").printCString(val).printCString("' => ").printFlt(expected);
         String testString = this.rt().createInstance(String:CLASSNAME); testString.assignCString(val);
         
-        if (testString.toFlt() != expected) { return this.failCase(message.ostream()); }
+        if (testString.toFlt() != expected) {
+            message.printCString(" got ").printFlt(testString.toFlt());
+            return this.failCase(message.ostream());
+        }
         
         IStream in = testString.toIStream();
-        if (in.readFlt() != expected) { return this.failCase(message.ostream()); }
+        if (in.readFlt() != expected) {
+            message.printCString(" got ").printFlt(in.readFlt());
+            return this.failCase(message.ostream());
+        }
         in.destroy();
         
         testString.destroy();

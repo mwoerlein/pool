@@ -1,0 +1,217 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core;
+
+class FloatTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testArithmetic();
+        this.testLogarithm();
+        this.testTrigonometric();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+        
+        Float f1 = this.rt().createInstance(Float:CLASSNAME);
+        f1.assignInt(-7);
+        if (f1.getFlt() != 0xC0E00000) { return this.fail("Assign native int"); }
+        
+        Integer i = this.rt().createInstance(Integer:CLASSNAME);
+        i.assignInt(0x1234);
+        Float f2 = this.rt().createInstance(Float:CLASSNAME);
+        f2.assignInteger(i);
+        if (f2.getFlt() != 0x4591A000) { return this.fail("Assign Integer"); }
+        
+        Float f3 = this.rt().createInstance(Float:CLASSNAME);
+        f3.assignFlt(0x3EAAAAAB);
+        if (f3.getFlt() != 0x3EAAAAAB) { return this.fail("Assign Flt"); }
+        
+        Float f4 = this.rt().createInstance(Float:CLASSNAME);
+        f4.assignFloat(f3);
+        if (f4.getFlt() != 0x3EAAAAAB) { return this.fail("Assign Float"); }
+        
+        Float f5 = this.rt().createInstance(Float:CLASSNAME);
+        f5.fromCString("0.3333333333");
+        if (f5.getFlt() != 0x3EAAAAAB) { return this.fail("From cstring"); }
+        
+        f5.destroy();
+        f4.destroy();
+        f3.destroy();
+        f2.destroy();
+        i.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        
+        Float f1 = this.rt().createInstance(Float:CLASSNAME); f1.assignInt(-19);
+        Integer i1 = this.rt().createInstance(Integer:CLASSNAME); i1.assignInt(-19);
+        Float f2 = this.rt().createInstance(Float:CLASSNAME); f2.assignInt(-19);
+        Float f3 = this.rt().createInstance(Float:CLASSNAME); f3.assignFlt(0x00BADDAD);
+        Float f4 = this.rt().createInstance(Float:CLASSNAME); f4.assignFlt(Flt:NAN);
+        
+        if (f1.hash() != f1.hash()) { return this.fail("Hash value is not constant"); }
+        if (f1.hash() != f2.hash()) { return this.fail("Hash value of Floats differs for same flt values"); }
+        if (f1.hash() == f3.hash()) { return this.fail("Hash value of Floats is identical for different flt values"); }
+        
+        if (!f1.equals(f1)) { return this.fail("Identity check"); }
+        if (!f1.equals(f2)) { return this.fail("Floats with same int value are not equal"); }
+        if (!f1.equalsInt(-19)) { return this.fail("Floats and same int value are not equal"); }
+        if (!f1.equals(i1)) { return this.fail("Floats and same Integer are not equal"); }
+        if (!f3.equalsFlt(0x00BADDAD)) { return this.fail("Floats and same föt value are not equal"); }
+        if (f1.equals(f3)) { return this.fail("Floats with different flt value are equal"); }
+        if (f1.equals(this)) { return this.fail("Float is equal to non-Float"); }
+        if (f4.equals(f3)) { return this.fail("NaN equals flt value"); }
+        if (f4.equals(f4)) { return this.fail("NaN equals NaN"); }
+        
+        f4.destroy();
+        f3.destroy();
+        f2.destroy();
+        i1.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        
+        Float f1 = this.rt().createInstance(Float:CLASSNAME); f1.assignFlt(Flt:NAN);
+        Float f2 = this.rt().createInstance(Float:CLASSNAME); f2.assignFlt(Flt:INF_NEG);
+        Float f3 = this.rt().createInstance(Float:CLASSNAME); f3.assignInt(-7);
+        Float f4 = this.rt().createInstance(Float:CLASSNAME); f4.assignFlt(Flt:ZERO_NEG);
+        Float f5 = this.rt().createInstance(Float:CLASSNAME); f5.assignFlt(Flt:ZERO_POS);
+        Float f6 = this.rt().createInstance(Float:CLASSNAME); f6.assignInt(0);
+        Float f7 = this.rt().createInstance(Float:CLASSNAME); f7.assignInt(7);
+        Float f8 = this.rt().createInstance(Float:CLASSNAME); f8.assignFlt(Flt:INF_POS);
+        
+        if (f1.compareFlt(Flt:INF_NEG) == 0) { return this.fail("Test NaN != -Inf"); }
+        if (f1.compareFlt(Flt:INF_NEG) >= 0) { return this.fail("Test NaN <  -Inf"); }
+        if (f1.compareFlt(Flt:INF_NEG) >  0) { return this.fail("Test NaN <= -Inf"); }
+        if (f2.compareFloat(f5) == 0) { return this.fail("Test -Inf != 0"); }
+        if (f2.compareFloat(f5) >= 0) { return this.fail("Test -Inf <  0"); }
+        if (f2.compareFloat(f5) >  0) { return this.fail("Test -Inf <= 0"); }
+        if (f3.compareFloat(f4) == 0) { return this.fail("Test -7 != -0"); }
+        if (f3.compareFloat(f4) >= 0) { return this.fail("Test -7 <  -0"); }
+        if (f3.compareFloat(f4) >  0) { return this.fail("Test -7 <= -0"); }
+        if (f4.compareFloat(f5) != 0) { return this.fail("Test -0 == 0"); }
+        if (f5.compareFloat(f5) != 0) { return this.fail("Test 0 == 0 (identity)"); }
+        if (f6.compareFloat(f5) != 0) { return this.fail("Test 0 == 0 (different Floats)"); }
+        if (f7.compareFloat(f5) == 0) { return this.fail("Test 7 != 0"); }
+        if (f7.compareFloat(f5) <= 0) { return this.fail("Test 7 >  0"); }
+        if (f7.compareFloat(f5) <  0) { return this.fail("Test 7 >= 0"); }
+        if (f8.compareFloat(f5) == 0) { return this.fail("Test +Inf != 0"); }
+        if (f8.compareFloat(f5) <= 0) { return this.fail("Test +Inf >  0"); }
+        if (f8.compareFloat(f5) <  0) { return this.fail("Test +Inf >= 0"); }
+
+        if (f3.compareInt(4) == 0) { return this.fail("Test -7 != 4 (int)"); }
+        if (f3.compareInt(4) >= 0) { return this.fail("Test -7 <  4 (int)"); }
+        if (f3.compareInt(4) >  0) { return this.fail("Test -7 <= 4 (int)"); }
+        if (f4.compareInt(0) != 0) { return this.fail("Test -0 == 0 (int)"); }
+        if (f5.compareInt(0) != 0) { return this.fail("Test 0 == 0 (int)"); }
+        if (f7.compareInt(4) <= 0) { return this.fail("Test 7 >  4 (int)"); }
+
+        f8.destroy();
+        f7.destroy();
+        f6.destroy();
+        f5.destroy();
+        f4.destroy();
+        f3.destroy();
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testArithmetic() {
+        this.start("testArithmetic");
+
+        Float f1 = this.rt().createInstance(Float:CLASSNAME); f1.assignInt(-1);
+        Float f2 = this.rt().createInstance(Float:CLASSNAME); f2.assignInt(2);
+        f1.neg();           if (!f1.equalsInt(  1)) { return this.fail("Negate Float"); }
+        
+        f1.addFloat(f1);            if (!f1.equalsInt(  2)) { return this.fail("Add Float to Float"); }
+        f1.addFlt(Flt:TWO_POS);     if (!f1.equalsInt(  4)) { return this.fail("Add flt to Float"); }
+        f1.subFloat(f2);            if (!f1.equalsInt(  2)) { return this.fail("Sub Float from Float"); }
+        f1.subFlt(Flt:ONE_POS);     if (!f1.equalsInt(  1)) { return this.fail("Sub flt from Float"); }
+        f1.mulFloat(f2);            if (!f1.equalsInt(  2)) { return this.fail("Mul Float with Float"); }
+        f1.mulFlt(Flt:fromInt(99)); if (!f1.equalsInt(198)) { return this.fail("Mul Float with flt"); }
+        f1.divFloat(f2);            if (!f1.equalsInt( 99)) { return this.fail("Div Float by Float"); }
+        f1.divFlt(Flt:fromInt(7));  if (!f1.equalsFlt(0x41624925)) { return this.fail("Div Float by flt"); }
+        f1.powFloat(f2);            if (!f1.equalsFlt(0x4348053A)) { return this.fail("Pow Float by Float"); }
+        f1.sqrt();                  if (!f1.equalsFlt(0x41624925)) { return this.fail("Str Float"); }
+        f1.powFlt(Flt:TWO_POS);     if (!f1.equalsFlt(0x4348053A)) { return this.fail("Pow Float by flt"); }
+        if (f1.floorToInt() != 200) { return this.fail("Floor Float"); }
+        
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testLogarithm() {
+        this.start("testLogarithm");
+        // TODO: add logarithm functions to Float or create special Flt test case?
+    
+        return this.success();
+    }
+    
+    [int] testTrigonometric() {
+        this.start("testTrigonometric");
+        // TODO: add trigonometric functions to Float or create special Flt test case?
+    
+        return this.success();
+    }
+    
+    [int] testPrintToStream() {
+        this.startCases("testPrintToStream");
+        String testString = this.rt().createInstance(String:CLASSNAME);
+        
+        this.casePrintToStream(Flt:ZERO_POS, "0");
+        this.casePrintToStream(Flt:ZERO_NEG, "-0");
+        this.casePrintToStream(Flt:INF_POS, "+Inf");
+        this.casePrintToStream(Flt:INF_NEG, "-Inf");
+        this.casePrintToStream(Flt:NAN, "NaN");
+        
+        this.casePrintToStream(Flt:SQRT_TWO_POS, "0.141421353816986083984375e1" /*"1.4142135"*/);
+        this.casePrintToStream(Flt:SQRT_TWO_NEG, "-0.141421353816986083984375e1" /*"-1.4142135"*/);
+        
+        this.casePrintToStream(0x3EAAAAAA, "0.333333313465118408203125e0" /*"0.3333333"*/);
+        this.casePrintToStream(0xBEAAAAAB, "-0.3333333432674407958984375e0" /*"-0.33333334"*/);
+        this.casePrintToStream(0xD2DF0280, "-0.478909825024e12" /*"-4.7890983e11"*/);
+        this.casePrintToStream(0x00BADDAD, "0.1716092457193833439412855353663287695633650745678394719045549009e-37" /*"1.7160925e-38"*/);
+        
+        testString.destroy();
+        return this.successCases();
+    }
+    
+    [int] casePrintToStream(int val, cstring expected) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").printPtr(val).printCString(" => '").printCString(expected).printChar('\'');
+        Float f = this.rt().createInstance(Float:CLASSNAME);
+        String s = this.rt().createInstance(String:CLASSNAME);
+        f.assignFlt(val);
+        f.printToStream(s.ostream());
+        if (!s.cequals(expected)) {
+            message.printCString(" got '").print(s).printChar('\'');
+            return this.failCase(message.ostream());
+        }
+        
+        s.destroy();
+        f.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+}
