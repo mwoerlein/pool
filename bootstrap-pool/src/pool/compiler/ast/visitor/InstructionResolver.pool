@@ -198,12 +198,12 @@ class InstructionResolver extends Visitor {
         int success = true;
         success = node.getVariable().accept(this.visitor()) && success;
         Type varRT = node.getVariable().getResolvedType();
-        if (!varRT.isInt()) {
+        if (!varRT || !varRT.isInt()) {
             return this.invalidTypeError(node.node(), varRT, "variable");
         }
         success = node.getValue().accept(this.visitor()) && success;
         Type valRT = node.getValue().getResolvedType();
-        if (!valRT.isInt()) {
+        if (!valRT || !valRT.isInt()) {
             return this.invalidTypeError(node.node(), valRT, "value");
         }
         node.setResolvedType(varRT);
@@ -213,12 +213,12 @@ class InstructionResolver extends Visitor {
         int success = true;
         success = node.getLeft().accept(this.visitor()) && success;
         Type leftRT = node.getLeft().getResolvedType();
-        if (!leftRT.isInt()) { 
+        if (!leftRT || !leftRT.isInt()) { 
             return this.invalidTypeError(node.node(), leftRT, "left");
         }
         success = node.getRight().accept(this.visitor()) && success;
         Type rightRT = node.getRight().getResolvedType();
-        if (!rightRT.isInt()) { 
+        if (!rightRT || !rightRT.isInt()) { 
             return this.invalidTypeError(node.node(), rightRT, "right");
         }
         node.setResolvedType(leftRT);
@@ -228,7 +228,7 @@ class InstructionResolver extends Visitor {
         int success = true;
         success = node.getVariable().accept(this.visitor()) && success;
         Type varRT = node.getVariable().getResolvedType();
-        if (!varRT.isInt()) { 
+        if (!varRT || !varRT.isInt()) { 
             return this.invalidTypeError(node.node(), varRT, "variable");
         }
         node.setResolvedType(varRT);
@@ -261,17 +261,17 @@ class InstructionResolver extends Visitor {
         Type leftRT = node.getLeft().getResolvedType();
         Type rightRT = node.getRight().getResolvedType();
         if (node.isAnd() || node.isOr()) {
-            if (!leftRT.isBool()) {
+            if (!leftRT || !leftRT.isBool()) {
                 return this.invalidTypeError(node.node(), leftRT, "left");
             }
-            if (!rightRT.isBool()) {
+            if (!rightRT || !rightRT.isBool()) {
                 return this.invalidTypeError(node.node(), rightRT, "right");
             }
         } else {
-            if (!leftRT.isInt()) { 
+            if (!leftRT || !leftRT.isInt()) { 
                 return this.invalidTypeError(node.node(), leftRT, "left");
             }
-            if (!rightRT.isInt()) { 
+            if (!rightRT || !rightRT.isInt()) { 
                 return this.invalidTypeError(node.node(), rightRT, "right");
             }
         }
@@ -294,7 +294,7 @@ class InstructionResolver extends Visitor {
         if (node.hasContext()) {
             node.getContext().accept(this.visitor());
             Type cRT = node.getContext().getResolvedType();
-            if (!cRT.isInstance() && !cRT.isClass()) {
+            if (!cRT || (!cRT.isInstance() && !cRT.isClass())) {
                 //return this.invalidTypeError(node.node(), cRT, "method call context");
                 this.validationError(node.node())
                     .printCString("invalid method call context '").print(node.getContext()).printChar('\'');
@@ -341,7 +341,7 @@ class InstructionResolver extends Visitor {
     [int] visitSignExpr(SignExprNode node) {
         int success = node.getExpression().accept(this.visitor());
         Type rt = node.getExpression().getResolvedType();
-        if (!rt.isInt()) {
+        if (!rt || !rt.isInt()) {
             return this.invalidTypeError(node.node(), rt, "expression");
         }
         node.setResolvedType(rt);
