@@ -59,10 +59,12 @@ class Lng {
         int sign = false;
         if (highA < 0) {
             sign = !sign;
+            // A = -A
             [int lA, int hA] := Lng:sub(0, 0, lowA, highA); lowA = lA; highA = hA;
         }
         if (highB < 0) {
             sign = !sign;
+            // B = -B
             [int lB, int hB] := Lng:sub(0, 0, lowB, highB); lowB = lB; highB = hB;
         }
         int lowQ = 0;
@@ -73,7 +75,11 @@ class Lng {
         int highM = 0x40000000;
         while (highM || lowM) {
             // R << 1;
-            __pasm__(".byte 0xD1; .byte 0xE0; .byte 0xD1; .byte 0xD3  #// shll %eax, 1, rcll %ebx, 1 #page 1704 & 1643", {"%eax": lowR, "%ebx": highR}, {"%eax": lowR, "%ebx": highR});
+            __pasm__(
+                ".byte 0xD1; .byte 0xE0; .byte 0xD1; .byte 0xD3  #// shll %eax, 1, rcll %ebx, 1 #page 1704 & 1643",
+                {"%eax": lowR, "%ebx": highR},
+                {"%eax": lowR, "%ebx": highR}
+            );
             // R(0) = A(i)
             if (Bitset:has(lowA, lowM) && Bitset:has(highA, highM)) { lowR += 1; }
             // if (R >= B)
@@ -84,10 +90,16 @@ class Lng {
                 [int lQ, int hQ] := Lng:add(lowQ, highQ, lowM, highM); lowQ = lQ; highQ = hQ;
             }
             // M >> 1;
-            __pasm__(".byte 0xD1; .byte 0xE8; .byte 0xD1; .byte 0xDB  #// shrl %eax, 1, rcrl %ebx, 1 #page 1704 & 1643", {"%eax": highM, "%ebx": lowM}, {"%eax": highM, "%ebx": lowM});
+            __pasm__(
+                ".byte 0xD1; .byte 0xE8; .byte 0xD1; .byte 0xDB  #// shrl %eax, 1, rcrl %ebx, 1 #page 1704 & 1643",
+                {"%eax": highM, "%ebx": lowM},
+                {"%eax": highM, "%ebx": lowM}
+            );
         }
         if (sign) {
+            // R = -R
             [int lR, int hR] := Lng:sub(0, 0, lowR, highR); lowR = lR; highR = hR;
+            // Q = -Q
             [int lQ, int hQ] := Lng:sub(0, 0, lowQ, highQ); lowQ = lQ; highQ = hQ;
         }
         return [lowQ, highQ, lowR, highR];

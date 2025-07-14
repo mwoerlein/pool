@@ -314,8 +314,8 @@ class String extends OStream {
         _scs_strhash_loop:
             movb (%ecx), %dl
             cmpb 0, %dl;     je _scs_strhash_ret
-            .byte 0x0f; .byte 0xaf; .byte 0xc3 #//imul %ebx, %eax
-            addl %edx, %eax;
+            imul %ebx, %eax
+            addl %edx, %eax
             addl 1, %ecx
             jmp _scs_strhash_loop
         _scs_strhash_ret:

@@ -459,13 +459,13 @@ class X86Generator extends sys::log::LoggerAware, pool::compiler::pir::statement
             this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
             this._inst0("cdq");
             this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
-            this._inst1("idiv", this._reg("ebx"));  // %eax / %ebx => %eax remainer %edx
+            this._inst1("idiv", this._reg("ebx"));  // %edx:%eax / %ebx => %eax remainer %edx
             this._inst2("movl", this._reg("eax"), dest);
         } else if (stmt.isMod()) {
             this._inst2("movl", this._location(stmt.getLeft()), this._reg("eax"));
             this._inst0("cdq");
             this._inst2("movl", this._location(stmt.getRight()), this._reg("ebx"));
-            this._inst1("idiv", this._reg("ebx"));  // %eax / %ebx => %eax remainer %edx
+            this._inst1("idiv", this._reg("ebx"));  // %edx:%eax / %ebx => %eax remainer %edx
             this._inst2("movl", this._reg("edx"), dest);
         }
     }
