@@ -11,6 +11,7 @@ use sys::stream::SeekableIOStream;
 
 use vector::graphics::Graphic;
 use vector::graphics::Builder;
+use vector::graphics::builder::Monogram;
 use vector::graphics::builder::Pentagram;
 use vector::graphics::builder::PoolLogo;
 use vector::graphics::builder::Rangnar;
@@ -93,6 +94,11 @@ Test for some vector features.
         if (builderType.cequals("pentagram-curved")) {
             Pentagram b = this.createOwn(Pentagram:CLASSNAME);
             return b.curved().builder();
+        }
+        
+        if (builderType.cequals("monogram")) {
+            Monogram b = this.createOwn(Monogram:CLASSNAME);
+            return b.builder();
         }
         
         if (builderType.cequals("rangnar")) {

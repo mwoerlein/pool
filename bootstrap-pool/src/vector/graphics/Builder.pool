@@ -168,4 +168,65 @@ class Builder extends sys::core::utils::Owner {
         return Flt:NAN;
     }
     
+    [int, int] __intersectLineLine(int a1x, int a1y, int a2x, int a2y, int b1x, int b1y, int b2x, int b2y) {
+        if (Flt:compare(a1x, a2x)==0 || Flt:compare(a1y, a2y)==0 || Flt:compare(b1x, b2x)==0 || Flt:compare(b1y, b2y)==0) {
+            // TODO: handle special cases for grid aligned lines
+            if (debug) {
+                debug.printCString("special lines not yet supported").printNewline();
+            }
+            return [Flt:NAN, Flt:NAN];
+        }
+        int dax := Flt:sub(a2x, a1x);
+        int day := Flt:sub(a2y, a1y);
+        int dbx := Flt:sub(b2x, b1x);
+        int dby := Flt:sub(b2y, b1y);
+        int max := Flt:div(day, dax);
+        int may := Flt:div(dax, day);
+        int mbx := Flt:div(dby, dbx);
+        int mby := Flt:div(dbx, dby);
+        if (Flt:compare(max, mbx)==0 || Flt:compare(may, mby)==0) {
+            // parallel lines do not intersect in one point
+            if (debug) {
+                debug.printCString("parallel lines").printNewline();
+            }
+            return [Flt:NAN, Flt:NAN];
+        }
+        int dmx := Flt:sub(max, mbx);
+        int dmy := Flt:sub(may, mby);
+        
+        int sx := Flt:div(
+            Flt:add(
+                Flt:sub(b1y, a1y),
+                Flt:sub(Flt:mul(a1x,max), Flt:mul(b1x,mbx))
+            ),
+            Flt:sub(max, mbx)
+        );
+        int sy := Flt:div(
+            Flt:add(
+                Flt:sub(b1x, a1x),
+                Flt:sub(Flt:mul(a1y,may), Flt:mul(b1y,mby))
+            ),
+            Flt:sub(may, mby)
+        );
+         
+        if (debug) {
+            debug
+                .printFlt(sx).printChar('/').printFlt(sy).printNewline();
+        }
+        /*
+        sx*(a2y-a1y) - a1x*(a2y-a1y) = sy*(a2x-a1x) - a1y*(a2x-a1x)
+        sx = sy*(a2x-a1x)/(a2y-a1y) - a1y*(a2x-a1x)/(a2y-a1y) + a1x
+        sx = sy*may - a1y*may + a1x
+
+        sx = sy*may - a1y*may + a1x
+        sx = sy*mby - b1y*mby + b1x
+        
+        sy = ((b1x-a1x) + (a1y*may - b1y*mby)) / (may-mby) 
+
+        
+        sy = a1y + (b1x-a1x)/(may-mby)
+        sx = a1x + (b1y-a1y)/(max-mbx)
+        */
+        return [sx, sy];
+    }
 }

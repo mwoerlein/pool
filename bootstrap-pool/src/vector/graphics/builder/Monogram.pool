@@ -1,0 +1,422 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::builder;
+
+use sys::core::Flt;
+use sys::core::String;
+
+use vector::graphics::Graphic;
+use vector::graphics::path::Path;
+use vector::graphics::shape::PathShape;
+use vector::graphics::shape::Rectangle;
+use vector::graphics::shape::Ring;
+
+class Monogram extends vector::graphics::Builder {
+    
+    String color;
+    
+    int a;
+    int b;
+    int d;
+    
+    int x1;
+    int x2;
+    int x3;
+    int x4;
+    int x5;
+    int x6;
+    int x7;
+    int x8;
+    int x9;
+    int x10;
+    int x11;
+    
+    int x1n;
+    int x2n;
+    int x3n;
+    int x4n;
+    int x5n;
+    int x6n;
+    int x7n;
+    int x8n;
+    int x9n;
+    int x10n;
+    int x11n;
+    
+    int y1;
+    int y2;
+    int y3;
+    int y4;
+    
+    int y1n;
+    int y2n;
+    int y3n;
+    int y4n;
+     
+    [] __init() { this._initMonogram(); }
+    [] _initMonogram() {
+        _initSimpleBuilder(240);
+        
+        //color = this.createStringFromCString("#999999");
+        color = this.createStringFromCString("white");
+        
+        a = Flt:fromInt(30);
+        b = Flt:fromInt(60);
+        d = Flt:fromInt(5);
+    }
+    
+    [Graphic] buildGraphic() {
+        this._initializeCoordinates();
+        
+        Graphic graphic := this._newGraphic();
+//*        
+        Path mono := this._addNewFilledPath(graphic, color);
+        
+        mono
+            .moveFltTo(x2n, y2)
+            .lineFltTo(x4n, y4)
+            .lineFltTo(x6n, y4)
+            .lineFltTo(x8n, y2)
+            .lineFltTo(x10n, y1n)
+            .lineFltTo(x11n, y1n)
+            .lineFltTo(x9n, y1)
+            .lineFltTo(x7n, y1)
+            .lineFltTo(x5n, y3)
+            .lineFltTo(x3n, y1)
+            .lineFltTo(x1n, y1)
+            
+            .lineFltTo(x2, y2n)
+            .lineFltTo(x4, y4n)
+            .lineFltTo(x6, y4n)
+            .lineFltTo(x8, y2n)
+            .lineFltTo(x10, y1)
+            .lineFltTo(x11, y1)
+            .lineFltTo(x9, y1n)
+            .lineFltTo(x7, y1n)
+            .lineFltTo(x5, y3n)
+            .lineFltTo(x3, y1n)
+            .lineFltTo(x1, y1n)
+            .close();
+//*/        
+        return graphic;
+    }
+    
+    [] _addScaffolding(Graphic g) {
+        String c1 := scaffoldingColor1;
+        String c2 := scaffoldingColor2;
+        String c3 := scaffoldingColor3;
+        
+        int xbl := Flt:sub(shiftX, viewWidth); 
+        int xbr := Flt:add(shiftX, viewWidth);
+        int ybu := Flt:add(shiftY, viewHeight);
+        int ybd := Flt:sub(shiftY, viewHeight); 
+
+        g.addFltRectangle(
+            xbl, ybu,
+            Flt:add(viewWidth, viewWidth), Flt:add(viewHeight, viewHeight)
+        ).getStrokeStyle().setColor(c3);
+        
+        int d = this.d;
+        int xap := this.b;
+        int yap := this.a;
+        
+        int xbp := Flt:add(xap, Flt:add(yap,yap));
+        int ybp := Flt:add(yap, Flt:add(xap,xap));
+        
+        int xan := Flt:neg(xap);
+        int xbn := Flt:neg(xbp);
+        int yan := Flt:neg(yap);
+        int ybn := Flt:neg(ybp);
+        
+        int xap2 := Flt:add(xap,xap);
+        int xan2 := Flt:add(xan,xan);
+        int yap2 := Flt:add(yap,yap);
+        int yan2 := Flt:add(yan,yan);
+        
+        
+        g.addFltLine(xbl,ybd,xbr,ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(xbl,ybu,xbr,ybd).getStrokeStyle().setColor(c3);
+        
+        
+        g.addFltLine(Flt:add(xap,d), ybu, Flt:add(xap,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:add(xbp,d), ybu, Flt:add(xbp,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:add(xan,d), ybu, Flt:add(xan,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:add(xbn,d), ybu, Flt:add(xbn,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:sub(xap,d), ybu, Flt:sub(xap,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:sub(xbp,d), ybu, Flt:sub(xbp,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:sub(xan,d), ybu, Flt:sub(xan,d), ybd).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:sub(xbn,d), ybu, Flt:sub(xbn,d), ybd).getStrokeStyle().setColor(c1);
+        
+        g.addFltLine(xbl, Flt:add(yap,d), xbr, Flt:add(yap,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:add(ybp,d), xbr, Flt:add(ybp,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:add(yan,d), xbr, Flt:add(yan,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:add(ybn,d), xbr, Flt:add(ybn,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:sub(yap,d), xbr, Flt:sub(yap,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:sub(ybp,d), xbr, Flt:sub(ybp,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:sub(yan,d), xbr, Flt:sub(yan,d)).getStrokeStyle().setColor(c1);
+        g.addFltLine(xbl, Flt:sub(ybn,d), xbr, Flt:sub(ybn,d)).getStrokeStyle().setColor(c1);
+        
+        int dx2a := Flt:add(xap,xap);
+        int dy2a := Flt:add(yan,yan);
+        int dx2b := Flt:add(xan,xan);
+        int dy2b := Flt:add(yap,yap);
+
+        int dx2 := Flt:sub(dx2b, dx2a);
+        int dy2 := Flt:sub(dy2b, dy2a);
+        int sq2 := Flt:sqrt(Flt:add(Flt:mul(dx2, dx2), Flt:mul(dy2, dy2)));
+        int t2x := Flt:div(Flt:mul(dy2, d), sq2); 
+        int t2y := Flt:div(Flt:mul(dx2, d), sq2);
+        
+        g.addFltLine(Flt:add(dx2a,t2x), Flt:sub(dy2a,t2y), Flt:add(dx2b,t2x), Flt:sub(dy2b,t2y)).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:sub(dx2a,t2x), Flt:add(dy2a,t2y), Flt:sub(dx2b,t2x), Flt:add(dy2b,t2y)).getStrokeStyle().setColor(c1);
+        
+        int dx1a := Flt:add(xan,yap);
+        int dy1a := Flt:sub(ybn,xap);
+        int dx1b := Flt:sub(xbn,yap);
+        int dy1b := Flt:add(yan,xap);
+        
+        int dx1 := Flt:sub(dx1b, dx1a);
+        int dy1 := Flt:sub(dy1b, dy1a);
+        int sq1 := Flt:sqrt(Flt:add(Flt:mul(dx1, dx1), Flt:mul(dy1, dy1)));
+        int t1x := Flt:div(Flt:mul(dy1, d), sq1); 
+        int t1y := Flt:div(Flt:mul(dx1, d), sq1);
+        
+        g.addFltLine(Flt:add(dx1a,t1x), Flt:sub(dy1a,t1y), Flt:add(dx1b,t1x), Flt:sub(dy1b,t1y)).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:sub(dx1a,t1x), Flt:add(dy1a,t1y), Flt:sub(dx1b,t1x), Flt:add(dy1b,t1y)).getStrokeStyle().setColor(c1);
+        
+        g.addFltLine(Flt:sub(Flt:neg(dx1a),t1x), Flt:add(Flt:neg(dy1a),t1y), Flt:sub(Flt:neg(dx1b),t1x), Flt:add(Flt:neg(dy1b),t1y)).getStrokeStyle().setColor(c1);
+        g.addFltLine(Flt:add(Flt:neg(dx1a),t1x), Flt:sub(Flt:neg(dy1a),t1y), Flt:add(Flt:neg(dx1b),t1x), Flt:sub(Flt:neg(dy1b),t1y)).getStrokeStyle().setColor(c1);
+
+        this.rt().err()
+            .printFlt(t1x).printChar(' ')
+            .printFlt(t1y).printChar(' ')
+            .printFlt(t2x).printChar(' ')
+            .printFlt(t2y).printNewline();
+        
+        int e1 = Flt:add(Flt:add(xap, yap), d);
+        int t2 = Flt:div(Flt:mul(d, yap), xap);
+        int h1 = Flt:add(t2,d);
+        int h2 = Flt:sqrt(Flt:add(Flt:mul(t2,t2),Flt:mul(d,d)));
+        int e2 = Flt:sub(Flt:add(xap, yap), Flt:add(h1,h2));
+        int e3 = Flt:add(Flt:sub(xap, yap), Flt:add(d,d));
+        int e4 = Flt:sub(Flt:sub(xap, yap), d);
+        
+        g.addFltLine(xbl,Flt:add(ybd,e1),Flt:sub(xbr,e1),ybu).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:add(ybd,e2),Flt:sub(xbr,e2),ybu).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:add(ybd,e3),Flt:sub(xbr,e3),ybu).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:add(ybd,e4),Flt:sub(xbr,e4),ybu).getStrokeStyle().setColor(c2);
+//*
+        g.addFltLine(Flt:add(xbl,e4),ybd,xbr,Flt:sub(ybu,e4)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,e3),ybd,xbr,Flt:sub(ybu,e3)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,e2),ybd,xbr,Flt:sub(ybu,e2)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,e1),ybd,xbr,Flt:sub(ybu,e1)).getStrokeStyle().setColor(c2);
+//*/
+
+        [int s1x, int s1y] := __intersectLineLine(
+            Flt:add(xbl,e1),ybd,xbr,Flt:sub(ybu,e1),
+            Flt:add(dx1a,t1x), Flt:sub(dy1a,t1y), Flt:add(dx1b,t1x), Flt:sub(dy1b,t1y)
+        );
+            
+        [int s2x, int s2y] := __intersectLineLine(
+            Flt:add(xbl,e1),ybd,xbr,Flt:sub(ybu,e1),
+            Flt:sub(dx1a,t1x), Flt:add(dy1a,t1y), Flt:sub(dx1b,t1x), Flt:add(dy1b,t1y)
+        );
+        
+        int magic1 = Flt:add(Flt:sub(s1y,ybn),Flt:sub(s1x,xan));//h2;        
+        int magic2 = Flt:add(Flt:sub(s2y,ybn),Flt:sub(s2x,xan));//h2;        
+        
+        int f1 = Flt:add(Flt:sub(xan, yan), magic1); // TODO
+        int f2 = Flt:sub(Flt:sub(xan, yan), Flt:add(Flt:sub(t2,d), h2));
+        int f3 = Flt:sub(Flt:sub(xan, yan), d);
+        
+        int f4 = Flt:add(Flt:add(xan, yan), d);
+        int f5 = Flt:add(xan, yan);
+        int f6 = Flt:sub(Flt:add(xan, yan), d);
+        
+        int f7 = Flt:add(Flt:add(xbn, yan), d);
+        int f8 = Flt:add(Flt:add(xbn, yan), Flt:add(Flt:sub(t2,d), h2));
+        int f9 = Flt:sub(Flt:add(xbn, yan), magic1); // TODO
+        
+        int f10 = Flt:add(Flt:add(xan, ybn), magic1); // TODO
+        int f11 = Flt:add(Flt:add(xan, ybn), magic2); // TODO
+        //int f11 = Flt:add(xan, ybn); // TODO
+        
+        g.addFltLine(
+            Flt:sub(xan,Flt:mul(Flt:fromInt(3),t1x)),Flt:add(ybn,Flt:mul(Flt:fromInt(3),t1y)),
+            Flt:add(xan,Flt:mul(Flt:fromInt(3),t1x)),Flt:sub(ybn,Flt:mul(Flt:fromInt(3),t1y))
+        ).getStrokeStyle().setColor(c3);
+        
+        g.addFltLine(xbl,Flt:sub(ybu,f1),Flt:sub(xbr,f1),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f2),Flt:sub(xbr,f2),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f3),Flt:sub(xbr,f3),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f4),Flt:sub(xbr,f4),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f5),Flt:sub(xbr,f5),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f6),Flt:sub(xbr,f6),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f7),Flt:sub(xbr,f7),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f8),Flt:sub(xbr,f8),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f9),Flt:sub(xbr,f9),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f10),Flt:sub(xbr,f10),ybd).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbl,Flt:sub(ybu,f11),Flt:sub(xbr,f11),ybd).getStrokeStyle().setColor(c2);
+//*
+        g.addFltLine(Flt:add(xbl,f11),ybu,xbr,Flt:add(ybd,f11)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f10),ybu,xbr,Flt:add(ybd,f10)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f9),ybu,xbr,Flt:add(ybd,f9)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f8),ybu,xbr,Flt:add(ybd,f8)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f7),ybu,xbr,Flt:add(ybd,f7)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f6),ybu,xbr,Flt:add(ybd,f6)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f5),ybu,xbr,Flt:add(ybd,f5)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f4),ybu,xbr,Flt:add(ybd,f4)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f3),ybu,xbr,Flt:add(ybd,f3)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f2),ybu,xbr,Flt:add(ybd,f2)).getStrokeStyle().setColor(c2);
+        g.addFltLine(Flt:add(xbl,f1),ybu,xbr,Flt:add(ybd,f1)).getStrokeStyle().setColor(c2);
+//*/
+        
+        Path path := g.newPath();
+        g.addPath(path).getStrokeStyle().setCColor("yellow");
+        
+        path
+            .moveFltTo(xan,ybn)
+            .lineFltTo(xbn,yan)
+            .lineFltTo(xan,yan)
+            .lineFltTo(xan,yap) //.lineFltTo(xan,yap)
+            .lineFltTo(xap,yan)
+            .lineFltTo(xap,yap)
+            .lineFltTo(xbp,yap)
+            .lineFltTo(xap,ybp);
+/*        
+        g.addFltLine(xan, ybn, xbn, yan).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbn, yan, xan, yan).getStrokeStyle().setColor(c2);
+        g.addFltLine(xan, yan, xan, yap).getStrokeStyle().setColor(c2);
+        g.addFltLine(xan, yap, xap, yan).getStrokeStyle().setColor(c2);
+        g.addFltLine(xap, yan, xap, yap).getStrokeStyle().setColor(c2);
+        g.addFltLine(xap, yap, xbp, yap).getStrokeStyle().setColor(c2);
+        g.addFltLine(xbp, yap, xap, ybp).getStrokeStyle().setColor(c2);
+*/
+/*
+        g.addFltLine(xbl, y1, xbr, y1).getStrokeStyle().setColor(c3);
+        g.addFltLine(xbl, y2, xbr, y2).getStrokeStyle().setColor(c3);
+        g.addFltLine(xbl, y3, xbr, y3).getStrokeStyle().setColor(c3);
+        g.addFltLine(xbl, y4, xbr, y4).getStrokeStyle().setColor(c3);
+        
+        g.addFltLine(x1, ybd, x1, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x2, ybd, x2, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x3, ybd, x3, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x4, ybd, x4, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x5, ybd, x5, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x6, ybd, x6, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x7, ybd, x7, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x8, ybd, x8, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x9, ybd, x9, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x10, ybd, x10, ybu).getStrokeStyle().setColor(c3);
+        g.addFltLine(x11, ybd, x11, ybu).getStrokeStyle().setColor(c3);
+//*/
+    }
+    
+    [] _initializeCoordinates() {
+    
+        int xap := b;
+        int yap := a;
+        
+        int xbp := Flt:add(xap, Flt:add(yap,yap));
+        int ybp := Flt:add(yap, Flt:add(xap,xap));
+        
+        int xan := Flt:neg(xap);
+        int xbn := Flt:neg(xbp);
+        int yan := Flt:neg(yap);
+        int ybn := Flt:neg(ybp);
+        
+        int xbl := Flt:sub(shiftX, viewWidth); 
+        int xbr := Flt:add(shiftX, viewWidth);
+        int ybu := Flt:add(shiftY, viewHeight);
+        int ybd := Flt:sub(shiftY, viewHeight); 
+
+        int xap2 := Flt:add(xap,xap);
+        int xan2 := Flt:add(xan,xan);
+        int yap2 := Flt:add(yap,yap);
+        int yan2 := Flt:add(yan,yan);
+        
+        int dx1a := Flt:add(xan,yap);
+        int dy1a := Flt:sub(ybn,xap);
+        int dx1b := Flt:sub(xbn,yap);
+        int dy1b := Flt:add(yan,xap);
+        
+        int dx1 := Flt:sub(dx1b, dx1a);
+        int dy1 := Flt:sub(dy1b, dy1a);
+        int sq1 := Flt:sqrt(Flt:add(Flt:mul(dx1, dx1), Flt:mul(dy1, dy1)));
+        int t1x := Flt:div(Flt:mul(dy1, d), sq1); 
+        int t1y := Flt:div(Flt:mul(dx1, d), sq1);
+        
+        int e1 = Flt:add(Flt:add(xap, yap), d);
+        int t2 = Flt:div(Flt:mul(d, yap), xap);
+        int h1 = Flt:add(t2,d);
+        int h2 = Flt:sqrt(Flt:add(Flt:mul(t2,t2),Flt:mul(d,d)));
+        int e2 = Flt:sub(Flt:add(xap, yap), Flt:add(h1,h2));
+        int e3 = Flt:add(Flt:sub(xap, yap), Flt:add(d,d));
+        int e4 = Flt:sub(Flt:sub(xap, yap), d);
+
+        [int s1x, int s1y] := __intersectLineLine(
+            Flt:add(xbl,e1),ybd,xbr,Flt:sub(ybu,e1),
+            Flt:add(dx1a,t1x), Flt:sub(dy1a,t1y), Flt:add(dx1b,t1x), Flt:sub(dy1b,t1y)
+        );
+            
+        [int s2x, int s2y] := __intersectLineLine(
+            Flt:add(xbl,e1),ybd,xbr,Flt:sub(ybu,e1),
+            Flt:sub(dx1a,t1x), Flt:add(dy1a,t1y), Flt:sub(dx1b,t1x), Flt:add(dy1b,t1y)
+        );
+        
+        int magic1 = Flt:add(Flt:sub(s1y,ybn),Flt:sub(s1x,xan));//h2;        
+        int magic2 = Flt:add(Flt:sub(s2y,ybn),Flt:sub(s2x,xan));//h2;        
+        
+        int f1 = Flt:add(Flt:sub(xan, yan), magic1); // TODO
+        int f2 = Flt:sub(Flt:sub(xan, yan), Flt:add(Flt:sub(t2,d), h2));
+        int f3 = Flt:sub(Flt:sub(xan, yan), d);
+        int f4 = Flt:add(Flt:add(xan, yan), d);
+        int f5 = Flt:add(xan, yan);
+        int f6 = Flt:sub(Flt:add(xan, yan), d);
+        int f7 = Flt:add(Flt:add(xbn, yan), d);
+        int f8 = Flt:add(Flt:add(xbn, yan), Flt:add(Flt:sub(t2,d), h2));
+        int f9 = Flt:sub(Flt:add(xbn, yan), magic1); // TODO
+        int f10 = Flt:add(Flt:add(xan, ybn), magic1); // TODO
+        int f11 = Flt:add(Flt:add(xan, ybn), magic2); // TODO
+
+        
+        int xfac := Flt:div(Flt:SQRT_TWO_POS, Flt:TWO_NEG);
+        int yfac := Flt:div(Flt:SQRT_TWO_POS, Flt:TWO_POS);
+        
+        x1 = Flt:mul(f1, xfac);
+        x2 = Flt:mul(f2, xfac);
+        x3 = Flt:mul(f3, xfac);
+        x4 = Flt:mul(f4, xfac);
+        x5 = Flt:mul(f5, xfac);
+        x6 = Flt:mul(f6, xfac);
+        x7 = Flt:mul(f7, xfac);
+        x8 = Flt:mul(f8, xfac);
+        x9 = Flt:mul(f9, xfac);
+        x10 = Flt:mul(f10, xfac);
+        x11 = Flt:mul(f11, xfac);
+        x1n = Flt:neg(x1);
+        x2n = Flt:neg(x2);
+        x3n = Flt:neg(x3);
+        x4n = Flt:neg(x4);
+        x5n = Flt:neg(x5);
+        x6n = Flt:neg(x6);
+        x7n = Flt:neg(x7);
+        x8n = Flt:neg(x8);
+        x9n = Flt:neg(x9);
+        x10n = Flt:neg(x10);
+        x11n = Flt:neg(x11);
+        
+        y1 = Flt:mul(e1, yfac);
+        y2 = Flt:mul(e2, yfac);
+        y3 = Flt:mul(e3, yfac);
+        y4 = Flt:mul(e4, yfac);
+        y1n = Flt:neg(y1);
+        y2n = Flt:neg(y2);
+        y3n = Flt:neg(y3);
+        y4n = Flt:neg(y4);
+    }
+
+}
