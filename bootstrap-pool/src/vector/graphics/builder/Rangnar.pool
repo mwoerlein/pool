@@ -18,6 +18,7 @@ class Rangnar extends vector::graphics::Builder {
     String mystraColor;
     String mystraHighlightColor;
     String lathandarColor;
+    String lathandarGemColor;
     String gondColor;
     String gondArrowColor;
     
@@ -51,6 +52,8 @@ class Rangnar extends vector::graphics::Builder {
     int l2r;
     int l3r;
     int l4r;
+    
+    int lgr;
     
     int l2a;
     int l3a;
@@ -113,7 +116,8 @@ class Rangnar extends vector::graphics::Builder {
         return this;
     }
     [Rangnar] withLathandar() {
-        lathandarColor = this.createStringFromCString("#F0C0B0");
+        lathandarColor = this.createStringFromCString("#F0C090");
+        lathandarGemColor = this.createStringFromCString("#FF5000");
         return this;
     }
     [Rangnar] withScales() { this.scales = true; return this; }
@@ -128,13 +132,15 @@ class Rangnar extends vector::graphics::Builder {
         Path mystra := this._addNewFilledPath(logo, mystraColor);
         Path mystraHighlight := this._addNewFilledPath(logo, mystraHighlightColor);
         Path lathandar := this._addNewFilledPath(logo, lathandarColor);
+        Path lathandarGem := this._addNewFilledPath(logo, lathandarGemColor);
         Path gondGear := this._addNewFilledPath(logo, gondColor);
         Path gondArrow := this._addNewFilledPath(logo, gondArrowColor);
+        Path gondGem := this._addNewFilledPath(logo, lathandarGemColor);
         
         this._generateRaven(raven);
         this._generateMystra(mystra, mystraHighlight);
-        this._generateLathandar(lathandar);
-        this._generateGond(gondGear, gondArrow);
+        this._generateLathandar(lathandar, lathandarGem);
+        this._generateGond(gondGear, gondArrow, gondGem);
         
         return logo;
     }
@@ -310,7 +316,7 @@ class Rangnar extends vector::graphics::Builder {
         }
     }
     
-    [] _generateLathandar(Path outline) {
+    [] _generateLathandar(Path outline, Path gem) {
         outline
             .circleFltTo(cx, cy, l1r, false)
             .close();
@@ -318,6 +324,7 @@ class Rangnar extends vector::graphics::Builder {
         int f45 = Flt:fromInt(45);
         int f45n = Flt:fromInt(-45);
         int f90 = Flt:fromInt(90);
+        int f90n = Flt:fromInt(-90);
         int f135 = Flt:fromInt(135);
         int f225 = Flt:fromInt(225);
         int f270 = Flt:fromInt(270);
@@ -355,9 +362,33 @@ class Rangnar extends vector::graphics::Builder {
             .arcFltTo(cx, cy, l2r, Flt:add(f225, l2a), Flt:sub(f270, l2a), false)
             .lineFltTo(Flt:neg(l5x), l5y)
             .close();
+        /*
+        {
+            int i = 13;
+            int j = 3;
+            int gr = Flt:div(Flt:add(l3r, l4r), Flt:TWO_POS);
+            int gStep = Flt:div(Flt:fromInt(180), Flt:fromInt(i-1));
+            int grStep = Flt:div(Flt:sub(l1r, l3r), Flt:fromInt(j+1));
+            int cur = Flt:fromInt(-90);
+            while (i--) {
+                [int x, int y] := Path:getPolarPoint(gr, Flt:degToRad(cur));
+                this._addGem(gem, x, y, cur);
+                cur = Flt:add(cur, gStep);
+            }
+            while (j--) {
+                gr = Flt:add(gr, grStep);
+                [int x, int y] := Path:getPolarPoint(gr, Flt:degToRad(f45));
+                this._addGem(gem, gr, Flt:ZERO_POS, f90);
+                this._addGem(gem, x, y, f45);
+                this._addGem(gem, Flt:ZERO_POS, gr, f0);
+                this._addGem(gem, Flt:neg(x), y, f45n);
+                this._addGem(gem, Flt:neg(gr), Flt:ZERO_POS, f90n);
+            }
+        }
+        */
     }
     
-    [] _generateGond(Path gear, Path arrow) {
+    [] _generateGond(Path gear, Path arrow, Path gem) {
         {
             int moveTo = true;
             int i = 0;
@@ -461,10 +492,13 @@ class Rangnar extends vector::graphics::Builder {
         {
             int moveTo = true;
             int i = 0;
+            int gi1r = Flt:sub(g1r, Flt:fromInt(8));
+            int gi2r = Flt:sub(g2r, Flt:fromInt(4));
             int cur = Flt:ZERO_POS;
             while (i++ < 32) {
-                [int x1, int y1] := Path:getPolarPoint(Flt:sub(g1r,Flt:fromInt(8)), Flt:degToRad(Flt:add(cur, g1a)));
-                [int x2, int y2] := Path:getPolarPoint(Flt:sub(g2r,Flt:fromInt(4)), Flt:degToRad(Flt:add(cur, g2a)));
+                [int x1, int y1] := Path:getPolarPoint(gi1r, Flt:degToRad(Flt:add(cur, g1a)));
+                [int x2, int y2] := Path:getPolarPoint(gi2r, Flt:degToRad(Flt:add(cur, g2a)));
+                [int x3, int y3] := Path:getPolarPoint(gi2r, Flt:degToRad(Flt:add(cur, g1a)));
                 if (moveTo) {
                     arrow.moveFltTo(x1, y1);
                     moveTo = false;
@@ -472,12 +506,34 @@ class Rangnar extends vector::graphics::Builder {
                     arrow.lineFltTo(x1, y1);
                 }
                 arrow.lineFltTo(x2, y2);
+                this._addGem(gem, x3, y3, cur);
                 
                 cur = Flt:add(cur, gStep);
             }
             arrow.close();
         }
     }
+    
+    [] _addGem(Path gem, int x, int y, int angle) {
+        //gem.circleFltTo(x, y, lgr, false);
+        {
+            int moveTo = true;
+            int i = 6;
+            int step = Flt:div(Flt:fromInt(360), Flt:fromInt(i));
+            int cur = angle;
+            while (i--) {
+                [int dx, int dy] := Path:getPolarPoint(lgr, Flt:degToRad(cur));
+                if (moveTo) {
+                    gem.moveFltTo(Flt:add(x, dx), Flt:add(y, dy));
+                    moveTo = false;
+                } else {
+                    gem.lineFltTo(Flt:add(x, dx), Flt:add(y, dy));
+                }
+                cur = Flt:add(cur, step);
+            }
+            gem.close();
+        }
+    } 
     
     [] _addScaffolding(Graphic g) {
         String c1 := scaffoldingColor1;
@@ -601,6 +657,7 @@ class Rangnar extends vector::graphics::Builder {
         {
             // lathandar
             lWidth = Flt:fromInt(8);
+            lgr = Flt:div(Flt:fromInt(5), f2);
             l1r = Flt:fromInt(150);
             l2r = Flt:sub(l1r, lWidth);
             l3r = Flt:div(Flt:add(l1r, lWidth), f2);
@@ -633,7 +690,7 @@ class Rangnar extends vector::graphics::Builder {
             
             g5r = Flt:add(g6r, border);
             g4r = Flt:add(g5r, arrow);
-            g3r = Flt:add(g4r, Flt:add(border, border));
+            g3r = Flt:add(g4r, Flt:add(arrow, arrow));
             g7r = Flt:sub(g6r, Flt:add(width2, border));
             g8r = Flt:sub(g7r, ab);
             
