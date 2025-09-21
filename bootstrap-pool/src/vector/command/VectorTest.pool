@@ -11,10 +11,13 @@ use sys::stream::SeekableIOStream;
 
 use vector::graphics::Graphic;
 use vector::graphics::Builder;
+use vector::graphics::builder::Celtic;
 use vector::graphics::builder::Monogram;
 use vector::graphics::builder::Pentagram;
+use vector::graphics::builder::Perbility;
 use vector::graphics::builder::PoolLogo;
 use vector::graphics::builder::Rangnar;
+use vector::graphics::builder::YinYang;
 use vector::svg::Writer;
 
 class VectorTest extends linux::Command {
@@ -99,6 +102,29 @@ Test for some vector features.
         if (builderType.cequals("monogram")) {
             Monogram b = this.createOwn(Monogram:CLASSNAME);
             return b.builder();
+        }
+        
+        if (builderType.cequals("celtic")) {
+            Celtic b = this.createOwn(Celtic:CLASSNAME);
+            return b.builder();
+        }
+        
+        if (builderType.cequals("perbility")) {
+            Perbility b = this.createOwn(Perbility:CLASSNAME);
+            return b.builder();
+        }
+        
+        if (builderType.cequals("yinyang")) {
+            YinYang b = this.createOwn(YinYang:CLASSNAME);
+            return b.builder();
+        }
+        if (builderType.cequals("yinyang-light")) {
+            YinYang b = this.createOwn(YinYang:CLASSNAME);
+            return b.light().builder();
+        }
+        if (builderType.cequals("yinyang-dark")) {
+            YinYang b = this.createOwn(YinYang:CLASSNAME);
+            return b.dark().builder();
         }
         
         if (builderType.cequals("rangnar")) {

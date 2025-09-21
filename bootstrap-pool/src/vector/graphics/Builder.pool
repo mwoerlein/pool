@@ -9,6 +9,7 @@ use sys::core::Flt;
 use sys::core::String;
 
 use vector::graphics::path::Path;
+use vector::graphics::shape::AbstractShape;
 use vector::graphics::shape::PathShape;
 
 class Builder extends sys::core::utils::Owner {
@@ -60,13 +61,7 @@ class Builder extends sys::core::utils::Owner {
     [Path] _addNewFilledPath(Graphic g, String color) {
         Path path := g.newPath();
         if (color) {
-            PathShape shape := g.addPath(path);
-            shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
-            shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
-            if (debug) { 
-                shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
-                shape.getFillStyle().setCOpacity("0.3");
-            }
+            this._styleFilledShape(g.addPath(path).shape(), color);
         }
         return path;
     }
@@ -74,14 +69,26 @@ class Builder extends sys::core::utils::Owner {
     [Path] _addNewLinePath(Graphic g, String color) {
         Path path := g.newPath();
         if (color) {
-            PathShape shape := g.addPath(path);
-            shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
-            shape.getStrokeStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
-            if (debug) { 
-                shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
-            }
+            this._styleLineShape(g.addPath(path).shape(), color);
         }
         return path;
+    }
+    
+    [AbstractShape] _styleFilledShape(AbstractShape shape, String color) {
+        shape.getStrokeStyle().setOpacityFlt(Flt:ZERO_POS);
+        shape.getFillStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
+        if (debug) { 
+            shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
+            shape.getFillStyle().setCOpacity("0.3");
+        }
+    }
+    
+    [AbstractShape] _styleLineShape(AbstractShape shape, String color) {
+        shape.getFillStyle().setOpacityFlt(Flt:ZERO_POS);
+        shape.getStrokeStyle().setColor(color).setOpacityFlt(Flt:ONE_POS);
+        if (debug) { 
+            shape.getStrokeStyle().setColor(color).setCOpacity("0.7");
+        }
     }
     
     [int] __interAngleCircleLine(int mx, int my, int r, int ax, int ay, int bx, int by, int second) {

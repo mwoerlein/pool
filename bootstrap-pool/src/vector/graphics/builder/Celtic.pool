@@ -1,0 +1,376 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::builder;
+
+use sys::core::Flt;
+use sys::core::String;
+
+use vector::graphics::Graphic;
+use vector::graphics::path::Path;
+use vector::graphics::shape::PathShape;
+use vector::graphics::shape::Rectangle;
+use vector::graphics::shape::Ring;
+
+class Celtic extends vector::graphics::Builder {
+    
+    String color;
+    
+    int rc;
+    int ri;
+    int ro;
+    int count;
+    
+    int cx1;
+    int cy1;
+    int cx2;
+    int cy2;
+    int cx3;
+    int cy3;
+    
+     
+    [] __init() { this._initCeltic(); }
+    [] _initCeltic() {
+        _initSimpleBuilder(240);
+        
+        //color = this.createStringFromCString("#999999");
+        color = this.createStringFromCString("white");
+        
+        rc = Flt:fromInt(110);
+        ri = Flt:fromInt(120);
+        ro = Flt:fromInt(170);
+/*        
+        rc = Flt:fromInt(120);
+        ri = Flt:fromInt(160);
+        ro = Flt:fromInt(200);
+*/
+/*        
+        rc = Flt:fromInt(120);
+        ri = Flt:fromInt(150);
+        ro = Flt:fromInt(180);
+//*/        
+        count = 4;
+    }
+    
+    [Graphic] buildGraphic() {
+        this._initializeCoordinates();
+        
+        Graphic graphic := this._newGraphic();
+        
+        Path triquetra := this._addNewFilledPath(graphic, color);
+        
+        //this._generateTriquetra(triquetra);
+        this._generateTriquetra2(triquetra);
+
+        return graphic;
+    }
+    
+    [] _generateTriquetra(Path triquetra) {
+        int d := Flt:div(Flt:sub(ro, ri), Flt:fromInt(count));
+        int w := Flt:div(d, Flt:fromInt(4));
+        int i = 0;
+        int r = Flt:add(ri, Flt:div(d, Flt:TWO_POS));
+        while (i++ < count) {
+            int r1 := Flt:sub(r, w);
+            int r2 := Flt:add(r, w);
+            
+            int i1i := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, ri);
+            int i11 := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, r1);
+            int i1o := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, ro);
+            
+            int i2i := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, ri);
+            int i22 := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, r2);
+            int i2o := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, ro);
+            
+            int ii1 := this.__interAngleCircleCircle(cx1, cy1, ri, cx2, cy2, r1);
+            int ii2 := this.__interAngleCircleCircle(cx1, cy1, ri, cx2, cy2, r2);
+            int io1 := this.__interAngleCircleCircle(cx1, cy1, ro, cx2, cy2, r1);
+            int io2 := this.__interAngleCircleCircle(cx1, cy1, ro, cx2, cy2, r2);
+            
+            triquetra
+                .arcFltTo(cx3, cy3, r2, Flt:add(Flt:fromInt(90), i2i), Flt:sub(Flt:fromInt(90), i22), false)
+                .arcFltTo(cx1, cy1, r2, Flt:add(Flt:fromInt(270), i22), Flt:add(Flt:fromInt(210), i2o), true)
+                .arcFltTo(cx2, cy2, ro, Flt:sub(Flt:fromInt(30), io2), Flt:sub(Flt:fromInt(30), io1), true)
+                .arcFltTo(cx1, cy1, r1, Flt:add(Flt:fromInt(210), i1o), Flt:add(Flt:fromInt(270), i11), true)
+                .arcFltTo(cx3, cy3, r1, Flt:sub(Flt:fromInt(90), i11), Flt:add(Flt:fromInt(90), i1i), true)
+                .arcFltTo(cx1, cy1, ri, Flt:sub(Flt:fromInt(270), ii1), Flt:sub(Flt:fromInt(270), ii2), true)
+                .close();
+                
+            triquetra
+                .arcFltTo(cx2, cy2, r2, Flt:add(Flt:fromInt(330), i2i), Flt:sub(Flt:fromInt(330), i22), false)
+                .arcFltTo(cx3, cy3, r2, Flt:add(Flt:fromInt(150), i22), Flt:add(Flt:fromInt(90), i2o), true)
+                .arcFltTo(cx1, cy1, ro, Flt:sub(Flt:fromInt(270), io2), Flt:sub(Flt:fromInt(270), io1), true)
+                .arcFltTo(cx3, cy3, r1, Flt:add(Flt:fromInt(90), i1o), Flt:add(Flt:fromInt(150), i11), true)
+                .arcFltTo(cx2, cy2, r1, Flt:sub(Flt:fromInt(330), i11), Flt:add(Flt:fromInt(330), i1i), true)
+                .arcFltTo(cx3, cy3, ri, Flt:sub(Flt:fromInt(150), ii1), Flt:sub(Flt:fromInt(150), ii2), true)
+                .close();
+                
+            triquetra
+                .arcFltTo(cx1, cy1, r2, Flt:add(Flt:fromInt(210), i2i), Flt:sub(Flt:fromInt(210), i22), false)
+                .arcFltTo(cx2, cy2, r2, Flt:add(Flt:fromInt(30), i22), Flt:add(Flt:fromInt(-30), i2o), true)
+                .arcFltTo(cx3, cy3, ro, Flt:sub(Flt:fromInt(150), io2), Flt:sub(Flt:fromInt(150), io1), true)
+                .arcFltTo(cx2, cy2, r1, Flt:add(Flt:fromInt(-30), i1o), Flt:add(Flt:fromInt(30), i11), true)
+                .arcFltTo(cx1, cy1, r1, Flt:sub(Flt:fromInt(210), i11), Flt:add(Flt:fromInt(210), i1i), true)
+                .arcFltTo(cx2, cy2, ri, Flt:sub(Flt:fromInt(30), ii1), Flt:sub(Flt:fromInt(30), ii2), true)
+                .close();
+
+            r = Flt:add(r, d);
+        }
+    }
+    
+    [] _generateTriquetra2(Path triquetra) {
+        int d := Flt:div(Flt:sub(ro, ri), Flt:fromInt(count));
+        int w := Flt:div(d, Flt:fromInt(4));
+        int i = 0;
+        int r = Flt:add(ri, Flt:div(d, Flt:TWO_POS));
+        while (i++ < count) {
+            int r1 := Flt:sub(r, w);
+            int r2 := Flt:add(r, w);
+            int ra = ro;
+            
+            int i1a = this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, ra);
+            int i2a = this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, ra);
+            int ia1 = this.__interAngleCircleCircle(cx1, cy1, ra, cx2, cy2, r1);
+            int ia2 = this.__interAngleCircleCircle(cx1, cy1, ra, cx2, cy2, r2);
+            
+            int mirror = !(i % 2);
+            
+            [int nr, int ni1r, int ni2r, int nir1, int nir2] := this._addTriquetraStart(triquetra,
+                r1, r2, ra, d, ia1, ia2, i1a, i2a, mirror);
+            ra = nr; i1a = ni1r; i2a = ni2r; ia1 = nir1; ia2 = nir2; mirror = !mirror;
+            
+            int j = 2;
+            while (j++ < count) {
+                [int nr, int ni1r, int ni2r, int nir1, int nir2] := this._addTriquetraMid(triquetra,
+                    r1, r2, ra, d, ia1, ia2, i1a, i2a, mirror);
+                ra = nr; i1a = ni1r; i2a = ni2r; ia1 = nir1; ia2 = nir2; mirror = !mirror;
+            }
+            
+            this._addTriquetraEnd(triquetra, r1, r2, ra, d, ia1, ia2, i1a, i2a, mirror);
+
+            r = Flt:add(r, d);
+        }
+    }
+    
+    [int, int, int, int, int] _addTriquetraStart(Path triquetra,
+        int r1, int r2, int ra, int d,
+        int ia1, int ia2, int i1a, int i2a,
+        int mirror
+    )
+    {
+        int i11 := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, r1);
+        int i22 := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, r2);
+        
+        int rb := Flt:sub(ra, d);
+        int i1b := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, rb);
+        int i2b := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, rb);
+        int ib1 := this.__interAngleCircleCircle(cx1, cy1, rb, cx2, cy2, r1);
+        int ib2 := this.__interAngleCircleCircle(cx1, cy1, rb, cx2, cy2, r2);
+        
+        if (mirror) {
+            triquetra
+                .arcFltTo(cx1, cy1, r2, Flt:add(Flt:fromInt(210), i2b), Flt:add(Flt:fromInt(270), i22), false)
+                .arcFltTo(cx3, cy3, r2, Flt:sub(Flt:fromInt(90), i22), Flt:sub(Flt:fromInt(150), i2a), true)
+                .arcFltTo(cx2, cy2, ra, Flt:add(Flt:fromInt(330), ia2), Flt:add(Flt:fromInt(330), ia1), true)
+                .arcFltTo(cx3, cy3, r1, Flt:sub(Flt:fromInt(150), i1a), Flt:sub(Flt:fromInt(90), i11), true)
+                .arcFltTo(cx1, cy1, r1, Flt:add(Flt:fromInt(270), i11), Flt:add(Flt:fromInt(210), i1b), true)
+                .arcFltTo(cx2, cy2, rb, Flt:sub(Flt:fromInt(30), ib1), Flt:sub(Flt:fromInt(30), ib2), true)
+                .close();
+            triquetra
+                .arcFltTo(cx3, cy3, r2, Flt:add(Flt:fromInt(90), i2b), Flt:add(Flt:fromInt(150), i22), false)
+                .arcFltTo(cx2, cy2, r2, Flt:sub(Flt:fromInt(-30), i22), Flt:sub(Flt:fromInt(30), i2a), true)
+                .arcFltTo(cx1, cy1, ra, Flt:add(Flt:fromInt(210), ia2), Flt:add(Flt:fromInt(210), ia1), true)
+                .arcFltTo(cx2, cy2, r1, Flt:sub(Flt:fromInt(30), i1a), Flt:sub(Flt:fromInt(-30), i11), true)
+                .arcFltTo(cx3, cy3, r1, Flt:add(Flt:fromInt(150), i11), Flt:add(Flt:fromInt(90), i1b), true)
+                .arcFltTo(cx1, cy1, rb, Flt:sub(Flt:fromInt(270), ib1), Flt:sub(Flt:fromInt(270), ib2), true)
+                .close();
+            triquetra
+                .arcFltTo(cx2, cy2, r2, Flt:add(Flt:fromInt(-30), i2b), Flt:add(Flt:fromInt(30), i22), false)
+                .arcFltTo(cx1, cy1, r2, Flt:sub(Flt:fromInt(210), i22), Flt:sub(Flt:fromInt(270), i2a), true)
+                .arcFltTo(cx3, cy3, ra, Flt:add(Flt:fromInt(90), ia2), Flt:add(Flt:fromInt(90), ia1), true)
+                .arcFltTo(cx1, cy1, r1, Flt:sub(Flt:fromInt(270), i1a), Flt:sub(Flt:fromInt(210), i11), true)
+                .arcFltTo(cx2, cy2, r1, Flt:add(Flt:fromInt(30), i11), Flt:add(Flt:fromInt(-30), i1b), true)
+                .arcFltTo(cx3, cy3, rb, Flt:sub(Flt:fromInt(150), ib1), Flt:sub(Flt:fromInt(150), ib2), true)
+                .close();
+        } else {
+            triquetra
+                .arcFltTo(cx3, cy3, r2, Flt:sub(Flt:fromInt(150), i2b), Flt:sub(Flt:fromInt(90), i22), false)
+                .arcFltTo(cx1, cy1, r2, Flt:add(Flt:fromInt(270), i22), Flt:add(Flt:fromInt(210), i2a), true)
+                .arcFltTo(cx2, cy2, ra, Flt:sub(Flt:fromInt(30), ia2), Flt:sub(Flt:fromInt(30), ia1), true)
+                .arcFltTo(cx1, cy1, r1, Flt:add(Flt:fromInt(210), i1a), Flt:add(Flt:fromInt(270), i11), true)
+                .arcFltTo(cx3, cy3, r1, Flt:sub(Flt:fromInt(90), i11), Flt:sub(Flt:fromInt(150), i1b), true)
+                .arcFltTo(cx2, cy2, rb, Flt:add(Flt:fromInt(-30), ib1), Flt:add(Flt:fromInt(-30), ib2), true)
+                .close();
+            triquetra
+                .arcFltTo(cx2, cy2, r2, Flt:sub(Flt:fromInt(30), i2b), Flt:sub(Flt:fromInt(-30), i22), false)
+                .arcFltTo(cx3, cy3, r2, Flt:add(Flt:fromInt(150), i22), Flt:add(Flt:fromInt(90), i2a), true)
+                .arcFltTo(cx1, cy1, ra, Flt:sub(Flt:fromInt(270), ia2), Flt:sub(Flt:fromInt(270), ia1), true)
+                .arcFltTo(cx3, cy3, r1, Flt:add(Flt:fromInt(90), i1a), Flt:add(Flt:fromInt(150), i11), true)
+                .arcFltTo(cx2, cy2, r1, Flt:sub(Flt:fromInt(-30), i11), Flt:sub(Flt:fromInt(30), i1b), true)
+                .arcFltTo(cx1, cy1, rb, Flt:add(Flt:fromInt(210), ib1), Flt:add(Flt:fromInt(210), ib2), true)
+                .close();
+            triquetra
+                .arcFltTo(cx1, cy1, r2, Flt:sub(Flt:fromInt(270), i2b), Flt:sub(Flt:fromInt(210), i22), false)
+                .arcFltTo(cx2, cy2, r2, Flt:add(Flt:fromInt(30), i22), Flt:add(Flt:fromInt(-30), i2a), true)
+                .arcFltTo(cx3, cy3, ra, Flt:sub(Flt:fromInt(150), ia2), Flt:sub(Flt:fromInt(150), ia1), true)
+                .arcFltTo(cx2, cy2, r1, Flt:add(Flt:fromInt(-30), i1a), Flt:add(Flt:fromInt(30), i11), true)
+                .arcFltTo(cx1, cy1, r1, Flt:sub(Flt:fromInt(210), i11), Flt:sub(Flt:fromInt(270), i1b), true)
+                .arcFltTo(cx3, cy3, rb, Flt:add(Flt:fromInt(90), ib1), Flt:add(Flt:fromInt(90), ib2), true)
+                .close();
+        }
+        return [rb, i1b, i2b, ib1, ib2];
+    }
+    
+    [int, int, int, int, int] _addTriquetraMid(Path triquetra,
+        int r1, int r2, int ra, int d,
+        int ia1, int ia2, int i1a, int i2a,
+        int mirror
+    )
+    {
+        int rb := Flt:sub(ra, d);
+        int i1b := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, rb);
+        int i2b := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, rb);
+        int ib1 := this.__interAngleCircleCircle(cx1, cy1, rb, cx2, cy2, r1);
+        int ib2 := this.__interAngleCircleCircle(cx1, cy1, rb, cx2, cy2, r2);
+        
+        if (mirror) {
+            triquetra
+                .arcFltTo(cx2, cy2, rb, Flt:sub(Flt:fromInt(30), ib2), Flt:sub(Flt:fromInt(30), ib1), false)
+                .arcFltTo(cx1, cy1, r1, Flt:add(Flt:fromInt(210), i1b), Flt:add(Flt:fromInt(210), i1a), true)
+                .arcFltTo(cx2, cy2, ra, Flt:sub(Flt:fromInt(30), ia1), Flt:sub(Flt:fromInt(30), ia2), true)
+                .arcFltTo(cx1, cy1, r2, Flt:add(Flt:fromInt(210), i2a), Flt:add(Flt:fromInt(210), i2b), true)
+                .close();
+            triquetra
+                .arcFltTo(cx1, cy1, rb, Flt:sub(Flt:fromInt(270), ib2), Flt:sub(Flt:fromInt(270), ib1), false)
+                .arcFltTo(cx3, cy3, r1, Flt:add(Flt:fromInt(90), i1b), Flt:add(Flt:fromInt(90), i1a), true)
+                .arcFltTo(cx1, cy1, ra, Flt:sub(Flt:fromInt(270), ia1), Flt:sub(Flt:fromInt(270), ia2), true)
+                .arcFltTo(cx3, cy3, r2, Flt:add(Flt:fromInt(90), i2a), Flt:add(Flt:fromInt(90), i2b), true)
+                .close();
+            triquetra
+                .arcFltTo(cx3, cy3, rb, Flt:sub(Flt:fromInt(150), ib2), Flt:sub(Flt:fromInt(150), ib1), false)
+                .arcFltTo(cx2, cy2, r1, Flt:add(Flt:fromInt(330), i1b), Flt:add(Flt:fromInt(330), i1a), true)
+                .arcFltTo(cx3, cy3, ra, Flt:sub(Flt:fromInt(150), ia1), Flt:sub(Flt:fromInt(150), ia2), true)
+                .arcFltTo(cx2, cy2, r2, Flt:add(Flt:fromInt(330), i2a), Flt:add(Flt:fromInt(330), i2b), true)
+                .close();
+        } else {
+            triquetra
+                .arcFltTo(cx2, cy2, rb, Flt:add(Flt:fromInt(330), ib2), Flt:add(Flt:fromInt(330), ib1), false)
+                .arcFltTo(cx3, cy3, r1, Flt:sub(Flt:fromInt(150), i1b), Flt:sub(Flt:fromInt(150), i1a), true)
+                .arcFltTo(cx2, cy2, ra, Flt:add(Flt:fromInt(330), ia1), Flt:add(Flt:fromInt(330), ia2), true)
+                .arcFltTo(cx3, cy3, r2, Flt:sub(Flt:fromInt(150), i2a), Flt:sub(Flt:fromInt(150), i2b), true)
+                .close();
+            triquetra
+                .arcFltTo(cx1, cy1, rb, Flt:add(Flt:fromInt(210), ib2), Flt:add(Flt:fromInt(210), ib1), false)
+                .arcFltTo(cx2, cy2, r1, Flt:sub(Flt:fromInt(30), i1b), Flt:sub(Flt:fromInt(30), i1a), true)
+                .arcFltTo(cx1, cy1, ra, Flt:add(Flt:fromInt(210), ia1), Flt:add(Flt:fromInt(210), ia2), true)
+                .arcFltTo(cx2, cy2, r2, Flt:sub(Flt:fromInt(30), i2a), Flt:sub(Flt:fromInt(30), i2b), true)
+                .close();
+            triquetra
+                .arcFltTo(cx3, cy3, rb, Flt:add(Flt:fromInt(90), ib2), Flt:add(Flt:fromInt(90), ib1), false)
+                .arcFltTo(cx1, cy1, r1, Flt:sub(Flt:fromInt(270), i1b), Flt:sub(Flt:fromInt(270), i1a), true)
+                .arcFltTo(cx3, cy3, ra, Flt:add(Flt:fromInt(90), ia1), Flt:add(Flt:fromInt(90), ia2), true)
+                .arcFltTo(cx1, cy1, r2, Flt:sub(Flt:fromInt(270), i2a), Flt:sub(Flt:fromInt(270), i2b), true)
+                .close();
+        }
+        return [rb, i1b, i2b, ib1, ib2];
+    }
+    
+    [] _addTriquetraEnd(Path triquetra,
+        int r1, int r2, int ra, int d,
+        int ia1, int ia2, int i1a, int i2a,
+        int mirror
+    )
+    {
+        int i1i := this.__interAngleCircleCircle(cx1, cy1, r1, cx2, cy2, ri);
+        int i2i := this.__interAngleCircleCircle(cx1, cy1, r2, cx2, cy2, ri);
+        int ii1 := this.__interAngleCircleCircle(cx1, cy1, ri, cx2, cy2, r1);
+        int ii2 := this.__interAngleCircleCircle(cx1, cy1, ri, cx2, cy2, r2);
+            
+        if (mirror) {
+            triquetra
+                .arcFltTo(cx3, cy3, ri, Flt:add(Flt:fromInt(90), ii2), Flt:add(Flt:fromInt(90), ii1), false)
+                .arcFltTo(cx1, cy1, r1, Flt:sub(Flt:fromInt(270), i1i), Flt:add(Flt:fromInt(210), i1a), true)
+                .arcFltTo(cx2, cy2, ra, Flt:sub(Flt:fromInt(30), ia1), Flt:sub(Flt:fromInt(30), ia2), true)
+                .arcFltTo(cx1, cy1, r2, Flt:add(Flt:fromInt(210), i2a), Flt:sub(Flt:fromInt(270), i2i), true)
+                .close();
+            triquetra
+                .arcFltTo(cx2, cy2, ri, Flt:add(Flt:fromInt(330), ii2), Flt:add(Flt:fromInt(330), ii1), false)
+                .arcFltTo(cx3, cy3, r1, Flt:sub(Flt:fromInt(150), i1i), Flt:add(Flt:fromInt(90), i1a), true)
+                .arcFltTo(cx1, cy1, ra, Flt:sub(Flt:fromInt(270), ia1), Flt:sub(Flt:fromInt(270), ia2), true)
+                .arcFltTo(cx3, cy3, r2, Flt:add(Flt:fromInt(90), i2a), Flt:sub(Flt:fromInt(150), i2i), true)
+                .close();
+            triquetra
+                .arcFltTo(cx1, cy1, ri, Flt:add(Flt:fromInt(210), ii2), Flt:add(Flt:fromInt(210), ii1), false)
+                .arcFltTo(cx2, cy2, r1, Flt:sub(Flt:fromInt(30), i1i), Flt:add(Flt:fromInt(-30), i1a), true)
+                .arcFltTo(cx3, cy3, ra, Flt:sub(Flt:fromInt(150), ia1), Flt:sub(Flt:fromInt(150), ia2), true)
+                .arcFltTo(cx2, cy2, r2, Flt:add(Flt:fromInt(-30), i2a), Flt:sub(Flt:fromInt(30), i2i), true)
+                .close();
+        } else {
+            triquetra
+                .arcFltTo(cx1, cy1, ri, Flt:sub(Flt:fromInt(270), ii2), Flt:sub(Flt:fromInt(270), ii1), false)
+                .arcFltTo(cx3, cy3, r1, Flt:add(Flt:fromInt(90), i1i), Flt:sub(Flt:fromInt(150), i1a), true)
+                .arcFltTo(cx2, cy2, ra, Flt:add(Flt:fromInt(330), ia1), Flt:add(Flt:fromInt(330), ia2), true)
+                .arcFltTo(cx3, cy3, r2, Flt:sub(Flt:fromInt(150), i2a), Flt:add(Flt:fromInt(90), i2i), true)
+                .close();
+            triquetra
+                .arcFltTo(cx3, cy3, ri, Flt:sub(Flt:fromInt(150), ii2), Flt:sub(Flt:fromInt(150), ii1), false)
+                .arcFltTo(cx2, cy2, r1, Flt:add(Flt:fromInt(-30), i1i), Flt:sub(Flt:fromInt(30), i1a), true)
+                .arcFltTo(cx1, cy1, ra, Flt:add(Flt:fromInt(210), ia1), Flt:add(Flt:fromInt(210), ia2), true)
+                .arcFltTo(cx2, cy2, r2, Flt:sub(Flt:fromInt(30), i2a), Flt:add(Flt:fromInt(-30), i2i), true)
+                .close();
+            triquetra
+                .arcFltTo(cx2, cy2, ri, Flt:sub(Flt:fromInt(30), ii2), Flt:sub(Flt:fromInt(30), ii1), false)
+                .arcFltTo(cx1, cy1, r1, Flt:add(Flt:fromInt(210), i1i), Flt:sub(Flt:fromInt(270), i1a), true)
+                .arcFltTo(cx3, cy3, ra, Flt:add(Flt:fromInt(90), ia1), Flt:add(Flt:fromInt(90), ia2), true)
+                .arcFltTo(cx1, cy1, r2, Flt:sub(Flt:fromInt(270), i2a), Flt:add(Flt:fromInt(210), i2i), true)
+                .close();
+        }
+    }
+    
+    [] _addScaffolding(Graphic g) {
+        String c1 := scaffoldingColor1;
+        String c2 := scaffoldingColor2;
+        String c3 := scaffoldingColor3;
+        
+        int xbl := Flt:sub(shiftX, viewWidth); 
+        int xbr := Flt:add(shiftX, viewWidth);
+        int ybu := Flt:add(shiftY, viewHeight);
+        int ybd := Flt:sub(shiftY, viewHeight); 
+
+        g.addFltRectangle(
+            xbl, ybd,
+            Flt:add(viewWidth, viewWidth), Flt:add(viewHeight, viewHeight)
+        ).getStrokeStyle().setColor(c3);
+
+        g.addFltCircle(Flt:ZERO_POS, Flt:ZERO_POS, rc).getStrokeStyle().setColor(c3);
+        g.addFltCircle(Flt:ZERO_POS, Flt:ZERO_POS, ri).getStrokeStyle().setColor(c2);
+        g.addFltCircle(Flt:ZERO_POS, Flt:ZERO_POS, ro).getStrokeStyle().setColor(c2);
+        
+        g.addFltCircle(cx1, cy1, ri).getStrokeStyle().setColor(c2);
+        g.addFltCircle(cx1, cy1, ro).getStrokeStyle().setColor(c2);
+        g.addFltCircle(cx2, cy2, ri).getStrokeStyle().setColor(c2);
+        g.addFltCircle(cx2, cy2, ro).getStrokeStyle().setColor(c2);
+        g.addFltCircle(cx3, cy3, ri).getStrokeStyle().setColor(c2);
+        g.addFltCircle(cx3, cy3, ro).getStrokeStyle().setColor(c2);
+        
+        int d := Flt:div(Flt:sub(ro, ri), Flt:fromInt(count));
+        int w := Flt:div(d, Flt:fromInt(4));
+        int i = 0;
+        int r = Flt:add(ri, Flt:add(w, w));
+        while (i++ < count) {
+            g.addFltCircle(cx1, cy1, r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx2, cy2, r).getStrokeStyle().setColor(c1);
+            g.addFltCircle(cx3, cy3, r).getStrokeStyle().setColor(c1);
+            r = Flt:add(r, d);
+        }
+    }
+    
+    [] _initializeCoordinates() {
+        [int x1, int y1] := Path:getPolarPoint(rc, Flt:degToRad(Flt:fromInt(60))); cx1 = x1; cy1 = y1;
+        [int x2, int y2] := Path:getPolarPoint(rc, Flt:degToRad(Flt:fromInt(180))); cx2 = x2; cy2 = y2;
+        [int x3, int y3] := Path:getPolarPoint(rc, Flt:degToRad(Flt:fromInt(300))); cx3 = x3; cy3 = y3;
+    }
+
+}

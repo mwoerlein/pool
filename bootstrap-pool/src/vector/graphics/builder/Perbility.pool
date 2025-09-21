@@ -1,0 +1,131 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace vector::graphics::builder;
+
+use sys::core::Flt;
+use sys::core::String;
+
+use vector::graphics::Graphic;
+use vector::graphics::path::Path;
+use vector::graphics::shape::PathShape;
+use vector::graphics::shape::Rectangle;
+use vector::graphics::shape::Ring;
+
+class Perbility extends vector::graphics::Builder {
+    
+    String color;
+    
+    int r;
+    
+    int cx1;
+    int cx2;
+    int cx3;
+    int cx4;
+    int cx5;
+    int cx6;
+    int cx7;
+    
+     
+    [] __init() { this._initPerbility(); }
+    [] _initPerbility() {
+        _initSimpleBuilder(65);
+        
+        color = this.createStringFromCString("#e61c3e");
+        
+    }
+    
+    [Graphic] buildGraphic() {
+        this._initializeCoordinates();
+        
+        Graphic graphic := this._newGraphic();
+        
+        Path heart := this._addNewFilledPath(graphic, color);
+        
+        this._generateHeart(heart);
+
+        return graphic;
+    }
+    
+    [] _generateHeart(Path heart) {
+        this._addHeartLine(heart, cx1, Flt:fromInt(37), Flt:fromInt(7));
+        
+        this._addHeartLine(heart, cx2, Flt:fromInt(53), Flt:fromInt(14));
+        this._addHeartLine(heart, cx2, Flt:fromInt(-2), Flt:fromInt(-14));
+        
+        this._addHeartLine(heart, cx3, Flt:fromInt(42), Flt:fromInt(25));
+        this._addHeartLine(heart, cx3, Flt:fromInt(9), Flt:fromInt(-33));
+        
+        this._addHeartLine(heart, cx4, Flt:fromInt(30), Flt:fromInt(-1));
+        this._addHeartLine(heart, cx4, Flt:fromInt(-17), Flt:fromInt(-26));
+        this._addHeartLine(heart, cx4, Flt:fromInt(-42), Flt:fromInt(-53));
+        
+        this._addHeartLine(heart, cx5, Flt:fromInt(42), Flt:fromInt(8));
+        this._addHeartLine(heart, cx5, Flt:fromInt(-8), Flt:fromInt(-33));
+        
+        this._addHeartLine(heart, cx6, Flt:fromInt(53), Flt:fromInt(43));
+        this._addHeartLine(heart, cx6, Flt:fromInt(27), Flt:fromInt(-14));
+        
+        this._addHeartLine(heart, cx7, Flt:fromInt(37), Flt:fromInt(7));
+    }
+    
+    [] _addHeartLine(Path heart, int cx, int cy1, int cy2) {
+        heart
+            .arcFltTo(cx, cy1, r, Flt:fromInt(-90), Flt:fromInt(90), false)
+            .arcFltTo(cx, cy2, r, Flt:fromInt(90), Flt:fromInt(270), true)
+            .close();
+    }
+    
+    [] _addScaffolding(Graphic g) {
+        String c1 := scaffoldingColor1;
+        String c2 := scaffoldingColor2;
+        String c3 := scaffoldingColor3;
+        
+        g.addFltCircle(cx1, Flt:fromInt(37), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx1, Flt:fromInt(7), r).getStrokeStyle().setColor(c3);
+
+        g.addFltCircle(cx2, Flt:fromInt(53), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx2, Flt:fromInt(-14), r).getStrokeStyle().setColor(c3);
+
+        g.addFltCircle(cx3, Flt:fromInt(42), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx3, Flt:fromInt(-33), r).getStrokeStyle().setColor(c3);
+
+        g.addFltCircle(cx4, Flt:fromInt(33), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx4, Flt:fromInt(-53), r).getStrokeStyle().setColor(c3);
+        
+        g.addFltCircle(cx5, Flt:fromInt(42), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx5, Flt:fromInt(-33), r).getStrokeStyle().setColor(c3);
+        
+        g.addFltCircle(cx6, Flt:fromInt(53), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx6, Flt:fromInt(-14), r).getStrokeStyle().setColor(c3);
+        
+        g.addFltCircle(cx7, Flt:fromInt(37), r).getStrokeStyle().setColor(c3);
+        g.addFltCircle(cx7, Flt:fromInt(7), r).getStrokeStyle().setColor(c3);
+        
+    }
+    
+    [] _initializeCoordinates() {
+    
+        r = Flt:fromInt(5);
+/*        
+        cx1 = Flt:fromInt(-57);
+        cx2 = Flt:fromInt(-38);
+        cx3 = Flt:fromInt(-19);
+        cx4 = Flt:fromInt(0);
+        cx5 = Flt:fromInt(19);
+        cx6 = Flt:fromInt(38);
+        cx7 = Flt:fromInt(57);
+/*/       
+        cx1 = Flt:fromInt(-57);
+        cx2 = Flt:fromInt(-39);
+        cx3 = Flt:fromInt(-21);
+        cx4 = Flt:fromInt(0);
+        cx5 = Flt:fromInt(21);
+        cx6 = Flt:fromInt(39);
+        cx7 = Flt:fromInt(57);
+//*/        
+    }
+
+}
