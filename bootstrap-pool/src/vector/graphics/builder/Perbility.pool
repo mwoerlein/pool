@@ -19,15 +19,11 @@ class Perbility extends vector::graphics::Builder {
     String color;
     
     int r;
+    int dy;
     
-    int cx1;
-    int cx2;
-    int cx3;
-    int cx4;
-    int cx5;
-    int cx6;
-    int cx7;
-    
+    int f90;
+    int f90n;
+    int f270;
      
     [] __init() { this._initPerbility(); }
     [] _initPerbility() {
@@ -50,31 +46,34 @@ class Perbility extends vector::graphics::Builder {
     }
     
     [] _generateHeart(Path heart) {
-        this._addHeartLine(heart, cx1, Flt:fromInt(37), Flt:fromInt(7));
-        
-        this._addHeartLine(heart, cx2, Flt:fromInt(53), Flt:fromInt(14));
-        this._addHeartLine(heart, cx2, Flt:fromInt(-2), Flt:fromInt(-14));
-        
-        this._addHeartLine(heart, cx3, Flt:fromInt(42), Flt:fromInt(25));
-        this._addHeartLine(heart, cx3, Flt:fromInt(9), Flt:fromInt(-33));
-        
-        this._addHeartLine(heart, cx4, Flt:fromInt(30), Flt:fromInt(-1));
-        this._addHeartLine(heart, cx4, Flt:fromInt(-17), Flt:fromInt(-26));
-        this._addHeartLine(heart, cx4, Flt:fromInt(-42), Flt:fromInt(-53));
-        
-        this._addHeartLine(heart, cx5, Flt:fromInt(42), Flt:fromInt(8));
-        this._addHeartLine(heart, cx5, Flt:fromInt(-8), Flt:fromInt(-33));
-        
-        this._addHeartLine(heart, cx6, Flt:fromInt(53), Flt:fromInt(43));
-        this._addHeartLine(heart, cx6, Flt:fromInt(27), Flt:fromInt(-14));
-        
-        this._addHeartLine(heart, cx7, Flt:fromInt(37), Flt:fromInt(7));
+        this._heartLine1(heart, Flt:fromInt(-57), Flt:fromInt(37), Flt:fromInt(7));
+        this._heartLine2(heart, Flt:fromInt(-39), Flt:fromInt(53), Flt:fromInt(6), Flt:fromInt(-14));
+        this._heartLine2(heart, Flt:fromInt(-21), Flt:fromInt(42), Flt:fromInt(17), Flt:fromInt(-33));
+        this._heartLine3(heart, Flt:ZERO_POS    , Flt:fromInt(30), Flt:fromInt(-9), Flt:fromInt(-34), Flt:fromInt(-53));
+        this._heartLine2(heart, Flt:fromInt( 21), Flt:fromInt(42), Flt:ZERO_POS, Flt:fromInt(-33));
+        this._heartLine2(heart, Flt:fromInt( 39), Flt:fromInt(53), Flt:fromInt(35), Flt:fromInt(-14));
+        this._heartLine1(heart, Flt:fromInt( 57), Flt:fromInt(37), Flt:fromInt(7));
+    }
+    
+    [] _heartLine1(Path heart, int cx, int cy1, int cy2) {
+        this._addHeartLine(heart, cx, cy1, cy2);
+    }
+    
+    [] _heartLine2(Path heart, int cx, int cy1, int cy2, int cy3) {
+        this._addHeartLine(heart, cx, cy1, Flt:add(cy2, dy));
+        this._addHeartLine(heart, cx, Flt:sub(cy2, dy), cy3);
+    }
+    
+    [] _heartLine3(Path heart, int cx, int cy1, int cy2, int cy3, int cy4) {
+        this._addHeartLine(heart, cx, cy1, Flt:add(cy2, dy));
+        this._addHeartLine(heart, cx, Flt:sub(cy2, dy), Flt:add(cy3, dy));
+        this._addHeartLine(heart, cx, Flt:sub(cy3, dy), cy4);
     }
     
     [] _addHeartLine(Path heart, int cx, int cy1, int cy2) {
         heart
-            .arcFltTo(cx, cy1, r, Flt:fromInt(-90), Flt:fromInt(90), false)
-            .arcFltTo(cx, cy2, r, Flt:fromInt(90), Flt:fromInt(270), true)
+            .arcFltTo(cx, cy1, r, f90n, f90, false)
+            .arcFltTo(cx, cy2, r, f90, f270, true)
             .close();
     }
     
@@ -82,50 +81,15 @@ class Perbility extends vector::graphics::Builder {
         String c1 := scaffoldingColor1;
         String c2 := scaffoldingColor2;
         String c3 := scaffoldingColor3;
-        
-        g.addFltCircle(cx1, Flt:fromInt(37), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx1, Flt:fromInt(7), r).getStrokeStyle().setColor(c3);
-
-        g.addFltCircle(cx2, Flt:fromInt(53), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx2, Flt:fromInt(-14), r).getStrokeStyle().setColor(c3);
-
-        g.addFltCircle(cx3, Flt:fromInt(42), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx3, Flt:fromInt(-33), r).getStrokeStyle().setColor(c3);
-
-        g.addFltCircle(cx4, Flt:fromInt(33), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx4, Flt:fromInt(-53), r).getStrokeStyle().setColor(c3);
-        
-        g.addFltCircle(cx5, Flt:fromInt(42), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx5, Flt:fromInt(-33), r).getStrokeStyle().setColor(c3);
-        
-        g.addFltCircle(cx6, Flt:fromInt(53), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx6, Flt:fromInt(-14), r).getStrokeStyle().setColor(c3);
-        
-        g.addFltCircle(cx7, Flt:fromInt(37), r).getStrokeStyle().setColor(c3);
-        g.addFltCircle(cx7, Flt:fromInt(7), r).getStrokeStyle().setColor(c3);
-        
     }
     
     [] _initializeCoordinates() {
-    
         r = Flt:fromInt(5);
-/*        
-        cx1 = Flt:fromInt(-57);
-        cx2 = Flt:fromInt(-38);
-        cx3 = Flt:fromInt(-19);
-        cx4 = Flt:fromInt(0);
-        cx5 = Flt:fromInt(19);
-        cx6 = Flt:fromInt(38);
-        cx7 = Flt:fromInt(57);
-/*/       
-        cx1 = Flt:fromInt(-57);
-        cx2 = Flt:fromInt(-39);
-        cx3 = Flt:fromInt(-21);
-        cx4 = Flt:fromInt(0);
-        cx5 = Flt:fromInt(21);
-        cx6 = Flt:fromInt(39);
-        cx7 = Flt:fromInt(57);
-//*/        
+        dy = Flt:fromInt(8);
+        
+        f90 = Flt:fromInt(90);
+        f90n = Flt:fromInt(-90);
+        f270 = Flt:fromInt(270);
     }
 
 }
