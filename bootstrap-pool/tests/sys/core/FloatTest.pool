@@ -178,25 +178,28 @@ class FloatTest extends test::TestCase {
         this.startCases("testPrintToStream");
         String testString = this.rt().createInstance(String:CLASSNAME);
         
-        this.casePrintToStream(Flt:ZERO_POS, "0");
-        this.casePrintToStream(Flt:ZERO_NEG, "-0");
-        this.casePrintToStream(Flt:INF_POS, "+Inf");
-        this.casePrintToStream(Flt:INF_NEG, "-Inf");
-        this.casePrintToStream(Flt:NAN, "NaN");
+        this.casePrintToStream(Flt:ZERO_POS, "0", "0");
+        this.casePrintToStream(Flt:ZERO_NEG, "-0", "-0");
+        this.casePrintToStream(Flt:INF_POS, "+Inf", "+Inf");
+        this.casePrintToStream(Flt:INF_NEG, "-Inf", "-Inf");
+        this.casePrintToStream(Flt:NAN, "NaN", "NaN");
         
-        this.casePrintToStream(Flt:SQRT_TWO_POS, "0.141421353816986083984375e1" /*"1.4142135"*/);
-        this.casePrintToStream(Flt:SQRT_TWO_NEG, "-0.141421353816986083984375e1" /*"-1.4142135"*/);
+        this.casePrintToStream(Flt:SQRT_TWO_POS, "1.4142135", "0.141421353816986083984375e1");
+        this.casePrintToStream(Flt:SQRT_TWO_NEG, "-1.4142135", "-0.141421353816986083984375e1");
         
-        this.casePrintToStream(0x3EAAAAAA, "0.333333313465118408203125e0" /*"0.3333333"*/);
-        this.casePrintToStream(0xBEAAAAAB, "-0.3333333432674407958984375e0" /*"-0.33333334"*/);
-        this.casePrintToStream(0xD2DF0280, "-0.478909825024e12" /*"-4.7890983e11"*/);
-        this.casePrintToStream(0x00BADDAD, "0.1716092457193833439412855353663287695633650745678394719045549009e-37" /*"1.7160925e-38"*/);
+        this.casePrintToStream(0x3C23D70A, "0.01", "0.0999999977648258209228515625e-1");
+        this.casePrintToStream(0xB8D1B717, "-0.0001", "-0.0999999974737875163555145263671875e-3");
+        this.casePrintToStream(0x4640E6B6, "12345.678", "0.12345677734375e5");
+        this.casePrintToStream(0x3EAAAAAA, "0.3333333", "0.333333313465118408203125e0");
+        this.casePrintToStream(0xBEAAAAAB, "-0.33333334", "-0.3333333432674407958984375e0");
+        this.casePrintToStream(0xD2DF0280, "-4.7890983e11", "-0.478909825024e12");
+        this.casePrintToStream(0x00BADDAD, "1.7160925e-38", "0.1716092457193833439412855353663287695633650745678394719045549009e-37");
         
         testString.destroy();
         return this.successCases();
     }
     
-    [int] casePrintToStream(int val, cstring expected) {
+    [int] casePrintToStream(int val, cstring expected, cstring expectedOld) {
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").printPtr(val).printCString(" => '").printCString(expected).printChar('\'');
         Float f = this.rt().createInstance(Float:CLASSNAME);
@@ -206,6 +209,14 @@ class FloatTest extends test::TestCase {
         if (!s.cequals(expected)) {
             message.printCString(" got '").print(s).printChar('\'');
             return this.failCase(message.ostream());
+        }
+        {
+            s.clear();
+            s.printFltOld(val);
+            if (!s.cequals(expectedOld)) {
+                message.printCString(" got old '").print(s).printChar('\'');
+                return this.failCase(message.ostream());
+            }
         }
         
         s.destroy();

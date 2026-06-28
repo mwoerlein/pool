@@ -42,7 +42,7 @@ class OStream extends Object {
     }
     
     // float serialisation adopted from https://www.ryanjuckett.com/printing-floating-point-numbers/
-    [OStream] printFlt(int f) {
+    [OStream] printFltOld(int f) {
         int sign = Bitset:rshift(f, 31);
         int exp = Bitset:and(Bitset:rshift(f, 23), 0xff);
         int mantissa = Bitset:and(f, 0x7fffff);
@@ -101,6 +101,178 @@ class OStream extends Object {
         numerator.destroy();
         denominator.destroy();
         return this; 
+    }
+    
+    // float serialisation adopted from https://www.ryanjuckett.com/printing-floating-point-numbers/
+    [OStream] printFlt(int f) {
+        int sign = Bitset:rshift(f, 31);
+        int exp = Bitset:and(Bitset:rshift(f, 23), 0xff);
+        int mantissa = Bitset:and(f, 0x7fffff);
+        
+        if (exp == 0xff) {
+            // special values
+            if (mantissa == 0) {
+                if (sign == 1) { return this.printCString("-Inf"); }
+                return this.printCString("+Inf");
+            }
+            return this.printCString("NaN");
+        }
+        if (exp == 0 && mantissa == 0) {
+            // 0 * 2^x => always 0
+            if (sign == 1) { this.printChar('-'); }
+            return this.printChar('0');
+        }
+        
+        int maxDigits = 64;
+        int p = 0;
+        // allocate buffer on stack
+        __pasm__("subl %eax, %esp", {"%eax": maxDigits} , {"%esp": p});
+        
+        int digitsExponent = Flt:floor(Flt:log10(Flt:abs(f)));
+        int digits := this._computeDigitsForFlt(mantissa, exp, digitsExponent, p, p+maxDigits);
+        
+        if (sign == 1) { this.printChar('-'); }
+        if (digitsExponent > -5 && digitsExponent < 9) {
+            this._printUFltPositional(p, digits, digitsExponent);
+        } else {
+            this._printUFltScientific(p, digits, digitsExponent);
+        }
+        
+        // free stack
+        __pasm__("addl %eax, %esp", {"%eax": maxDigits});
+        
+        return this; 
+    }
+    
+    [OStream] _printUFltSimple(int buf, int digits, int digitsExponent) {
+        // simple representation: 0.<DIGITS>e<EXPONENT+1> and -0.<DIGITS>e<EXPONENT+1>
+        this.printChar('0').printChar('.');
+        int cur = buf; 
+        while (digits--) { this.printChar('0' + Address:loadChar(cur++)); }
+        this.printChar('e').printInt(digitsExponent+1);
+        
+        return this;
+    }
+    
+    [OStream] _printUFltScientific(int buf, int digits, int digitsExponent) {
+        // scientific representation: d.<DIGITS>e<EXPONENT> and -d.<DIGITS>e<EXPONENT>
+        int cur = buf;
+        if (digits--) { this.printChar('0' + Address:loadChar(cur++)); }
+        if (digits) { this.printChar('.'); }
+        while (digits--) { this.printChar('0' + Address:loadChar(cur++)); }
+        if (digitsExponent) { this.printChar('e').printInt(digitsExponent); }
+        
+        return this;
+    }
+    
+    [OStream] _printUFltPositional(int buf, int digits, int digitsExponent) {
+        // positional representation: ddd.dddd and -ddd.ddddd
+        int cur = buf;
+        if (digitsExponent < 0) {
+            this.printChar('0').printChar('.');
+            while (++digitsExponent < 0) { this.printChar('0'); }
+        } else {
+            while (digits > 0 && digitsExponent >= 0) { this.printChar('0' + Address:loadChar(cur++)); digits--; digitsExponent--; }
+            while (digitsExponent >= 0) { this.printChar('0'); digitsExponent--; }
+            if (digits > 0) { this.printChar('.'); }
+        }
+        while (digits--) { this.printChar('0' + Address:loadChar(cur++)); }
+        
+        return this;
+    }
+    
+    [int] _computeDigitsForFlt(
+        int mantissa,			// value significand
+        int exp,    			// value exponent in base 2
+        int firstDigitExponent,
+        int buf,		    	// buffer to output into
+        int maxBuf	    		// maximum characters that can be stored in buf
+    ) {
+        int hasUnequalMargins = false;
+        BigInt marginLow = this.rt().createInstance(BigInt:CLASSNAME);
+        marginLow.assignInt(1);
+        
+        // determine digits as big integer fraction:  numerator  /  denominator
+        BigInt numerator = this.rt().createInstance(BigInt:CLASSNAME);
+        BigInt numeratorHigh = this.rt().createInstance(BigInt:CLASSNAME);
+        BigInt denominator = this.rt().createInstance(BigInt:CLASSNAME);
+        if (exp == 0) {
+            // denormalized float =>  mant * 2^(1-127-23) => mant  /  2^-(1-127-23)
+            numerator.assignInt(mantissa);
+            denominator.assignInt(1).shiftBits(149);
+        } else if (exp > 150) {
+            // normalized float without fractional part =>  mant * 2^exp-127-23  /  1
+            numerator.assignInt(mantissa + 0x800000).shiftBits(exp - 150);
+            marginLow.shiftBits(exp - 151);
+            denominator.assignInt(1);
+            hasUnequalMargins = (mantissa == 0);
+        } else {
+            // normalized float with fractional part =>  mant  /  2^-(exp-127-23) 
+            numerator.assignInt(mantissa + 0x800000);
+            denominator.assignInt(1).shiftBits(150 - exp);
+            hasUnequalMargins = (exp != 1) && (mantissa == 0);
+        }
+        
+        // adjust fraction to get first non-zero digit
+        if (firstDigitExponent > 0) {
+            denominator.shiftDigits(firstDigitExponent);
+        } else {
+            numerator.shiftDigits(-firstDigitExponent);
+            marginLow.shiftDigits(-firstDigitExponent);
+        }
+
+        
+        int cur = buf;
+
+        Address:storeChar(cur++, numerator.divToDigit(denominator));
+        numeratorHigh.assignBigInt(numerator).add(marginLow);
+        if (hasUnequalMargins) { numeratorHigh.add(marginLow); }
+        int low = numerator.compareBigInt(marginLow) < 0;
+        int high = numeratorHigh.compareBigInt(denominator) > 0;
+
+/*/
+        // compute all digits
+        while (!numerator.isZero() && (cur < maxBuf)) {
+//*/
+        // compute significant digits
+        while (!low && !high && (cur < maxBuf)) {
+//*/
+            numerator.shiftDigits(1);
+            marginLow.shiftDigits(1);
+            Address:storeChar(cur++, numerator.divToDigit(denominator));
+            numeratorHigh.assignBigInt(numerator).add(marginLow);
+            if (hasUnequalMargins) { numeratorHigh.add(marginLow); }
+            low = numerator.compareBigInt(marginLow) < 0;
+            high = numeratorHigh.compareBigInt(denominator) > 0;
+        }
+        
+        int roundUp = !low;
+        if (low == high) {
+            numerator.shiftBits(1);
+            int c = numerator.compareBigInt(denominator);
+            // on .50 round towards the even digit (i.e. IEEE rounding rules)
+            roundUp = (c > 0) || ((c == 0) && Bitset:isset(Address:loadChar(cur - 1), 0));
+        }
+        
+        if (roundUp) {
+            int lastDigit = 0;
+            do {
+                lastDigit = Address:loadChar(--cur);
+            } while (lastDigit == 9 && cur > buf);
+            if (cur == buf) {
+                Address:storeChar(cur++, 1);
+            } else {
+                Address:storeChar(cur++, lastDigit+1);
+            }
+        }
+        
+        Address:storeChar(cur, 0);
+        
+        denominator.destroy();
+        numeratorHigh.destroy();
+        numerator.destroy();
+        marginLow.destroy();
+        return cur - buf;
     }
     
     [OStream] printCString(cstring s) {
