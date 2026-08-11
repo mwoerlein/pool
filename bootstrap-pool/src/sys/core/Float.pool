@@ -45,6 +45,7 @@ class Float extends Object {
     
     [] neg() { _f = Flt:neg(_f); }
     [] sqrt() { _f = Flt:sqrt(_f); }
+    [] e() { _f = Flt:e(_f); }
     
     [int] compareFlt(int f) { return Flt:compare(_f, f); }
     [int] compareFloat(Float f) { return Flt:compare(_f, f.getFlt()); }

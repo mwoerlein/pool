@@ -150,9 +150,15 @@ class FloatTest extends test::TestCase {
         f1.divFloat(f2);            if (!f1.equalsInt( 99)) { return this.fail("Div Float by Float"); }
         f1.divFlt(Flt:fromInt(7));  if (!f1.equalsFlt(0x41624925)) { return this.fail("Div Float by flt"); }
         f1.powFloat(f2);            if (!f1.equalsFlt(0x4348053A)) { return this.fail("Pow Float by Float"); }
-        f1.sqrt();                  if (!f1.equalsFlt(0x41624925)) { return this.fail("Str Float"); }
+        f1.sqrt();                  if (!f1.equalsFlt(0x41624925)) { return this.fail("Sqrt Float"); }
         f1.powFlt(Flt:TWO_POS);     if (!f1.equalsFlt(0x4348053A)) { return this.fail("Pow Float by flt"); }
         if (f1.floorToInt() != 200) { return this.fail("Floor Float"); }
+        
+        f1.assignInt(1);
+        f1.e();                     if (!f1.equalsFlt(Flt:E_POS)) { return this.fail("E^1"); }
+        f1.e();                     if (!f1.equalsFlt(0x417277da)) { return this.fail("E^E"); }
+        f1.assignInt(-80);
+        f1.e();                     if (!f1.equalsFlt(0x05bfecba)) { return this.fail("E^-80"); }
         
         f2.destroy();
         f1.destroy();
