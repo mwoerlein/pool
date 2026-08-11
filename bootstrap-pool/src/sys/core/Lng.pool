@@ -8,6 +8,7 @@ namespace sys::core;
 use sys::core::utils::Bitset;
 
 class Lng {
+    global int SIZE := 8;
 
     global [int, int] add(int lowA, int highA, int lowB, int highB) {
         int low = 0;

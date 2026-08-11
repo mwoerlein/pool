@@ -8,6 +8,7 @@ namespace sys::core;
 use sys::core::utils::Bitset;
 
 class Flt {
+    global int SIZE := 4;
 
     int NAN := 0xffffffff;
     int INF_POS := 0x7f800000;

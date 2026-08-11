@@ -8,6 +8,9 @@ namespace sys::memory;
 
 class Address {
     global int SIZE := 4;
+    global int BYTE_SIZE := 1;
+    global int WORD_SIZE := 2;
+    global int DWORD_SIZE := 4;
     
     // methods
     global [int] from(__any__ a) {
