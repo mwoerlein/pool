@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::core::math;
 
 use sys::core::Flt;
+use sys::stream::OStream;
 
 class FltMatrix extends sys::core::utils::DWordArray {
     
@@ -92,7 +93,42 @@ class FltMatrix extends sys::core::utils::DWordArray {
         }
         return this;
     }
+    
+    [int] compareFltMatrix(FltMatrix v) { 
+        if (_rows != v.rows()) { return _rows - v.rows(); }
+        if (_cols != v.cols()) { return _cols - v.cols(); }
+        int i = 0;
+        while (i < _size) {
+            int c := Flt:compare(this._saveGetDWord(i), v._saveGetDWord(i));
+            if (c) { return c; }
+            i++;
+        }
+        return 0;
+    }
 
+    [OStream] printToStream(OStream stream) {
+        stream.printChar('[');
+        if (_rows > 0) {
+            this._printRowFromPosToStream(stream, 0);
+            int i = 1;
+            while (i < _rows) {
+                this._printRowFromPosToStream(stream.printChar(',').printChar(' '), i++);
+            }
+        }
+        return stream.printChar(']');
+    }
+    [OStream] _printRowFromPosToStream(OStream stream, int row) {
+        stream.printChar('[');
+        if (_cols > 0) {
+            int i = row * _cols;
+            int end = i + _cols;
+            stream.printFlt(this._saveGetDWord(i++));
+            while (i < end) {
+                stream.printChar(',').printChar(' ').printFlt(this._saveGetDWord(i++));
+            }
+        }
+        return stream.printChar(']');
+    }
     global [FltVector] mvMul(FltMatrix a, FltVector b) {
         if (!a || !b || a._cols != b.length()) {
             return null;

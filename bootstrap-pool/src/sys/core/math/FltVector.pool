@@ -107,6 +107,17 @@ class FltVector extends sys::core::utils::DWordArray {
         return this;
     }
     
+    [int] compareFltVector(FltVector v) { 
+        if (_size != v.length()) { return _size - v.length(); }
+        int i = 0;
+        while (i < _size) {
+            int c := Flt:compare(this._saveGetDWord(i), v._saveGetDWord(i));
+            if (c) { return c; }
+            i++;
+        }
+        return 0;
+    }
+    
     [OStream] printToStream(OStream stream) {
         stream.printChar('[');
         if (_size > 0) {
