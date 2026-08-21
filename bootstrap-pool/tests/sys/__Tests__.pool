@@ -20,6 +20,9 @@ class __Tests__ {
         suite.register(sys::core::anycollection::AnyList:CLASSNAME, sys::core::anycollection::AnyListTest:CLASSNAME);
         suite.register(sys::core::anycollection::AnyMap:CLASSNAME, sys::core::anycollection::AnyMapTest:CLASSNAME);
         
+        suite.register(sys::core::math::FltMatrix:CLASSNAME, sys::core::math::FltMatrixTest:CLASSNAME);
+        suite.register(sys::core::math::FltVector:CLASSNAME, sys::core::math::FltVectorTest:CLASSNAME);
+        
         suite.register(sys::core::utils::Bitset:CLASSNAME, sys::core::utils::BitsetTest:CLASSNAME);
     }
 }

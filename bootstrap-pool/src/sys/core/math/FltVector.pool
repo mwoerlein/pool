@@ -1,0 +1,142 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::math;
+
+use sys::core::Flt;
+
+class FltVector extends sys::core::util::DWordArray {
+    
+    [] init(int length) {
+        this._initDWordArray(length);
+        this._setAllDWord(Flt:ZERO_POS);
+    }
+    
+    [] initWith(int length, int value) {
+        this._initDWordArray(length);
+        this._setAllDWord(value);
+    }
+    
+    [] clear() {
+        this._setAllDWord(Flt:ZERO_POS);
+    }
+    
+    [int] length() {
+        return _size;
+    }
+    
+    [int] set(int index, int value) {
+        if (index < 0 || index >= _size) {
+            return Flt:NAN;
+        }
+        return this._saveSetDWord(index, value);
+    }
+    
+    [int] get(int index) {
+        if (index < 0 || index >= _size) {
+            return Flt:NAN;
+        }
+        return this._saveGetDWord(index);
+    }
+    
+    [int] min() {
+        int i = this._size;
+        int ret = this._saveGetDWord(--i);
+        while (i--) {
+            ret = Flt:min(ret, this._saveGetDWord(i));
+        }
+        return ret;
+    }
+    
+    [int] max() {
+        int i = this._size;
+        int ret = this._saveGetDWord(--i);
+        while (i--) {
+            ret = Flt:max(ret, this._saveGetDWord(i));
+        }
+        return ret;
+    }
+    
+    [int] sum() {
+        int i = this._size;
+        int ret = this._saveGetDWord(--i);
+        while (i--) {
+            ret = Flt:add(ret, this._saveGetDWord(i));
+        }
+        return ret;
+    }
+    
+    [FltVector] add(FltVector vec) {
+        if (!vec || this._size != vec._size) {
+            return null;
+        }
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:add(this._saveGetDWord(i), vec._saveGetDWord(i)));
+        }
+        return this;
+    }
+    
+    [FltVector] sub(FltVector vec) {
+        if (!vec || this._size != vec._size) {
+            return null;
+        }
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:sub(this._saveGetDWord(i), vec._saveGetDWord(i)));
+        }
+        return this;
+    }
+    
+    [FltVector] mulFlt(int f) {
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:mul(this._saveGetDWord(i), f));
+        }
+        return this;
+    }
+    
+    [FltVector] divFlt(int f) {
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:div(this._saveGetDWord(i), f));
+        }
+        return this;
+    }
+    
+    global [int] dotProduct(FltVector a, FltVector b) {
+        if (!a || !b || a._size != b._size) {
+            return Flt:NAN;
+        }
+        int ret = Flt:ZERO_POS;
+        int i = a._size;
+        while (i--) {
+            ret = Flt:add(ret, Flt:mul(a._saveGetDWord(i), b._saveGetDWord(i)));
+        }
+        return ret;
+    }
+    
+    global [FltVector] softmax(FltVector a) {
+        if (!a) {
+            return null;
+        }
+        int m := a.max();
+        int len := a.length();
+        
+        FltVector ret = a.rt().createInstance(FltVector:CLASSNAME);
+        ret.init(len);
+        
+        int sum = Flt:ZERO_POS;
+        int i = len;
+        while (i--) {
+            int e := Flt:e(Flt:sub(a.get(i), m));
+            sum = Flt:add(sum, e);
+            ret.set(i, e);
+        }
+        
+        return ret.divFlt(sum);
+    }
+    
+}

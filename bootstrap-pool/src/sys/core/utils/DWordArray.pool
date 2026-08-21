@@ -1,0 +1,51 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::util;
+
+use sys::core::Object;
+use sys::memory::Address;
+use sys::memory::MemoryInfo;
+
+class DWordArray extends Object {
+    
+    MemoryInfo buffer;
+    int _size;
+    
+    [] _initDWordArray(int size) {
+        this._size = size;
+        this.buffer = this.rt().getAllocator().allocate(size * Address:DWORD_SIZE);
+    }
+    
+    [] _initDWordArrayFromMemoryInfo(MemoryInfo buffer) {
+        this._size = buffer.len / Address:DWORD_SIZE;
+        this.buffer = this.rt().getAllocator().allocate(buffer.len);
+        Address:copyDWords(buffer.buf, this.buffer.buf, this._size);
+    }
+    
+    [] __destruct() {
+        this._destructDWordArray();
+    }
+    
+    [] _destructDWordArray() {
+        this.rt().getAllocator().free(buffer);
+    }
+    
+    [] _setAllDWord(int value) {
+        Address:setDWords(buffer.buf, _size, value);
+    }
+    
+    [int] _saveSetDWord(int index, int value) {
+        int addr = buffer.buf + index * Address:DWORD_SIZE;
+        int old = Address:loadDWord(addr);
+        Address:storeDWord(addr, value);
+        return old;
+    }
+    
+    [int] _saveGetDWord(int index) {
+        int addr = buffer.buf + index * Address:DWORD_SIZE;
+        return Address:loadDWord(addr);
+    }
+}

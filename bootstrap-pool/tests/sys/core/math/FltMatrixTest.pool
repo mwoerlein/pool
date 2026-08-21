@@ -1,0 +1,192 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::math;
+
+use sys::core::Flt;
+
+class FltMatrixTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testArithmetic();
+        this.testMVMultiplication();
+        this.testMMMultiplication();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+        
+        FltMatrix f1 = this.rt().createInstance(FltMatrix:CLASSNAME);
+        f1.init(3, 2);
+        if (f1.rows() != 3) { return this.fail("Empty matrix row"); }
+        if (f1.cols() != 2) { return this.fail("Empty matrix cols"); }
+        if (Flt:compare(f1.get(-1, -1), Flt:NAN) != 0)  { return this.fail("Empty vector value -1,-1"); }
+        if (Flt:compare(f1.get(0, 0), Flt:ZERO_POS) != 0)  { return this.fail("Empty vector value 0,0"); }
+        if (Flt:compare(f1.get(1, 1), Flt:ZERO_POS) != 0)  { return this.fail("Empty vector value 1,1"); }
+        if (Flt:compare(f1.get(2, 2), Flt:NAN) != 0)  { return this.fail("Empty vector value 2,2"); }
+        if (Flt:compare(f1.get(3, 0), Flt:NAN) != 0)  { return this.fail("Empty vector value 3,0"); }
+        
+        FltMatrix f2 = this.rt().createInstance(FltMatrix:CLASSNAME);
+        f2.initWith(2, 1, Flt:E_POS);
+        if (f2.rows() != 2) { return this.fail("Filled matrix row"); }
+        if (f2.cols() != 1) { return this.fail("Filled matrix cols"); }
+        if (Flt:compare(f2.get(-1, -1), Flt:NAN) != 0)  { return this.fail("Filled matrix value -1,-1"); }
+        if (Flt:compare(f2.get(0, 0), Flt:E_POS) != 0)  { return this.fail("Filled matrix value 0,0"); }
+        if (Flt:compare(f2.get(1, 0), Flt:E_POS) != 0)  { return this.fail("Filled matrix value 1,0"); }
+        if (Flt:compare(f2.get(1, 1), Flt:NAN) != 0)  { return this.fail("Filled matrix value 1,1"); }
+        if (Flt:compare(f2.get(2, 0), Flt:NAN) != 0)  { return this.fail("Filled matrix value 2,0"); }
+        if (Flt:compare(f2.get(3, 3), Flt:NAN) != 0)  { return this.fail("Filled matrix value 3,3"); }
+        
+        
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        // TODO: add hash and compare functions to FltMatrix
+        
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        // TODO: add hash and compare functions to FltMatrix
+        
+        return this.success();
+    }
+    
+    [int] testArithmetic() {
+        this.start("testArithmetic");
+        int one = Flt:ONE_POS;
+        int two = Flt:TWO_POS;
+        int three = Flt:fromInt(3);
+        int four = Flt:fromInt(4);
+        int five = Flt:fromInt(5);
+        int six = Flt:fromInt(6);
+        int eight = Flt:fromInt(8);
+        
+        FltMatrix f1 = this.rt().createInstance(FltMatrix:CLASSNAME);
+        f1.init(2, 2);
+        f1.set(0, 0, one); f1.set(0, 1, two);
+        f1.set(1, 0, three); f1.set(1, 1, four);
+        
+        f1.mulFlt(two);
+        if (Flt:compare(f1.get(0, 0), two  ) != 0)  { return this.fail("MulFlt matrix value 0,0"); }
+        if (Flt:compare(f1.get(0, 1), four ) != 0)  { return this.fail("MulFlt matrix value 0,1"); }
+        if (Flt:compare(f1.get(1, 0), six  ) != 0)  { return this.fail("MulFlt matrix value 1,0"); }
+        if (Flt:compare(f1.get(1, 1), eight) != 0)  { return this.fail("MulFlt matrix value 1,1"); }
+        if (Flt:compare(f1.rowMax(0), four ) != 0)  { return this.fail("MulFlt matrix row max 0"); }
+        if (Flt:compare(f1.rowMax(1), eight) != 0)  { return this.fail("MulFlt matrix row max 1"); }
+        
+        f1.divFlt(two);
+        if (Flt:compare(f1.get(0, 0), one  ) != 0)  { return this.fail("DivFlt matrix value 0,0"); }
+        if (Flt:compare(f1.get(0, 1), two  ) != 0)  { return this.fail("DivFlt matrix value 0,1"); }
+        if (Flt:compare(f1.get(1, 0), three) != 0)  { return this.fail("DivFlt matrix value 1,0"); }
+        if (Flt:compare(f1.get(1, 1), four ) != 0)  { return this.fail("DivFlt matrix value 1,1"); }
+        if (Flt:compare(f1.rowMax(0), two  ) != 0)  { return this.fail("DivFlt matrix row max 0"); }
+        if (Flt:compare(f1.rowMax(1), four ) != 0)  { return this.fail("DivFlt matrix row max 1"); }
+        
+        f1.rowMulFlt(0, three);
+        if (Flt:compare(f1.get(0, 0), three) != 0)  { return this.fail("RowMulFlt matrix value 0,0"); }
+        if (Flt:compare(f1.get(0, 1), six  ) != 0)  { return this.fail("RowMulFlt matrix value 0,1"); }
+        if (Flt:compare(f1.get(1, 0), three) != 0)  { return this.fail("RowMulFlt matrix value 1,0"); }
+        if (Flt:compare(f1.get(1, 1), four ) != 0)  { return this.fail("RowMulFlt matrix value 1,1"); }
+        if (Flt:compare(f1.rowMax(0), six  ) != 0)  { return this.fail("RowMulFlt matrix row max 0"); }
+        if (Flt:compare(f1.rowMax(1), four ) != 0)  { return this.fail("RowMulFlt matrix row max 1"); }
+        
+        f1.rowDivFlt(0, three);
+        if (Flt:compare(f1.get(0, 0), one  ) != 0)  { return this.fail("RowDivFlt matrix value 0,0"); }
+        if (Flt:compare(f1.get(0, 1), two  ) != 0)  { return this.fail("RowDivFlt matrix value 0,1"); }
+        if (Flt:compare(f1.get(1, 0), three) != 0)  { return this.fail("RowDivFlt matrix value 1,0"); }
+        if (Flt:compare(f1.get(1, 1), four ) != 0)  { return this.fail("RowDivFlt matrix value 1,1"); }
+        if (Flt:compare(f1.rowMax(0), two  ) != 0)  { return this.fail("RowDivFlt matrix row max 0"); }
+        if (Flt:compare(f1.rowMax(1), four ) != 0)  { return this.fail("RowDivFlt matrix row max 1"); }
+        
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testMVMultiplication() {
+        this.startCases("testMVMultiplication");
+        
+        FltMatrix f1 = this.rt().createInstance(FltMatrix:CLASSNAME);
+        f1.init(2, 3);
+        f1.set(0, 0, Flt:fromInt(1)); f1.set(0, 1, Flt:fromInt(2)); f1.set(0, 2, Flt:fromInt(3));
+        f1.set(1, 0, Flt:fromInt(4)); f1.set(1, 1, Flt:fromInt(5)); f1.set(1, 2, Flt:fromInt(6));
+        FltVector f2 = this.rt().createInstance(FltVector:CLASSNAME);
+        f2.init(3); f2.set(0, Flt:fromInt(10)); f2.set(1, Flt:fromInt(20)); f2.set(2, Flt:fromInt(30));
+        
+        FltVector f3 = FltMatrix:mvMul(f1, f2);
+        if (Flt:compare(f3.get(0), Flt:fromInt(140)) != 0)  { return this.fail("MVMul vector value 0"); }
+        if (Flt:compare(f3.get(1), Flt:fromInt(320)) != 0)  { return this.fail("MVMul vector value 1"); }
+        
+        f3.destroy();
+        f2.destroy();
+        f1.destroy();
+
+        return this.success();        
+    }
+    
+    [int] testMMMultiplication() {
+        this.startCases("testMMMultiplication");
+        // TODO: add Test
+        FltMatrix f1 = this.rt().createInstance(FltMatrix:CLASSNAME);
+        f1.init(2, 3);
+        f1.set(0, 0, Flt:fromInt(1)); f1.set(0, 1, Flt:fromInt(2)); f1.set(0, 2, Flt:fromInt(3));
+        f1.set(1, 0, Flt:fromInt(4)); f1.set(1, 1, Flt:fromInt(5)); f1.set(1, 2, Flt:fromInt(6));
+        FltMatrix f2 = this.rt().createInstance(FltMatrix:CLASSNAME);
+        f2.init(3, 2);
+        f2.set(0, 0, Flt:fromInt(7)); f2.set(0, 1, Flt:fromInt(8));
+        f2.set(1, 0, Flt:fromInt(9)); f2.set(1, 1, Flt:fromInt(1));
+        f2.set(2, 0, Flt:fromInt(2)); f2.set(2, 1, Flt:fromInt(3));
+        
+        FltMatrix f2t = FltMatrix:transpose(f2);
+        if (f2t.rows() != f2.cols() || f2t.cols() != f2.rows())  { return this.fail("Transpose dimensions"); }
+        if (Flt:compare(f2t.get(0, 0), Flt:fromInt(7)) != 0)  { return this.fail("Transpose matrix value 0,0"); }
+        if (Flt:compare(f2t.get(0, 1), Flt:fromInt(9)) != 0)  { return this.fail("Transpose matrix value 0,1"); }
+        if (Flt:compare(f2t.get(0, 2), Flt:fromInt(2)) != 0)  { return this.fail("Transpose matrix value 0,2"); }
+        if (Flt:compare(f2t.get(1, 0), Flt:fromInt(8)) != 0)  { return this.fail("Transpose matrix value 1,0"); }
+        if (Flt:compare(f2t.get(1, 1), Flt:fromInt(1)) != 0)  { return this.fail("Transpose matrix value 1,1"); }
+        if (Flt:compare(f2t.get(1, 2), Flt:fromInt(3)) != 0)  { return this.fail("Transpose matrix value 1,2"); }
+        
+        FltMatrix m1 = FltMatrix:mmMul(f1, f2);
+        if (m1.rows() != f1.rows() || m1.cols() != f2.cols())  { return this.fail("MMMul dimensions"); }
+        if (Flt:compare(m1.get(0, 0), Flt:fromInt(31)) != 0)  { return this.fail("MMMul matrix value 0,0"); }
+        if (Flt:compare(m1.get(0, 1), Flt:fromInt(19)) != 0)  { return this.fail("MMMul matrix value 0,1"); }
+        if (Flt:compare(m1.get(1, 0), Flt:fromInt(85)) != 0)  { return this.fail("MMMul matrix value 1,0"); }
+        if (Flt:compare(m1.get(1, 1), Flt:fromInt(55)) != 0)  { return this.fail("MMMul matrix value 1,1"); }
+        
+        FltMatrix m2 = FltMatrix:mtMul(f1, f2t);
+        if (m2.rows() != f1.rows() || m2.cols() != f2t.rows())  { return this.fail("MTMul dimensions"); }
+        if (Flt:compare(m2.get(0, 0), Flt:fromInt(31)) != 0)  { return this.fail("MTMul matrix value 0,0"); }
+        if (Flt:compare(m2.get(0, 1), Flt:fromInt(19)) != 0)  { return this.fail("MTMul matrix value 0,1"); }
+        if (Flt:compare(m2.get(1, 0), Flt:fromInt(85)) != 0)  { return this.fail("MTMul matrix value 1,0"); }
+        if (Flt:compare(m2.get(1, 1), Flt:fromInt(55)) != 0)  { return this.fail("MTMul matrix value 1,1"); }
+         
+        m2.destroy();
+        m1.destroy();
+        f2t.destroy();
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();        
+    }
+    
+    [int] testPrintToStream() {
+        this.startCases("testPrintToStream");
+        // TODO: add print functions to FltMatrix
+        
+        return this.success();        
+    }
+    
+}

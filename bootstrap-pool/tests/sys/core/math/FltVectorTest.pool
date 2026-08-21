@@ -1,0 +1,168 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::math;
+
+use sys::core::Flt;
+
+class FltVectorTest extends test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testHashAndEquals();
+        this.testComparable();
+        this.testArithmetic();
+        this.testDotProduct();
+        this.testSoftmax();
+        this.testPrintToStream();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+        
+        FltVector f1 = this.rt().createInstance(FltVector:CLASSNAME);
+        f1.init(3);
+        if (f1.length() != 3) { return this.fail("Empty vector length"); }
+        if (Flt:compare(f1.get(-1), Flt:NAN) != 0)  { return this.fail("Empty vector value -1"); }
+        if (Flt:compare(f1.get(0), Flt:ZERO_POS) != 0)  { return this.fail("Empty vector value 0"); }
+        if (Flt:compare(f1.get(1), Flt:ZERO_POS) != 0)  { return this.fail("Empty vector value 1"); }
+        if (Flt:compare(f1.get(2), Flt:ZERO_POS) != 0)  { return this.fail("Empty vector value 2"); }
+        if (Flt:compare(f1.get(3), Flt:NAN) != 0)  { return this.fail("Empty vector value 3"); }
+        
+        FltVector f2 = this.rt().createInstance(FltVector:CLASSNAME);
+        f2.initWith(2, Flt:E_POS);
+        if (f2.length() != 2) { return this.fail("Filled vector length"); }
+        if (Flt:compare(f2.get(-1), Flt:NAN) != 0)  { return this.fail("Filled vector value -1"); }
+        if (Flt:compare(f2.get(0), Flt:E_POS) != 0)  { return this.fail("Filled vector value 0"); }
+        if (Flt:compare(f2.get(1), Flt:E_POS) != 0)  { return this.fail("Filled vector value 1"); }
+        if (Flt:compare(f2.get(2), Flt:NAN) != 0)  { return this.fail("Filled vector value 2"); }
+        if (Flt:compare(f2.get(3), Flt:NAN) != 0)  { return this.fail("Filled vector value 3"); }
+        
+        
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testHashAndEquals() {
+        this.start("testHashAndEquals");
+        // TODO: add hash and compare functions to FltVector
+        
+        return this.success();
+    }
+    
+    [int] testComparable() {
+        this.start("testComparable");
+        // TODO: add hash and compare functions to FltVector
+        
+        return this.success();
+    }
+    
+    [int] testArithmetic() {
+        this.start("testArithmetic");
+        int three = Flt:fromInt(3);
+        int four = Flt:fromInt(4);
+        int six = Flt:fromInt(6);
+        int eight = Flt:fromInt(8);
+         
+        FltVector f1 = this.rt().createInstance(FltVector:CLASSNAME);
+        f1.init(3); f1.set(1, Flt:ONE_POS); f1.set(2, Flt:TWO_POS); 
+        FltVector f2 = this.rt().createInstance(FltVector:CLASSNAME);
+        f2.initWith(3, Flt:ONE_POS);
+        
+        f2.add(f1); 
+        if (Flt:compare(f2.get(0), Flt:ONE_POS) != 0)  { return this.fail("Add vector value 0"); }
+        if (Flt:compare(f2.get(1), Flt:TWO_POS) != 0)  { return this.fail("Add vector value 1"); }
+        if (Flt:compare(f2.get(2), three) != 0)  { return this.fail("Add vector value 2"); }
+        if (Flt:compare(f2.sum(), six) != 0)  { return this.fail("Add vector sum"); }
+        if (Flt:compare(f2.min(), Flt:ONE_POS) != 0)  { return this.fail("Add vector min"); }
+        if (Flt:compare(f2.max(), three) != 0)  { return this.fail("Add vector max"); }
+        
+        f2.sub(f1); 
+        if (Flt:compare(f2.get(0), Flt:ONE_POS) != 0)  { return this.fail("Sub vector value 0"); }
+        if (Flt:compare(f2.get(1), Flt:ONE_POS) != 0)  { return this.fail("Sub vector value 1"); }
+        if (Flt:compare(f2.get(2), Flt:ONE_POS) != 0)  { return this.fail("Sub vector value 2"); }
+        if (Flt:compare(f2.sum(), three) != 0)  { return this.fail("Sub vector sum"); }
+        if (Flt:compare(f2.min(), Flt:ONE_POS) != 0)  { return this.fail("Sub vector min"); }
+        if (Flt:compare(f2.max(), Flt:ONE_POS) != 0)  { return this.fail("Sub vector max"); }
+        
+        f1.mulFlt(four);
+        if (Flt:compare(f1.get(0), Flt:ZERO_POS) != 0)  { return this.fail("MulFlt vector value 0"); }
+        if (Flt:compare(f1.get(1), four) != 0)  { return this.fail("MulFlt vector value 1"); }
+        if (Flt:compare(f1.get(2), eight) != 0)  { return this.fail("MulFlt vector value 2"); }
+        if (Flt:compare(f1.sum(), Flt:fromInt(12)) != 0)  { return this.fail("MulFlt vector sum"); }
+        if (Flt:compare(f1.min(), Flt:ZERO_POS) != 0)  { return this.fail("MulFlt vector min"); }
+        if (Flt:compare(f1.max(), eight) != 0)  { return this.fail("MulFlt vector max"); }
+        
+        f1.divFlt(Flt:TWO_POS);
+        if (Flt:compare(f1.get(0), Flt:ZERO_POS) != 0)  { return this.fail("DivFlt vector value 0"); }
+        if (Flt:compare(f1.get(1), Flt:TWO_POS) != 0)  { return this.fail("DivFlt vector value 1"); }
+        if (Flt:compare(f1.get(2), four) != 0)  { return this.fail("DivFlt vector value 2"); }
+        if (Flt:compare(f1.sum(), six) != 0)  { return this.fail("DivFlt vector sum"); }
+        if (Flt:compare(f1.min(), Flt:ZERO_POS) != 0)  { return this.fail("DivFlt vector min"); }
+        if (Flt:compare(f1.max(), four) != 0)  { return this.fail("DivFlt vector max"); }
+        
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testDotProduct() {
+        this.startCases("testDotProduct");
+        // TODO: add Test
+        FltVector f1 = this.rt().createInstance(FltVector:CLASSNAME);
+        f1.init(3); f1.set(0, Flt:ONE_POS); f1.set(1, Flt:TWO_POS); f1.set(2, Flt:fromInt(3)); 
+        FltVector f2 = this.rt().createInstance(FltVector:CLASSNAME);
+        f2.init(3); f2.set(0, Flt:fromInt(4)); f2.set(1, Flt:fromInt(5)); f2.set(2, Flt:fromInt(6));
+         
+        if (Flt:compare(FltVector:dotProduct(f1, f2), Flt:fromInt(32)) != 0)  { return this.fail("DotProduct f1 f2"); }
+        if (Flt:compare(FltVector:dotProduct(f2, f1), Flt:fromInt(32)) != 0)  { return this.fail("DotProduct f2 f1"); }
+        
+        f2.destroy();
+        f1.destroy();
+        
+        return this.success();        
+    }
+    
+    [int] testSoftmax() {
+        this.startCases("testSoftmax");
+        {
+            FltVector f1 = this.rt().createInstance(FltVector:CLASSNAME);
+            f1.init(3); f1.set(0, Flt:TWO_POS); f1.set(1, Flt:ONE_POS); f1.set(2, Flt:div(Flt:ONE_POS, Flt:fromInt(10)));
+    
+            FltVector f2 = FltVector:softmax(f1); 
+            if (Flt:compare(f2.get(0), 0x3f28b44c) != 0)  { return this.fail("Softmax vector value 0"); }
+            if (Flt:compare(f2.get(1), 0x3e78405a) != 0)  { return this.fail("Softmax vector value 1"); }
+            if (Flt:compare(f2.get(2), 0x3dc9dcea) != 0)  { return this.fail("Softmax vector value 2"); }
+            if (Flt:compare(f2.sum(), Flt:ONE_POS) != 0)  { return this.fail("Softmax vector sum"); }
+            
+            f2.destroy();
+            f1.destroy();
+        }
+        {
+            FltVector f1 = this.rt().createInstance(FltVector:CLASSNAME);
+            f1.init(2); f1.set(0, Flt:fromInt(1000)); f1.set(1, Flt:fromInt(1000));
+    
+            FltVector f2 = FltVector:softmax(f1); 
+            if (Flt:compare(f2.get(0), 0x3f000000) != 0)  { return this.fail("Softmax vector large value 0"); }
+            if (Flt:compare(f2.get(1), 0x3f000000) != 0)  { return this.fail("Softmax vector large value 1"); }
+            if (Flt:compare(f2.sum(), Flt:ONE_POS) != 0)  { return this.fail("Softmax vector sum"); }
+            
+            f2.destroy();
+            f1.destroy();
+        }
+        return this.success();        
+    }
+    
+    [int] testPrintToStream() {
+        this.startCases("testPrintToStream");
+        // TODO: add print functions to FltVector
+        
+        return this.success();        
+    }
+    
+}

@@ -1,0 +1,175 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::math;
+
+use sys::core::Flt;
+
+class FltMatrix extends sys::core::util::DWordArray {
+    
+    int _rows;
+    int _cols;
+    
+    [] init(int rows, int cols) {
+        this._rows = rows;
+        this._cols = cols;
+        this._initDWordArray(rows * cols);
+        this._setAllDWord(Flt:ZERO_POS);
+    }
+    
+    [] initWith(int rows, int cols, int value) {
+        this._rows = rows;
+        this._cols = cols;
+        this._initDWordArray(rows * cols);
+        this._setAllDWord(value);
+    }
+    
+    [] clear() {
+        this._setAllDWord(Flt:ZERO_POS);
+    }
+    
+    [int] rows() { return _rows; }
+    [int] cols() { return _cols; }
+    
+    [int] set(int row, int col, int value) {
+        if (row < 0 || row >= _rows || col < 0 || col >= _cols) {
+            return Flt:NAN;
+        }
+        return this._saveSetDWord(row * _cols + col, value);
+    }
+    
+    [int] get(int row, int col) {
+        if (row < 0 || row >= _rows || col < 0 || col >= _cols) {
+            return Flt:NAN;
+        }
+        return this._saveGetDWord(row * _cols + col);
+    }
+    
+    [FltMatrix] mulFlt(int f) {
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:mul(this._saveGetDWord(i), f));
+        }
+        return this;
+    }
+    
+    [FltMatrix] divFlt(int f) {
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:div(this._saveGetDWord(i), f));
+        }
+        return this;
+    }
+    
+    [int] rowMax(int row) {
+        int i = this._cols - 1;
+        int pos = row * this._cols;
+        int ret = this._saveGetDWord(pos++);
+        while (i--) {
+            ret = Flt:max(ret, this._saveGetDWord(pos++));
+        }
+        return ret;
+    }
+    
+    [FltMatrix] rowMulFlt(int row, int f) {
+        int i = this._cols;
+        int pos = row * this._cols;
+        while (i--) {
+            this._saveSetDWord(pos, Flt:mul(this._saveGetDWord(pos), f));
+            pos++;
+        }
+        return this;
+    }
+    
+    [FltMatrix] rowDivFlt(int row, int f) {
+        int i = this._cols;
+        int pos = row * this._cols;
+        while (i--) {
+            this._saveSetDWord(pos, Flt:div(this._saveGetDWord(pos), f));
+            pos++;
+        }
+        return this;
+    }
+
+    global [FltVector] mvMul(FltMatrix a, FltVector b) {
+        if (!a || !b || a._cols != b.length()) {
+            return null;
+        }
+        
+        FltVector ret = a.rt().createInstance(FltVector:CLASSNAME);
+        ret.init(a._rows);
+        int i = a._rows;
+        while (i--) {
+            int sum = Flt:ZERO_POS;
+            int k = a._cols;
+            while (k--) {
+                sum = Flt:add(sum, Flt:mul(a.get(i, k), b.get(k)));
+            }
+            ret.set(i, sum);
+        }
+        return ret;
+    }
+    
+    global [FltMatrix] mmMul(FltMatrix a, FltMatrix b) {
+        if (!a || !b || a._cols != b._rows) {
+            return null;
+        }
+        
+        FltMatrix ret = a.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(a._rows, b._cols);
+        int i = a._rows;
+        while (i--) {
+            int j = b._cols;
+            while (j--) {
+                int sum = Flt:ZERO_POS;
+                int k = a._cols;
+                while (k--) {
+                    sum = Flt:add(sum, Flt:mul(a.get(i, k), b.get(k, j)));
+                }
+                ret.set(i, j, sum);
+            }
+        }
+        return ret;
+    }
+
+    global [FltMatrix] mtMul(FltMatrix a, FltMatrix b_t) {
+        if (!a || !b_t || a._cols != b_t._cols) {
+            return null;
+        }
+        
+        FltMatrix ret = a.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(a._rows, b_t._rows);
+        int i = a._rows;
+        while (i--) {
+            int j = b_t._rows;
+            while (j--) {
+                int sum = Flt:ZERO_POS;
+                int k = a._cols;
+                while (k--) {
+                    sum = Flt:add(sum, Flt:mul(a.get(i, k), b_t.get(j, k)));
+                }
+                ret.set(i, j, sum);
+            }
+        }
+        return ret;
+    }
+
+    global [FltMatrix] transpose(FltMatrix a) {
+        if (!a) {
+            return null;
+        }
+        
+        FltMatrix ret = a.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(a._cols, a._rows);
+        int i = a._rows;
+        while (i--) {
+            int j = a._cols;
+            while (j--) {
+                ret.set(j, i, a.get(i, j));
+            }
+        }
+        return ret;
+    }
+}
