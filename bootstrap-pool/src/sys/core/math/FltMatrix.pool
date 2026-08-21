@@ -7,7 +7,7 @@ namespace sys::core::math;
 
 use sys::core::Flt;
 
-class FltMatrix extends sys::core::util::DWordArray {
+class FltMatrix extends sys::core::utils::DWordArray {
     
     int _rows;
     int _cols;

@@ -7,7 +7,7 @@ namespace sys::core::math;
 
 use sys::core::Flt;
 
-class FltVector extends sys::core::util::DWordArray {
+class FltVector extends sys::core::utils::DWordArray {
     
     [] init(int length) {
         this._initDWordArray(length);
