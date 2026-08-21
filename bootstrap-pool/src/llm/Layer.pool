@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm;
+
+use sys::core::Object;
+use sys::core::math::FltVector;
+
+class Layer extends Object {
+
+    abstract [FltVector] forward(FltVector x);
+    
+    [FltVector] _emptyVector(int len) {
+        FltVector ret = this.rt().createInstance(FltVector:CLASSNAME);
+        ret.init(len);
+        return ret;
+    }
+    
+    // TODO: remove with implicit cast
+    [Layer] layer() { return this; }
+}

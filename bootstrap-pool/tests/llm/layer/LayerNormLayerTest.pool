@@ -1,0 +1,87 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+
+class LayerNormLayerTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testLayerNorm();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+
+        FltVector g3 = this.scaled3vec(1, 5,5,5);
+        FltVector b3 = this.scaled3vec(1, 1,1,1);
+        FltVector b2 = this.scaled2vec(1, 1,1);
+        
+        LayerNormLayer l = this.rt().createInstance(LayerNormLayer:CLASSNAME);
+        if (l._init(null, b2)) { return this.fail("Empty gamma initialization"); }
+        if (l._init(g3, null)) { return this.fail("Empty beta initialization"); }
+        if (l._init(g3, b2)) { return this.fail("Invalid initialization"); }
+        if (!this.isSame(l, l._init(g3, b3))) { return this.fail("Correct initialization"); }
+        
+        l.destroy();
+        b2.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testLayerNorm() {
+        this.startCases("testLayerNorm");
+        
+        this.caseLayerNorm(1, 1,2,3, 1,1,1, 0,0,0, 0xbf9cc16e,0x00000000,0x3f9cc16e);
+        this.caseLayerNorm(1, 5,5,5, 1,1,1, 0,0,0, 0x00000000,0x00000000,0x00000000);
+        this.caseLayerNorm(1, -1,2,3, 1,1,1, 0,0,0, 0xbfafb78f,0x3ec8d1c6,0x3f7b0638);
+        this.caseLayerNorm(1, 0,100,0, 1,1,1, 0,0,0, 0xbf3504f1,0x3fb504f3,0xbf3504f1);
+        this.caseLayerNorm(1, 1,2,3, 2,2,2, 1,1,1, 0xbfb982dc,0x3f800000,0x405cc16e);
+        this.caseLayerNorm(10, 10,20,30, 5,10,20, 0,1,0, 0xbf1cc16e,0x3dcccccd,0x401cc16e);
+        
+        return this.successCases();
+    }
+    
+    [int] caseLayerNorm(int scale, int x1, int x2, int x3, int g1, int g2, int g3, int b1, int b2, int b3, int exp1, int exp2, int exp3) {
+        int eps = Flt:div(Flt:ONE_POS, Flt:fromInt(10000));
+        FltVector a = this.scaled3vec(scale, x1, x2, x3);
+        FltVector g = this.scaled3vec(scale, g1, g2, g3);
+        FltVector b = this.scaled3vec(scale, b1, b2, b3);
+        FltVector expected = this.rt().createInstance(FltVector:CLASSNAME);
+        expected.init(3); expected.set(0, exp1); expected.set(1, exp2); expected.set(2, exp3); 
+
+        LayerNormLayer l = this.rt().createInstance(LayerNormLayer:CLASSNAME);
+        FltVector y = l._init(g, b).forward(a);
+        
+        String message = this.rt().createInstance(String:CLASSNAME);
+        a.printToStream(message.printCString("Case "));
+        g.printToStream(message.printCString(" gamma "));
+        b.printToStream(message.printCString(" beta "));
+        expected.printToStream(message.printCString(" => "));
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (Flt:compare(y.get(0), exp1) != 0
+            || Flt:compare(y.get(1), exp2) != 0
+            || Flt:compare(y.get(2), exp3) != 0)  {
+            y.printToStream(message.printCString(" got "));
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        y.destroy();
+        expected.destroy();
+        l.destroy();
+        a.destroy();
+        return this.successCase();        
+    }
+
+}

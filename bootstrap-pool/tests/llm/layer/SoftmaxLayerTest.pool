@@ -1,0 +1,72 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+
+class SoftmaxLayerTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testSoftmax();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+
+        SoftmaxLayer l = this.rt().createInstance(SoftmaxLayer:CLASSNAME);
+        l.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testSoftmax() {
+        this.startCases("testSoftmax");
+        
+        this.caseSoftmax(10, 20,10,1, 0x3f28b44c,0x3e78405a,0x3dc9dcea);
+        this.caseSoftmax(1, 1000,1000,1, 0x3f000000,0x3f000000,0x00000000);
+        
+        return this.successCases();        
+    }
+    
+    [int] caseSoftmax(int scale, int x1, int x2, int x3, int exp1, int exp2, int exp3) {
+        FltVector x = this.scaled3vec(scale, x1, x2, x3);
+        FltVector expected = this.flt3vec(exp1, exp2, exp3);
+
+        SoftmaxLayer l = this.rt().createInstance(SoftmaxLayer:CLASSNAME);
+        FltVector y = l.forward(x);
+        
+        String message = this.rt().createInstance(String:CLASSNAME);
+        x.printToStream(message.printCString("Case "));
+        expected.printToStream(message.printCString(" => "));
+        
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (Flt:compare(y.get(0), exp1) != 0
+            || Flt:compare(y.get(1), exp2) != 0
+            || Flt:compare(y.get(2), exp3) != 0) {
+            y.printToStream(message.printCString(" got "));
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        if (Flt:compare(y.sum(), Flt:ONE_POS) != 0) {
+            message.printCString(" doesn't normalize to 100%");
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        y.destroy();
+        l.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+
+}

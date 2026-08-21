@@ -1,0 +1,34 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Object;
+use sys::core::Flt;
+use sys::core::math::FltVector;
+
+class SoftmaxLayer extends llm::Layer {
+
+    [FltVector] forward(FltVector x) {
+        if (!x) {
+            return null;
+        }
+        int m := x.max();
+        int len := x.length();
+        
+        FltVector y := this._emptyVector(len);
+        
+        int sum = Flt:ZERO_POS;
+        int i = len;
+        while (i--) {
+            int e := Flt:e(Flt:sub(x.get(i), m));
+            sum = Flt:add(sum, e);
+            y.set(i, e);
+        }
+        
+        return y.divFlt(sum);
+    }
+
+}

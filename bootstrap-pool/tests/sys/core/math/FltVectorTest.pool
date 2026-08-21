@@ -16,8 +16,6 @@ class FltVectorTest extends test::TestCase {
         this.testComparable();
         this.testArithmetic();
         this.testDotProduct();
-        this.testSoftmax();
-        this.testLayerNorm();
         this.testPrintToStream();
     }
     
@@ -130,90 +128,11 @@ class FltVectorTest extends test::TestCase {
         return this.success();        
     }
     
-    [int] testSoftmax() {
-        this.startCases("testSoftmax");
-        {
-            FltVector f1 = this.scaled3vec(10, 20,10,1);
-            FltVector f2 = FltVector:softmax(f1); 
-            if (Flt:compare(f2.get(0), 0x3f28b44c) != 0)  { return this.fail("Softmax vector value 0"); }
-            if (Flt:compare(f2.get(1), 0x3e78405a) != 0)  { return this.fail("Softmax vector value 1"); }
-            if (Flt:compare(f2.get(2), 0x3dc9dcea) != 0)  { return this.fail("Softmax vector value 2"); }
-            if (Flt:compare(f2.sum(), Flt:ONE_POS) != 0)  { return this.fail("Softmax vector sum"); }
-            
-            f2.destroy();
-            f1.destroy();
-        }
-        {
-            FltVector f1 = this.scaled2vec(1, 1000,1000);
-            FltVector f2 = FltVector:softmax(f1); 
-            if (Flt:compare(f2.get(0), 0x3f000000) != 0)  { return this.fail("Softmax vector large value 0"); }
-            if (Flt:compare(f2.get(1), 0x3f000000) != 0)  { return this.fail("Softmax vector large value 1"); }
-            if (Flt:compare(f2.sum(), Flt:ONE_POS) != 0)  { return this.fail("Softmax vector sum"); }
-            
-            f2.destroy();
-            f1.destroy();
-        }
-        return this.success();        
-    }
-    
-    [int] testLayerNorm() {
-        this.startCases("testLayerNorm");
-        
-        this.caseLayerNorm(1, 1,2,3, 1,1,1, 0,0,0, 0xbf9cc16e,0x00000000,0x3f9cc16e);
-        this.caseLayerNorm(1, 5,5,5, 1,1,1, 0,0,0, 0x00000000,0x00000000,0x00000000);
-        this.caseLayerNorm(1, -1,2,3, 1,1,1, 0,0,0, 0xbfafb78f,0x3ec8d1c6,0x3f7b0638);
-        this.caseLayerNorm(1, 0,100,0, 1,1,1, 0,0,0, 0xbf3504f1,0x3fb504f3,0xbf3504f1);
-        this.caseLayerNorm(1, 1,2,3, 2,2,2, 1,1,1, 0xbfb982dc,0x3f800000,0x405cc16e);
-        this.caseLayerNorm(10, 10,20,30, 5,10,20, 0,1,0, 0xbf1cc16e,0x3dcccccd,0x401cc16e);
-        
-        return this.successCases();
-    }
-    
-    [int] caseLayerNorm(int scale, int a1, int a2, int a3, int g1, int g2, int g3, int b1, int b2, int b3, int norm1, int norm2, int norm3) {
-        int eps = Flt:div(Flt:ONE_POS, Flt:fromInt(10000));
-        FltVector a = this.scaled3vec(scale, a1, a2, a3);
-        FltVector g = this.scaled3vec(scale, g1, g2, g3);
-        FltVector b = this.scaled3vec(scale, b1, b2, b3);
-        FltVector expected = this.rt().createInstance(FltVector:CLASSNAME);
-        expected.init(3); expected.set(0, norm1); expected.set(1, norm2); expected.set(2, norm3); 
-        
-        FltVector norm = FltVector:layerNorm(a, g, b, eps);
-        
-        String message = this.rt().createInstance(String:CLASSNAME);
-        a.printToStream(message.printCString("Case "));
-        g.printToStream(message.printCString(" gamma "));
-        b.printToStream(message.printCString(" beta "));
-        expected.printToStream(message.printCString(" => "));
-        norm.printToStream(message.printCString(" got "));
-        norm.debugToStream(message.printCString(" "));
-        if (Flt:compare(norm.get(0), norm1) != 0
-            || Flt:compare(norm.get(1), norm2) != 0
-            || Flt:compare(norm.get(2), norm3) != 0)  {
-            return this.failCase(message.ostream());
-        }
-        
-        message.destroy();
-        norm.destroy();
-        expected.destroy();
-        b.destroy();
-        g.destroy();
-        a.destroy();
-        return this.successCase();        
-    }
-    
     [int] testPrintToStream() {
         this.startCases("testPrintToStream");
         // TODO: add print functions to FltVector
         
         return this.success();        
-    }
-    
-    [FltVector] scaled2vec(int dividend, int a, int b) {
-        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
-        v.init(2);
-        v.set(0, Flt:fromInt(a)); v.set(1, Flt:fromInt(b));
-        v.divFlt(Flt:fromInt(dividend));
-        return v;
     }
     
     [FltVector] scaled3vec(int scale, int a, int b, int c) {

@@ -1,0 +1,39 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::test;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+use sys::stream::IStream;
+
+class TestCase extends test::TestCase {
+    
+    [FltVector] scaled2vec(int dividend, int a, int b) {
+        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
+        v.init(2);
+        v.set(0, Flt:fromInt(a)); v.set(1, Flt:fromInt(b));
+        v.divFlt(Flt:fromInt(dividend));
+        return v;
+    }
+    
+    [FltVector] scaled3vec(int scale, int a, int b, int c) {
+        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
+        v.init(3);
+        v.set(0, Flt:fromInt(a)); v.set(1, Flt:fromInt(b)); v.set(2, Flt:fromInt(c));
+        v.divFlt(Flt:fromInt(scale));
+        return v;
+    }
+    
+    [FltVector] flt3vec(int a, int b, int c) {
+        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
+        v.init(3);
+        v.set(0, a); v.set(1, b); v.set(2, c);
+        return v;
+    }
+    
+}

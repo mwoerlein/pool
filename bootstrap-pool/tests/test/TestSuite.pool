@@ -23,6 +23,7 @@ class TestSuite extends sys::core::Object {
         
         sys::__Tests__:setup(this);
         pool::__Tests__:setup(this);
+        llm::__Tests__:setup(this);
     }
     
     [] register(cstring classname, cstring testname) {

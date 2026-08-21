@@ -1,0 +1,63 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::Object;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class LayerNormLayer extends llm::Layer {
+
+    int len;
+    FltVector gamma;
+    FltVector beta;
+    int epsilon;
+    
+    [LayerNormLayer] _init(FltVector gamma, FltVector beta) {
+        if (!gamma || !beta || gamma.length() != beta.length()) {
+            return null;
+        }
+        this.len = gamma.length();
+        this.gamma = this.own(gamma);
+        this.beta = this.own(beta);
+        this.epsilon = Flt:div(Flt:ONE_POS, Flt:fromInt(10000));
+        return this;
+    }
+
+    [FltVector] forward(FltVector x) {
+        if (!x || !gamma || !beta || x.length() != len) {
+            return null;
+        }
+
+        int lenF := Flt:fromInt(len);
+        int mean := Flt:div(x.sum(), lenF);
+        int sqrsum = Flt:ZERO_POS;
+        {
+            int i = len;
+            while (i--) {
+                sqrsum = Flt:add(sqrsum, Flt:sqr(Flt:sub(x.get(i), mean)));
+            }
+        }
+        
+        //y_i = gamma_i * ( (x_i - m) / sqrt(v + epsilon) ) + beta_i
+        FltVector y := this._emptyVector(len);
+        int d := Flt:sqrt(Flt:add(Flt:div(sqrsum, lenF), epsilon));
+        {
+            int i = len;
+            while (i--) {
+                y.set(i, Flt:add(
+                    Flt:mul(
+                        gamma.get(i),
+                        Flt:div(Flt:sub(x.get(i), mean), d)
+                    ),
+                    beta.get(i)
+                ));
+            }
+        }
+        return y;
+    }
+}
