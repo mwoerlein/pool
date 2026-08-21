@@ -1,0 +1,31 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Object;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class LinearLayer extends llm::Layer {
+
+    FltMatrix w;
+    FltVector b;
+    
+    [LinearLayer] _init(FltMatrix w, FltVector b) {
+        if (!w || !b || w.rows() != b.length()) {
+            return null;
+        }
+        this.w = this.own(w);
+        this.b = this.own(b);
+        return this;
+    }
+    
+    [FltVector] forward(FltVector x) {
+        FltVector y = FltMatrix:mvMul(w, x);
+        if (!y) { return null; }
+        return y.add(b);
+    }
+}

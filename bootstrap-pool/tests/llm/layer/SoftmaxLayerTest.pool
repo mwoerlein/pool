@@ -28,31 +28,52 @@ class SoftmaxLayerTest extends llm::test::TestCase {
     [int] testSoftmax() {
         this.startCases("testSoftmax");
         
-        this.caseSoftmax(10, 20,10,1, 0x3f28b44c,0x3e78405a,0x3dc9dcea);
-        this.caseSoftmax(1, 1000,1000,1, 0x3f000000,0x3f000000,0x00000000);
+        this.caseSoftmax(
+            this.scaled3vec(10, 20,10,1),
+            this.flt3vec(0x3f28b44c,0x3e78405a,0x3dc9dcea)
+        );
+        this.caseSoftmax(
+            this.scaled3vec(1, 1,1,1),
+            this.scaled3vec(3, 1,1,1)
+        );
+        this.caseSoftmax(
+            this.scaled3vec(1, -1,0,1),
+            this.flt3vec(0x3db861f3,0x3e7a9a1a,0x3f2a4d3b)
+        );
+        this.caseSoftmax(
+            this.scaled2vec(1, 1000,1000),
+            this.scaled2vec(10, 5,5)
+        );
+        this.caseSoftmax(
+            this.scaled2vec(1, 1000,-1000),
+            this.scaled2vec(1, 1,0)
+        );
+        this.caseSoftmax(
+            this.scaled2vec(1, 0,0),
+            this.scaled2vec(10, 5,5)
+        );
+        this.caseSoftmax(
+            this.scaled1vec(1, 42),
+            this.scaled1vec(1, 1)
+        );
         
         return this.successCases();        
     }
     
-    [int] caseSoftmax(int scale, int x1, int x2, int x3, int exp1, int exp2, int exp3) {
-        FltVector x = this.scaled3vec(scale, x1, x2, x3);
-        FltVector expected = this.flt3vec(exp1, exp2, exp3);
+    [int] caseSoftmax(FltVector x, FltVector expected) {
 
         SoftmaxLayer l = this.rt().createInstance(SoftmaxLayer:CLASSNAME);
         FltVector y = l.forward(x);
         
         String message = this.rt().createInstance(String:CLASSNAME);
-        x.printToStream(message.printCString("Case "));
-        expected.printToStream(message.printCString(" => "));
+        message.printCString("Case ").print(x).printCString(" => ").print(expected);
         
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());
         }
-        if (Flt:compare(y.get(0), exp1) != 0
-            || Flt:compare(y.get(1), exp2) != 0
-            || Flt:compare(y.get(2), exp3) != 0) {
-            y.printToStream(message.printCString(" got "));
+        if (expected.compareFltVector(y) != 0)  {
+            message.printCString(" got ").print(y);
             y.debugToStream(message.printCString(" "));
             return this.failCase(message.ostream());
         }

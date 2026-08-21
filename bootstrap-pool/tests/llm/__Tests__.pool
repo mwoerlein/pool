@@ -9,7 +9,7 @@ class __Tests__ {
     
     global [] setup(test::TestSuite suite) {
         suite.register(llm::layer::LayerNormLayer:CLASSNAME, llm::layer::LayerNormLayerTest:CLASSNAME);
-        //suite.register(llm::layer::LinearLayer:CLASSNAME, llm::layer::LinearLayerTest:CLASSNAME);
+        suite.register(llm::layer::LinearLayer:CLASSNAME, llm::layer::LinearLayerTest:CLASSNAME);
         suite.register(llm::layer::SoftmaxLayer:CLASSNAME, llm::layer::SoftmaxLayerTest:CLASSNAME);
     }
 }

@@ -12,7 +12,7 @@ use sys::core::math::FltVector;
 class SoftmaxLayer extends llm::Layer {
 
     [FltVector] forward(FltVector x) {
-        if (!x) {
+        if (!x || x.length() == 0) {
             return null;
         }
         int m := x.max();
