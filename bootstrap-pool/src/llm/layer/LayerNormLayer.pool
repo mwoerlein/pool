@@ -6,7 +6,6 @@ version = 0.1.0
 namespace llm::layer;
 
 use sys::core::Flt;
-use sys::core::Object;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 

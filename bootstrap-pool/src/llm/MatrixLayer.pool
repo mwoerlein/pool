@@ -5,10 +5,13 @@ version = 0.1.0
 */
 namespace llm;
 
-use sys::core::Object;
-use sys::core::math::FltMatrix;
+use llm::layer::LinearLayer;
+use llm::layer::SoftmaxLayer;
 
-class MatrixLayer extends Object {
+use sys::core::math::FltMatrix;
+use sys::core::math::FltVector;
+
+class MatrixLayer extends sys::core::Object {
 
     abstract [FltMatrix] forwardMatrix(FltMatrix x);
     
@@ -20,4 +23,16 @@ class MatrixLayer extends Object {
     
     // TODO: remove with implicit cast
     [MatrixLayer] matrixLayer() { return this; }
+    
+    [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {
+        LinearLayer l = this.createOwn(LinearLayer:CLASSNAME);
+        return l._init(w, b);
+    }
+    
+    [SoftmaxLayer] _ownSoftmaxLayer() {
+        SoftmaxLayer l = this.createOwn(SoftmaxLayer:CLASSNAME);
+        return l;
+    }
+    
+
 }
