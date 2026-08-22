@@ -68,6 +68,15 @@ class TestCase extends test::TestCase {
         return m;
     }
     
+    [FltMatrix] scaled22mat(int scale, int m00, int m01, int m10, int m11) {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(2, 2);
+        m.set(0, 0, Flt:fromInt(m00)); m.set(0, 1, Flt:fromInt(m01));
+        m.set(1, 0, Flt:fromInt(m10)); m.set(1, 1, Flt:fromInt(m11));
+        m.divFlt(Flt:fromInt(scale));
+        return m;
+    }
+    
     [FltMatrix] scaled13mat(int scale, int m00, int m01, int m02) {
         FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
         m.init(1, 3);
@@ -103,4 +112,12 @@ class TestCase extends test::TestCase {
         return m;
     }
     
+    
+    [FltMatrix] flt22mat(int m00, int m01, int m10, int m11) {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(2, 2);
+        m.set(0, 0, m00); m.set(0, 1, m01);
+        m.set(1, 0, m10); m.set(1, 1, m11);
+        return m;
+    }
 }

@@ -1,0 +1,60 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::attention;
+
+use llm::layer::LinearLayer;
+use llm::layer::SoftmaxLayer;
+
+use sys::core::Flt;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class SelfAttention extends llm::MatrixLayer {
+
+    LinearLayer linearQ;
+    LinearLayer linearK;
+    LinearLayer linearV;
+    SoftmaxLayer softmax;
+    int scale;
+    
+    [SelfAttention] _init(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
+        if (!wq || !bq || !wk || !bk || !wv || !bv ) {
+            return null;
+        }
+        int r = wq.rows();
+        int c = wq.cols();
+        if (wk.rows() != r || wv.rows() != r || bq.length() != r || bk.length() != r || bv.length() != r 
+            || wk.cols() != c || wv.cols() != c
+        ) {
+            return null;
+        }
+        this.linearQ = this._ownLinearLayer(wq, bq);
+        this.linearK = this._ownLinearLayer(wk, bk);
+        this.linearV = this._ownLinearLayer(wv, bv);
+        this.softmax = this._ownSoftmaxLayer();
+        this.scale = Flt:sqrt(Flt:fromInt(r));
+        return this;
+    }
+    
+    [FltMatrix] forwardMatrix(FltMatrix x) {
+        FltMatrix q := linearQ.forwardMatrix(x);
+        FltMatrix k := linearK.forwardMatrix(x);
+        FltMatrix v := linearV.forwardMatrix(x);
+        if (!q || !k || !v) { return null; }
+        
+        FltMatrix scores := FltMatrix:mtMul(q, k);
+        scores.divFlt(scale);
+        FltMatrix weights := softmax.forwardMatrix(scores);
+        FltMatrix y := FltMatrix:mmMul(weights, v);
+        
+        weights.destroy();
+        scores.destroy();
+        v.destroy();
+        k.destroy();
+        q.destroy();
+        return y;
+    }
+}
