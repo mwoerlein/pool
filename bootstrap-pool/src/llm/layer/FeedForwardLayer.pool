@@ -1,0 +1,47 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::Object;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class FeedForwardLayer extends llm::Layer {
+
+    LinearLayer layer1;
+    LinearLayer layer2;
+    
+    [FeedForwardLayer] _init(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
+        if (!w1 || !b1 || !w2 || !b2 || w1.rows() != b1.length() || w2.rows() != b2.length() || w1.rows() != w2.cols()) {
+            return null;
+        }
+        this.layer1 = this._ownLinearLayer(w1, b1);
+        this.layer2 = this._ownLinearLayer(w2, b2);
+        
+        return this;
+    }
+    
+    [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {
+        LinearLayer l = this.createOwn(LinearLayer:CLASSNAME);
+        return l._init(w, b);
+    }
+    
+    [FltVector] forward(FltVector x) {
+        FltVector tmp = layer1.forward(x);
+        if (!tmp) { return null; }
+        // ReLU
+        int i = tmp.length();
+        while (i--) {
+            if (Flt:compare(tmp.get(i), Flt:ZERO_POS) < 0) {
+                tmp.set(i, Flt:ZERO_POS);
+            }
+        }
+        FltVector y = layer2.forward(tmp);
+        tmp.destroy();
+        return y;
+    }
+}

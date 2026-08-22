@@ -80,14 +80,19 @@ class LayerNormLayerTest extends llm::test::TestCase {
     
     [int] caseLayerNorm(FltVector x, FltVector gamma, FltVector beta, FltVector expected) {
 
-        LayerNormLayer l = this.rt().createInstance(LayerNormLayer:CLASSNAME);
-        FltVector y = l._init(gamma, beta).forward(x);
-        
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(x)
             .printCString(" gamma ").print(gamma)
             .printCString(" beta ").print(beta)
             .printCString(" => ").print(expected);
+
+        LayerNormLayer l = this.rt().createInstance(LayerNormLayer:CLASSNAME);
+        if (!this.isSame(l, l._init(gamma, beta))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+
+        FltVector y = l.forward(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());
@@ -98,9 +103,9 @@ class LayerNormLayerTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        message.destroy();
         y.destroy();
         l.destroy();
+        message.destroy();
         expected.destroy();
         x.destroy();
         return this.successCase();        

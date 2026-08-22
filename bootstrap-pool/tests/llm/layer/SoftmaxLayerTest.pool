@@ -62,12 +62,12 @@ class SoftmaxLayerTest extends llm::test::TestCase {
     
     [int] caseSoftmax(FltVector x, FltVector expected) {
 
-        SoftmaxLayer l = this.rt().createInstance(SoftmaxLayer:CLASSNAME);
-        FltVector y = l.forward(x);
-        
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(x).printCString(" => ").print(expected);
         
+        SoftmaxLayer l = this.rt().createInstance(SoftmaxLayer:CLASSNAME);
+        
+        FltVector y = l.forward(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());
@@ -82,9 +82,9 @@ class SoftmaxLayerTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        message.destroy();
         y.destroy();
         l.destroy();
+        message.destroy();
         expected.destroy();
         x.destroy();
         return this.successCase();        

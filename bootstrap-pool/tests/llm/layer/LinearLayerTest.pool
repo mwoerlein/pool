@@ -20,18 +20,18 @@ class LinearLayerTest extends llm::test::TestCase {
     [int] testInitialization() {
         this.start("testInitialization");
 
-//        FltVector g3 = this.scaled3vec(1, 5,5,5);
-//        FltVector b3 = this.scaled3vec(1, 1,1,1);
-//        FltVector b2 = this.scaled2vec(1, 1,1);
+        FltMatrix w23 = this.scaled23mat(1, 5,5,5, 6,6,6);
+        FltVector b3 = this.scaled3vec(1, 1,1,1);
+        FltVector b2 = this.scaled2vec(1, 1,1);
         
         LinearLayer l = this.rt().createInstance(LinearLayer:CLASSNAME);
-//        if (l._init(null, b2)) { return this.fail("Empty gamma initialization"); }
-//        if (l._init(g3, null)) { return this.fail("Empty beta initialization"); }
-//        if (l._init(g3, b2)) { return this.fail("Invalid initialization"); }
-//        if (!this.isSame(l, l._init(g3, b3))) { return this.fail("Correct initialization"); }
+        if (l._init(null, b2)) { return this.fail("Empty w initialization"); }
+        if (l._init(w23, null)) { return this.fail("Empty b initialization"); }
+        if (l._init(w23, b3)) { return this.fail("Invalid initialization"); }
+        if (!this.isSame(l, l._init(w23, b2))) { return this.fail("Correct initialization"); }
         
         l.destroy();
-//        b2.destroy();
+        b3.destroy();
         
         return this.success();
     }
@@ -87,14 +87,19 @@ class LinearLayerTest extends llm::test::TestCase {
 
     [int] caseLinear(FltVector x, FltMatrix w, FltVector b, FltVector expected) {
 
-        LinearLayer l = this.rt().createInstance(LinearLayer:CLASSNAME);
-        FltVector y = l._init(w, b).forward(x);
-        
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(x)
             .printCString(" w ").print(w)
             .printCString(" b ").print(b)
             .printCString(" => ").print(expected);
+
+        LinearLayer l = this.rt().createInstance(LinearLayer:CLASSNAME);
+        if (!this.isSame(l, l._init(w, b))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        
+        FltVector y = l.forward(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());
@@ -105,9 +110,9 @@ class LinearLayerTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        message.destroy();
         y.destroy();
         l.destroy();
+        message.destroy();
         expected.destroy();
         x.destroy();
         return this.successCase();        
