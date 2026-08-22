@@ -9,9 +9,9 @@ use sys::core::Object;
 use sys::core::Flt;
 use sys::core::math::FltVector;
 
-class SoftmaxLayer extends llm::Layer {
+class SoftmaxLayer extends llm::VectorLayer {
 
-    [FltVector] forward(FltVector x) {
+    [FltVector] forwardVector(FltVector x) {
         if (!x || x.length() == 0) {
             return null;
         }

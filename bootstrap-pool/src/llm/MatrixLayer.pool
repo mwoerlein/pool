@@ -1,0 +1,23 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm;
+
+use sys::core::Object;
+use sys::core::math::FltMatrix;
+
+class MatrixLayer extends Object {
+
+    abstract [FltMatrix] forwardMatrix(FltMatrix x);
+    
+    [FltMatrix] _emptyMatrix(int rows, int cols) {
+        FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(rows, cols);
+        return ret;
+    }
+    
+    // TODO: remove with implicit cast
+    [MatrixLayer] matrixLayer() { return this; }
+}

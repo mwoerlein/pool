@@ -48,6 +48,24 @@ class FltMatrix extends sys::core::utils::DWordArray {
         return this._saveGetDWord(row * _cols + col);
     }
     
+    [FltMatrix] setRowFromVector(int row, FltVector v) {
+        if (row < 0 || row >= _rows || v.length() != _cols) {
+            return null;
+        }
+        this._saveSetDWordArray(row * _cols, v.dwordArray());
+        return this;
+    }
+    
+    [FltVector] getRowAsVector(int row) {
+        if (row < 0 || row >= _rows) {
+            return null;
+        }
+        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
+        v.init(_cols);
+        this._saveGetDWordArray(row * _cols, v.dwordArray());
+        return v;
+    }
+    
     [FltMatrix] mulFlt(int f) {
         int i = this._size;
         while (i--) {
@@ -129,6 +147,31 @@ class FltMatrix extends sys::core::utils::DWordArray {
         }
         return stream.printChar(']');
     }
+
+    [OStream] debugToStream(OStream stream) {
+        stream.printChar('[');
+        if (_rows > 0) {
+            this._debugRowFromPosToStream(stream, 0);
+            int i = 1;
+            while (i < _rows) {
+                this._debugRowFromPosToStream(stream.printChar(',').printChar(' '), i++);
+            }
+        }
+        return stream.printChar(']');
+    }
+    [OStream] _debugRowFromPosToStream(OStream stream, int row) {
+        stream.printChar('[');
+        if (_cols > 0) {
+            int i = row * _cols;
+            int end = i + _cols;
+            stream.printPtr(this._saveGetDWord(i++));
+            while (i < end) {
+                stream.printChar(',').printChar(' ').printPtr(this._saveGetDWord(i++));
+            }
+        }
+        return stream.printChar(']');
+    }
+    
     global [FltVector] mvMul(FltMatrix a, FltVector b) {
         if (!a || !b || a._cols != b.length()) {
             return null;

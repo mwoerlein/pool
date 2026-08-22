@@ -103,7 +103,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
             message.printCString(" has invalid settings");
             return this.failCase(message.ostream());
         }
-        FltVector y = l.forward(x);
+        FltVector y = l.forwardVector(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

@@ -39,53 +39,47 @@ class LinearLayerTest extends llm::test::TestCase {
     [int] testLinear() {
         this.startCases("testLinear");
         
-        this.caseLinear(
+        this.caseLinearVector(
             this.scaled3vec(1, 1,2,3),
             this.scaled23mat(1, 1,2,3, 4,5,6),
             this.scaled2vec(10, 5,-10),
             this.scaled2vec(10, 145,310)
         );
-        this.caseLinear(
+        this.caseLinearVector(
             this.scaled3vec(1, 2,3,-4),
             this.scaled13mat(1, -1,-2,0),
             this.scaled1vec(1, 0),
             this.scaled1vec(1, -8)
         );
-        this.caseLinear(
+        this.caseLinearVector(
             this.scaled3vec(1, 1,2,3),
             this.scaled33mat(1, 1,0,0, 0,1,0, 0,0,1),
             this.scaled3vec(1, 5,-2,7),
             this.scaled3vec(1, 6,0,10)
         );
-        this.caseLinear(
+        this.caseLinearVector(
             this.scaled3vec(1, 0,0,0),
             this.scaled23mat(1, 1,2,3, 4,5,6),
             this.scaled2vec(10, 1,2),
             this.scaled2vec(10, 1,2)
         );
-        this.caseLinear(
+        this.caseLinearVector(
             this.scaled2vec(1, 3,4),
             this.scaled32mat(1, 1,0, 0,1, 2,2),
             this.scaled3vec(1, 0,0,0),
             this.scaled3vec(1, 3,4,14)
         );
-        this.caseLinear(
-            this.scaled3vec(1, 1,1,2),
+        this.caseLinearMatrix(
+            this.scaled23mat(1, 1,1,2, 1,1,-2),
             this.scaled13mat(1, 1000,1000,-1000),
             this.scaled1vec(1, 0),
-            this.scaled1vec(1, 0)
-        );
-        this.caseLinear(
-            this.scaled3vec(1, 1,1,-2),
-            this.scaled13mat(1, 1000,1000,-1000),
-            this.scaled1vec(1, 0),
-            this.scaled1vec(1, 4000)
+            this.scaled21mat(1, 0, 4000)
         );
         
         return this.successCases();
     }
 
-    [int] caseLinear(FltVector x, FltMatrix w, FltVector b, FltVector expected) {
+    [int] caseLinearVector(FltVector x, FltMatrix w, FltVector b, FltVector expected) {
 
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(x)
@@ -99,12 +93,45 @@ class LinearLayerTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        FltVector y = l.forward(x);
+        FltVector y = l.forwardVector(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());
         }
         if (expected.compareFltVector(y) != 0)  {
+            message.printCString(" got ").print(y);
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        y.destroy();
+        l.destroy();
+        message.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+    
+    [int] caseLinearMatrix(FltMatrix x, FltMatrix w, FltVector b, FltMatrix expected) {
+
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(x)
+            .printCString(" w ").print(w)
+            .printCString(" b ").print(b)
+            .printCString(" => ").print(expected);
+
+        LinearLayer l = this.rt().createInstance(LinearLayer:CLASSNAME);
+        if (!this.isSame(l, l._init(w, b))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        
+        FltMatrix y = l.forwardMatrix(x);
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (expected.compareFltMatrix(y) != 0)  {
             message.printCString(" got ").print(y);
             y.debugToStream(message.printCString(" "));
             return this.failCase(message.ostream());

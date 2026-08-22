@@ -1,0 +1,41 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm;
+
+use sys::core::Object;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class VectorLayer extends MatrixLayer {
+
+    abstract [FltVector] forwardVector(FltVector x);
+    [FltMatrix] forwardMatrix(FltMatrix x) {
+        int r = x.rows()-1;
+        FltVector l1 := x.getRowAsVector(r);
+        FltVector l2 := this.forwardVector(l1);
+        FltMatrix ret = _emptyMatrix(r+1, l2.length());
+        ret.setRowFromVector(r, l2);
+        l2.destroy();
+        l1.destroy();
+        while (r--) {
+            FltVector t1 := x.getRowAsVector(r);
+            FltVector t2 := this.forwardVector(t1);
+            ret.setRowFromVector(r, t2);
+            t2.destroy();
+            t1.destroy();
+        }
+        return ret;
+    }
+    
+    [FltVector] _emptyVector(int len) {
+        FltVector ret = this.rt().createInstance(FltVector:CLASSNAME);
+        ret.init(len);
+        return ret;
+    }
+    
+    // TODO: remove with implicit cast
+    [VectorLayer] vectorLayer() { return this; }
+}

@@ -48,4 +48,16 @@ class DWordArray extends Object {
         int addr = buffer.buf + index * Address:DWORD_SIZE;
         return Address:loadDWord(addr);
     }
+    
+    [] _saveSetDWordArray(int index, DWordArray src) {
+        Address:copyDWords(src.buffer.buf, this.buffer.buf + index * Address:DWORD_SIZE, src._size);
+    }
+    
+    [] _saveGetDWordArray(int index, DWordArray dest) {
+        Address:copyDWords(this.buffer.buf + index * Address:DWORD_SIZE, dest.buffer.buf, dest._size);
+    }
+    
+    // TODO: remove with implicit cast
+    [DWordArray] dwordArray() { return this; }
+    
 }

@@ -9,7 +9,7 @@ use sys::core::Object;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class LinearLayer extends llm::Layer {
+class LinearLayer extends llm::VectorLayer {
 
     FltMatrix w;
     FltVector b;
@@ -23,7 +23,7 @@ class LinearLayer extends llm::Layer {
         return this;
     }
     
-    [FltVector] forward(FltVector x) {
+    [FltVector] forwardVector(FltVector x) {
         FltVector y = FltMatrix:mvMul(w, x);
         if (!y) { return null; }
         return y.add(b);

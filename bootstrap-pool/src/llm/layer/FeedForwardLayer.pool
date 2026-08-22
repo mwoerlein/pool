@@ -10,7 +10,7 @@ use sys::core::Object;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class FeedForwardLayer extends llm::Layer {
+class FeedForwardLayer extends llm::VectorLayer {
 
     LinearLayer layer1;
     LinearLayer layer2;
@@ -30,8 +30,8 @@ class FeedForwardLayer extends llm::Layer {
         return l._init(w, b);
     }
     
-    [FltVector] forward(FltVector x) {
-        FltVector tmp = layer1.forward(x);
+    [FltVector] forwardVector(FltVector x) {
+        FltVector tmp = layer1.forwardVector(x);
         if (!tmp) { return null; }
         // ReLU
         int i = tmp.length();
@@ -40,7 +40,7 @@ class FeedForwardLayer extends llm::Layer {
                 tmp.set(i, Flt:ZERO_POS);
             }
         }
-        FltVector y = layer2.forward(tmp);
+        FltVector y = layer2.forwardVector(tmp);
         tmp.destroy();
         return y;
     }

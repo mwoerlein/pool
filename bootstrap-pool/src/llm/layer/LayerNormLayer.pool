@@ -10,7 +10,7 @@ use sys::core::Object;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class LayerNormLayer extends llm::Layer {
+class LayerNormLayer extends llm::VectorLayer {
 
     int len;
     FltVector gamma;
@@ -28,7 +28,7 @@ class LayerNormLayer extends llm::Layer {
         return this;
     }
 
-    [FltVector] forward(FltVector x) {
+    [FltVector] forwardVector(FltVector x) {
         if (!x || !gamma || !beta || x.length() != len) {
             return null;
         }
