@@ -1,0 +1,67 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use llm::attention::MultiHeadAttention;
+
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class EncoderLayer extends llm::MatrixLayer {
+
+    MultiHeadAttention attn;
+    LayerNormLayer attnNorm;
+    FeedForwardLayer ffwd;
+    LayerNormLayer ffwdNorm;
+    
+    [EncoderLayer] _init(
+        int attnHeads, FltMatrix attnWq, FltVector attnBq, FltMatrix attnWk, FltVector attnBk,
+        FltMatrix attnWv, FltVector attnBv, FltMatrix attnWo, FltVector attnBo,
+        FltVector attnGamma, FltVector attnBeta,
+        FltMatrix ffwdW1, FltVector ffwdB1, FltMatrix ffwdW2, FltVector ffwdB2,
+        FltVector ffwdGamma, FltVector ffwdBeta
+    ) {
+        attn = this._ownMultiHeadAttention(attnHeads, attnWq, attnBq, attnWk, attnBk, attnWv, attnBv, attnWo, attnBo);
+        attnNorm = this._ownLayerNormLayer(attnGamma, attnBeta);
+        ffwd = this._ownFeedForwardLayer(ffwdW1, ffwdB1, ffwdW2, ffwdB2);
+        ffwdNorm = this._ownLayerNormLayer(ffwdGamma, ffwdBeta);
+        if (!attn || !attnNorm || !ffwd || !ffwdNorm) {
+            return null;
+        }
+        
+        int dm := attn.dModel;
+        if (attnNorm.dModel != dm || ffwd.getDIn() != dm || ffwd.getDOut() != dm || ffwdNorm.dModel != dm) {
+            return null;
+        }
+        this.dModel = dm;
+        
+        return this;
+    }
+    
+    [FltMatrix] forwardMatrix(FltMatrix x) {
+        if (!x) { return null; }
+
+        // ---- Self‑Attention Block ----
+        FltMatrix attnOut = attn.forwardMatrix(x);
+        if (!attnOut) { return null; }
+        if (!attnOut.add(x)) { return null; }
+        FltMatrix attnNormOut = attnNorm.forwardMatrix(attnOut);
+        if (!attnNormOut) { return null; }
+        
+        // ---- Feed‑Forward Block ----
+        FltMatrix ffwdOut = ffwd.forwardMatrix(attnNormOut);
+        if (!ffwdOut) { return null; }
+        if (!ffwdOut.add(attnNormOut)) { return null; }
+        FltMatrix ffwdNormOut = ffwdNorm.forwardMatrix(ffwdOut);
+        if (!ffwdNormOut) { return null; }
+        
+        ffwdOut.destroy();
+        attnNormOut.destroy();
+        attnOut.destroy();
+        
+        return ffwdNormOut;
+    }
+}

@@ -1,0 +1,213 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class EncoderLayerTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testEncoderLayer();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+/*
+        FltMatrix w23 = this.scaled23mat(1, 5,5,5, 6,6,6);
+        FltMatrix w32 = this.scaled32mat(1, 4,4, 5,5, 6,6);
+        FltVector b3 = this.scaled3vec(1, 1,1,1);
+        FltVector b2 = this.scaled2vec(1, 1,1);
+*/        
+        EncoderLayer l = this.rt().createInstance(EncoderLayer:CLASSNAME);
+/*
+        if (l._init(null, b2, w32, b3)) { return this.fail("Empty w1 initialization"); }
+        if (l._init(w23, null, w32, b3)) { return this.fail("Empty b1 initialization"); }
+        if (l._init(w23, b2, null, b3)) { return this.fail("Empty w2 initialization"); }
+        if (l._init(w23, b2, w32, null)) { return this.fail("Empty b2 initialization"); }
+        if (l._init(w23, b3, w32, b3)) { return this.fail("Invalid b1 initialization"); }
+        if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b2 initialization"); }
+        if (l._init(w23, b2, w23, b2)) { return this.fail("Invalid w1 initialization"); }
+        if (!this.isSame(l, l._init(w23, b2, w32, b3))) { return this.fail("Correct initialization"); }
+*/       
+        l.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testEncoderLayer() {
+        this.startCases("testEncoderLayer");
+        
+        this.caseEncoderLayer( // Der "Null-Effekt" (Sanity Check)
+            this.scaled22mat(1, 0,0, 0,0),
+            
+            1,
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(1, 1,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(1, 1,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled22mat(1, 0,0, 0,0)
+        );
+        this.caseEncoderLayer( // Reiner Residual- & LayerNorm-Test
+            this.scaled22mat(1, 1,2, 3,4),
+            
+            1,
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(1, 1,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled22mat(1, 0,0, 0,0),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 0,0, 0,0),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(1, 1,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.flt22mat(0xbf7ffcba,0x3f7ffcba, 0xbf7ffcba,0x3f7ffcba)
+        );
+        this.caseEncoderLayer( // Der FFWD-Aktivierungs-Test (ReLU / GELU)
+            this.scaled22mat(1, 1,2, 3,4),
+            
+            1,
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(1, 1,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled22mat(1, 1,-1, -1,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(1, 1,1),
+            this.scaled2vec(1, 0,0),
+            
+            this.flt22mat(0xbf7fff2f,0x3f7fff2f, 0xbf7fff2f,0x3f7fff2f)
+        );
+        this.caseEncoderLayer(
+            this.scaled24mat(1, 1,2,3,4, 0,1,0,1),
+            
+            2,
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 1,0,1,0, 0,1,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 1,0,1,0, 0,1,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 1,0,1,0, 0,1,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            
+            this.scaled4vec(1, 1,1,1,1),
+            this.scaled4vec(1, 0,0,0,0),
+            
+            this.scaled48mat(1, 1,0,0,0,0,0,0,0, 0,1,0,0,0,0,0,0, 0,0,1,0,0,0,0,0, 0,0,0,1,0,0,0,0),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled84mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0),
+            this.scaled4vec(1, 0,0,0,0),
+            
+            this.scaled4vec(1, 1,1,1,1),
+            this.scaled4vec(1, 0,0,0,0),
+            
+            this.flt24mat(0xbf9f5268,0x3f7b8fa1,0xbf387a65,0x3f7b8f91, 0xbef75df2,0x3fd3c0a5,0xbf800717,0xbe2f1093)
+        );
+        
+        return this.successCases();
+    }
+    
+    [int] caseEncoderLayer(FltMatrix x, 
+        int attnHeads, FltMatrix attnWq, FltVector attnBq, FltMatrix attnWk, FltVector attnBk,
+        FltMatrix attnWv, FltVector attnBv, FltMatrix attnWo, FltVector attnBo,
+        FltVector attnGamma, FltVector attnBeta,
+        FltMatrix ffwdW1, FltVector ffwdB1, FltMatrix ffwdW2, FltVector ffwdB2,
+        FltVector ffwdGamma, FltVector ffwdBeta,
+        FltMatrix expected
+    ) {
+        
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(x).printCString(" with:").printNewline()
+            .printCString("attn: heads ").printInt(attnHeads)
+            .printCString(" wq ").print(attnWq)
+            .printCString(" bq ").print(attnBq)
+            .printCString(" wk ").print(attnWk)
+            .printCString(" bk ").print(attnBk)
+            .printCString(" wv ").print(attnWv)
+            .printCString(" bv ").print(attnBv)
+            .printCString(" wo ").print(attnWo)
+            .printCString(" bo ").print(attnBo).printNewline()
+            .printCString("attnNorm: gamma ").print(attnGamma)
+            .printCString(" beta ").print(attnBeta).printNewline()
+            .printCString("ffwd: w1 ").print(ffwdW1)
+            .printCString(" b1 ").print(ffwdB1)
+            .printCString(" w2 ").print(ffwdW2)
+            .printCString(" b2 ").print(ffwdB2).printNewline()
+            .printCString("ffwdNorm: gamma ").print(ffwdGamma)
+            .printCString(" beta ").print(ffwdBeta).printNewline()
+            .printCString(" => ").print(expected);
+        expected.debugToStream(message.printCString(" "));
+
+        EncoderLayer l = this.rt().createInstance(EncoderLayer:CLASSNAME);
+        if (!this.isSame(l, l._init(
+            attnHeads, attnWq, attnBq, attnWk, attnBk, attnWv, attnBv, attnWo, attnBo, attnGamma, attnBeta,
+            ffwdW1, ffwdB1, ffwdW2, ffwdB2, ffwdGamma, ffwdBeta 
+        ))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        FltMatrix y = l.forwardMatrix(x);
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (expected.compareFltMatrix(y) != 0)  {
+            message.printCString(" got ").print(y);
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        y.destroy();
+        l.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+    
+}

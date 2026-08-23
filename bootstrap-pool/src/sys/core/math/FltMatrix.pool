@@ -112,6 +112,28 @@ class FltMatrix extends sys::core::utils::DWordArray {
         return this;
     }
     
+    [FltMatrix] add(FltMatrix mat) {
+        if (!mat || this._rows != mat._rows || this._cols != mat._cols) {
+            return null;
+        }
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:add(this._saveGetDWord(i), mat._saveGetDWord(i)));
+        }
+        return this;
+    }
+    
+    [FltMatrix] sub(FltMatrix mat) {
+        if (!mat || this._rows != mat._rows || this._cols != mat._cols) {
+            return null;
+        }
+        int i = this._size;
+        while (i--) {
+            this._saveSetDWord(i, Flt:sub(this._saveGetDWord(i), mat._saveGetDWord(i)));
+        }
+        return this;
+    }
+    
     [int] compareFltMatrix(FltMatrix v) { 
         if (_rows != v.rows()) { return _rows - v.rows(); }
         if (_cols != v.cols()) { return _cols - v.cols(); }

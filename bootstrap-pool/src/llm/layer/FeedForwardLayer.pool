@@ -25,6 +25,9 @@ class FeedForwardLayer extends llm::VectorLayer {
         return this;
     }
     
+    [int] getDIn() { return layer1.getDIn(); }     
+    [int] getDOut() { return layer2.getDOut(); }     
+    
     [FltVector] forwardVector(FltVector x) {
         FltVector tmp = layer1.forwardVector(x);
         if (!tmp) { return null; }
