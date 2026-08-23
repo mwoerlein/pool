@@ -1,0 +1,111 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::attention;
+
+use llm::layer::LinearLayer;
+use llm::layer::SoftmaxLayer;
+
+use sys::core::Flt;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class MultiHeadAttention extends llm::MatrixLayer {
+
+    LinearLayer linearQ;
+    LinearLayer linearK;
+    LinearLayer linearV;
+    LinearLayer linearO;
+    SoftmaxLayer softmax;
+    int heads;
+    int dModel;
+    int dHead;
+    int scale;
+    
+    [MultiHeadAttention] _init(int heads, FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo) {
+        if (!wq || !bq || !wk || !bk || !wv || !bv || !wo || !bo ) {
+            return null;
+        }
+        int dm = wq.rows();
+        if (dm % heads) { return null; } 
+        this.heads = heads;
+        this.dModel = dm;
+        this.dHead = dm/heads;
+        if ( wq.rows() != dm || wq.cols() != dm || bq.length() != dm
+            || wk.rows() != dm || wk.cols() != dm || bk.length() != dm
+            || wv.rows() != dm || wv.cols() != dm || bv.length() != dm
+            || wo.rows() != dm || wo.cols() != dm || bo.length() != dm
+        ) {
+            return null;
+        }
+        this.linearQ = this._ownLinearLayer(wq, bq);
+        this.linearK = this._ownLinearLayer(wk, bk);
+        this.linearV = this._ownLinearLayer(wv, bv);
+        this.linearO = this._ownLinearLayer(wo, bo);
+        this.softmax = this._ownSoftmaxLayer();
+        this.scale = Flt:sqrt(Flt:fromInt(this.dHead));
+        return this;
+    }
+    
+    [FltMatrix] forwardMatrix(FltMatrix x) {
+        FltMatrix q := linearQ.forwardMatrix(x);
+        FltMatrix k := linearK.forwardMatrix(x);
+        FltMatrix v := linearV.forwardMatrix(x);
+        if (!q || !k || !v) { return null; }
+/*        
+        this.rt().err().printNewline()
+            .printCString("Q: ").print(q).printNewline()
+            .printCString("K: ").print(k).printNewline()
+            .printCString("V: ").print(v).printNewline()
+        ;
+*/        
+        int dm := this.dModel;
+        int dh := this.dHead;
+        int dt := x.rows();
+        int sh := this.scale;
+        FltMatrix tmp := this._emptyMatrix(dt, dm);
+        
+        FltMatrix scores := this._emptyMatrix(dt, dt);
+        int i = this.heads;
+        while (i--) {
+            int start := i*dh;
+            if (!FltMatrix:mtMulInto(q, 0, start, k, 0, start, scores, 0, 0, dt, dt, dh)) {
+                this.rt().err().printCString("aaaahhhh1").printNewline();
+            }
+/*
+            this.rt().err()
+                .printInt(i).printCString("-scores: ").print(scores).printNewline()
+            ;
+*/
+            scores.divFlt(sh);
+            FltMatrix weights := softmax.forwardMatrix(scores);
+            if (!FltMatrix:mmMulInto(weights, 0, 0, v, 0, start, tmp, 0, start, dt, dh, dt)) {
+                this.rt().err().printCString("aaaahhhh2").printNewline();
+            }
+/*
+            this.rt().err()
+                .printInt(i).printCString("-scaled: ").print(scores).printNewline()
+                .printInt(i).printCString("-weights: ").print(weights).printNewline()
+                .printInt(i).printCString("-tmp: ").print(tmp).printNewline()
+            ;
+*/
+            weights.destroy();
+        }
+        scores.destroy();
+        
+        FltMatrix y := linearO.forwardMatrix(tmp);
+/*
+        this.rt().err()
+            .printCString("tmp: ").print(tmp).printNewline()
+            .printCString("Y: ").print(y).printNewline()
+        ;
+*/        
+        tmp.destroy();
+        v.destroy();
+        k.destroy();
+        q.destroy();
+        return y;
+    }
+}

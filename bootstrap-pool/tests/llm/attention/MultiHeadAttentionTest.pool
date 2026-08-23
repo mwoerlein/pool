@@ -1,0 +1,194 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::attention;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class MultiHeadAttentionTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testMultiHeadAttention();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+
+        FltMatrix wq = this.scaled22mat(1, 1,1, 2,2);
+        FltMatrix wk = this.scaled22mat(1, 3,3, 4,4);
+        FltMatrix wv = this.scaled22mat(1, 5,5, 6,6);
+        FltMatrix wo = this.scaled22mat(1, 7,7, 8,8);
+        FltMatrix wi = this.scaled33mat(1, 1,2,3, 4,5,6, 7,8,9);
+        FltVector bq = this.scaled2vec(1, 0,0);
+        FltVector bk = this.scaled2vec(1, 1,1);
+        FltVector bv = this.scaled2vec(1, 2,2);
+        FltVector bo = this.scaled2vec(1, 3,3);
+        FltVector bi = this.scaled3vec(1, 1,1,1);
+        
+        MultiHeadAttention a = this.rt().createInstance(MultiHeadAttention:CLASSNAME);
+        
+        if (a._init(2, null, bq, wk, bk, wv, bv, wo, bo)) { return this.fail("Empty wq initialization"); }
+        if (a._init(2, wq, null, wk, bk, wv, bv, wo, bo)) { return this.fail("Empty bq initialization"); }
+        if (a._init(2, wq, bq, null, bk, wv, bv, wo, bo)) { return this.fail("Empty wk initialization"); }
+        if (a._init(2, wq, bq, wk, null, wv, bv, wo, bo)) { return this.fail("Empty bk initialization"); }
+        if (a._init(2, wq, bq, wk, bk, null, bv, wo, bo)) { return this.fail("Empty wv initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wv, null, wo, bo)) { return this.fail("Empty bv initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wv, bv, null, bo)) { return this.fail("Empty wo initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wv, bv, wo, null)) { return this.fail("Empty bo initialization"); }
+        
+        if (a._init(2, wi, bq, wk, bk, wv, bv, wo, bo)) { return this.fail("Invalid wq initialization"); }
+        if (a._init(2, wq, bi, wk, bk, wv, bv, wo, bo)) { return this.fail("Invalid bq initialization"); }
+        if (a._init(2, wq, bq, wi, bk, wv, bv, wo, bo)) { return this.fail("Invalid wk initialization"); }
+        if (a._init(2, wq, bq, wk, bi, wv, bv, wo, bo)) { return this.fail("Invalid bk initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wi, bv, wo, bo)) { return this.fail("Invalid wv initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wv, bi, wo, bo)) { return this.fail("Invalid bv initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wv, bv, wi, bo)) { return this.fail("Invalid wo initialization"); }
+        if (a._init(2, wq, bq, wk, bk, wv, bv, wo, bi)) { return this.fail("Invalid bo initialization"); }
+        
+        if (!this.isSame(a, a._init(2, wq, bq, wk, bk, wv, bv, wo, bo))) { return this.fail("Correct initialization"); }
+        
+        a.destroy();
+        bi.destroy();
+        wi.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testMultiHeadAttention() {
+        this.startCases("testMultiHeadAttention");
+        
+        this.caseSelfAttention( // Identitäts-Projektion (Ein‑Head‑Fall)
+            this.scaled24mat(1, 1,0,0,0, 0,1,0,0),
+            1,
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.flt24mat(0x3f1f597f,0x3ec14d03,0x00000000,0x00000000, 0x3ec14d03,0x3f1f597f,0x00000000,0x00000000)
+        );
+        this.caseSelfAttention( // Identitäts-Projektion (Grundfunktion)
+            this.scaled24mat(1, 1,0,0,0, 0,1,0,0),
+            2,
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.flt24mat(0x3f2b757e,0x3ea91504,0x00000000,0x00000000, 0x3ea91504,0x3f2b757e,0x00000000,0x00000000)
+        );
+        this.caseSelfAttention( // Null-Eingabe
+            this.scaled24mat(1, 0,0,0,0, 0,0,0,0),
+            2,
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled24mat(1, 0,0,0,0, 0,0,0,0)
+        );
+        this.caseSelfAttention(
+            this.scaled24mat(1, 1,2,3,4, 5,6,7,8),
+            2,
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,0,0, 0,0,0,0),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.flt24mat(0x409ff93d,0x40bff93d,0x40a00000,0x40c00000, 0x40a00000,0x40c00000,0x40a00000,0x40c00000)
+        );
+        this.caseSelfAttention( // Output-Projektion W_O mischt Köpfe
+            this.scaled14mat(1, 1,0,0,0),
+            2,
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled44mat(1, 0,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0),
+            this.scaled4vec(1, 0,0,0,0),
+            this.scaled14mat(1, 0,0,0,1)
+        );
+        this.caseSelfAttention(
+            this.scaled23mat(1, 1,2,3, 4,5,6),
+            3,
+            this.scaled33mat(1, 1,2,3, 2,3,4, 3,4,5),
+            this.scaled3vec(1, 7,8,9),
+            this.scaled33mat(1, 2,3,4, 3,4,5, 4,5,6),
+            this.scaled3vec(1, 4,5,6),
+            this.scaled33mat(1, 3,4,5, 4,5,6, 5,6,7),
+            this.scaled3vec(1, 1,2,3),
+            this.scaled33mat(1, 4,5,6, 5,6,7, 6,7,8),
+            this.scaled3vec(1, 8,5,2),
+            this.scaled23mat(1, 1225,1459,1693, 1225,1459,1693)
+
+        );
+        
+        return this.successCases();
+    }
+
+    
+    [int] caseSelfAttention(FltMatrix x,
+        int heads, FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk,
+        FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo,
+        FltMatrix expected
+    ) {
+
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(x)
+            .printCString(" heads ").printInt(heads)
+            .printCString(" wq ").print(wq)
+            .printCString(" bq ").print(bq)
+            .printCString(" wk ").print(wk)
+            .printCString(" bk ").print(bk)
+            .printCString(" wv ").print(wv)
+            .printCString(" bv ").print(bv)
+            .printCString(" wo ").print(wo)
+            .printCString(" bo ").print(bo)
+            .printCString(" => ").print(expected);
+
+        MultiHeadAttention a = this.rt().createInstance(MultiHeadAttention:CLASSNAME);
+        if (!this.isSame(a, a._init(heads, wq, bq, wk, bk, wv, bv, wo, bo))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        
+        FltMatrix y = a.forwardMatrix(x);
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (expected.compareFltMatrix(y) != 0)  {
+            message.printCString(" got ").print(y);
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        y.destroy();
+        a.destroy();
+        message.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+    
+}

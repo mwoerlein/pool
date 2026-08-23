@@ -251,4 +251,124 @@ class FltMatrix extends sys::core::utils::DWordArray {
         }
         return ret;
     }
+    
+    global [FltMatrix] mmMulInto(
+        FltMatrix a, int startRowA, int startColA,
+        FltMatrix b, int startRowB, int startColB, 
+        FltMatrix r, int startRowR, int startColR,
+        int rows, int cols, int commons 
+    ) {
+//*/
+        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0
+            || startRowA < 0 || startColA < 0 || startRowA + rows > a.rows() || startColA + commons > a.cols()
+            || startRowB < 0 || startColB < 0 || startRowB + commons > b.rows() || startColB + cols > b.cols()
+            || startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()
+        ) { return null; }
+/*/
+        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0) { return null; }
+        if (startRowA < 0 || startColA < 0 || startRowA + rows > a.rows() || startColA + commons > a.cols()) {
+            a.rt().err().printCString("Problem A").printNewline()
+                .printCString("startRow: ").printInt(startRowA).printNewline()
+                .printCString("endRow  : ").printInt(startRowA+rows).printNewline()
+                .printCString("rows    : ").printInt(a.rows()).printNewline()
+                .printCString("startCol: ").printInt(startColA).printNewline()
+                .printCString("endCol  : ").printInt(startColA+commons).printNewline()
+                .printCString("cols    : ").printInt(a.cols()).printNewline()
+            ;
+            return null;
+        }
+        if (startRowB < 0 || startColB < 0 || startRowB + commons > b.rows() || startColB + cols > b.cols()) {
+            b.rt().err().printCString("Problem B").printNewline()
+                .printCString("startRow: ").printInt(startRowB).printNewline()
+                .printCString("endRow  : ").printInt(startRowB+commons).printNewline()
+                .printCString("rows    : ").printInt(b.rows()).printNewline()
+                .printCString("startCol: ").printInt(startColB).printNewline()
+                .printCString("endCol  : ").printInt(startColB+cols).printNewline()
+                .printCString("cols    : ").printInt(b.cols()).printNewline()
+            ;
+            return null;
+        }
+        if (startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()) {
+            r.rt().err().printCString("Problem R").printNewline();
+            return null;
+        }
+//*/         
+        
+        int i = rows;
+        while (i--) {
+            int j = cols;
+            while (j--) {
+                int sum = Flt:ZERO_POS;
+                int k = commons;
+                while (k--) {
+                    sum = Flt:add(sum, Flt:mul(
+                        a.get(startRowA + i, startColA + k),
+                        b.get(startRowB + k, startColB + j)
+                    ));
+                }
+                r.set(startRowR + i, startColR + j, sum);
+            }
+        }
+        return r;
+    }
+    
+    global [FltMatrix] mtMulInto(
+        FltMatrix a, int startRowA, int startColA,
+        FltMatrix b, int startRowB, int startColB, 
+        FltMatrix r, int startRowR, int startColR,
+        int rows, int cols, int commons 
+    ) {
+//*/
+        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0
+            || startRowA < 0 || startColA < 0 || startRowA + rows > a.rows() || startColA + commons > a.cols()
+            || startRowB < 0 || startColB < 0 || startRowB + cols > b.rows() || startColB + commons > b.cols()
+            || startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()
+        ) { return null; }
+/*/
+        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0) { return null; }
+        if (startRowA < 0 || startColA < 0 || startRowA + rows > a.rows() || startColA + commons > a.cols()) {
+            a.rt().err().printCString("Problem A").printNewline()
+                .printCString("startRow: ").printInt(startRowA).printNewline()
+                .printCString("endRow  : ").printInt(startRowA+rows).printNewline()
+                .printCString("rows    : ").printInt(a.rows()).printNewline()
+                .printCString("startCol: ").printInt(startColA).printNewline()
+                .printCString("endCol  : ").printInt(startColA+commons).printNewline()
+                .printCString("cols    : ").printInt(a.cols()).printNewline()
+            ;
+            return null;
+        }
+        if (startRowB < 0 || startColB < 0 || startRowB + cols > b.rows() || startColB + commons > b.cols()) {
+            b.rt().err().printCString("Problem B").printNewline()
+                .printCString("startRow: ").printInt(startRowB).printNewline()
+                .printCString("endRow  : ").printInt(startRowB+cols).printNewline()
+                .printCString("rows    : ").printInt(b.rows()).printNewline()
+                .printCString("startCol: ").printInt(startColB).printNewline()
+                .printCString("endCol  : ").printInt(startColB+commons).printNewline()
+                .printCString("cols    : ").printInt(b.cols()).printNewline()
+            ;
+            return null;
+        }
+        if (startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()) {
+            r.rt().err().printCString("Problem R").printNewline();
+            return null;
+        }
+ //*/       
+        int i = rows;
+        while (i--) {
+            int j = cols;
+            while (j--) {
+                int sum = Flt:ZERO_POS;
+                int k = commons;
+                while (k--) {
+                    sum = Flt:add(sum, Flt:mul(
+                        a.get(startRowA + i, startColA + k),
+                        b.get(startRowB + j, startColB + k)
+                    ));
+                }
+                r.set(startRowR + i, startColR + j, sum);
+            }
+        }
+        return r;
+    }
+    
 }
