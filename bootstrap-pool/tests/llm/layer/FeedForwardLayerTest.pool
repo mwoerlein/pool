@@ -26,14 +26,14 @@ class FeedForwardLayerTest extends llm::test::TestCase {
         FltVector b2 = this.scaled2vec(1, 1,1);
         
         FeedForwardLayer l = this.rt().createInstance(FeedForwardLayer:CLASSNAME);
-        if (l._init(null, b2, w32, b3)) { return this.fail("Empty w1 initialization"); }
-        if (l._init(w23, null, w32, b3)) { return this.fail("Empty b1 initialization"); }
-        if (l._init(w23, b2, null, b3)) { return this.fail("Empty w2 initialization"); }
-        if (l._init(w23, b2, w32, null)) { return this.fail("Empty b2 initialization"); }
-        if (l._init(w23, b3, w32, b3)) { return this.fail("Invalid b1 initialization"); }
+        if (l._init(null, b3, w32, b2)) { return this.fail("Empty w1 initialization"); }
+        if (l._init(w23, null, w32, b2)) { return this.fail("Empty b1 initialization"); }
+        if (l._init(w23, b3, null, b2)) { return this.fail("Empty w2 initialization"); }
+        if (l._init(w23, b3, w32, null)) { return this.fail("Empty b2 initialization"); }
+        if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b1 initialization"); }
         if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b2 initialization"); }
-        if (l._init(w23, b2, w23, b2)) { return this.fail("Invalid w1 initialization"); }
-        if (!this.isSame(l, l._init(w23, b2, w32, b3))) { return this.fail("Correct initialization"); }
+        if (l._init(w23, b3, w23, b3)) { return this.fail("Invalid w1 initialization"); }
+        if (!this.isSame(l, l._init(w23, b3, w32, b2))) { return this.fail("Correct initialization"); }
         
         l.destroy();
         
@@ -45,41 +45,41 @@ class FeedForwardLayerTest extends llm::test::TestCase {
         
         this.caseFeedForwardLayer(
             this.scaled2vec(1, 1,2),
-            this.scaled32mat(1, 1,2, 0,1, 1,0),
+            this.scaled23mat(1, 1,0,1, 2,1,0),
             this.scaled3vec(1, 0,0,0),
-            this.scaled23mat(1, 1,1,1, 0,1,0),
+            this.scaled32mat(1, 1,0, 1,1, 1,0),
             this.scaled2vec(1, 0,0),
             this.scaled2vec(1, 8,2)
         );
         this.caseFeedForwardLayer(
             this.scaled2vec(1, 1,2),
-            this.scaled32mat(10, 5,-10, 10,20, 25,-5),
+            this.scaled23mat(10, 5,10,25, -10,20,-5),
             this.scaled3vec(10, 1,-2,3),
-            this.scaled23mat(10, 10,0,20, -10,10,5),
+            this.scaled32mat(10, 10,-10, 0,10, 20,5),
             this.scaled2vec(10, 5,-10),
             this.flt2vec(0x40833333,0x40966667)
         );
         this.caseFeedForwardLayer(
             this.scaled2vec(1, 0,0),
-            this.scaled32mat(10, 5,-10, 10,20, 25,-5),
+            this.scaled23mat(10, 5,10,25, -10,20,-5),
             this.scaled3vec(10, 1,-2,3),
-            this.scaled23mat(10, 10,0,20, -10,10,5),
+            this.scaled32mat(10, 10,-10, 0,10, 20,5),
             this.scaled2vec(10, 5,-10),
             this.scaled2vec(100, 120,-95)
         );
         this.caseFeedForwardLayer(
             this.scaled2vec(1, -1,-1),
-            this.scaled32mat(1, 1,2, 0,1, 1,0),
+            this.scaled23mat(1, 1,0,1, 2,1,0),
             this.scaled3vec(1, 0,0,0),
-            this.scaled23mat(1, 1,1,1, 0,1,0),
+            this.scaled32mat(1, 1,0, 1,1, 1,0),
             this.scaled2vec(1, 0,0),
             this.scaled2vec(1, 0,0)
         );
         this.caseFeedForwardLayer(
             this.scaled2vec(1, 1000000,-1000000),
-            this.scaled32mat(1, 1,2, 0,1, 1,0),
+            this.scaled23mat(1, 1,0,1, 2,1,0),
             this.scaled3vec(1, 0,0,0),
-            this.scaled23mat(1, 1,1,1, 0,1,0),
+            this.scaled32mat(1, 1,0, 1,1, 1,0),
             this.scaled2vec(1, 0,0),
             this.scaled2vec(1, 1000000,0)
         );

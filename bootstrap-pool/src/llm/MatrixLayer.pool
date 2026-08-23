@@ -5,6 +5,10 @@ version = 0.1.0
 */
 namespace llm;
 
+use llm::attention::MultiHeadAttention;
+use llm::attention::SelfAttention;
+use llm::layer::FeedForwardLayer;
+use llm::layer::LayerNormLayer;
 use llm::layer::LinearLayer;
 use llm::layer::SoftmaxLayer;
 
@@ -13,6 +17,8 @@ use sys::core::math::FltVector;
 
 class MatrixLayer extends sys::core::Object {
 
+    int dModel;
+    
     abstract [FltMatrix] forwardMatrix(FltMatrix x);
     
     [FltMatrix] _emptyMatrix(int rows, int cols) {
@@ -24,6 +30,31 @@ class MatrixLayer extends sys::core::Object {
     // TODO: remove with implicit cast
     [MatrixLayer] matrixLayer() { return this; }
     
+    // factory helper
+    
+    [MultiHeadAttention] _ownMultiHeadAttention(int heads,
+        FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk,
+        FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo
+    ) {
+        MultiHeadAttention a = this.createOwn(MultiHeadAttention:CLASSNAME);
+        return a._init(heads, wq, bq, wk, bk, wv, bv, wo, bo);
+    }
+    
+    [SelfAttention] _ownSelfAttention(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
+        SelfAttention a = this.createOwn(SelfAttention:CLASSNAME);
+        return a._init(wq, bq, wk, bk, wv, bv);
+    }
+    
+    [FeedForwardLayer] _ownFeedForwardLayer(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
+        FeedForwardLayer l = this.createOwn(FeedForwardLayer:CLASSNAME);
+        return l._init(w1, b1, w2, b2);
+    }
+    
+    [LayerNormLayer] _ownLayerNormLayer(FltVector gamma, FltVector beta) {
+        LayerNormLayer l = this.createOwn(LayerNormLayer:CLASSNAME);
+        return l._init(gamma, beta);
+    }
+    
     [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {
         LinearLayer l = this.createOwn(LinearLayer:CLASSNAME);
         return l._init(w, b);
@@ -33,6 +64,5 @@ class MatrixLayer extends sys::core::Object {
         SoftmaxLayer l = this.createOwn(SoftmaxLayer:CLASSNAME);
         return l;
     }
-    
 
 }

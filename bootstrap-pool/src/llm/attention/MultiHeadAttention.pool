@@ -20,30 +20,29 @@ class MultiHeadAttention extends llm::MatrixLayer {
     LinearLayer linearO;
     SoftmaxLayer softmax;
     int heads;
-    int dModel;
     int dHead;
     int scale;
     
     [MultiHeadAttention] _init(int heads, FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo) {
-        if (!wq || !bq || !wk || !bk || !wv || !bv || !wo || !bo ) {
+        linearQ = this._ownLinearLayer(wq, bq);
+        linearK = this._ownLinearLayer(wk, bk);
+        linearV = this._ownLinearLayer(wv, bv);
+        linearO = this._ownLinearLayer(wo, bo);
+        if (!linearQ || !linearK || !linearV || !linearO) {
             return null;
         }
-        int dm = wq.rows();
+        int dm = linearQ.getDIn();
         if (dm % heads) { return null; } 
         this.heads = heads;
         this.dModel = dm;
         this.dHead = dm/heads;
-        if ( wq.rows() != dm || wq.cols() != dm || bq.length() != dm
-            || wk.rows() != dm || wk.cols() != dm || bk.length() != dm
-            || wv.rows() != dm || wv.cols() != dm || bv.length() != dm
-            || wo.rows() != dm || wo.cols() != dm || bo.length() != dm
+        if ( linearQ.getDIn() != dm || linearQ.getDOut() != dm
+            || linearK.getDIn() != dm || linearK.getDOut() != dm
+            || linearV.getDIn() != dm || linearV.getDOut() != dm
+            || linearO.getDIn() != dm || linearO.getDOut() != dm
         ) {
             return null;
         }
-        this.linearQ = this._ownLinearLayer(wq, bq);
-        this.linearK = this._ownLinearLayer(wk, bk);
-        this.linearV = this._ownLinearLayer(wv, bv);
-        this.linearO = this._ownLinearLayer(wo, bo);
         this.softmax = this._ownSoftmaxLayer();
         this.scale = Flt:sqrt(Flt:fromInt(this.dHead));
         return this;

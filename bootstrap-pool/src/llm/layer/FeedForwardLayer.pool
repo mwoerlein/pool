@@ -15,11 +15,12 @@ class FeedForwardLayer extends llm::VectorLayer {
     LinearLayer layer2;
     
     [FeedForwardLayer] _init(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
-        if (!w1 || !b1 || !w2 || !b2 || w1.rows() != b1.length() || w2.rows() != b2.length() || w1.rows() != w2.cols()) {
-            return null;
-        }
         this.layer1 = this._ownLinearLayer(w1, b1);
         this.layer2 = this._ownLinearLayer(w2, b2);
+        if (!layer1 || !layer2 || layer1.getDOut() != layer2.getDIn()) {
+            return null;
+        }
+        this.dModel = layer1.dModel;
         
         return this;
     }

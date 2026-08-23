@@ -13,17 +13,26 @@ class LinearLayer extends llm::VectorLayer {
     FltMatrix w;
     FltVector b;
     
+    int dOut;
+   
     [LinearLayer] _init(FltMatrix w, FltVector b) {
-        if (!w || !b || w.rows() != b.length()) {
+        if (!w || !b || w.cols() != b.length()) {
             return null;
         }
+        this.dModel = w.rows();
+        this.dOut = w.cols();
         this.w = this.own(w);
         this.b = this.own(b);
         return this;
     }
     
+    [FltMatrix] getW() { return w; }     
+    [FltVector] getB() { return b; }
+    [int] getDIn() { return dModel; }     
+    [int] getDOut() { return dOut; }     
+    
     [FltVector] forwardVector(FltVector x) {
-        FltVector y = FltMatrix:mvMul(w, x);
+        FltVector y = FltMatrix:vmMul(x, w);
         if (!y) { return null; }
         return y.add(b);
     }

@@ -20,10 +20,10 @@ class SelfAttentionTest extends llm::test::TestCase {
     [int] testInitialization() {
         this.start("testInitialization");
 
-        FltMatrix wq = this.scaled23mat(1, 1,1,1, 2,2,2);
-        FltMatrix wk = this.scaled23mat(1, 3,3,3, 4,4,4);
-        FltMatrix wv = this.scaled23mat(1, 5,5,5, 6,6,6);
-        FltMatrix wi = this.scaled32mat(1, 1,2, 3,4, 5,6);
+        FltMatrix wq = this.scaled32mat(1, 1,1, 2,2, 3,3);
+        FltMatrix wk = this.scaled32mat(1, 3,3, 4,4, 5,5);
+        FltMatrix wv = this.scaled32mat(1, 5,5, 6,6, 7,7);
+        FltMatrix wi = this.scaled23mat(1, 1,2,3, 4,5,6);
         FltVector bq = this.scaled2vec(1, 0,0);
         FltVector bk = this.scaled2vec(1, 1,1);
         FltVector bv = this.scaled2vec(1, 2,2);
@@ -59,11 +59,11 @@ class SelfAttentionTest extends llm::test::TestCase {
         
         this.caseSelfAttention(
             this.scaled23mat(1, 1,0,0, 0,1,0),
-            this.scaled23mat(1, 1,0,0, 0,1,0),
+            this.scaled32mat(1, 1,0, 0,1, 0,0),
             this.scaled2vec(1, 0,0),
-            this.scaled23mat(1, 0,1,0, 0,0,1),
+            this.scaled32mat(1, 0,0, 1,0, 0,1),
             this.scaled2vec(1, 0,0),
-            this.scaled23mat(1, 1,0,1, 0,1,0),
+            this.scaled32mat(1, 1,0, 0,1, 1,0),
             this.scaled2vec(1, 0,0),
             this.flt22mat(0x3ea91504,0x3f2b757e, 0x3f000000,0x3f000000)
         );
@@ -97,7 +97,6 @@ class SelfAttentionTest extends llm::test::TestCase {
             this.scaled3vec(1, 0,0,0),
             this.scaled13mat(1, 1,0,0)
         );
-
         
         return this.successCases();
     }

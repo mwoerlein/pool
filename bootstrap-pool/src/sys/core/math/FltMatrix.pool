@@ -191,6 +191,25 @@ class FltMatrix extends sys::core::utils::DWordArray {
         return ret;
     }
     
+    global [FltVector] vmMul(FltVector a, FltMatrix b) {
+        if (!a || !b || a.length() != b._rows) {
+            return null;
+        }
+        
+        FltVector ret = a.rt().createInstance(FltVector:CLASSNAME);
+        ret.init(b._cols);
+        int i = b._cols;
+        while (i--) {
+            int sum = Flt:ZERO_POS;
+            int k = b._rows;
+            while (k--) {
+                sum = Flt:add(sum, Flt:mul(a.get(k), b.get(k, i)));
+            }
+            ret.set(i, sum);
+        }
+        return ret;
+    }
+    
     global [FltMatrix] mmMul(FltMatrix a, FltMatrix b) {
         if (!a || !b || a._cols != b._rows) {
             return null;

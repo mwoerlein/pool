@@ -21,21 +21,20 @@ class SelfAttention extends llm::MatrixLayer {
     int scale;
     
     [SelfAttention] _init(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
-        if (!wq || !bq || !wk || !bk || !wv || !bv ) {
+        linearQ = this._ownLinearLayer(wq, bq);
+        linearK = this._ownLinearLayer(wk, bk);
+        linearV = this._ownLinearLayer(wv, bv);
+        if (!linearQ || !linearK || !linearV) {
             return null;
         }
-        int r = wq.rows();
-        int c = wq.cols();
-        if (wk.rows() != r || wv.rows() != r || bq.length() != r || bk.length() != r || bv.length() != r 
-            || wk.cols() != c || wv.cols() != c
-        ) {
+        int dIn = linearQ.getDIn();
+        int dOut = linearQ.getDOut();
+        if (linearK.getDIn() != dIn || linearK.getDOut() != dOut || linearV.getDIn() != dIn || linearV.getDOut() != dOut) {
             return null;
         }
-        this.linearQ = this._ownLinearLayer(wq, bq);
-        this.linearK = this._ownLinearLayer(wk, bk);
-        this.linearV = this._ownLinearLayer(wv, bv);
+        this.dModel = dIn;
         this.softmax = this._ownSoftmaxLayer();
-        this.scale = Flt:sqrt(Flt:fromInt(r));
+        this.scale = Flt:sqrt(Flt:fromInt(dOut));
         return this;
     }
     

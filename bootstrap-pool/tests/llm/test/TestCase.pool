@@ -119,6 +119,16 @@ class TestCase extends test::TestCase {
         return m;
     }
     
+    [FltMatrix] scaled31mat(int scale, int m00, int m10, int m20) {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(3, 1);
+        m.set(0, 0, Flt:fromInt(m00));
+        m.set(1, 0, Flt:fromInt(m10));
+        m.set(2, 0, Flt:fromInt(m20));
+        m.divFlt(Flt:fromInt(scale));
+        return m;
+    }
+    
     [FltMatrix] scaled32mat(int scale, int m00, int m01, int m10, int m11, int m20, int m21) {
         FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
         m.init(3, 2);

@@ -25,13 +25,13 @@ class LinearLayerTest extends llm::test::TestCase {
         FltVector b2 = this.scaled2vec(1, 1,1);
         
         LinearLayer l = this.rt().createInstance(LinearLayer:CLASSNAME);
-        if (l._init(null, b2)) { return this.fail("Empty w initialization"); }
+        if (l._init(null, b3)) { return this.fail("Empty w initialization"); }
         if (l._init(w23, null)) { return this.fail("Empty b initialization"); }
-        if (l._init(w23, b3)) { return this.fail("Invalid initialization"); }
-        if (!this.isSame(l, l._init(w23, b2))) { return this.fail("Correct initialization"); }
+        if (l._init(w23, b2)) { return this.fail("Invalid initialization"); }
+        if (!this.isSame(l, l._init(w23, b3))) { return this.fail("Correct initialization"); }
         
         l.destroy();
-        b3.destroy();
+        b2.destroy();
         
         return this.success();
     }
@@ -41,13 +41,13 @@ class LinearLayerTest extends llm::test::TestCase {
         
         this.caseLinearVector(
             this.scaled3vec(1, 1,2,3),
-            this.scaled23mat(1, 1,2,3, 4,5,6),
+            this.scaled32mat(1, 1,4, 2,5, 3,6),
             this.scaled2vec(10, 5,-10),
             this.scaled2vec(10, 145,310)
         );
         this.caseLinearVector(
             this.scaled3vec(1, 2,3,-4),
-            this.scaled13mat(1, -1,-2,0),
+            this.scaled31mat(1, -1, -2, 0),
             this.scaled1vec(1, 0),
             this.scaled1vec(1, -8)
         );
@@ -59,19 +59,19 @@ class LinearLayerTest extends llm::test::TestCase {
         );
         this.caseLinearVector(
             this.scaled3vec(1, 0,0,0),
-            this.scaled23mat(1, 1,2,3, 4,5,6),
+            this.scaled32mat(1, 1,4, 2,5, 3,6),
             this.scaled2vec(10, 1,2),
             this.scaled2vec(10, 1,2)
         );
         this.caseLinearVector(
             this.scaled2vec(1, 3,4),
-            this.scaled32mat(1, 1,0, 0,1, 2,2),
+            this.scaled23mat(1, 1,0,2 ,0,1,2),
             this.scaled3vec(1, 0,0,0),
             this.scaled3vec(1, 3,4,14)
         );
         this.caseLinearMatrix(
             this.scaled23mat(1, 1,1,2, 1,1,-2),
-            this.scaled13mat(1, 1000,1000,-1000),
+            this.scaled31mat(1, 1000, 1000, -1000),
             this.scaled1vec(1, 0),
             this.scaled21mat(1, 0, 4000)
         );
