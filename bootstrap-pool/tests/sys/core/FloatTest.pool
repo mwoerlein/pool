@@ -200,6 +200,8 @@ class FloatTest extends test::TestCase {
         this.casePrintToStream(0xBEAAAAAB, "-0.33333334", "-0.3333333432674407958984375e0");
         this.casePrintToStream(0xD2DF0280, "-4.7890983e11", "-0.478909825024e12");
         this.casePrintToStream(0x00BADDAD, "1.7160925e-38", "0.1716092457193833439412855353663287695633650745678394719045549009e-37");
+        this.casePrintToStream(0x3F333333, "0.7", "0.699999988079071044921875e0");
+        this.casePrintToStream(0x3F666666, "0.9", "0.89999997615814208984375e0");
         
         testString.destroy();
         return this.successCases();

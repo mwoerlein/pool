@@ -258,9 +258,10 @@ class OStream extends Object {
             int lastDigit = 0;
             do {
                 lastDigit = Address:loadChar(--cur);
-            } while (lastDigit == 9 && cur > buf);
-            if (cur == buf) {
-                Address:storeChar(cur++, 1);
+            } while (lastDigit == 9 && cur >= buf);
+            if (cur < buf) {
+                Address:storeChar(buf, 1);
+                cur = buf+1;
             } else {
                 Address:storeChar(cur++, lastDigit+1);
             }
