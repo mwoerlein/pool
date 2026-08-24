@@ -24,6 +24,8 @@ class Flt {
     int E_NEG := 0xc02df854;
     int SQRT_TWO_POS := 0x3fb504f3;
     int SQRT_TWO_NEG := 0xbfb504f3;
+    int TEN_THOUSAND_POS := 0x461c4000;
+    int TEN_THOUSAND_NEG := 0xc61c4000;
     
     int RADIAN_FACTOR := 0x3c8efa35; // PI / 180.
 
