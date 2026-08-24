@@ -1,0 +1,55 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::Flt;
+
+class RandomGenerator extends sys::core::Object {
+    
+    // Standard-Konstanten (z.B. verwendet in glibc)
+    int A := 1103515245;
+    int C := 12345;
+    int M := 2147483647; // 2^31 - 1
+    int M_FLT := 0x4F000000;
+    int EPS_FLT := 0x3727C5AC; // 0.00001
+    
+    int seed;
+    
+    [RandomGenerator] setSeed(int seed) {
+        this.seed = seed;
+        return this;
+    }
+
+    [int] getSeed() {
+        return this.seed;
+    }
+
+    [int] nextFloat() {
+        // Aktualisiere den State (Achtung: Integer-Überlauf beachten/nutzen)
+        this.seed = (RandomGenerator:A * this.seed + RandomGenerator:C) % RandomGenerator:M;
+        if (this.seed < 0) {
+            this.seed = this.seed + RandomGenerator:M;
+        }
+        
+        return Flt:div(Flt:fromInt(this.seed), RandomGenerator:M_FLT);
+    }
+
+    // Liefert eine normalverteilte Zahl (Mittelwert 0, Varianz 1) via Box-Muller-Transform
+    // Perfekt für die Gewichtsinitialisierung (z.B. Xavier/He Initialisierung)
+    [int] nextGaussian() {
+        int u1 := this.nextFloat(); 
+        int u2 := this.nextFloat();
+        
+        // Box-Muller Formel
+        int r := Flt:sqrt(Flt:mul(
+            Flt:TWO_NEG,
+            Flt:ln(Flt:max(u1, RandomGenerator:EPS_FLT)) // Verhindere ln(0)
+        ));
+        int theta := Flt:mul(Flt:TWO_PI_POS, u2);
+        
+        return Flt:mul(r, Flt:sin(theta));
+    }
+}

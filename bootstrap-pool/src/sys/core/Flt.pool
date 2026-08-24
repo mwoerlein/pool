@@ -28,6 +28,8 @@ class Flt {
     int TEN_THOUSAND_NEG := 0xc61c4000;
     
     int RADIAN_FACTOR := 0x3c8efa35; // PI / 180.
+    int TWO_PI_POS := 0x40c90fdb; // 2 * PI
+    int TWO_PI_NEG := 0xc0c90fdb; // -2 * PI
 
     //// creation functions ////
     global [int] fromInt(int n) {

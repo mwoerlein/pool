@@ -1,0 +1,47 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::core::utils;
+
+use sys::core::Flt;
+use sys::core::String;
+
+class RandomGeneratorTest extends test::TestCase {
+
+    [] runAll() {
+        this.testNextFloat();
+        this.testNextGaussian();
+    }
+    
+    [int] testNextFloat() {
+        this.start("testNextFloat");
+        
+        RandomGenerator g = this.rt().createInstance(RandomGenerator:CLASSNAME);
+        g.setSeed(1337);
+        if (Flt:compare(g.nextFloat(), 0x3d15f8f0) != 0) { return this.fail("First float of seed 1337"); }
+        if (Flt:compare(g.nextFloat(), 0x3e2a71b4) != 0) { return this.fail("Second float of seed 1337"); }
+        if (Flt:compare(g.nextFloat(), 0x3ecd2731) != 0) { return this.fail("Third float of seed 1337"); }
+        if (Flt:compare(g.nextFloat(), 0x3f62d82d) != 0) { return this.fail("Forth float of seed 1337"); }
+        
+        g.destroy();
+
+        return this.success();
+    }
+    
+    [int] testNextGaussian() {
+        this.start("testNextGaussian");
+        
+        RandomGenerator g = this.rt().createInstance(RandomGenerator:CLASSNAME);
+        g.setSeed(42);
+        if (Flt:compare(g.nextGaussian(), 0x3d1f5421) != 0) { return this.fail("First gaussian of seed 42"); }
+        if (Flt:compare(g.nextGaussian(), 0xbea9c54b) != 0) { return this.fail("Second gaussian of seed 42"); }
+        if (Flt:compare(g.nextGaussian(), 0x40037d15) != 0) { return this.fail("Third gaussian of seed 42"); }
+       
+        g.destroy();
+
+        return this.success();
+    }
+    
+}

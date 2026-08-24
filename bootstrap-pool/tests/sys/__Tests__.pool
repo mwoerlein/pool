@@ -24,5 +24,6 @@ class __Tests__ {
         suite.register(sys::core::math::FltVector:CLASSNAME, sys::core::math::FltVectorTest:CLASSNAME);
         
         suite.register(sys::core::utils::Bitset:CLASSNAME, sys::core::utils::BitsetTest:CLASSNAME);
+        suite.register(sys::core::utils::RandomGenerator:CLASSNAME, sys::core::utils::RandomGeneratorTest:CLASSNAME);
     }
 }
