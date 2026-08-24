@@ -54,6 +54,12 @@ class TestCase extends test::TestCase {
         return v;
     }
     
+    [FltVector] flt0vec() {
+        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
+        v.init(0);
+        return v;
+    }
+    
     [FltVector] flt1vec(int a) {
         FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
         v.init(1);
@@ -168,6 +174,38 @@ class TestCase extends test::TestCase {
         return m;
     }
     
+    [FltMatrix] scaled41mat(int scale,
+        int m00,
+        int m10,
+        int m20,
+        int m30
+    ) {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(4, 1);
+        m.set(0, 0, Flt:fromInt(m00));
+        m.set(1, 0, Flt:fromInt(m10));
+        m.set(2, 0, Flt:fromInt(m20));
+        m.set(3, 0, Flt:fromInt(m30));
+        m.divFlt(Flt:fromInt(scale));
+        return m;
+    }
+    
+    [FltMatrix] scaled43mat(int scale,
+        int m00, int m01, int m02,
+        int m10, int m11, int m12,
+        int m20, int m21, int m22,
+        int m30, int m31, int m32
+    ) {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(4, 3);
+        m.set(0, 0, Flt:fromInt(m00)); m.set(0, 1, Flt:fromInt(m01)); m.set(0, 2, Flt:fromInt(m02));
+        m.set(1, 0, Flt:fromInt(m10)); m.set(1, 1, Flt:fromInt(m11)); m.set(1, 2, Flt:fromInt(m12));
+        m.set(2, 0, Flt:fromInt(m20)); m.set(2, 1, Flt:fromInt(m21)); m.set(2, 2, Flt:fromInt(m22));
+        m.set(3, 0, Flt:fromInt(m30)); m.set(3, 1, Flt:fromInt(m31)); m.set(3, 2, Flt:fromInt(m32));
+        m.divFlt(Flt:fromInt(scale));
+        return m;
+    }
+    
     [FltMatrix] scaled44mat(int scale,
         int m00, int m01, int m02, int m03,
         int m10, int m11, int m12, int m13,
@@ -228,6 +266,18 @@ class TestCase extends test::TestCase {
         return m;
     }
     
+    [FltMatrix] flt01mat() {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(0, 1);
+        return m;
+    }
+    
+    [FltMatrix] flt04mat() {
+        FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
+        m.init(0, 4);
+        return m;
+    }
+    
     [FltMatrix] flt22mat(int m00, int m01, int m10, int m11) {
         FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
         m.init(2, 2);
@@ -235,6 +285,7 @@ class TestCase extends test::TestCase {
         m.set(1, 0, m10); m.set(1, 1, m11);
         return m;
     }
+    
     [FltMatrix] flt24mat(int m00, int m01, int m02, int m03, int m10, int m11, int m12, int m13) {
         FltMatrix m = this.rt().createInstance(FltMatrix:CLASSNAME);
         m.init(2, 4);

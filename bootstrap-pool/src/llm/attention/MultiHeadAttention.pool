@@ -66,33 +66,35 @@ class MultiHeadAttention extends llm::MatrixLayer {
         int sh := this.scale;
         FltMatrix tmp := this._emptyMatrix(dt, dm);
         
-        FltMatrix scores := this._emptyMatrix(dt, dt);
-        int i = this.heads;
-        while (i--) {
-            int start := i*dh;
-            if (!FltMatrix:mtMulInto(q, 0, start, k, 0, start, scores, 0, 0, dt, dt, dh)) {
-                this.rt().err().printCString("aaaahhhh1").printNewline();
-            }
+        if (dt) {
+            FltMatrix scores := this._emptyMatrix(dt, dt);
+            int i = this.heads;
+            while (i--) {
+                int start := i*dh;
+                if (!FltMatrix:mtMulInto(q, 0, start, k, 0, start, scores, 0, 0, dt, dt, dh)) {
+                    this.rt().err().printCString("aaaahhhh1").printNewline();
+                }
 /*
-            this.rt().err()
-                .printInt(i).printCString("-scores: ").print(scores).printNewline()
-            ;
+                this.rt().err()
+                    .printInt(i).printCString("-scores: ").print(scores).printNewline()
+                ;
 */
-            scores.divFlt(sh);
-            FltMatrix weights := softmax.forwardMatrix(scores);
-            if (!FltMatrix:mmMulInto(weights, 0, 0, v, 0, start, tmp, 0, start, dt, dh, dt)) {
-                this.rt().err().printCString("aaaahhhh2").printNewline();
-            }
+                scores.divFlt(sh);
+                FltMatrix weights := softmax.forwardMatrix(scores);
+                if (!FltMatrix:mmMulInto(weights, 0, 0, v, 0, start, tmp, 0, start, dt, dh, dt)) {
+                    this.rt().err().printCString("aaaahhhh2").printNewline();
+                }
 /*
-            this.rt().err()
-                .printInt(i).printCString("-scaled: ").print(scores).printNewline()
-                .printInt(i).printCString("-weights: ").print(weights).printNewline()
-                .printInt(i).printCString("-tmp: ").print(tmp).printNewline()
-            ;
+                this.rt().err()
+                    .printInt(i).printCString("-scaled: ").print(scores).printNewline()
+                    .printInt(i).printCString("-weights: ").print(weights).printNewline()
+                    .printInt(i).printCString("-tmp: ").print(tmp).printNewline()
+                ;
 */
-            weights.destroy();
+                weights.destroy();
+            }
+            scores.destroy();
         }
-        scores.destroy();
         
         FltMatrix y := linearO.forwardMatrix(tmp);
 /*

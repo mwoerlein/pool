@@ -69,11 +69,18 @@ class LinearLayerTest extends llm::test::TestCase {
             this.scaled3vec(1, 0,0,0),
             this.scaled3vec(1, 3,4,14)
         );
+        
         this.caseLinearMatrix(
             this.scaled23mat(1, 1,1,2, 1,1,-2),
             this.scaled31mat(1, 1000, 1000, -1000),
             this.scaled1vec(1, 0),
             this.scaled21mat(1, 0, 4000)
+        );
+        this.caseLinearMatrix( // empty input
+            this.flt04mat(),
+            this.scaled41mat(1, 1, 1, 1, 1),
+            this.scaled1vec(1, 0),
+            this.flt01mat()
         );
         
         return this.successCases();
