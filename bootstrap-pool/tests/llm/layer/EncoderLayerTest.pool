@@ -146,7 +146,7 @@ class EncoderLayerTest extends llm::test::TestCase {
             this.scaled4vec(1, 1,1,1,1),
             this.scaled4vec(1, 0,0,0,0),
             
-            this.flt24mat(0xbf9f5268,0x3f7b8fa1,0xbf387a65,0x3f7b8f91, 0xbef75df2,0x3fd3c0a5,0xbf800717,0xbe2f1093)
+            this.flt24mat(0xbf9f526a,0x3f7b8f99,0xbf387a5f,0x3f7b8f99, 0xbef75df2,0x3fd3c0a5,0xbf800717,0xbe2f1093)
         );
         this.caseEncoderLayer(
             this.flt04mat(),

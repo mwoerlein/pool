@@ -74,7 +74,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            this.flt24mat(0x3f1f597f,0x3ec14d03,0x00000000,0x00000000, 0x3ec14d03,0x3f1f597f,0x00000000,0x00000000)
+            this.flt24mat(0x3f800000,0x00000000,0x00000000,0x00000000, 0x3ec14d03,0x3f1f597f,0x00000000,0x00000000)
         );
         this.caseSelfAttention( // Identitäts-Projektion (Grundfunktion)
             this.scaled24mat(1, 1,0,0,0, 0,1,0,0),
@@ -87,7 +87,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            this.flt24mat(0x3f2b757e,0x3ea91504,0x00000000,0x00000000, 0x3ea91504,0x3f2b757e,0x00000000,0x00000000)
+            this.flt24mat(0x3f800000,0x00000000,0x00000000,0x00000000, 0x3ea91504,0x3f2b757e,0x00000000,0x00000000)
         );
         this.caseSelfAttention( // Null-Eingabe
             this.scaled24mat(1, 0,0,0,0, 0,0,0,0),
@@ -113,7 +113,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            this.flt24mat(0x409ff93d,0x40bff93d,0x40a00000,0x40c00000, 0x40a00000,0x40c00000,0x40a00000,0x40c00000)
+            this.scaled24mat(1, 1,2,3,4, 5,6,5,6)
         );
         this.caseSelfAttention( // Output-Projektion W_O mischt Köpfe
             this.scaled14mat(1, 1,0,0,0),
@@ -139,7 +139,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 6,5,4,3),
             this.scaled44mat(1, 4,5,6,7, -1,0,1,2, 3,5,7,9, -6,4,-3,0),
             this.scaled4vec(1, -2,0,-1,-2),
-            this.scaled24mat(1, -874,610,-204,332, -874,610,-204,332)
+            this.scaled24mat(1, -386,210,-132,76, -874,610,-204,332)
         );
         this.caseSelfAttention(
             this.scaled23mat(1, 1,2,3, 4,5,6),
@@ -152,7 +152,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled3vec(1, 1,2,3),
             this.scaled33mat(1, 4,5,6, 5,6,7, 6,7,8),
             this.scaled3vec(1, 8,5,2),
-            this.scaled23mat(1, 1225,1459,1693, 1225,1459,1693)
+            this.scaled23mat(1, 532,631,730, 1225,1459,1693)
         );
         this.caseSelfAttention( // empty input
             this.flt04mat(),

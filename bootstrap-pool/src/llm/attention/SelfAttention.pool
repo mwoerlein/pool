@@ -13,6 +13,8 @@ use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
 class SelfAttention extends llm::MatrixLayer {
+    
+    int MASK_FLT := 0xCE6E6B28; // -1e9
 
     LinearLayer linearQ;
     LinearLayer linearK;
@@ -46,6 +48,7 @@ class SelfAttention extends llm::MatrixLayer {
         
         FltMatrix scores := FltMatrix:mtMul(q, k);
         scores.divFlt(scale);
+        SelfAttention:applyCausalMask(scores); // TODO: add feature flag?
         FltMatrix weights := softmax.forwardMatrix(scores);
         FltMatrix y := FltMatrix:mmMul(weights, v);
         
@@ -56,4 +59,18 @@ class SelfAttention extends llm::MatrixLayer {
         q.destroy();
         return y;
     }
+    
+    global [] applyCausalMask(FltMatrix m) {
+        int l = m.rows();
+        if (m.cols() != l) { return; }
+        int r = 0;
+        while (r < l-1) {
+            int c = r+1;
+            while (c < l) {
+                m.set(r, c++, SelfAttention:MASK_FLT);
+            }
+            r++;
+        }
+    }
+    
 }

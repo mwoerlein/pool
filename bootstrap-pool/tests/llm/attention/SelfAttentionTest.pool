@@ -15,6 +15,7 @@ class SelfAttentionTest extends llm::test::TestCase {
     [] runAll() {
         this.testInitialization();
         this.testSelfAttention();
+        this.testCausalMask();
     }
     
     [int] testInitialization() {
@@ -65,7 +66,7 @@ class SelfAttentionTest extends llm::test::TestCase {
             this.scaled2vec(1, 0,0),
             this.scaled32mat(1, 1,0, 0,1, 1,0),
             this.scaled2vec(1, 0,0),
-            this.flt22mat(0x3ea91504,0x3f2b757e, 0x3f000000,0x3f000000)
+            this.scaled22mat(10, 10,0, 5,5)
         );
         this.caseSelfAttention(
             this.scaled23mat(1, 1,0,0, 1,0,0),
@@ -137,6 +138,28 @@ class SelfAttentionTest extends llm::test::TestCase {
         expected.destroy();
         x.destroy();
         return this.successCase();        
+    }
+    
+    [int] testCausalMask() {
+        this.start("testCausalMask");
+
+        FltMatrix m = this.scaled33mat(1, 0,1,2, 0,1,2, 0,1,2);
+        
+        SelfAttention:applyCausalMask(m);
+        
+        if (Flt:compare(m.get(0,0), Flt:ZERO_POS) != 0) { return this.fail("Causal mask keep 0,0"); }
+        if (Flt:compare(m.get(0,1), SelfAttention:MASK_FLT) != 0) { return this.fail("Causal mask hide 0,1"); }
+        if (Flt:compare(m.get(0,2), SelfAttention:MASK_FLT) != 0) { return this.fail("Causal mask hide 0,2"); }
+        if (Flt:compare(m.get(1,0), Flt:ZERO_POS) != 0) { return this.fail("Causal mask keep 1,0"); }
+        if (Flt:compare(m.get(1,1), Flt:ONE_POS) != 0) { return this.fail("Causal mask keep 1,1"); }
+        if (Flt:compare(m.get(1,2), SelfAttention:MASK_FLT) != 0) { return this.fail("Causal mask hide 1,2"); }
+        if (Flt:compare(m.get(2,0), Flt:ZERO_POS) != 0) { return this.fail("Causal mask keep 2,0"); }
+        if (Flt:compare(m.get(2,1), Flt:ONE_POS) != 0) { return this.fail("Causal mask keep 2,1"); }
+        if (Flt:compare(m.get(2,2), Flt:TWO_POS) != 0) { return this.fail("Causal mask keep 2,2"); }
+        
+        m.destroy();
+        
+        return this.success();
     }
     
 }
