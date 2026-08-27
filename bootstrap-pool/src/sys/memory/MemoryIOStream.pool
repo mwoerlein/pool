@@ -82,7 +82,7 @@ class MemoryIOStream extends SeekableIOStream {
     }
 
     [SeekableIOStream] getView(int offset, int length) {
-        MemoryIOStream view = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+        MemoryIOStream view = this.createOwn(MemoryIOStream:CLASSNAME);
         
         int nb = _buf + offset;
         if (offset < 0) { nb = _buf; }
