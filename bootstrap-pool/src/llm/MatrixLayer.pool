@@ -12,6 +12,7 @@ use llm::layer::LayerNormLayer;
 use llm::layer::LinearLayer;
 use llm::layer::SoftmaxLayer;
 
+use sys::core::Flt;
 use sys::core::math::FltMatrix;
 use sys::core::math::FltVector;
 
@@ -29,6 +30,18 @@ class MatrixLayer extends sys::core::Object {
     
     // TODO: remove with implicit cast
     [MatrixLayer] matrixLayer() { return this; }
+    
+    // computation helper
+    global [int] alpha(int dmFlt, int posFlt, int index) {
+        return Flt:div(
+                   posFlt,
+                   Flt:pow(
+                       Flt:TEN_THOUSAND_POS,
+                       Flt:div(Flt:fromInt(index), dmFlt)
+                   )
+               );
+    }
+
     
     // factory helper
     

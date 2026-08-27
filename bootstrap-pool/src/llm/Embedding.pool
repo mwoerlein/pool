@@ -1,0 +1,67 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm;
+
+use sys::core::Flt;
+use sys::core::math::FltMatrix;
+use sys::core::math::FltVector;
+
+class Embedding extends sys::core::Object {
+
+    FltMatrix weights; // vocab_size x d_model
+    int usePE;
+    
+    [Embedding] _init(FltMatrix weights) {
+        if (!weights) { return null; }
+        this.weights = this.own(weights);
+        return this;
+    }
+    [Embedding] usePE(int b) {
+        this.usePE = b;
+        return this;
+    }
+   
+    [FltMatrix] forwardTokens(FltVector tokenIds) {
+        if (!tokenIds) { return null; }
+        int dm := this.weights.cols();
+        int pos = tokenIds.length();
+        FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(pos, dm);
+        
+        if (usePE) {
+            int dmFlt := Flt:fromInt(dm);
+            while (pos--) {
+                int posFlt := Flt:fromInt(pos);
+                int token := Flt:floor(tokenIds.get(pos)); // create and use IntArray for token IDs?
+                int i = dm;
+                while (i--) {
+                    if (i % 2) {
+                        ret.set(pos, i, Flt:add(
+                            this.weights.get(token, i),
+                            Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
+                        ));
+                    } else {
+                        ret.set(pos, i, Flt:add(
+                            this.weights.get(token, i),
+                            Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
+                        ));
+                    }
+                }
+            }
+        } else {
+            while (pos--) {
+                int token := Flt:floor(tokenIds.get(pos)); // create and use IntArray for token IDs?
+                int i = dm;
+                while (i--) {
+                    ret.set(pos, i, this.weights.get(token, i));
+                }
+            }
+        }
+        
+        return ret;
+    }
+    
+}

@@ -121,7 +121,7 @@ class SelfAttentionTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        FltMatrix y = a.forwardMatrix(x);
+        FltMatrix y = a.useCM(true).forwardMatrix(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

@@ -10,7 +10,7 @@ use sys::core::String;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class EmbeddingWithPositionalEncodingTest extends llm::test::TestCase {
+class EmbeddingTest extends llm::test::TestCase {
 
     [] runAll() {
         this.testInitialization();
@@ -22,7 +22,7 @@ class EmbeddingWithPositionalEncodingTest extends llm::test::TestCase {
 
         FltMatrix w23 = this.scaled23mat(1, 5,5,5, 6,6,6);
         
-        EmbeddingWithPositionalEncoding e = this.rt().createInstance(EmbeddingWithPositionalEncoding:CLASSNAME);
+        Embedding e = this.rt().createInstance(Embedding:CLASSNAME);
         if (e._init(null)) { return this.fail("Empty weight initialization"); }
         if (!this.isSame(e, e._init(w23))) { return this.fail("Correct initialization"); }
         
@@ -37,31 +37,45 @@ class EmbeddingWithPositionalEncodingTest extends llm::test::TestCase {
         this.caseEmbeddingWithPositionalEncoding(
             this.scaled3vec(1, 2,0,3),
             this.scaled43mat(10, 1,2,3, 4,5,6, 7,8,9, 10,11,12),
+            false, // usePE
+            this.scaled33mat(10, 7,8,9, 1,2,3, 10,11,12)
+        );
+        this.caseEmbeddingWithPositionalEncoding(
+            this.scaled3vec(1, 2,0,3),
+            this.scaled43mat(10, 1,2,3, 4,5,6, 7,8,9, 10,11,12),
+            true, // usePE
             this.flt33mat(0x3f333333,0x3fe66666,0x3f666666, 0x3f71043e,0x3f3d8473,0x3e9ab3fd, 0x3ff463dc,0x3f2f1100,0x3f9a26cb)
         );
         this.caseEmbeddingWithPositionalEncoding( // empty input
             this.flt0vec(),
             this.scaled44mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16),
+            false, // usePE
+            this.flt04mat()
+        );
+        this.caseEmbeddingWithPositionalEncoding( // empty input
+            this.flt0vec(),
+            this.scaled44mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16),
+            true, // usePE
             this.flt04mat()
         );
         
         return this.successCases();
     }
 
-    [int] caseEmbeddingWithPositionalEncoding(FltVector t, FltMatrix w, FltMatrix expected) {
+    [int] caseEmbeddingWithPositionalEncoding(FltVector t, FltMatrix w, int usePE, FltMatrix expected) {
 
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(t)
             .printCString(" w ").print(w)
             .printCString(" => ").print(expected);
 
-        EmbeddingWithPositionalEncoding e = this.rt().createInstance(EmbeddingWithPositionalEncoding:CLASSNAME);
+        Embedding e = this.rt().createInstance(Embedding:CLASSNAME);
         if (!this.isSame(e, e._init(w))) {
             message.printCString(" has invalid settings");
             return this.failCase(message.ostream());
         }
         
-        FltMatrix y = e.forwardTokens(t);
+        FltMatrix y = e.usePE(usePE).forwardTokens(t);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

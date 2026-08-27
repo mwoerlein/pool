@@ -74,6 +74,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
+            false, // useRoPE
             this.flt24mat(0x3f800000,0x00000000,0x00000000,0x00000000, 0x3ec14d03,0x3f1f597f,0x00000000,0x00000000)
         );
         this.caseSelfAttention( // Identitäts-Projektion (Grundfunktion)
@@ -87,6 +88,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
+            false, // useRoPE
             this.flt24mat(0x3f800000,0x00000000,0x00000000,0x00000000, 0x3ea91504,0x3f2b757e,0x00000000,0x00000000)
         );
         this.caseSelfAttention( // Null-Eingabe
@@ -100,6 +102,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
+            false, // useRoPE
             this.scaled24mat(1, 0,0,0,0, 0,0,0,0)
         );
         this.caseSelfAttention(
@@ -113,6 +116,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
+            false, // useRoPE
             this.scaled24mat(1, 1,2,3,4, 5,6,5,6)
         );
         this.caseSelfAttention( // Output-Projektion W_O mischt Köpfe
@@ -126,6 +130,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 0,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0),
             this.scaled4vec(1, 0,0,0,0),
+            false, // useRoPE
             this.scaled14mat(1, 0,0,0,1)
         );
         this.caseSelfAttention(
@@ -139,6 +144,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 6,5,4,3),
             this.scaled44mat(1, 4,5,6,7, -1,0,1,2, 3,5,7,9, -6,4,-3,0),
             this.scaled4vec(1, -2,0,-1,-2),
+            false, // useRoPE
             this.scaled24mat(1, -386,210,-132,76, -874,610,-204,332)
         );
         this.caseSelfAttention(
@@ -152,6 +158,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled3vec(1, 1,2,3),
             this.scaled33mat(1, 4,5,6, 5,6,7, 6,7,8),
             this.scaled3vec(1, 8,5,2),
+            false, // useRoPE
             this.scaled23mat(1, 532,631,730, 1225,1459,1693)
         );
         this.caseSelfAttention( // empty input
@@ -165,7 +172,22 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
+            false, // useRoPE
             this.flt04mat()
+        );
+        this.caseSelfAttention( // empty input
+            this.scaled22mat(10, 10,15, 5,-20),
+            1,
+            this.scaled22mat(10, 5,-2, 1,8),
+            this.scaled2vec(10, 1,-1),
+            this.scaled22mat(10, 3,4, -5,2),
+            this.scaled2vec(10, 0,1),
+            this.scaled22mat(10, 8,0, 2,5),
+            this.scaled2vec(10, -2,2),
+            this.scaled22mat(10, 6,-3, 1,7),
+            this.scaled2vec(10, 0,-2),
+            true, // useRoPE
+            this.flt22mat(0x3f228f5c,0x3e47ae11, 0xbc444032,0xbeff3728)
         );
         
         return this.successCases();
@@ -175,6 +197,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
     [int] caseSelfAttention(FltMatrix x,
         int heads, FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk,
         FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo,
+        int useRoPE,
         FltMatrix expected
     ) {
 
@@ -197,7 +220,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        FltMatrix y = a.forwardMatrix(x);
+        FltMatrix y = a.useRoPE(useRoPE).useCM(true).forwardMatrix(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

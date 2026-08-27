@@ -19,7 +19,7 @@ class __Tests__ {
         suite.register(llm::layer::LinearLayer:CLASSNAME, llm::layer::LinearLayerTest:CLASSNAME);
         suite.register(llm::layer::SoftmaxLayer:CLASSNAME, llm::layer::SoftmaxLayerTest:CLASSNAME);
         
-        suite.register(llm::EmbeddingWithPositionalEncoding:CLASSNAME, llm::EmbeddingWithPositionalEncodingTest:CLASSNAME);
+        suite.register(llm::Embedding:CLASSNAME, llm::EmbeddingTest:CLASSNAME);
         
     }
 }

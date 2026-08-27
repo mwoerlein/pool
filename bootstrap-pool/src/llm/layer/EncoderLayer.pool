@@ -31,6 +31,7 @@ class EncoderLayer extends llm::MatrixLayer {
         if (!attn || !attnNorm || !ffwd || !ffwdNorm) {
             return null;
         }
+        attn.useCM(true);
         
         int dm := attn.dModel;
         if (attnNorm.dModel != dm || ffwd.getDIn() != dm || ffwd.getDOut() != dm || ffwdNorm.dModel != dm) {

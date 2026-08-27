@@ -21,6 +21,7 @@ class SelfAttention extends llm::MatrixLayer {
     LinearLayer linearV;
     SoftmaxLayer softmax;
     int scale;
+    int useCM;
     
     [SelfAttention] _init(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
         linearQ = this._ownLinearLayer(wq, bq);
@@ -39,6 +40,10 @@ class SelfAttention extends llm::MatrixLayer {
         this.scale = Flt:sqrt(Flt:fromInt(dOut));
         return this;
     }
+    [SelfAttention] useCM(int b) {
+        this.useCM = b;
+        return this;
+    }
     
     [FltMatrix] forwardMatrix(FltMatrix x) {
         FltMatrix q := linearQ.forwardMatrix(x);
@@ -48,7 +53,7 @@ class SelfAttention extends llm::MatrixLayer {
         
         FltMatrix scores := FltMatrix:mtMul(q, k);
         scores.divFlt(scale);
-        SelfAttention:applyCausalMask(scores); // TODO: add feature flag?
+        if (useCM) { SelfAttention:applyCausalMask(scores); }
         FltMatrix weights := softmax.forwardMatrix(scores);
         FltMatrix y := FltMatrix:mmMul(weights, v);
         

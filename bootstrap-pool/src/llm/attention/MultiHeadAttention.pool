@@ -5,6 +5,7 @@ version = 0.1.0
 */
 namespace llm::attention;
 
+use llm::MatrixLayer;
 use llm::layer::LinearLayer;
 use llm::layer::SoftmaxLayer;
 
@@ -22,6 +23,8 @@ class MultiHeadAttention extends llm::MatrixLayer {
     int heads;
     int dHead;
     int scale;
+    int useRoPE;
+    int useCM;
     
     [MultiHeadAttention] _init(int heads, FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo) {
         linearQ = this._ownLinearLayer(wq, bq);
@@ -47,12 +50,21 @@ class MultiHeadAttention extends llm::MatrixLayer {
         this.scale = Flt:sqrt(Flt:fromInt(this.dHead));
         return this;
     }
+    [MultiHeadAttention] useRoPE(int b) {
+        this.useRoPE = b;
+        return this;
+    }
+    [MultiHeadAttention] useCM(int b) {
+        this.useCM = b;
+        return this;
+    }
     
     [FltMatrix] forwardMatrix(FltMatrix x) {
         FltMatrix q := linearQ.forwardMatrix(x);
         FltMatrix k := linearK.forwardMatrix(x);
         FltMatrix v := linearV.forwardMatrix(x);
         if (!q || !k || !v) { return null; }
+        if (useRoPE) { this.applyRoPE(q, k); }
 /*        
         this.rt().err().printNewline()
             .printCString("Q: ").print(q).printNewline()
@@ -80,7 +92,7 @@ class MultiHeadAttention extends llm::MatrixLayer {
                 ;
 */
                 scores.divFlt(sh);
-                SelfAttention:applyCausalMask(scores); // TODO: add feature flag?
+                if (useCM) { SelfAttention:applyCausalMask(scores); }
                 FltMatrix weights := softmax.forwardMatrix(scores);
                 if (!FltMatrix:mmMulInto(weights, 0, 0, v, 0, start, tmp, 0, start, dt, dh, dt)) {
                     this.rt().err().printCString("aaaahhhh2").printNewline();
@@ -110,4 +122,38 @@ class MultiHeadAttention extends llm::MatrixLayer {
         q.destroy();
         return y;
     }
+    
+    [] applyRoPE(FltMatrix q, FltMatrix k) {
+        int dmFlt := Flt:fromInt(dModel);
+        int dh := this.dHead;
+        int pos = q.rows();
+        while (pos--) {
+            int posFlt := Flt:fromInt(pos);
+            int i = this.heads;
+            while (i--) {
+                int start := i*dh;
+                int j := start + dh;
+                while (j > start) {
+                    int idx2 := --j;
+                    int idx1 := --j;
+                    int alpha := MatrixLayer:alpha(dmFlt, posFlt, idx1 - start);
+                    int cosA := Flt:cos(alpha);
+                    int sinA := Flt:sin(alpha);
+                    
+                    // In-place rotation for matrix Q
+                    int q1 := q.get(pos, idx1);
+                    int q2 := q.get(pos, idx2);
+                    q.set(pos, idx1, Flt:sub(Flt:mul(q1, cosA), Flt:mul(q2, sinA)));
+                    q.set(pos, idx2, Flt:add(Flt:mul(q2, cosA), Flt:mul(q1, sinA)));
+                    
+                    // In-place rotation for matrix K
+                    int k1 := k.get(pos, idx1);
+                    int k2 := k.get(pos, idx2);
+                    k.set(pos, idx1, Flt:sub(Flt:mul(k1, cosA), Flt:mul(k2, sinA)));
+                    k.set(pos, idx2, Flt:add(Flt:mul(k2, cosA), Flt:mul(k1, sinA)));
+                }
+            }
+        }
+    }
+
 }
