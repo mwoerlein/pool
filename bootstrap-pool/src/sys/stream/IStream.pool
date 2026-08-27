@@ -207,6 +207,10 @@ class IStream extends Object {
         return ret;
     }
     
+    [int] readRawWord() {
+        return this.readChar() + this.readChar() * 0x100;
+    }
+    
     [int] readRawInt() {
         return this.readChar() + this.readChar() * 0x100 + this.readChar() * 0x10000 + this.readChar() * 0x1000000;
     }

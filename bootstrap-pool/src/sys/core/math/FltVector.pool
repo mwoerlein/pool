@@ -6,18 +6,44 @@ version = 0.1.0
 namespace sys::core::math;
 
 use sys::core::Flt;
+use sys::stream::IStream;
 use sys::stream::OStream;
 
 class FltVector extends sys::core::utils::DWordArray {
     
-    [] init(int length) {
+    [FltVector] init(int length) {
         this._initDWordArray(length);
         this._setAllDWord(Flt:ZERO_POS);
+        return this;
     }
     
-    [] initWith(int length, int value) {
+    [FltVector] initWith(int length, int value) {
         this._initDWordArray(length);
         this._setAllDWord(value);
+        return this;
+    }
+    
+    [FltVector] initFromStream(int length, IStream in, int type) {
+        this._initDWordArray(length);
+        int s := _size;
+        int i = 0;
+        if (type == Flt:TYPE_F32) {
+            while (i < s && !in.isEmpty()) {
+                this._saveSetDWord(i++, in.readRawInt());
+            }
+        } else if (type == Flt:TYPE_BF16) {
+            while (i < s && !in.isEmpty()) {
+                this._saveSetDWord(i++, Flt:fromBF16(in.readRawWord()));
+            }
+        } else if (type == Flt:TYPE_F16) {
+            while (i < s && !in.isEmpty()) {
+                this._saveSetDWord(i++, Flt:fromF16(in.readRawWord()));
+            }
+        }
+        while (i < s) {
+            this._saveSetDWord(i++, Flt:ZERO_POS);
+        }
+        return this;
     }
     
     [] clear() {

@@ -15,6 +15,8 @@ class FloatTest extends test::TestCase {
         this.testLogarithm();
         this.testTrigonometric();
         this.testPrintToStream();
+        this.testFromF16();
+        this.testFromBF16();
     }
     
     [int] testInitialization() {
@@ -229,6 +231,78 @@ class FloatTest extends test::TestCase {
         
         s.destroy();
         f.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] testFromF16() {
+        this.startCases("testFromF16");
+
+        // normalized and special values
+        this.caseFromF16(0x0000, 0x00000000, "Positive Null (+0.0)");
+        this.caseFromF16(0x8000, 0x80000000, "Negative Null (-0.0)");
+        this.caseFromF16(0x3C00, 0x3F800000, "Die Zahl Eins (1.0)");
+        this.caseFromF16(0x4000, 0x40000000, "Die Zahl Zwei (2.0)");
+        this.caseFromF16(0x3E00, 0x3FC00000, "Dezimalwert 1.5");
+        this.caseFromF16(0x7BFF, 0x477FE000, "Groesster normaler Wert (65504.0)");
+        this.caseFromF16(0x0400, 0x38800000, "Kleinstes positives Normal (6.1035e-05)");
+        this.caseFromF16(0x7C00, 0x7F800000, "Positiv Unendlich (+Inf)");
+        this.caseFromF16(0xFC00, 0xFF800000, "Negativ Unendlich (-Inf)");
+        this.caseFromF16(0x7E00, 0x7FC00000, "Keine Zahl (Quiet NaN)");
+    
+        // Denormalised values
+        this.caseFromF16(0x0001, 0x33800000, "Kleinstes positives Subnormal (5.9605e-08)");
+        this.caseFromF16(0x03FF, 0x387FC000, "Groesstes positives Subnormal (6.0976e-05)");
+
+        return this.successCases();
+    }
+    
+    [int] caseFromF16(int f16, int expected, cstring desc) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").printPtr(f16).printCString(" => ").printPtr(expected);
+
+        int f32 := Flt:fromF16(f16);
+        if (Flt:compare(f32, expected) != 0) {
+            message.printCString(" got ").printPtr(f32);
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] testFromBF16() {
+        this.startCases("testFromBF16");
+
+        // normalized and special values
+        this.caseFromBF16(0x0000, 0x00000000, "Positive Null (+0.0)");
+        this.caseFromBF16(0x8000, 0x80000000, "Negative Null (-0.0)");
+        this.caseFromBF16(0x3F80, 0x3F800000, "Die Zahl Eins (1.0)");
+        this.caseFromBF16(0x4000, 0x40000000, "Die Zahl Zwei (2.0)");
+        this.caseFromBF16(0x3FC0, 0x3FC00000, "Dezimalwert 1.5");
+        this.caseFromBF16(0x7F7F, 0x7F7F0000, "Groesster normaler Wert (~3.389e38)");
+        this.caseFromBF16(0x0080, 0x00800000, "Kleinstes positives Normal (~1.175e-38)");
+        this.caseFromBF16(0x7F80, 0x7F800000, "Positiv Unendlich (+Inf)");
+        this.caseFromBF16(0xFF80, 0xFF800000, "Negativ Unendlich (-Inf)");
+        this.caseFromBF16(0x7FC0, 0x7FC00000, "Keine Zahl (Quiet NaN)");
+    
+        // Denormalised values
+        this.caseFromBF16(0x0001, 0x00010000, "Kleinstes positives Subnormal (~9.18e-41)");
+        this.caseFromBF16(0x007F, 0x007F0000, "Groesstes positives Subnormal (~1.166e-38)");
+
+        return this.successCases();
+    }
+    
+    [int] caseFromBF16(int bf16, int expected, cstring desc) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").printPtr(bf16).printCString(" => ").printPtr(expected);
+
+        int f32 := Flt:fromBF16(bf16);
+        if (Flt:compare(f32, expected) != 0) {
+            message.printCString(" got ").printPtr(f32);
+            return this.failCase(message.ostream());
+        }
+        
         message.destroy();
         return this.successCase();        
     }

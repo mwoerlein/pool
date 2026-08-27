@@ -6,6 +6,7 @@ version = 0.1.0
 namespace sys::core::math;
 
 use sys::core::Flt;
+use sys::stream::IStream;
 use sys::stream::OStream;
 
 class FltMatrix extends sys::core::utils::DWordArray {
@@ -13,18 +14,45 @@ class FltMatrix extends sys::core::utils::DWordArray {
     int _rows;
     int _cols;
     
-    [] init(int rows, int cols) {
+    [FltMatrix] init(int rows, int cols) {
         this._rows = rows;
         this._cols = cols;
         this._initDWordArray(rows * cols);
         this._setAllDWord(Flt:ZERO_POS);
+        return this;
     }
     
-    [] initWith(int rows, int cols, int value) {
+    [FltMatrix] initWith(int rows, int cols, int value) {
         this._rows = rows;
         this._cols = cols;
         this._initDWordArray(rows * cols);
         this._setAllDWord(value);
+        return this;
+    }
+    
+    [FltMatrix] initFromStream(int rows, int cols, IStream in, int type) {
+        this._rows = rows;
+        this._cols = cols;
+        this._initDWordArray(rows * cols);
+        int s := _size;
+        int i = 0;
+        if (type == Flt:TYPE_F32) {
+            while (i < s && !in.isEmpty()) {
+                this._saveSetDWord(i++, in.readRawInt());
+            }
+        } else if (type == Flt:TYPE_BF16) {
+            while (i < s && !in.isEmpty()) {
+                this._saveSetDWord(i++, Flt:fromBF16(in.readRawWord()));
+            }
+        } else if (type == Flt:TYPE_F16) {
+            while (i < s && !in.isEmpty()) {
+                this._saveSetDWord(i++, Flt:fromF16(in.readRawWord()));
+            }
+        }
+        while (i < s) {
+            this._saveSetDWord(i++, Flt:ZERO_POS);
+        }
+        return this;
     }
     
     [] clear() {

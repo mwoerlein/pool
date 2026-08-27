@@ -9,6 +9,9 @@ use sys::core::utils::Bitset;
 
 class Flt {
     global int SIZE := 4;
+    int TYPE_F32 := 0;
+    int TYPE_F16 := 1;
+    int TYPE_BF16 := 2;
 
     int NAN := 0xffffffff;
     int INF_POS := 0x7f800000;
@@ -41,6 +44,33 @@ class Flt {
             popl %eax
         ">, {"%eax": n}, {"%eax": f});
         return f;
+    }
+
+    global [int] fromF16(int n) {
+        int sign = Bitset:lshift(Bitset:and(n, 0x8000), 16);
+        int exp = Bitset:rshift(Bitset:and(n, 0x7C00), 10);
+        int mant = Bitset:lshift(Bitset:and(n, 0x03FF), 13);
+        
+        if (exp == 0) {
+            if (mant != 0) { // denormalized value
+                exp = 113;
+                while (!Bitset:and(mant, 0x00800000)) {
+                    mant = Bitset:lshift(mant, 1);
+                    exp--;
+                }
+                mant = Bitset:and(mant, 0x007FFFFF);
+            }
+        } else if (exp == 0x1F) { // special value
+            exp = 0xFF;
+        } else { // normalized value
+            exp += 112;
+        }
+        
+        return Bitset:or(sign, Bitset:or(Bitset:lshift(exp, 23), mant));
+    }
+    
+    global [int] fromBF16(int n) {
+        return Bitset:lshift(n, 16);
     }
     
     global [int] neg(int a) {
