@@ -1,0 +1,113 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::io;
+
+use json::parser::Parser as JsonParser;
+use json::value::ArrayValue;
+use json::value::JsonValue;
+use json::value::NumberValue;
+use json::value::ObjectValue;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltMatrix;
+use sys::core::math::FltVector;
+
+use sys::stream::SeekableIOStream;
+
+
+class SafetensorsWeightLoader extends WeightLoader {
+
+    SeekableIOStream _inner;
+    int offset;
+    ObjectValue index;
+    
+    [WeightLoader] initWeightLoader(SeekableIOStream data) {
+        sys::memory::MemoryIOStream buffer := this.createOwn(sys::memory::MemoryIOStream:CLASSNAME);
+        SeekableIOStream in := data.fillBuffer(buffer._init(data.length()));
+        int a := in.readRawInt();
+        int b := in.readRawInt();
+        if ( a < 0 || b != 0) { buffer.destroy(); return null; }
+        
+        SeekableIOStream json := in.getView(8, a);
+        JsonParser jp := this.createOwn(JsonParser:CLASSNAME);
+        JsonValue raw := jp.parse(json.istream());
+        jp.destroy();
+        json.destroy();
+        in.destroy();
+        
+        if (!raw) { buffer.destroy(); return null; }
+        ObjectValue idx := raw.asObjectValue();
+        if (!idx) { raw.destroy(); buffer.destroy(); return null; }
+        
+        this._inner = this.own(buffer.iostream());
+        this.index = this.own(idx);
+        this.offset = a + 8;
+        
+        return this.weightLoader();
+    }
+
+    [FltMatrix] loadMatrix(String id) {
+        ObjectValue desc = null;
+        if (!index || !(desc = index.getObjectValue(id))) { return null; }
+        
+        int type := this._parseType(desc.cgetString("dtype"));
+        [int rows, int cols] := this._parseIntArray2(desc.cgetArrayValue("shape"));
+        [int start, int end] := this._parseIntArray2(desc.cgetArrayValue("data_offsets"));
+        if (type < 0 || rows < 0 || cols < 0 || start < 0 || end < start) { return null; }
+        
+        SeekableIOStream view := _inner.getView(offset + start, end - start);
+        FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.initFromStream(rows, cols, view.istream(), type);
+        view.destroy();
+        return ret;
+    }
+    
+    [FltVector] loadVector(String id) {
+        ObjectValue desc = null;
+        if (!index || !(desc = index.getObjectValue(id))) { return null; }
+        
+        int type := this._parseType(desc.cgetString("dtype"));
+        int length := this._parseIntArray1(desc.cgetArrayValue("shape"));
+        [int start, int end] := this._parseIntArray2(desc.cgetArrayValue("data_offsets"));
+        if (type < 0 || length < 0 || start < 0 || end < start) { return null; }
+        
+        SeekableIOStream view := _inner.getView(offset + start, end - start);
+        FltVector ret := this.rt().createInstance(FltVector:CLASSNAME);
+        ret.initFromStream(length, view.istream(), type);
+        view.destroy();
+        return ret;
+    }
+    
+    [int] _parseType(String t) {
+        if (!t) { return -1; }
+        if (t.cequals("F32") || t.cequals("f32")) { return Flt:TYPE_F32; }
+        if (t.cequals("BF16") || t.cequals("bf16")) { return Flt:TYPE_BF16; }
+        if (t.cequals("F16") || t.cequals("f16")) { return Flt:TYPE_F16; }
+        return -1;
+    }
+    
+    [int] _parseIntArray1(ArrayValue arr) {
+        if (!arr || arr.size() != 1) { return -1; }
+        return this._parseInt(arr.at(0));
+    }
+    
+    [int, int] _parseIntArray2(ArrayValue arr) {
+        if (!arr || arr.size() != 2) { return [-1, -1]; }
+        return [
+            this._parseInt(arr.at(0)),
+            this._parseInt(arr.at(1))
+        ];
+    }
+    
+    [int] _parseInt(JsonValue v) {
+        if (!v) { return -1; }
+        NumberValue nv := v.asNumberValue();
+        if (!nv) { return -1; }
+        return nv.toInt();
+    }
+
+}
