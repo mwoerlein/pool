@@ -10,11 +10,11 @@ use sys::core::String;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class FeedForwardLayerTest extends llm::test::TestCase {
+class ReLUFeedForwardLayerTest extends llm::test::TestCase {
 
     [] runAll() {
         this.testInitialization();
-        this.testFeedForwardLayer();
+        this.testReLUFeedForwardLayer();
     }
     
     [int] testInitialization() {
@@ -25,7 +25,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
         FltVector b3 = this.scaled3vec(1, 1,1,1);
         FltVector b2 = this.scaled2vec(1, 1,1);
         
-        FeedForwardLayer l = this.rt().createInstance(FeedForwardLayer:CLASSNAME);
+        ReLUFeedForwardLayer l = this.rt().createInstance(ReLUFeedForwardLayer:CLASSNAME);
         if (l._init(null, b3, w32, b2)) { return this.fail("Empty w1 initialization"); }
         if (l._init(w23, null, w32, b2)) { return this.fail("Empty b1 initialization"); }
         if (l._init(w23, b3, null, b2)) { return this.fail("Empty w2 initialization"); }
@@ -40,10 +40,10 @@ class FeedForwardLayerTest extends llm::test::TestCase {
         return this.success();
     }
     
-    [int] testFeedForwardLayer() {
-        this.startCases("testFeedForwardLayer");
+    [int] testReLUFeedForwardLayer() {
+        this.startCases("testReLUFeedForwardLayer");
         
-        this.caseFeedForwardLayer(
+        this.caseReLUFeedForwardLayer(
             this.scaled2vec(1, 1,2),
             this.scaled23mat(1, 1,0,1, 2,1,0),
             this.scaled3vec(1, 0,0,0),
@@ -51,7 +51,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
             this.scaled2vec(1, 0,0),
             this.scaled2vec(1, 8,2)
         );
-        this.caseFeedForwardLayer(
+        this.caseReLUFeedForwardLayer(
             this.scaled2vec(1, 1,2),
             this.scaled23mat(10, 5,10,25, -10,20,-5),
             this.scaled3vec(10, 1,-2,3),
@@ -59,7 +59,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
             this.scaled2vec(10, 5,-10),
             this.flt2vec(0x40833333,0x40966667)
         );
-        this.caseFeedForwardLayer(
+        this.caseReLUFeedForwardLayer(
             this.scaled2vec(1, 0,0),
             this.scaled23mat(10, 5,10,25, -10,20,-5),
             this.scaled3vec(10, 1,-2,3),
@@ -67,7 +67,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
             this.scaled2vec(10, 5,-10),
             this.scaled2vec(100, 120,-95)
         );
-        this.caseFeedForwardLayer(
+        this.caseReLUFeedForwardLayer(
             this.scaled2vec(1, -1,-1),
             this.scaled23mat(1, 1,0,1, 2,1,0),
             this.scaled3vec(1, 0,0,0),
@@ -75,7 +75,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
             this.scaled2vec(1, 0,0),
             this.scaled2vec(1, 0,0)
         );
-        this.caseFeedForwardLayer(
+        this.caseReLUFeedForwardLayer(
             this.scaled2vec(1, 1000000,-1000000),
             this.scaled23mat(1, 1,0,1, 2,1,0),
             this.scaled3vec(1, 0,0,0),
@@ -87,7 +87,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
         return this.successCases();
     }
     
-    [int] caseFeedForwardLayer(FltVector x, FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2, FltVector expected) {
+    [int] caseReLUFeedForwardLayer(FltVector x, FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2, FltVector expected) {
         
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(x)
@@ -98,7 +98,7 @@ class FeedForwardLayerTest extends llm::test::TestCase {
             .printCString(" => ").print(expected);
         expected.debugToStream(message.printCString(" "));
 
-        FeedForwardLayer l = this.rt().createInstance(FeedForwardLayer:CLASSNAME);
+        ReLUFeedForwardLayer l = this.rt().createInstance(ReLUFeedForwardLayer:CLASSNAME);
         if (!this.isSame(l, l._init(w1, b1, w2, b2))) {
             message.printCString(" has invalid settings");
             return this.failCase(message.ostream());

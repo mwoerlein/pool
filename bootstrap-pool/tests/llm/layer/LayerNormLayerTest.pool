@@ -24,10 +24,10 @@ class LayerNormLayerTest extends llm::test::TestCase {
         FltVector b2 = this.scaled2vec(1, 1,1);
         
         LayerNormLayer l = this.rt().createInstance(LayerNormLayer:CLASSNAME);
-        if (l._init(null, b2)) { return this.fail("Empty gamma initialization"); }
-        if (l._init(g3, null)) { return this.fail("Empty beta initialization"); }
-        if (l._init(g3, b2)) { return this.fail("Invalid initialization"); }
-        if (!this.isSame(l, l._init(g3, b3))) { return this.fail("Correct initialization"); }
+        if (l._init(null, b2, Flt:ONE_TEN_THOUSANDTH_POS)) { return this.fail("Empty gamma initialization"); }
+        if (l._init(g3, null, Flt:ONE_TEN_THOUSANDTH_POS)) { return this.fail("Empty beta initialization"); }
+        if (l._init(g3, b2, Flt:ONE_TEN_THOUSANDTH_POS)) { return this.fail("Invalid initialization"); }
+        if (!this.isSame(l, l._init(g3, b3, Flt:ONE_TEN_THOUSANDTH_POS))) { return this.fail("Correct initialization"); }
         
         l.destroy();
         b2.destroy();
@@ -87,7 +87,7 @@ class LayerNormLayerTest extends llm::test::TestCase {
             .printCString(" => ").print(expected);
 
         LayerNormLayer l = this.rt().createInstance(LayerNormLayer:CLASSNAME);
-        if (!this.isSame(l, l._init(gamma, beta))) {
+        if (!this.isSame(l, l._init(gamma, beta, Flt:ONE_TEN_THOUSANDTH_POS))) {
             message.printCString(" has invalid settings");
             return this.failCase(message.ostream());
         }

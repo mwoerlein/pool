@@ -9,25 +9,23 @@ use sys::core::Flt;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class LayerNormLayer extends llm::VectorLayer {
+class RMSNormLayer extends llm::VectorLayer {
 
     FltVector gamma;
-    FltVector beta;
     int epsilon;
     
-    [LayerNormLayer] _init(FltVector gamma, FltVector beta, int epsilon) {
-        if (!gamma || !beta || gamma.length() != beta.length()) {
+    [RMSNormLayer] _init(FltVector gamma, int epsilon) {
+        if (!gamma) {
             return null;
         }
         this.dModel = gamma.length();
         this.gamma = this.own(gamma);
-        this.beta = this.own(beta);
         this.epsilon = epsilon;
         return this;
     }
 
     [FltVector] forwardVector(FltVector x) {
-        if (!x || !gamma || !beta || x.length() != dModel) {
+        if (!x || !gamma || x.length() != dModel) {
             return null;
         }
         int dm := this.dModel;
@@ -37,22 +35,18 @@ class LayerNormLayer extends llm::VectorLayer {
         {
             int i = dm;
             while (i--) {
-                sqrsum = Flt:add(sqrsum, Flt:sqr(Flt:sub(x.get(i), mean)));
+                sqrsum = Flt:add(sqrsum, Flt:sqr(x.get(i)));
             }
         }
         
-        //y_i = gamma_i * ( (x_i - m) / sqrt(v + epsilon) ) + beta_i
         FltVector y := this._emptyVector(dm);
-        int d := Flt:sqrt(Flt:add(Flt:div(sqrsum, lenF), epsilon));
+        int rms := Flt:sqrt(Flt:add(Flt:div(sqrsum, lenF), epsilon));
         {
             int i = dm;
             while (i--) {
-                y.set(i, Flt:add(
-                    Flt:mul(
-                        gamma.get(i),
-                        Flt:div(Flt:sub(x.get(i), mean), d)
-                    ),
-                    beta.get(i)
+                y.set(i, Flt:mul(
+                    Flt:div(x.get(i), rms),
+                    gamma.get(i)
                 ));
             }
         }

@@ -1,0 +1,132 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class SwiGLUFeedForwardLayerTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testSwiGLUFeedForwardLayer();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+
+        FltMatrix wg = this.scaled23mat(1, 5,5,5, 6,6,6);
+        FltMatrix wu = this.scaled23mat(1, 5,5,5, 6,6,6);
+        FltMatrix wd = this.scaled32mat(1, 4,4, 5,5, 6,6);
+        FltMatrix wi = this.scaled44mat(1, 1,2,3,4, 1,2,3,4, 1,2,3,4, 1,2,3,4);
+        FltVector bg = this.scaled3vec(1, 1,1,1);
+        FltVector bu = this.scaled3vec(1, 1,1,1);
+        FltVector bd = this.scaled2vec(1, 1,1);
+        FltVector bi = this.scaled4vec(1, 1,1,1,1);
+        
+        SwiGLUFeedForwardLayer l = this.rt().createInstance(SwiGLUFeedForwardLayer:CLASSNAME);
+        if (l._init(null, bg, wu, bu, wd, bd)) { return this.fail("Empty wGate initialization"); }
+        if (l._init(wg, null, wu, bu, wd, bd)) { return this.fail("Empty bGate initialization"); }
+        if (l._init(wg, bg, null, bu, wd, bd)) { return this.fail("Empty wUp initialization"); }
+        if (l._init(wg, bg, wu, null, wd, bd)) { return this.fail("Empty bUp initialization"); }
+        if (l._init(wg, bg, wu, bu, null, bd)) { return this.fail("Empty wDown initialization"); }
+        if (l._init(wg, bg, wu, bu, wd, null)) { return this.fail("Empty bDown initialization"); }
+        if (l._init(wi, bg, wu, bu, wd, bd)) { return this.fail("Invalid wGate initialization"); }
+        if (l._init(wg, bi, wu, bu, wd, bd)) { return this.fail("Invalid bGate initialization"); }
+        if (l._init(wg, bg, wi, bu, wd, bd)) { return this.fail("Invalid wUp initialization"); }
+        if (l._init(wg, bg, wu, bi, wd, bd)) { return this.fail("Invalid bUp initialization"); }
+        if (l._init(wg, bg, wu, bu, wi, bd)) { return this.fail("Invalid wDown initialization"); }
+        if (l._init(wg, bg, wu, bu, wd, bi)) { return this.fail("Invalid bDown initialization"); }
+        if (!this.isSame(l, l._init(wg, bg, wu, bu, wd, bd))) { return this.fail("Correct initialization"); }
+        
+        l.destroy();
+        bi.destroy();
+        wi.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testSwiGLUFeedForwardLayer() {
+        this.startCases("testSwiGLUFeedForwardLayer");
+        
+        this.caseSwiGLUFeedForwardLayer(
+            this.scaled2vec(10, 10,-5),
+            this.scaled22mat(10, 5,-2, 1,8),
+            this.scaled2vec(10, 1,-1),
+            this.scaled22mat(10, -3,4, 6,2),
+            this.scaled2vec(10, 0,2),
+            this.scaled22mat(10, 3,-5, 1,4),
+            this.scaled2vec(10, -2,1),
+            this.flt2vec(0xbe8c7d38,0x3e21f996)
+        );
+        this.caseSwiGLUFeedForwardLayer(
+            this.scaled2vec(1, 10,-10),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,1, 1,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(1, 1,0, 0,1),
+            this.scaled2vec(1, 0,0),
+            this.scaled2vec(1, 0,0)
+        );
+        this.caseSwiGLUFeedForwardLayer(
+            this.scaled2vec(10, 15,-8),
+            this.scaled23mat(10, 4,-3,1, 2,5,-6),
+            this.scaled3vec(10, -1,2,0),
+            this.scaled23mat(10, -2,6,4, 1,-1,3),
+            this.scaled3vec(10, 1,0,-2),
+            this.scaled32mat(10, 5,-2, -4,3, 1,6),
+            this.scaled2vec(10, 2,-1),
+            this.flt2vec(0x3e884690,0xbdeb7005)
+        );
+
+        
+        return this.successCases();
+    }
+    
+    [int] caseSwiGLUFeedForwardLayer(FltVector x,
+        FltMatrix wg, FltVector bg, FltMatrix wu, FltVector bu, FltMatrix wd, FltVector bd,
+        FltVector expected
+    ) {
+        
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(x)
+            .printCString(" wg ").print(wg)
+            .printCString(" bg ").print(bg)
+            .printCString(" wu ").print(wu)
+            .printCString(" bu ").print(bu)
+            .printCString(" wd ").print(wd)
+            .printCString(" bd ").print(bd)
+            .printCString(" => ").print(expected);
+        expected.debugToStream(message.printCString(" "));
+
+        SwiGLUFeedForwardLayer l = this.rt().createInstance(SwiGLUFeedForwardLayer:CLASSNAME);
+        if (!this.isSame(l, l._init(wg, bg, wu, bu, wd, bd))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        FltVector y = l.forwardVector(x);
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (expected.compareFltVector(y) != 0)  {
+            message.printCString(" got ").print(y);
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        y.destroy();
+        l.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+    
+}

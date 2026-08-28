@@ -1,0 +1,53 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::layer;
+
+use sys::core::Flt;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class SwiGLUFeedForwardLayer extends llm::VectorLayer {
+
+    LinearLayer gate;
+    LinearLayer up;
+    LinearLayer down;
+    
+    [SwiGLUFeedForwardLayer] _init(FltMatrix wGate, FltVector bGate, FltMatrix wUp, FltVector bUp, FltMatrix wDown, FltVector bDown) {
+        this.gate = this._ownLinearLayer(wGate, bGate);
+        this.up = this._ownLinearLayer(wUp, bUp);
+        this.down = this._ownLinearLayer(wDown, bDown);
+        if (!gate || !up || !down || gate.getDIn() != up.getDIn()  || gate.getDOut() != up.getDOut() || gate.getDOut() != down.getDIn()) {
+            return null;
+        }
+        this.dModel = gate.dModel;
+        
+        return this;
+    }
+    
+    [int] getDIn() { return gate.getDIn(); }     
+    [int] getDOut() { return down.getDOut(); }     
+    
+    [FltVector] forwardVector(FltVector x) {
+        FltVector g = gate.forwardVector(x);
+        FltVector u = up.forwardVector(x);
+        if (!g || !u) { return null; }
+        
+        int i = g.length();
+        while (i--) {
+            int gi := g.get(i);
+            g.set(i, Flt:mul(
+                Flt:div(gi, Flt:add(Flt:ONE_POS, Flt:e(Flt:neg(gi)))), // silu(gi)
+                u.get(i)
+            ));
+        }
+        
+        FltVector y = down.forwardVector(g);
+        u.destroy();
+        g.destroy();
+        return y;
+    }
+    
+}

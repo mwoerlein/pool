@@ -9,12 +9,12 @@ use sys::core::Flt;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class FeedForwardLayer extends llm::VectorLayer {
+class ReLUFeedForwardLayer extends llm::VectorLayer {
 
     LinearLayer layer1;
     LinearLayer layer2;
     
-    [FeedForwardLayer] _init(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
+    [ReLUFeedForwardLayer] _init(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
         this.layer1 = this._ownLinearLayer(w1, b1);
         this.layer2 = this._ownLinearLayer(w2, b2);
         if (!layer1 || !layer2 || layer1.getDOut() != layer2.getDIn()) {

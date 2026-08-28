@@ -7,7 +7,7 @@ namespace llm;
 
 use llm::attention::MultiHeadAttention;
 use llm::attention::SelfAttention;
-use llm::layer::FeedForwardLayer;
+use llm::layer::ReLUFeedForwardLayer;
 use llm::layer::LayerNormLayer;
 use llm::layer::LinearLayer;
 use llm::layer::SoftmaxLayer;
@@ -58,14 +58,14 @@ class MatrixLayer extends sys::core::Object {
         return a._init(wq, bq, wk, bk, wv, bv);
     }
     
-    [FeedForwardLayer] _ownFeedForwardLayer(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
-        FeedForwardLayer l = this.createOwn(FeedForwardLayer:CLASSNAME);
+    [ReLUFeedForwardLayer] _ownReLUFeedForwardLayer(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
+        ReLUFeedForwardLayer l = this.createOwn(ReLUFeedForwardLayer:CLASSNAME);
         return l._init(w1, b1, w2, b2);
     }
     
-    [LayerNormLayer] _ownLayerNormLayer(FltVector gamma, FltVector beta) {
+    [LayerNormLayer] _ownLayerNormLayer(FltVector gamma, FltVector beta, int epsilon) {
         LayerNormLayer l = this.createOwn(LayerNormLayer:CLASSNAME);
-        return l._init(gamma, beta);
+        return l._init(gamma, beta, epsilon);
     }
     
     [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {

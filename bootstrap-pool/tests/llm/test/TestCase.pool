@@ -80,6 +80,13 @@ class TestCase extends test::TestCase {
         v.set(0, a); v.set(1, b); v.set(2, c);
         return v;
     }
+    
+    [FltVector] flt4vec(int a, int b, int c, int d) {
+        FltVector v = this.rt().createInstance(FltVector:CLASSNAME);
+        v.init(4);
+        v.set(0, a); v.set(1, b); v.set(2, c); v.set(3, d);
+        return v;
+    }
 
     
     [FltMatrix] scaled13mat(int scale, int m00, int m01, int m02) {
