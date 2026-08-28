@@ -1,0 +1,164 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::io;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class SafetensorsWeightLoaderTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testOneTensors();
+        this.testAllTypesTensors();
+    }
+    
+    [WeightLoader] loadSafetensors(cstring filename) {
+        linux::fs::File f = this.rt().createInstance(linux::fs::File:CLASSNAME);
+        int r = f._init(filename, linux::fs::File:MODE_READ, 0);
+        if (r < 0) {
+            f.destroy();
+            return null;
+        }
+        SafetensorsWeightLoader loader := this.rt().createInstance(SafetensorsWeightLoader:CLASSNAME);
+        WeightLoader l = loader.initWeightLoader(f.iostream());
+        f.destroy();
+        if (!l) {
+            loader.destroy();
+            return null;
+        }
+        return l;
+    }
+    
+    [int] testOneTensors() {
+        this.start("testOneTensors");
+        
+        WeightLoader l = this.loadSafetensors("tests/llm/io/one.safetensors");
+        if (!l) { return this.fail("Load one.safetensors"); }
+/*
+    tensors = {
+        "one": np.array([1.0], dtype=np.float32)
+    }
+*/
+        
+        String id := this.rt().createInstance(String:CLASSNAME);
+        {
+            id.assignCString("one");
+            FltVector vec = l.loadVector(id);
+            if (!vec) { return this.fail("Load one vector"); }
+            if (vec.length() != 1) { return this.fail("Load one length"); }
+            if (Flt:compare(vec.get(0), Flt:ONE_POS) != 0) { return this.fail("Load one value"); }
+            vec.destroy();
+        }
+        
+        id.destroy();
+        l.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testAllTypesTensors() {
+        this.start("testAllTypesTensors");
+        
+        WeightLoader l = this.loadSafetensors("tests/llm/io/all_types.safetensors");
+        if (!l) { return this.fail("Load all_types.safetensors"); }
+/*
+    tensors = {
+        "layer1.bias": np.array([-1.0, 2.0, 3.0], dtype=np.float32),
+        "layer1.weight": np.array([[-0.5, 1.5], [2.5, 3.5]], dtype=np.float32),
+        "layer2.bias": np.array([1.2, -2.2, 3.2], dtype=np.float16),
+        "layer2.weight": np.array([[0.2, -1.2], [2.2, 3.2]], dtype=np.float16),
+        "layer3.bias": np.array([1.3, 2.3, -3.3], dtype=np.bfloat16),
+        "layer3.weight": np.array([[0.3, 1.3], [-2.3, 3.3]], dtype=np.bfloat16)
+    }
+*/
+        
+        
+        String id := this.rt().createInstance(String:CLASSNAME);
+        {
+            id.assignCString("layer1.bias");
+            FltVector vec = l.loadVector(id);
+            if (!vec) { return this.fail("Load layer1.bias vector"); }
+            if (vec.length() != 3) { return this.fail("Load layer1.bias length"); }
+            //vec.debugToStream(this.tout.error().print(vec));
+            //[-1, 2, 3][0xbf800000, 0x40000000, 0x40400000]
+            if (Flt:compare(vec.get(0), Flt:ONE_NEG) != 0) { return this.fail("Load layer1.bias value[0]"); }
+            if (Flt:compare(vec.get(1), Flt:TWO_POS) != 0) { return this.fail("Load layer1.bias value[1]"); }
+            if (Flt:compare(vec.get(2), 0x40400000) != 0) { return this.fail("Load layer1.bias value[2]"); }
+            vec.destroy();
+        }
+        {
+            id.assignCString("layer1.weight");
+            FltMatrix mat = l.loadMatrix(id);
+            if (!mat) { return this.fail("Load layer1.weight vector"); }
+            if (mat.rows() != 2 || mat.cols() != 2) { return this.fail("Load layer1.weight dimension"); }
+            //mat.debugToStream(this.tout.error().print(mat));
+            //[[-0.5, 1.5], [2.5, 3.5]][[0xbf000000, 0x3fc00000], [0x40200000, 0x40600000]]
+            if (Flt:compare(mat.get(0, 0), 0xbf000000) != 0) { return this.fail("Load layer1.weight value[0][0]"); }
+            if (Flt:compare(mat.get(0, 1), 0x3fc00000) != 0) { return this.fail("Load layer1.weight value[0][1]"); }
+            if (Flt:compare(mat.get(1, 0), 0x40200000) != 0) { return this.fail("Load layer1.weight value[1][0]"); }
+            if (Flt:compare(mat.get(1, 1), 0x40600000) != 0) { return this.fail("Load layer1.weight value[1][1]"); }
+            mat.destroy();
+        }
+        {
+            id.assignCString("layer2.bias");
+            FltVector vec = l.loadVector(id);
+            if (!vec) { return this.fail("Load layer2.bias vector"); }
+            if (vec.length() != 3) { return this.fail("Load layer2.bias length"); }
+            //vec.debugToStream(this.tout.error().print(vec));
+            //[1.2001953, -2.1992188, 3.1992188][0x3f99a000, 0xc00cc000, 0x404cc000]
+            if (Flt:compare(vec.get(0), 0x3f99a000) != 0) { return this.fail("Load layer2.bias value[0]"); }
+            if (Flt:compare(vec.get(1), 0xc00cc000) != 0) { return this.fail("Load layer2.bias value[1]"); }
+            if (Flt:compare(vec.get(2), 0x404cc000) != 0) { return this.fail("Load layer2.bias value[2]"); }
+            vec.destroy();
+        }
+        {
+            id.assignCString("layer2.weight");
+            FltMatrix mat = l.loadMatrix(id);
+            if (!mat) { return this.fail("Load layer2.weight vector"); }
+            if (mat.rows() != 2 || mat.cols() != 2) { return this.fail("Load layer2.weight dimension"); }
+            //mat.debugToStream(this.tout.error().print(mat));
+            //[[0.19995117, -1.2001953], [2.1992188, 3.1992188]][[0x3e4cc000, 0xbf99a000], [0x400cc000, 0x404cc000]]
+            if (Flt:compare(mat.get(0, 0), 0x3e4cc000) != 0) { return this.fail("Load layer2.weight value[0][0]"); }
+            if (Flt:compare(mat.get(0, 1), 0xbf99a000) != 0) { return this.fail("Load layer2.weight value[0][1]"); }
+            if (Flt:compare(mat.get(1, 0), 0x400cc000) != 0) { return this.fail("Load layer2.weight value[1][0]"); }
+            if (Flt:compare(mat.get(1, 1), 0x404cc000) != 0) { return this.fail("Load layer2.weight value[1][1]"); }
+            mat.destroy();
+        }
+        {
+            id.assignCString("layer3.bias");
+            FltVector vec = l.loadVector(id);
+            if (!vec) { return this.fail("Load layer3.bias vector"); }
+            if (vec.length() != 3) { return this.fail("Load layer3.bias length"); }
+            //vec.debugToStream(this.tout.error().print(vec));
+            //[1.296875, 2.296875, -3.296875][0x3fa60000, 0x40130000, 0xc0530000]
+            if (Flt:compare(vec.get(0), 0x3fa60000) != 0) { return this.fail("Load layer3.bias value[0]"); }
+            if (Flt:compare(vec.get(1), 0x40130000) != 0) { return this.fail("Load layer3.bias value[1]"); }
+            if (Flt:compare(vec.get(2), 0xc0530000) != 0) { return this.fail("Load layer3.bias value[2]"); }
+            vec.destroy();
+        }
+        {
+            id.assignCString("layer3.weight");
+            FltMatrix mat = l.loadMatrix(id);
+            if (!mat) { return this.fail("Load layer3.weight vector"); }
+            if (mat.rows() != 2 || mat.cols() != 2) { return this.fail("Load layer3.weight dimension"); }
+            //mat.debugToStream(this.tout.error().print(mat));
+            //[[0.30078125, 1.296875], [-2.296875, 3.296875]][[0x3e9a0000, 0x3fa60000], [0xc0130000, 0x40530000]]
+            if (Flt:compare(mat.get(0, 0), 0x3e9a0000) != 0) { return this.fail("Load layer3.weight value[0][0]"); }
+            if (Flt:compare(mat.get(0, 1), 0x3fa60000) != 0) { return this.fail("Load layer3.weight value[0][1]"); }
+            if (Flt:compare(mat.get(1, 0), 0xc0130000) != 0) { return this.fail("Load layer3.weight value[1][0]"); }
+            if (Flt:compare(mat.get(1, 1), 0x40530000) != 0) { return this.fail("Load layer3.weight value[1][1]"); }
+            mat.destroy();
+        }
+        
+        id.destroy();
+        l.destroy();
+        
+        return this.success();
+    }
+    
+}
