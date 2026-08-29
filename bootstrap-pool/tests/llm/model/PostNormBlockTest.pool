@@ -3,18 +3,18 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace llm::layer;
+namespace llm::model;
 
 use sys::core::Flt;
 use sys::core::String;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class PostNormTransformerLayerTest extends llm::test::TestCase {
+class PostNormBlockTest extends llm::test::TestCase {
 
     [] runAll() {
         this.testInitialization();
-        this.testPostNormTransformerLayer();
+        this.testPostNormBlock();
     }
     
     [int] testInitialization() {
@@ -25,7 +25,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
         FltVector b3 = this.scaled3vec(1, 1,1,1);
         FltVector b2 = this.scaled2vec(1, 1,1);
 */        
-        PostNormTransformerLayer l = this.rt().createInstance(PostNormTransformerLayer:CLASSNAME);
+        PostNormBlock l = this.rt().createInstance(PostNormBlock:CLASSNAME);
 /*
         if (l._init(null, b2, w32, b3)) { return this.fail("Empty w1 initialization"); }
         if (l._init(w23, null, w32, b3)) { return this.fail("Empty b1 initialization"); }
@@ -41,10 +41,10 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
         return this.success();
     }
     
-    [int] testPostNormTransformerLayer() {
-        this.startCases("testPostNormTransformerLayer");
+    [int] testPostNormBlock() {
+        this.startCases("testPostNormBlock");
         
-        this.casePostNormTransformerLayer( // Der "Null-Effekt" (Sanity Check)
+        this.casePostNormBlock( // Der "Null-Effekt" (Sanity Check)
             this.scaled22mat(1, 0,0, 0,0),
             
             1,
@@ -70,7 +70,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
             
             this.scaled22mat(1, 0,0, 0,0)
         );
-        this.casePostNormTransformerLayer( // Reiner Residual- & LayerNorm-Test
+        this.casePostNormBlock( // Reiner Residual- & LayerNorm-Test
             this.scaled22mat(1, 1,2, 3,4),
             
             1,
@@ -96,7 +96,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
             
             this.flt22mat(0xbf7ffcba,0x3f7ffcba, 0xbf7ffcba,0x3f7ffcba)
         );
-        this.casePostNormTransformerLayer( // Der FFWD-Aktivierungs-Test (ReLU / GELU)
+        this.casePostNormBlock( // Der FFWD-Aktivierungs-Test (ReLU / GELU)
             this.scaled22mat(1, 1,2, 3,4),
             
             1,
@@ -122,7 +122,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
             
             this.flt22mat(0xbf7fff2f,0x3f7fff2f, 0xbf7fff2f,0x3f7fff2f)
         );
-        this.casePostNormTransformerLayer(
+        this.casePostNormBlock(
             this.scaled24mat(1, 1,2,3,4, 0,1,0,1),
             
             2,
@@ -148,7 +148,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
             
             this.flt24mat(0xbf9f526a,0x3f7b8f99,0xbf387a5f,0x3f7b8f99, 0xbef75df2,0x3fd3c0a5,0xbf800717,0xbe2f1093)
         );
-        this.casePostNormTransformerLayer(
+        this.casePostNormBlock(
             this.flt04mat(),
             
             2,
@@ -178,7 +178,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
         return this.successCases();
     }
     
-    [int] casePostNormTransformerLayer(FltMatrix x, 
+    [int] casePostNormBlock(FltMatrix x, 
         int attnHeads, FltMatrix attnWq, FltVector attnBq, FltMatrix attnWk, FltVector attnBk,
         FltMatrix attnWv, FltVector attnBv, FltMatrix attnWo, FltVector attnBo,
         FltVector attnGamma, FltVector attnBeta,
@@ -209,7 +209,7 @@ class PostNormTransformerLayerTest extends llm::test::TestCase {
             .printCString(" => ").print(expected);
         expected.debugToStream(message.printCString(" "));
 
-        PostNormTransformerLayer l = this.rt().createInstance(PostNormTransformerLayer:CLASSNAME);
+        PostNormBlock l = this.rt().createInstance(PostNormBlock:CLASSNAME);
         if (!this.isSame(l, l._init(
             attnHeads, attnWq, attnBq, attnWk, attnBk, attnWv, attnBv, attnWo, attnBo, attnGamma, attnBeta,
             ffwdW1, ffwdB1, ffwdW2, ffwdB2, ffwdGamma, ffwdBeta 

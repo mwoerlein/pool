@@ -9,18 +9,18 @@ class __Tests__ {
     
     global [] setup(test::TestSuite suite) {
         
-        suite.register(llm::attention::SelfAttention:CLASSNAME, llm::attention::SelfAttentionTest:CLASSNAME);
-        suite.register(llm::attention::MultiHeadAttention:CLASSNAME, llm::attention::MultiHeadAttentionTest:CLASSNAME);
-        
         suite.register(llm::io::SafetensorsWeightLoader:CLASSNAME, llm::io::SafetensorsWeightLoaderTest:CLASSNAME);
         
         suite.register(llm::layer::LayerNormLayer:CLASSNAME, llm::layer::LayerNormLayerTest:CLASSNAME);
         suite.register(llm::layer::LinearLayer:CLASSNAME, llm::layer::LinearLayerTest:CLASSNAME);
-        suite.register(llm::layer::PostNormTransformerLayer:CLASSNAME, llm::layer::PostNormTransformerLayerTest:CLASSNAME);
+        suite.register(llm::layer::MultiHeadAttention:CLASSNAME, llm::layer::MultiHeadAttentionTest:CLASSNAME);
         suite.register(llm::layer::ReLUFeedForwardLayer:CLASSNAME, llm::layer::ReLUFeedForwardLayerTest:CLASSNAME);
         suite.register(llm::layer::RMSNormLayer:CLASSNAME, llm::layer::RMSNormLayerTest:CLASSNAME);
-        suite.register(llm::layer::SwiGLUFeedForwardLayer:CLASSNAME, llm::layer::SwiGLUFeedForwardLayerTest:CLASSNAME);
+        suite.register(llm::layer::SelfAttention:CLASSNAME, llm::layer::SelfAttentionTest:CLASSNAME);
         suite.register(llm::layer::SoftmaxLayer:CLASSNAME, llm::layer::SoftmaxLayerTest:CLASSNAME);
+        suite.register(llm::layer::SwiGLUFeedForwardLayer:CLASSNAME, llm::layer::SwiGLUFeedForwardLayerTest:CLASSNAME);
+        
+        suite.register(llm::model::PostNormBlock:CLASSNAME, llm::model::PostNormBlockTest:CLASSNAME);
         
         suite.register(llm::Embedding:CLASSNAME, llm::EmbeddingTest:CLASSNAME);
         

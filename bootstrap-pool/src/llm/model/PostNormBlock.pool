@@ -3,22 +3,24 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace llm::layer;
+namespace llm::model;
 
-use llm::attention::MultiHeadAttention;
+use llm::layer::LayerNormLayer;
+use llm::layer::MultiHeadAttention;
+use llm::layer::ReLUFeedForwardLayer;
 
 use sys::core::Flt;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class PostNormTransformerLayer extends llm::MatrixLayer {
+class PostNormBlock extends llm::MatrixLayer {
 
     MultiHeadAttention attn;
     LayerNormLayer attnNorm;
     ReLUFeedForwardLayer ffwd;
     LayerNormLayer ffwdNorm;
     
-    [PostNormTransformerLayer] _init(
+    [PostNormBlock] _init(
         int attnHeads, FltMatrix attnWq, FltVector attnBq, FltMatrix attnWk, FltVector attnBk,
         FltMatrix attnWv, FltVector attnBv, FltMatrix attnWo, FltVector attnBo,
         FltVector attnGamma, FltVector attnBeta,

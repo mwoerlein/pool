@@ -5,11 +5,11 @@ version = 0.1.0
 */
 namespace llm;
 
-use llm::attention::MultiHeadAttention;
-use llm::attention::SelfAttention;
-use llm::layer::ReLUFeedForwardLayer;
 use llm::layer::LayerNormLayer;
 use llm::layer::LinearLayer;
+use llm::layer::MultiHeadAttention;
+use llm::layer::ReLUFeedForwardLayer;
+use llm::layer::SelfAttention;
 use llm::layer::SoftmaxLayer;
 
 use sys::core::Flt;
