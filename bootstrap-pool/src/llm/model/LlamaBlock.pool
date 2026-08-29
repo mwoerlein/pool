@@ -1,0 +1,128 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use llm::layer::MultiHeadAttention;
+use llm::layer::RMSNormLayer;
+use llm::layer::SwiGLUFeedForwardLayer;
+
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class LlamaBlock extends llm::MatrixLayer {
+
+    RMSNormLayer attnNorm;
+    MultiHeadAttention attn;
+    RMSNormLayer ffwdNorm;
+    SwiGLUFeedForwardLayer ffwd;
+    
+    [LlamaBlock] _init(
+        FltVector attnGamma,
+        int attnHeads, FltMatrix attnWq, FltVector attnBq, FltMatrix attnWk, FltVector attnBk,
+        FltMatrix attnWv, FltVector attnBv, FltMatrix attnWo, FltVector attnBo,
+        FltVector ffwdGamma,
+        FltMatrix ffwdWG, FltVector ffwdBG, FltMatrix ffwdWU, FltVector ffwdBU, FltMatrix ffwdWD, FltVector ffwdBD
+    ) {
+        attnNorm = this._ownRMSNormLayer(attnGamma);
+        attn = this._ownMultiHeadAttention(attnHeads, attnWq, attnBq, attnWk, attnBk, attnWv, attnBv, attnWo, attnBo);
+        ffwdNorm = this._ownRMSNormLayer(ffwdGamma);
+        ffwd = this._ownSwiGLUFeedForwardLayer(ffwdWG, ffwdBG, ffwdWU, ffwdBU, ffwdWD, ffwdBD);
+        if (!attn || !attnNorm || !ffwd || !ffwdNorm) {
+            return null;
+        }
+        attn.useCM(true);
+        attn.useRoPE(true);
+        
+        int dm := attn.dModel;
+        if (attnNorm.dModel != dm || ffwd.getDIn() != dm || ffwd.getDOut() != dm || ffwdNorm.dModel != dm) {
+            return null;
+        }
+        this.dModel = dm;
+        
+        return this;
+    }
+    
+    [FltMatrix] forwardMatrix(FltMatrix x) {
+        if (!x) { return null; }
+
+        // ---- Self‑Attention Block ----
+        FltMatrix attnNormOut = attnNorm.forwardMatrix(x);
+        if (!attnNormOut) { return null; }
+        FltMatrix attnOut = attn.forwardMatrix(attnNormOut);
+        if (!attnOut) { return null; }
+        if (!attnOut.add(x)) { return null; }
+        
+        // ---- Feed‑Forward Block ----
+        FltMatrix ffwdNormOut = ffwdNorm.forwardMatrix(attnOut);
+        if (!ffwdNormOut) { return null; }
+        FltMatrix ffwdOut = ffwd.forwardMatrix(ffwdNormOut);
+        if (!ffwdOut) { return null; }
+        if (!ffwdOut.add(attnOut)) { return null; }
+        
+        ffwdNormOut.destroy();
+        attnOut.destroy();
+        attnNormOut.destroy();
+        
+        return ffwdOut;
+    }
+}
+
+/*
+CLASS LlamaBlock EXTENDS MatrixLayer
+
+    // Sub-Layer als Instanzvariablen
+    ATTRIBUTES:
+        rmsNormAttention : RMSNormLayer
+        multiHeadAttention : MultiHeadAttention
+        rmsNormFFN : RMSNormLayer
+        feedForward : SwiGLUFeedForwardLayer
+
+    // Konstruktor initialisiert die Schichten mit den geladenen Gewichten
+    CONSTRUCTOR(weightLoader, blockIndex)
+        // blockIndex hilft, die korrekten IDs aus der Safetensors-Datei zu laden
+        // z.B. "model.layers.0.input_layernorm.weight"
+        rmsNormAttention = weightLoader.loadRMSNorm(blockIndex, "input_layernorm")
+        multiHeadAttention = weightLoader.loadMHA(blockIndex, "self_attn")
+        rmsNormFFN = weightLoader.loadRMSNorm(blockIndex, "post_attention_layernorm")
+        feedForward = weightLoader.loadSwiGLU(blockIndex, "mlp")
+    END CONSTRUCTOR
+
+    // Die zentrale Verarbeitungs-Pipeline für eine Token-Matrix
+    METHOD forwardMatrix(inputMatrix : Matrix) RETURNS Matrix
+        
+        // --- 1. ATTENTION PFAD (Pre-Norm) ---
+        // Schritt A: Kopie für die erste Residual-Verbindung behalten
+        Matrix residual1 = inputMatrix.clone() 
+        
+        // Schritt B: RMSNorm vor der Attention (Zeilenweise)
+        Matrix normAttnOut = rmsNormAttention.forwardMatrix(inputMatrix)
+        
+        // Schritt C: Multi-Head-Attention (inklusive RoPE und Causal Mask intern)
+        Matrix attnOut = multiHeadAttention.forwardMatrix(normAttnOut)
+        
+        // Schritt D: Erste Residual-Addition (X = X + Attention(RMSNorm(X)))
+        Matrix xIntermediary = residual1.elementwiseAdd(attnOut)
+        
+        
+        // --- 2. FEED-FORWARD PFAD (Pre-Norm) ---
+        // Schritt E: Kopie für die zweite Residual-Verbindung behalten
+        Matrix residual2 = xIntermediary.clone()
+        
+        // Schritt F: RMSNorm vor dem FFN
+        Matrix normFFNOut = rmsNormFFN.forwardMatrix(xIntermediary)
+        
+        // Schritt G: SwiGLU Berechnung
+        Matrix ffnOut = feedForward.forwardMatrix(normFFNOut)
+        
+        // Schritt H: Zweite Residual-Addition (Output = X + FFN(RMSNorm(X)))
+        Matrix finalOutput = residual2.elementwiseAdd(ffnOut)
+        
+        RETURN finalOutput
+        
+    END METHOD
+END CLASS
+
+*/

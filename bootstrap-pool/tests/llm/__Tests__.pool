@@ -20,6 +20,7 @@ class __Tests__ {
         suite.register(llm::layer::SoftmaxLayer:CLASSNAME, llm::layer::SoftmaxLayerTest:CLASSNAME);
         suite.register(llm::layer::SwiGLUFeedForwardLayer:CLASSNAME, llm::layer::SwiGLUFeedForwardLayerTest:CLASSNAME);
         
+        suite.register(llm::model::LlamaBlock:CLASSNAME, llm::model::LlamaBlockTest:CLASSNAME);
         suite.register(llm::model::PostNormBlock:CLASSNAME, llm::model::PostNormBlockTest:CLASSNAME);
         
         suite.register(llm::Embedding:CLASSNAME, llm::EmbeddingTest:CLASSNAME);

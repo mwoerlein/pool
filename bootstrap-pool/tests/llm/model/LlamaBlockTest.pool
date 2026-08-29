@@ -1,0 +1,136 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class LlamaBlockTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testLlamaBlock();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+/*
+        FltMatrix w23 = this.scaled23mat(1, 5,5,5, 6,6,6);
+        FltMatrix w32 = this.scaled32mat(1, 4,4, 5,5, 6,6);
+        FltVector b3 = this.scaled3vec(1, 1,1,1);
+        FltVector b2 = this.scaled2vec(1, 1,1);
+*/        
+        LlamaBlock l = this.rt().createInstance(LlamaBlock:CLASSNAME);
+/*
+        if (l._init(null, b2, w32, b3)) { return this.fail("Empty w1 initialization"); }
+        if (l._init(w23, null, w32, b3)) { return this.fail("Empty b1 initialization"); }
+        if (l._init(w23, b2, null, b3)) { return this.fail("Empty w2 initialization"); }
+        if (l._init(w23, b2, w32, null)) { return this.fail("Empty b2 initialization"); }
+        if (l._init(w23, b3, w32, b3)) { return this.fail("Invalid b1 initialization"); }
+        if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b2 initialization"); }
+        if (l._init(w23, b2, w23, b2)) { return this.fail("Invalid w1 initialization"); }
+        if (!this.isSame(l, l._init(w23, b2, w32, b3))) { return this.fail("Correct initialization"); }
+*/       
+        l.destroy();
+        
+        return this.success();
+    }
+    
+    [int] testLlamaBlock() {
+        this.startCases("testLlamaBlock");
+        
+        this.caseLlamaBlock(
+            this.scaled32mat(10, 20,40, 15,30, 10,20),
+            
+            this.scaled2vec(10, 10,5),
+            
+            1,
+            this.scaled22mat(10, 8,-1, 2,6),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(10, 5,3, -2,7),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(10, 9,1, 4,8),
+            this.scaled2vec(1, 0,0),
+            this.scaled22mat(10, 6,-3, 1,5),
+            this.scaled2vec(1, 0,0),
+            
+            this.scaled2vec(10, 10,5),
+            
+            this.scaled23mat(10, 4,1,-3, -2,5,2),
+            this.scaled3vec(1, 0,0,0),
+            this.scaled23mat(10, 1,-4,3, 6,2,-1),
+            this.scaled3vec(1, 0,0,0),
+            this.scaled32mat(10, 3,5, -1,2, 4,-2),
+            this.scaled2vec(1, 0,0),
+            
+            this.flt32mat(0x4024168d,0x4081b36c, 0x400424b6,0x40438163, 0x3fc87691,0x4003b2a9)
+        );
+        
+        return this.successCases();
+    }
+    
+    [int] caseLlamaBlock(FltMatrix x, 
+        FltVector attnGamma,
+        int attnHeads,
+        FltMatrix attnWq, FltVector attnBq, FltMatrix attnWk, FltVector attnBk,
+        FltMatrix attnWv, FltVector attnBv, FltMatrix attnWo, FltVector attnBo,
+        FltVector ffwdGamma,
+        FltMatrix ffwdWG, FltVector ffwdBG, FltMatrix ffwdWU, FltVector ffwdBU, FltMatrix ffwdWD, FltVector ffwdBD,
+        FltMatrix expected
+    ) {
+        
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(x).printCString(" with:").printNewline()
+            .printCString("  attnNorm: gamma ").print(attnGamma).printNewline()
+            .printCString("  attn: heads ").printInt(attnHeads)
+            .printCString(" wq ").print(attnWq)
+            .printCString(" bq ").print(attnBq)
+            .printCString(" wk ").print(attnWk)
+            .printCString(" bk ").print(attnBk)
+            .printCString(" wv ").print(attnWv)
+            .printCString(" bv ").print(attnBv)
+            .printCString(" wo ").print(attnWo)
+            .printCString(" bo ").print(attnBo).printNewline()
+            .printCString("  ffwdNorm: gamma ").print(ffwdGamma).printNewline()
+            .printCString("  ffwd: wg ").print(ffwdWG)
+            .printCString(" bg ").print(ffwdBG)
+            .printCString(" wu ").print(ffwdWU)
+            .printCString(" bu ").print(ffwdBU)
+            .printCString(" wd ").print(ffwdWD)
+            .printCString(" bd ").print(ffwdBD).printNewline()
+            .printCString(" => ").print(expected);
+        expected.debugToStream(message.printCString(" "));
+
+        LlamaBlock l = this.rt().createInstance(LlamaBlock:CLASSNAME);
+        if (!this.isSame(l, l._init(
+            attnGamma, attnHeads, attnWq, attnBq, attnWk, attnBk, attnWv, attnBv, attnWo, attnBo,
+            ffwdGamma, ffwdWG, ffwdBG, ffwdWU, ffwdBU, ffwdWD, ffwdBD 
+        ))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        FltMatrix y = l.forwardMatrix(x);
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (expected.compareFltMatrix(y) != 0)  {
+            message.printCString(" got ").print(y);
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        y.destroy();
+        l.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+    
+}

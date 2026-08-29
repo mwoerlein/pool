@@ -9,8 +9,10 @@ use llm::layer::LayerNormLayer;
 use llm::layer::LinearLayer;
 use llm::layer::MultiHeadAttention;
 use llm::layer::ReLUFeedForwardLayer;
+use llm::layer::RMSNormLayer;
 use llm::layer::SelfAttention;
 use llm::layer::SoftmaxLayer;
+use llm::layer::SwiGLUFeedForwardLayer;
 
 use sys::core::Flt;
 use sys::core::math::FltMatrix;
@@ -45,6 +47,16 @@ class MatrixLayer extends sys::core::Object {
     
     // factory helper
     
+    [LayerNormLayer] _ownLayerNormLayer(FltVector gamma, FltVector beta) {
+        LayerNormLayer l = this.createOwn(LayerNormLayer:CLASSNAME);
+        return l._init(gamma, beta, Flt:ONE_TEN_THOUSANDTH_POS);
+    }
+    
+    [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {
+        LinearLayer l = this.createOwn(LinearLayer:CLASSNAME);
+        return l._init(w, b);
+    }
+    
     [MultiHeadAttention] _ownMultiHeadAttention(int heads,
         FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk,
         FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo
@@ -53,24 +65,19 @@ class MatrixLayer extends sys::core::Object {
         return a._init(heads, wq, bq, wk, bk, wv, bv, wo, bo);
     }
     
-    [SelfAttention] _ownSelfAttention(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
-        SelfAttention a = this.createOwn(SelfAttention:CLASSNAME);
-        return a._init(wq, bq, wk, bk, wv, bv);
-    }
-    
     [ReLUFeedForwardLayer] _ownReLUFeedForwardLayer(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
         ReLUFeedForwardLayer l = this.createOwn(ReLUFeedForwardLayer:CLASSNAME);
         return l._init(w1, b1, w2, b2);
     }
     
-    [LayerNormLayer] _ownLayerNormLayer(FltVector gamma, FltVector beta, int epsilon) {
-        LayerNormLayer l = this.createOwn(LayerNormLayer:CLASSNAME);
-        return l._init(gamma, beta, epsilon);
+    [RMSNormLayer] _ownRMSNormLayer(FltVector gamma) {
+        RMSNormLayer l = this.createOwn(RMSNormLayer:CLASSNAME);
+        return l._init(gamma, Flt:ONE_HUNDRED_THOUSANDTH_POS);
     }
     
-    [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {
-        LinearLayer l = this.createOwn(LinearLayer:CLASSNAME);
-        return l._init(w, b);
+    [SelfAttention] _ownSelfAttention(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
+        SelfAttention a = this.createOwn(SelfAttention:CLASSNAME);
+        return a._init(wq, bq, wk, bk, wv, bv);
     }
     
     [SoftmaxLayer] _ownSoftmaxLayer() {
@@ -78,4 +85,9 @@ class MatrixLayer extends sys::core::Object {
         return l;
     }
 
+    [SwiGLUFeedForwardLayer] _ownSwiGLUFeedForwardLayer(FltMatrix wg, FltVector bg, FltMatrix wu, FltVector bu, FltMatrix wd, FltVector bd) {
+        SwiGLUFeedForwardLayer l = this.createOwn(SwiGLUFeedForwardLayer:CLASSNAME);
+        return l._init(wg, bg, wu, bu, wd, bd);
+    }
+    
 }

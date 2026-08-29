@@ -9,7 +9,6 @@ use llm::layer::LayerNormLayer;
 use llm::layer::MultiHeadAttention;
 use llm::layer::ReLUFeedForwardLayer;
 
-use sys::core::Flt;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
@@ -28,9 +27,9 @@ class PostNormBlock extends llm::MatrixLayer {
         FltVector ffwdGamma, FltVector ffwdBeta
     ) {
         attn = this._ownMultiHeadAttention(attnHeads, attnWq, attnBq, attnWk, attnBk, attnWv, attnBv, attnWo, attnBo);
-        attnNorm = this._ownLayerNormLayer(attnGamma, attnBeta, Flt:ONE_TEN_THOUSANDTH_POS);
+        attnNorm = this._ownLayerNormLayer(attnGamma, attnBeta);
         ffwd = this._ownReLUFeedForwardLayer(ffwdW1, ffwdB1, ffwdW2, ffwdB2);
-        ffwdNorm = this._ownLayerNormLayer(ffwdGamma, ffwdBeta, Flt:ONE_TEN_THOUSANDTH_POS);
+        ffwdNorm = this._ownLayerNormLayer(ffwdGamma, ffwdBeta);
         if (!attn || !attnNorm || !ffwd || !ffwdNorm) {
             return null;
         }
