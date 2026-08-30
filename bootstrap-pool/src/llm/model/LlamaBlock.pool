@@ -34,7 +34,7 @@ class LlamaBlock extends llm::MatrixLayer {
             return null;
         }
         attn.useCM(true);
-        attn.useRoPE(true);
+        attn.useRoPE(MultiHeadAttention:ROPE_HALF_SPLITTING);
         
         int dm := attn.dModel;
         if (attnNorm.dModel != dm || ffwd.getDIn() != dm || ffwd.getDOut() != dm || ffwdNorm.dModel != dm) {

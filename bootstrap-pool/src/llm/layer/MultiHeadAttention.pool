@@ -15,6 +15,9 @@ use sys::core::math::FltMatrix;
 
 class MultiHeadAttention extends llm::MatrixLayer {
 
+    global int ROPE_NONE := 0;
+    global int ROPE_CONSECUTIVE_PAIRS := 1;
+    global int ROPE_HALF_SPLITTING := 2;
     LinearLayer linearQ;
     LinearLayer linearK;
     LinearLayer linearV;
@@ -50,8 +53,8 @@ class MultiHeadAttention extends llm::MatrixLayer {
         this.scale = Flt:sqrt(Flt:fromInt(this.dHead));
         return this;
     }
-    [MultiHeadAttention] useRoPE(int b) {
-        this.useRoPE = b;
+    [MultiHeadAttention] useRoPE(int mode) {
+        this.useRoPE = mode;
         return this;
     }
     [MultiHeadAttention] useCM(int b) {
@@ -64,14 +67,23 @@ class MultiHeadAttention extends llm::MatrixLayer {
         FltMatrix k := linearK.forwardMatrix(x);
         FltMatrix v := linearV.forwardMatrix(x);
         if (!q || !k || !v) { return null; }
-        if (useRoPE) { this.applyRoPE(q, k); }
 /*        
         this.rt().err().printNewline()
-            .printCString("Q: ").print(q).printNewline()
-            .printCString("K: ").print(k).printNewline()
-            .printCString("V: ").print(v).printNewline()
+            .printCString("X: ").print(x).printNewline()
+            .printCString("Q (before RoPE): ").print(q).printNewline()
+            .printCString("K (before RoPE): ").print(k).printNewline()
+            .printCString("V (before RoPE): ").print(v).printNewline()
         ;
-*/        
+//*/        
+        if (useRoPE == MultiHeadAttention:ROPE_HALF_SPLITTING) { this.applyRoPEHS(q, k); }
+        else if (useRoPE == MultiHeadAttention:ROPE_CONSECUTIVE_PAIRS) { this.applyRoPECP(q, k); }
+/*        
+        this.rt().err()
+            .printCString("Q (after RoPE): ").print(q).printNewline()
+            .printCString("K (after RoPE): ").print(k).printNewline()
+            .printCString("V (after RoPE): ").print(v).printNewline()
+        ;
+//*/        
         int dm := this.dModel;
         int dh := this.dHead;
         int dt := x.rows();
@@ -88,11 +100,21 @@ class MultiHeadAttention extends llm::MatrixLayer {
                 }
 /*
                 this.rt().err()
+                    .printInt(i).printCString("-scores (before scale): ").print(scores).printNewline()
+                ;
+                this.rt().err()
                     .printInt(i).printCString("-scores: ").print(scores).printNewline()
                 ;
 */
                 scores.divFlt(sh);
                 if (useCM) { SelfAttention:applyCausalMask(scores); }
+/*
+                this.rt().err()
+                    .printInt(i).printCString("-dHead: ").printInt(this.dHead).printNewline()
+                    .printInt(i).printCString("-scale: ").printFlt(scale).printNewline()
+                    .printInt(i).printCString("-scores (after scale): ").print(scores).printNewline()
+                ;
+*/
                 FltMatrix weights := softmax.forwardMatrix(scores);
                 if (!FltMatrix:mmMulInto(weights, 0, 0, v, 0, start, tmp, 0, start, dt, dh, dt)) {
                     this.rt().err().printCString("aaaahhhh2").printNewline();
@@ -101,9 +123,9 @@ class MultiHeadAttention extends llm::MatrixLayer {
                 this.rt().err()
                     .printInt(i).printCString("-scaled: ").print(scores).printNewline()
                     .printInt(i).printCString("-weights: ").print(weights).printNewline()
-                    .printInt(i).printCString("-tmp: ").print(tmp).printNewline()
+//                    .printInt(i).printCString("-tmp: ").print(tmp).printNewline()
                 ;
-*/
+//*/
                 weights.destroy();
             }
             scores.destroy();
@@ -115,7 +137,7 @@ class MultiHeadAttention extends llm::MatrixLayer {
             .printCString("tmp: ").print(tmp).printNewline()
             .printCString("Y: ").print(y).printNewline()
         ;
-*/        
+//*/        
         tmp.destroy();
         v.destroy();
         k.destroy();
@@ -123,37 +145,67 @@ class MultiHeadAttention extends llm::MatrixLayer {
         return y;
     }
     
-    [] applyRoPE(FltMatrix q, FltMatrix k) {
-        int dmFlt := Flt:fromInt(dModel);
+    [] applyRoPECP(FltMatrix q, FltMatrix k) {
+        int dhFlt := Flt:fromInt(dHead);
         int dh := this.dHead;
+        int dh2 := this.dHead/2;
         int pos = q.rows();
         while (pos--) {
             int posFlt := Flt:fromInt(pos);
-            int i = this.heads;
-            while (i--) {
-                int start := i*dh;
-                int j := start + dh;
-                while (j > start) {
-                    int idx2 := --j;
-                    int idx1 := --j;
-                    int alpha := MatrixLayer:alpha(dmFlt, posFlt, idx1 - start);
-                    int cosA := Flt:cos(alpha);
-                    int sinA := Flt:sin(alpha);
-                    
-                    // In-place rotation for matrix Q
-                    int q1 := q.get(pos, idx1);
-                    int q2 := q.get(pos, idx2);
-                    q.set(pos, idx1, Flt:sub(Flt:mul(q1, cosA), Flt:mul(q2, sinA)));
-                    q.set(pos, idx2, Flt:add(Flt:mul(q2, cosA), Flt:mul(q1, sinA)));
-                    
-                    // In-place rotation for matrix K
-                    int k1 := k.get(pos, idx1);
-                    int k2 := k.get(pos, idx2);
-                    k.set(pos, idx1, Flt:sub(Flt:mul(k1, cosA), Flt:mul(k2, sinA)));
-                    k.set(pos, idx2, Flt:add(Flt:mul(k2, cosA), Flt:mul(k1, sinA)));
+            int h = this.heads;
+            while (h--) {
+                int start := h*dh;
+                int i := 0;
+                while (i < dh2) {
+                    // Consecutive Pairs 
+                    int idx1 := start + 2*i;
+                    int idx2 := idx1 + 1;
+                    int alpha := MatrixLayer:alpha(dhFlt, posFlt, 2*i);
+                    this.rotate(q, k, pos, idx1, idx2, alpha);
+                    i++;
                 }
             }
         }
+    }
+    
+    [] applyRoPEHS(FltMatrix q, FltMatrix k) {
+        int dhFlt := Flt:fromInt(dHead);
+        int dh := this.dHead;
+        int dh2 := this.dHead/2;
+        int pos = q.rows();
+        while (pos--) {
+            int posFlt := Flt:fromInt(pos);
+            int h = this.heads;
+            while (h--) {
+                int start := h*dh;
+                int i := 0;
+                while (i < dh2) {
+                    // Half-Splitting
+                    int idx1 := start + i;
+                    int idx2 := idx1 + dh2;
+                    int alpha := MatrixLayer:alpha(dhFlt, posFlt, 2*i);
+                    this.rotate(q, k, pos, idx1, idx2, alpha);
+                    i++;
+                }
+            }
+        }
+    }
+    
+    [] rotate(FltMatrix q, FltMatrix k, int pos, int idx1, int idx2, int alpha) {
+        int cosA := Flt:cos(alpha);
+        int sinA := Flt:sin(alpha);
+        
+        // In-place rotation for matrix Q
+        int q1 := q.get(pos, idx1);
+        int q2 := q.get(pos, idx2);
+        q.set(pos, idx1, Flt:sub(Flt:mul(q1, cosA), Flt:mul(q2, sinA)));
+        q.set(pos, idx2, Flt:add(Flt:mul(q2, cosA), Flt:mul(q1, sinA)));
+        
+        // In-place rotation for matrix K
+        int k1 := k.get(pos, idx1);
+        int k2 := k.get(pos, idx2);
+        k.set(pos, idx1, Flt:sub(Flt:mul(k1, cosA), Flt:mul(k2, sinA)));
+        k.set(pos, idx2, Flt:add(Flt:mul(k2, cosA), Flt:mul(k1, sinA)));
     }
 
 }

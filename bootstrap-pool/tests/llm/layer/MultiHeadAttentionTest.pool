@@ -70,7 +70,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.flt24mat(0x3f800000,0x00000000,0x00000000,0x00000000, 0x3ec14d03,0x3f1f597f,0x00000000,0x00000000)
         );
         this.caseSelfAttention( // Identitäts-Projektion (Grundfunktion)
@@ -84,7 +84,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.flt24mat(0x3f800000,0x00000000,0x00000000,0x00000000, 0x3ea91504,0x3f2b757e,0x00000000,0x00000000)
         );
         this.caseSelfAttention( // Null-Eingabe
@@ -98,7 +98,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.scaled24mat(1, 0,0,0,0, 0,0,0,0)
         );
         this.caseSelfAttention(
@@ -112,7 +112,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.scaled24mat(1, 1,2,3,4, 5,6,5,6)
         );
         this.caseSelfAttention( // Output-Projektion W_O mischt Köpfe
@@ -126,7 +126,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 0,0,0,1, 0,0,1,0, 0,1,0,0, 1,0,0,0),
             this.scaled4vec(1, 0,0,0,0),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.scaled14mat(1, 0,0,0,1)
         );
         this.caseSelfAttention(
@@ -140,7 +140,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 6,5,4,3),
             this.scaled44mat(1, 4,5,6,7, -1,0,1,2, 3,5,7,9, -6,4,-3,0),
             this.scaled4vec(1, -2,0,-1,-2),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.scaled24mat(1, -386,210,-132,76, -874,610,-204,332)
         );
         this.caseSelfAttention(
@@ -154,7 +154,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled3vec(1, 1,2,3),
             this.scaled33mat(1, 4,5,6, 5,6,7, 6,7,8),
             this.scaled3vec(1, 8,5,2),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.scaled23mat(1, 532,631,730, 1225,1459,1693)
         );
         this.caseSelfAttention( // empty input
@@ -168,10 +168,10 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled4vec(1, 0,0,0,0),
             this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1),
             this.scaled4vec(1, 0,0,0,0),
-            false, // useRoPE
+            MultiHeadAttention:ROPE_NONE,
             this.flt04mat()
         );
-        this.caseSelfAttention( // empty input
+        this.caseSelfAttention(
             this.scaled22mat(10, 10,15, 5,-20),
             1,
             this.scaled22mat(10, 5,-2, 1,8),
@@ -182,8 +182,176 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
             this.scaled2vec(10, -2,2),
             this.scaled22mat(10, 6,-3, 1,7),
             this.scaled2vec(10, 0,-2),
-            true, // useRoPE
+            MultiHeadAttention:ROPE_CONSECUTIVE_PAIRS,
             this.flt22mat(0x3f228f5c,0x3e47ae11, 0xbc444032,0xbeff3728)
+        );
+        this.caseSelfAttention( // No RoPE
+            this.scaled28mat(10,
+                5,6,2,-3,1,5,-2,4,
+                4,-5,7,3,-2,6,5,-1
+            ),
+            2,
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(10,
+                5,5,5,5,5,5,5,5,
+                0,5,5,5,5,5,5,5,
+                0,0,5,5,5,5,5,5,
+                0,0,0,5,5,5,5,5,
+                0,0,0,0,5,5,5,5,
+                0,0,0,0,0,5,5,5,
+                0,0,0,0,0,0,5,5,
+                0,0,0,0,0,0,0,5
+            ),
+            this.scaled8vec(10, 0,1,0,1,0,1,0,1),
+            MultiHeadAttention:ROPE_NONE,
+            this.flt28mat(
+                0x3e800000,0x3f266667,0x3f266666,0x3f19999a,0x3f0ccccd,0x3f666667,0x3f333334,0x3f800000,
+                0x3e5fe3da,0x3e8c23e5,0x3edc6a46,0x3f119290,0x3ede2e53,0x3f4feaf7,0x3f4f4f2a,0x3f77f8f8
+            )
+        );
+        this.caseSelfAttention( // RoPE with Consecutive Pairs
+            this.scaled28mat(10,
+                5,6,2,-3,1,5,-2,4,
+                4,-5,7,3,-2,6,5,-1
+            ),
+            2,
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(10,
+                5,5,5,5,5,5,5,5,
+                0,5,5,5,5,5,5,5,
+                0,0,5,5,5,5,5,5,
+                0,0,0,5,5,5,5,5,
+                0,0,0,0,5,5,5,5,
+                0,0,0,0,0,5,5,5,
+                0,0,0,0,0,0,5,5,
+                0,0,0,0,0,0,0,5
+            ),
+            this.scaled8vec(10, 0,1,0,1,0,1,0,1),
+            MultiHeadAttention:ROPE_CONSECUTIVE_PAIRS,
+            this.flt28mat(
+                0x3e800000,0x3f266667,0x3f266666,0x3f19999a,0x3f0ccccd,0x3f666667,0x3f333334,0x3f800000,
+                0x3e62afa8,0x3e9ceabc,0x3ee63398,0x3f124584,0x3edd2262,0x3f4fcd4d,0x3f520ba7,0x3f78abea
+            )
+        );
+        this.caseSelfAttention( // RoPE with Half-Splitting
+            this.scaled28mat(10,
+                5,6,2,-3,1,5,-2,4,
+                4,-5,7,3,-2,6,5,-1
+            ),
+            2,
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(1,
+                1,0,0,0,0,0,0,0,
+                0,1,0,0,0,0,0,0,
+                0,0,1,0,0,0,0,0,
+                0,0,0,1,0,0,0,0,
+                0,0,0,0,1,0,0,0,
+                0,0,0,0,0,1,0,0,
+                0,0,0,0,0,0,1,0,
+                0,0,0,0,0,0,0,1
+            ),
+            this.scaled8vec(1, 0,0,0,0,0,0,0,0),
+            this.scaled88mat(10,
+                5,5,5,5,5,5,5,5,
+                0,5,5,5,5,5,5,5,
+                0,0,5,5,5,5,5,5,
+                0,0,0,5,5,5,5,5,
+                0,0,0,0,5,5,5,5,
+                0,0,0,0,0,5,5,5,
+                0,0,0,0,0,0,5,5,
+                0,0,0,0,0,0,0,5
+            ),
+            this.scaled8vec(10, 0,1,0,1,0,1,0,1),
+            MultiHeadAttention:ROPE_HALF_SPLITTING,
+            this.flt28mat(
+                0x3e800000,0x3f266667,0x3f266666,0x3f19999a,0x3f0ccccd,0x3f666667,0x3f333334,0x3f800000,
+                0x3e5da773,0x3e7d730a,0x3ed496e2,0x3f110376,0x3edd8840,0x3f4f83e9,0x3f4e5bf3,0x3f7769dd
+            )
         );
         
         return this.successCases();
@@ -200,6 +368,7 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(x)
             .printCString(" heads ").printInt(heads)
+            .printCString(" rope ").printInt(useRoPE)
             .printCString(" wq ").print(wq)
             .printCString(" bq ").print(bq)
             .printCString(" wk ").print(wk)
