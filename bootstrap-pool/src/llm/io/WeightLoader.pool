@@ -12,6 +12,7 @@ use sys::core::math::FltVector;
 class WeightLoader extends sys::core::Object {
 
     abstract [FltMatrix] loadMatrix(String id);
+    abstract [FltMatrix] loadTMatrix(String id);
     abstract [FltVector] loadVector(String id);
     
     // TODO: remove with implicit cast

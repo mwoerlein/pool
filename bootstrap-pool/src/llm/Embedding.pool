@@ -14,19 +14,23 @@ class Embedding extends sys::core::Object {
     FltMatrix weights; // vocab_size x d_model
     int usePE;
     
+    int dModel;
+    
     [Embedding] _init(FltMatrix weights) {
         if (!weights) { return null; }
         this.weights = this.own(weights);
+        this.dModel = weights.cols();
         return this;
     }
     [Embedding] usePE(int b) {
         this.usePE = b;
         return this;
     }
+    [int] getDModel() { return dModel; }
    
     [FltMatrix] forwardTokens(FltVector tokenIds) {
         if (!tokenIds) { return null; }
-        int dm := this.weights.cols();
+        int dm := this.dModel;
         int pos = tokenIds.length();
         FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
         ret.init(pos, dm);

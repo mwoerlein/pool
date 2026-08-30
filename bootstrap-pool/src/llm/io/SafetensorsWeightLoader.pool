@@ -65,6 +65,14 @@ class SafetensorsWeightLoader extends WeightLoader {
         view.destroy();
         return ret;
     }
+
+    [FltMatrix] loadTMatrix(String id) {
+        FltMatrix m = this.loadMatrix(id);
+        if (!m) { return null; }
+        FltMatrix t = FltMatrix:transpose(m);
+        m.destroy();
+        return t;
+    }
     
     [FltVector] loadVector(String id) {
         ObjectValue desc = null;

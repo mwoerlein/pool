@@ -1,0 +1,150 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use llm::Embedding;
+use llm::io::WeightLoader;
+use llm::layer::LinearLayer;
+use llm::layer::RMSNormLayer;
+
+use sys::core::String;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
+
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class LlamaModel extends llm::MatrixLayer {
+
+    Embedding embedding;
+    AnyList blocks; // List<LlamaBlock>
+    RMSNormLayer finalNorm;
+    LinearLayer lmHead;
+    
+    [LlamaModel] _init(
+        int blocks,
+        int dModel,
+        int attnHeads,
+        WeightLoader loader
+    ) {
+        this.blocks = this.createOwn(AnyList:CLASSNAME);
+        String id = this.rt().createInstance(String:CLASSNAME);
+        String base = this.rt().createInstance(String:CLASSNAME);
+
+        FltMatrix wEmb = loader.loadMatrix(id.assignCString("model.embed_tokens.weight"));
+        this.embedding = this._ownEmbedding(wEmb);
+
+        int i = 0;
+        while (i < blocks) {
+            base.assignCString("model.layers.").printInt(i);
+            LlamaBlock b = this.createOwn(LlamaBlock:CLASSNAME);
+            if (b._init(
+                loader.loadVector(this._buildId(id, base, ".input_layernorm.weight")),
+                
+                attnHeads,
+                loader.loadTMatrix(this._buildId(id, base, ".self_attn.q_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".self_attn.q_proj.bias")),
+                loader.loadTMatrix(this._buildId(id, base, ".self_attn.k_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".self_attn.k_proj.bias")),
+                loader.loadTMatrix(this._buildId(id, base, ".self_attn.v_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".self_attn.v_proj.bias")),
+                loader.loadTMatrix(this._buildId(id, base, ".self_attn.o_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".self_attn.o_proj.bias")),
+                
+                loader.loadVector(this._buildId(id, base, ".post_attention_layernorm.weight")),
+                
+                loader.loadTMatrix(this._buildId(id, base, ".mlp.gate_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".mlp.gate_proj.bias")),
+                loader.loadTMatrix(this._buildId(id, base, ".mlp.up_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".mlp.up_proj.bias")),
+                loader.loadTMatrix(this._buildId(id, base, ".mlp.down_proj.weight")),
+                loader.loadVector(this._buildId(id, base, ".mlp.down_proj.bias"))
+            ) && b.dModel == dModel) {
+                this.rt().err().printCString(" layer-").printInt(i).printCString(": ").print(b).printChar(' ').printInt(b.dModel).printNewline();
+                
+                this.blocks.add(b);
+            } else {
+                b.destroy();
+            }
+            i++;
+        }
+
+        this.finalNorm = this._ownRMSNormLayer(loader.loadVector(id.assignCString("model.norm.weight")));
+        
+        FltMatrix wHead = loader.loadTMatrix(id.assignCString("lm_head.weight"));
+        if (!wHead) { wHead = FltMatrix:transpose(wEmb); }
+        this.lmHead = this._ownLinearLayer(wHead, loader.loadVector(id.assignCString("lm_head.bias")));
+        
+        base.destroy();
+        id.destroy();
+        
+        if (!this.embedding || !this.finalNorm || !this.lmHead || this.blocks.size() != blocks) {
+            this.rt().err().printCString("!!!LAYER!!!")
+                .printCString(" emb : ").print(this.embedding)
+                .printCString(" norm: ").print(this.finalNorm)
+                .printCString(" head: ").print(this.lmHead)
+                .printCString(" blocks: ").printInt(this.blocks.size())
+                .printNewline();
+            return null;
+        }
+        
+        this.embedding.usePE(false);
+
+        if (this.embedding.getDModel() != dModel || this.finalNorm.dModel != dModel || this.lmHead.dModel != dModel) {
+            this.rt().err().printCString("!!!DMODEL!!!")
+                .printCString(" emb : ").printInt(this.embedding.getDModel())
+                .printCString(" norm: ").printInt(this.finalNorm.dModel)
+                .printCString(" head: ").printInt(this.lmHead.dModel)
+                .printNewline();
+            return null;
+        }
+        this.dModel = dModel;
+        
+        return this;
+    }
+    
+    [String] _buildId(String id, String base, cstring tail) {
+        id.assignString(base).printCString(tail);
+        return id;
+    }
+    
+    [FltMatrix] forwardTokens(FltVector tokenIds) {
+        if (!tokenIds) { return null; }
+        FltMatrix x = embedding.forwardTokens(tokenIds);
+//        this.rt().err().printCString("found tokens: ").printInt(x.rows()).printChar('x').printInt(x.cols()).printNewline();
+        FltMatrix logits = this.forwardMatrix(x);
+//        this.rt().err().printCString("found logits: ").printInt(logits.rows()).printChar('x').printInt(logits.cols()).printNewline();
+//        this.rt().err().printCString("greedy next token: ").printInt(logits.rowMaxCol(logits.rows()-1)).printNewline();
+        x.destroy();
+        return logits;
+    }
+    
+    [FltMatrix] forwardMatrix(FltMatrix x) {
+        if (!x) { return null; }
+        
+        FltMatrix cur = x;
+        {
+            AnyIterator it = blocks.iterator();
+            while (it.hasNext()) {
+//        this.rt().err().printCString("run block").printNewline();
+                LlamaBlock block := it.next();
+                FltMatrix next = block.forwardMatrix(cur);
+                if (!x.isSameAs(cur)) { cur.destroy(); }
+                cur = next;
+            }
+            it.destroy();
+        }
+//        this.rt().err().printCString("cur: ").printInt(cur.rows()).printChar('x').printInt(cur.cols()).printNewline();
+        FltMatrix norm = finalNorm.forwardMatrix(cur);
+        if (!x.isSameAs(cur)) { cur.destroy(); }
+//        this.rt().err().printCString("norm: ").printInt(norm.rows()).printChar('x').printInt(norm.cols()).printNewline();
+        FltMatrix y = lmHead.forwardMatrix(norm);
+        norm.destroy();
+//        this.rt().err().printCString("y: ").printInt(y.rows()).printChar('x').printInt(y.cols()).printNewline();
+        
+        return y;
+    }
+}
