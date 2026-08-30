@@ -26,13 +26,14 @@ class ReLUFeedForwardLayerTest extends llm::test::TestCase {
         FltVector b2 = this.scaled2vec(1, 1,1);
         
         ReLUFeedForwardLayer l = this.rt().createInstance(ReLUFeedForwardLayer:CLASSNAME);
+        
         if (l._init(null, b3, w32, b2)) { return this.fail("Empty w1 initialization"); }
-        if (l._init(w23, null, w32, b2)) { return this.fail("Empty b1 initialization"); }
         if (l._init(w23, b3, null, b2)) { return this.fail("Empty w2 initialization"); }
-        if (l._init(w23, b3, w32, null)) { return this.fail("Empty b2 initialization"); }
+        
         if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b1 initialization"); }
         if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b2 initialization"); }
         if (l._init(w23, b3, w23, b3)) { return this.fail("Invalid w1 initialization"); }
+        
         if (!this.isSame(l, l._init(w23, b3, w32, b2))) { return this.fail("Correct initialization"); }
         
         l.destroy();

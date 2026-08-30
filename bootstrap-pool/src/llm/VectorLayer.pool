@@ -40,12 +40,6 @@ class VectorLayer extends MatrixLayer {
         }
     }
     
-    [FltVector] _emptyVector(int len) {
-        FltVector ret = this.rt().createInstance(FltVector:CLASSNAME);
-        ret.init(len);
-        return ret;
-    }
-    
     // TODO: remove with implicit cast
     [VectorLayer] vectorLayer() { return this; }
 }

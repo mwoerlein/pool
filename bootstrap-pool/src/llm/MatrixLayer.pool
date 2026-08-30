@@ -24,12 +24,6 @@ class MatrixLayer extends sys::core::Object {
     
     abstract [FltMatrix] forwardMatrix(FltMatrix x);
     
-    [FltMatrix] _emptyMatrix(int rows, int cols) {
-        FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
-        ret.init(rows, cols);
-        return ret;
-    }
-    
     // TODO: remove with implicit cast
     [MatrixLayer] matrixLayer() { return this; }
     
@@ -47,27 +41,56 @@ class MatrixLayer extends sys::core::Object {
     
     // factory helper
     
+    [FltMatrix] _emptyMatrix(int rows, int cols) {
+        FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(rows, cols);
+        return ret;
+    }
+    
+    [FltVector] _emptyVector(int len) {
+        FltVector ret = this.rt().createInstance(FltVector:CLASSNAME);
+        ret.init(len);
+        return ret;
+    }
+    
+    [FltVector] _ensureVector(FltVector v, int len) {
+        if (!v) { return this._emptyVector(len); }
+        return v;
+    }
+    
     [LayerNormLayer] _ownLayerNormLayer(FltVector gamma, FltVector beta) {
+        if (!gamma) { return null; }
         LayerNormLayer l = this.createOwn(LayerNormLayer:CLASSNAME);
-        return l._init(gamma, beta, Flt:ONE_TEN_THOUSANDTH_POS);
+        return l._init(gamma, this._ensureVector(beta, gamma.length()), Flt:ONE_TEN_THOUSANDTH_POS);
     }
     
     [LinearLayer] _ownLinearLayer(FltMatrix w, FltVector b) {
+        if (!w) { return null; }
         LinearLayer l = this.createOwn(LinearLayer:CLASSNAME);
-        return l._init(w, b);
+        return l._init(w, this._ensureVector(b, w.cols()));
     }
     
     [MultiHeadAttention] _ownMultiHeadAttention(int heads,
         FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk,
         FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo
     ) {
+        if (!wq || !wk || !wv || !wo) { return null; }
         MultiHeadAttention a = this.createOwn(MultiHeadAttention:CLASSNAME);
-        return a._init(heads, wq, bq, wk, bk, wv, bv, wo, bo);
+        return a._init(heads,
+            wq, this._ensureVector(bq, wq.cols()),
+            wk, this._ensureVector(bk, wk.cols()),
+            wv, this._ensureVector(bv, wv.cols()),
+            wo, this._ensureVector(bo, wo.cols())
+        );
     }
     
     [ReLUFeedForwardLayer] _ownReLUFeedForwardLayer(FltMatrix w1, FltVector b1, FltMatrix w2, FltVector b2) {
+        if (!w1 || !w2) { return null; }
         ReLUFeedForwardLayer l = this.createOwn(ReLUFeedForwardLayer:CLASSNAME);
-        return l._init(w1, b1, w2, b2);
+        return l._init(
+            w1, this._ensureVector(b1, w1.cols()),
+            w2, this._ensureVector(b2, w2.cols())
+        );
     }
     
     [RMSNormLayer] _ownRMSNormLayer(FltVector gamma) {
@@ -76,8 +99,13 @@ class MatrixLayer extends sys::core::Object {
     }
     
     [SelfAttention] _ownSelfAttention(FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv) {
+        if (!wq || !wk || !wv) { return null; }
         SelfAttention a = this.createOwn(SelfAttention:CLASSNAME);
-        return a._init(wq, bq, wk, bk, wv, bv);
+        return a._init(
+            wq, this._ensureVector(bq, wq.cols()),
+            wk, this._ensureVector(bk, wk.cols()),
+            wv, this._ensureVector(bv, wv.cols())
+        );
     }
     
     [SoftmaxLayer] _ownSoftmaxLayer() {
@@ -86,8 +114,18 @@ class MatrixLayer extends sys::core::Object {
     }
 
     [SwiGLUFeedForwardLayer] _ownSwiGLUFeedForwardLayer(FltMatrix wg, FltVector bg, FltMatrix wu, FltVector bu, FltMatrix wd, FltVector bd) {
+        if (!wg || !wu || !wd) { return null; }
         SwiGLUFeedForwardLayer l = this.createOwn(SwiGLUFeedForwardLayer:CLASSNAME);
-        return l._init(wg, bg, wu, bu, wd, bd);
+        return l._init(
+            wg, this._ensureVector(bg, wg.cols()),
+            wu, this._ensureVector(bu, wu.cols()),
+            wd, this._ensureVector(bd, wd.cols())
+        );
     }
     
+    [Embedding] _ownEmbedding(FltMatrix weights) {
+        Embedding e = this.createOwn(Embedding:CLASSNAME);
+        return e._init(weights);
+    }
+
 }

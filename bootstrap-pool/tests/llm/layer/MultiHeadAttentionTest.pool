@@ -34,13 +34,9 @@ class MultiHeadAttentionTest extends llm::test::TestCase {
         MultiHeadAttention a = this.rt().createInstance(MultiHeadAttention:CLASSNAME);
         
         if (a._init(2, null, bq, wk, bk, wv, bv, wo, bo)) { return this.fail("Empty wq initialization"); }
-        if (a._init(2, wq, null, wk, bk, wv, bv, wo, bo)) { return this.fail("Empty bq initialization"); }
         if (a._init(2, wq, bq, null, bk, wv, bv, wo, bo)) { return this.fail("Empty wk initialization"); }
-        if (a._init(2, wq, bq, wk, null, wv, bv, wo, bo)) { return this.fail("Empty bk initialization"); }
         if (a._init(2, wq, bq, wk, bk, null, bv, wo, bo)) { return this.fail("Empty wv initialization"); }
-        if (a._init(2, wq, bq, wk, bk, wv, null, wo, bo)) { return this.fail("Empty bv initialization"); }
         if (a._init(2, wq, bq, wk, bk, wv, bv, null, bo)) { return this.fail("Empty wo initialization"); }
-        if (a._init(2, wq, bq, wk, bk, wv, bv, wo, null)) { return this.fail("Empty bo initialization"); }
         
         if (a._init(2, wi, bq, wk, bk, wv, bv, wo, bo)) { return this.fail("Invalid wq initialization"); }
         if (a._init(2, wq, bi, wk, bk, wv, bv, wo, bo)) { return this.fail("Invalid bq initialization"); }

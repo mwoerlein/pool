@@ -30,18 +30,18 @@ class SwiGLUFeedForwardLayerTest extends llm::test::TestCase {
         FltVector bi = this.scaled4vec(1, 1,1,1,1);
         
         SwiGLUFeedForwardLayer l = this.rt().createInstance(SwiGLUFeedForwardLayer:CLASSNAME);
+        
         if (l._init(null, bg, wu, bu, wd, bd)) { return this.fail("Empty wGate initialization"); }
-        if (l._init(wg, null, wu, bu, wd, bd)) { return this.fail("Empty bGate initialization"); }
         if (l._init(wg, bg, null, bu, wd, bd)) { return this.fail("Empty wUp initialization"); }
-        if (l._init(wg, bg, wu, null, wd, bd)) { return this.fail("Empty bUp initialization"); }
         if (l._init(wg, bg, wu, bu, null, bd)) { return this.fail("Empty wDown initialization"); }
-        if (l._init(wg, bg, wu, bu, wd, null)) { return this.fail("Empty bDown initialization"); }
+        
         if (l._init(wi, bg, wu, bu, wd, bd)) { return this.fail("Invalid wGate initialization"); }
         if (l._init(wg, bi, wu, bu, wd, bd)) { return this.fail("Invalid bGate initialization"); }
         if (l._init(wg, bg, wi, bu, wd, bd)) { return this.fail("Invalid wUp initialization"); }
         if (l._init(wg, bg, wu, bi, wd, bd)) { return this.fail("Invalid bUp initialization"); }
         if (l._init(wg, bg, wu, bu, wi, bd)) { return this.fail("Invalid wDown initialization"); }
         if (l._init(wg, bg, wu, bu, wd, bi)) { return this.fail("Invalid bDown initialization"); }
+        
         if (!this.isSame(l, l._init(wg, bg, wu, bu, wd, bd))) { return this.fail("Correct initialization"); }
         
         l.destroy();

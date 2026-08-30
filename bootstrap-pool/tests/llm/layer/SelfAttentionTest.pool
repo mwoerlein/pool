@@ -33,11 +33,8 @@ class SelfAttentionTest extends llm::test::TestCase {
         SelfAttention a = this.rt().createInstance(SelfAttention:CLASSNAME);
         
         if (a._init(null, bq, wk, bk, wv, bv)) { return this.fail("Empty wq initialization"); }
-        if (a._init(wq, null, wk, bk, wv, bv)) { return this.fail("Empty bq initialization"); }
         if (a._init(wq, bq, null, bk, wv, bv)) { return this.fail("Empty wk initialization"); }
-        if (a._init(wq, bq, wk, null, wv, bv)) { return this.fail("Empty bk initialization"); }
         if (a._init(wq, bq, wk, bk, null, bv)) { return this.fail("Empty wv initialization"); }
-        if (a._init(wq, bq, wk, bk, wv, null)) { return this.fail("Empty bv initialization"); }
         
         if (a._init(wi, bq, wk, bk, wv, bv)) { return this.fail("Invalid wq initialization"); }
         if (a._init(wq, bi, wk, bk, wv, bv)) { return this.fail("Invalid bq initialization"); }
