@@ -120,6 +120,22 @@ class FltMatrix extends sys::core::utils::DWordArray {
         return ret;
     }
     
+    [int] rowMaxCol(int row) {
+        int pos = row * this._cols;
+        int ret = 0;
+        int max = this._saveGetDWord(pos++);
+        int i = 1;
+        while (i < this._cols) {
+            int x := this._saveGetDWord(pos++);
+            if (Flt:compare(x, max) > 0) {
+                ret = i;
+                max = x;
+            }
+            i++;
+        }
+        return ret;
+    }
+    
     [FltMatrix] rowMulFlt(int row, int f) {
         int i = this._cols;
         int pos = row * this._cols;
