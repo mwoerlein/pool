@@ -98,11 +98,14 @@ class MemoryManager extends Allocator {
             // sort free elements
             freeHead = this._sortElements(freeHead);
             
-            // extract available elements
             MemoryInfo availableList = this.available;
-            MemoryInfo availableHead = availableList.next;
-            availableList.next.prev = availableList.prev.next = null;
-            availableList.next = availableList.prev = availableList;
+            MemoryInfo availableHead = null;
+            if (Address:compare(availableList.next, availableList)) {
+                // extract available elements
+                availableHead = availableList.next;
+                availableList.next.prev = availableList.prev.next = null;
+                availableList.next = availableList.prev = availableList;
+            }
             
             // merge free elements and available elements
             availableHead = this._mergeSortedElements(availableHead, freeHead);
