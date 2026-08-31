@@ -63,8 +63,7 @@ class LlamaModel extends llm::MatrixLayer {
                 loader.loadTMatrix(this._buildId(id, base, ".mlp.down_proj.weight")),
                 loader.loadVector(this._buildId(id, base, ".mlp.down_proj.bias"))
             ) && b.dModel == dModel) {
-                this.rt().err().printCString(" layer-").printInt(i).printCString(": ").print(b).printChar(' ').printInt(b.dModel).printNewline();
-                
+                //this.rt().err().printCString(" layer-").printInt(i).printCString(": ").print(b).printChar(' ').printInt(b.dModel).printNewline();
                 this.blocks.add(b);
             } else {
                 b.destroy();

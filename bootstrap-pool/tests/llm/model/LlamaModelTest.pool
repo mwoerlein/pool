@@ -1,0 +1,150 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use llm::io::MemoryWeightLoader;
+use llm::io::WeightLoader;
+
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltVector;
+use sys::core::math::FltMatrix;
+
+class LlamaModelTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testInitialization();
+        this.testLlamaModel();
+    }
+    
+    [int] testInitialization() {
+        this.start("testInitialization");
+/*
+        FltMatrix w23 = this.scaled23mat(1, 5,5,5, 6,6,6);
+        FltMatrix w32 = this.scaled32mat(1, 4,4, 5,5, 6,6);
+        FltVector b3 = this.scaled3vec(1, 1,1,1);
+        FltVector b2 = this.scaled2vec(1, 1,1);
+*/        
+        LlamaModel l = this.rt().createInstance(LlamaModel:CLASSNAME);
+/*
+        if (l._init(null, b2, w32, b3)) { return this.fail("Empty w1 initialization"); }
+        if (l._init(w23, null, w32, b3)) { return this.fail("Empty b1 initialization"); }
+        if (l._init(w23, b2, null, b3)) { return this.fail("Empty w2 initialization"); }
+        if (l._init(w23, b2, w32, null)) { return this.fail("Empty b2 initialization"); }
+        if (l._init(w23, b3, w32, b3)) { return this.fail("Invalid b1 initialization"); }
+        if (l._init(w23, b2, w32, b2)) { return this.fail("Invalid b2 initialization"); }
+        if (l._init(w23, b2, w23, b2)) { return this.fail("Invalid w1 initialization"); }
+        if (!this.isSame(l, l._init(w23, b2, w32, b3))) { return this.fail("Correct initialization"); }
+*/       
+        l.destroy();
+        
+        return this.success();
+    }
+
+    [int] testLlamaModel() {
+        this.startCases("testLlamaModel");
+        
+        {
+            MemoryWeightLoader l := this.rt().createInstance(MemoryWeightLoader:CLASSNAME);
+            l.addCMatrix("model.embed_tokens.weight", this.scaled34mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12));
+            l.addCVector("model.layers.0.input_layernorm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("model.layers.0.self_attn.q_proj.weight", this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+            l.addCMatrix("model.layers.0.self_attn.k_proj.weight", this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+            l.addCMatrix("model.layers.0.self_attn.v_proj.weight", this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+            l.addCMatrix("model.layers.0.self_attn.o_proj.weight", this.scaled44mat(1, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0));
+            l.addCVector("model.layers.0.post_attention_layernorm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("model.layers.0.mlp.gate_proj.weight", this.scaled34mat(1, 0,0,0, 0,0,0, 0,0,0, 0,0,0));
+            l.addCMatrix("model.layers.0.mlp.up_proj.weight", this.scaled34mat(1, 0,0,0, 0,0,0, 0,0,0, 0,0,0));
+            l.addCMatrix("model.layers.0.mlp.down_proj.weight", this.scaled43mat(1, 0,0,0, 0,0,0, 0,0,0, 0,0,0));
+            l.addCVector("model.layers.1.input_layernorm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("model.layers.1.self_attn.q_proj.weight", this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+            l.addCMatrix("model.layers.1.self_attn.k_proj.weight", this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+            l.addCMatrix("model.layers.1.self_attn.v_proj.weight", this.scaled44mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1));
+            l.addCMatrix("model.layers.1.self_attn.o_proj.weight", this.scaled44mat(1, 1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0));
+            l.addCVector("model.layers.1.post_attention_layernorm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("model.layers.1.mlp.gate_proj.weight", this.scaled34mat(1, 0,0,0, 0,0,0, 0,0,0, 0,0,0));
+            l.addCMatrix("model.layers.1.mlp.up_proj.weight", this.scaled34mat(1, 0,0,0, 0,0,0, 0,0,0, 0,0,0));
+            l.addCMatrix("model.layers.1.mlp.down_proj.weight", this.scaled43mat(1, 0,0,0, 0,0,0, 0,0,0, 0,0,0));
+            l.addCVector("model.norm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("lm_head.weight", this.scaled34mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0));
+
+            this.caseLlamaModel(
+                this.scaled2vec(1, 1,2),
+                2,4,2,
+                l.weightLoader(),
+                this.flt23mat(0x3f6402c4,0x3f762268,0x3f842105, 0x3f6b0479,0x3f78b358,0x3f83311c)
+            );
+            
+            l.destroy();
+        }
+        {
+            MemoryWeightLoader l := this.rt().createInstance(MemoryWeightLoader:CLASSNAME);
+            l.addCMatrix("model.embed_tokens.weight", this.scaled34mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12));
+            l.addCVector("model.layers.0.input_layernorm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("model.layers.0.self_attn.q_proj.weight", this.scaled44mat(10, 1,0,2,0, 0,3,0,4, 5,0,6,0, 0,7,0,8));
+            l.addCMatrix("model.layers.0.self_attn.k_proj.weight", this.scaled44mat(10, 1,0,2,0, 0,3,0,4, 5,0,6,0, 0,7,0,8));
+            l.addCMatrix("model.layers.0.self_attn.v_proj.weight", this.scaled44mat(10, 5,0,0,0, 0,5,0,0, 0,0,5,0, 0,0,0,5));
+            l.addCMatrix("model.layers.0.self_attn.o_proj.weight", this.scaled44mat(10, 2,0,4,0, 0,2,0,4, 1,0,3,0, 0,1,0,3));
+            l.addCVector("model.layers.0.post_attention_layernorm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("model.layers.0.mlp.gate_proj.weight", this.scaled34mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12));
+            l.addCMatrix("model.layers.0.mlp.up_proj.weight", this.scaled34mat(10, 2,1,4,3, 6,5,8,7, 10,9,12,11));
+            l.addCMatrix("model.layers.0.mlp.down_proj.weight", this.scaled43mat(10, 5,0,0, 0,5,0, 0,0,5, 0,0,0));
+            l.addCVector("model.norm.weight", this.scaled4vec(1, 1,1,1,1));
+            l.addCMatrix("lm_head.weight", this.scaled34mat(10, 5,0,1,0, 0,5,0,1, 1,1,5,5));
+
+            this.caseLlamaModel(
+                this.scaled2vec(1, 1,2),
+                1,4,2,
+                l.weightLoader(),
+                this.flt23mat(0x3e95d183,0x3ed13f7b,0x3f8da2f1, 0x3ea380bb,0x3edafaf3,0x3f90caed)
+            );
+            
+            l.destroy();
+        }
+
+        return this.successCases();
+    }
+    
+    [int] caseLlamaModel(FltVector x, 
+        int blocks, int dModel, int attnHeads,
+        WeightLoader loader,
+        FltMatrix expected
+    ) {
+        
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(x).printCString(" with:")
+            .printCString("  blocks ").printInt(blocks)
+            .printCString("  heads ").printInt(attnHeads)
+            .printCString(" => ").print(expected);
+        expected.debugToStream(message.printCString(" "));
+
+        LlamaModel l = this.rt().createInstance(LlamaModel:CLASSNAME);
+        if (!this.isSame(l, l._init(
+            blocks, dModel, attnHeads, loader 
+        ))) {
+            message.printCString(" has invalid settings");
+            return this.failCase(message.ostream());
+        }
+        FltMatrix y = l.forwardTokens(x);
+        if (!y) {
+            message.printCString(" has no result");
+            return this.failCase(message.ostream());
+        }
+        if (expected.compareFltMatrix(y) != 0)  {
+            message.printCString(" got ").print(y);
+            y.debugToStream(message.printCString(" "));
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        y.destroy();
+        l.destroy();
+        expected.destroy();
+        x.destroy();
+        return this.successCase();        
+    }
+    
+}
