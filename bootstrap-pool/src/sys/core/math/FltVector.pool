@@ -46,6 +46,11 @@ class FltVector extends sys::core::utils::DWordArray {
         return this;
     }
     
+    [FltVector] initFromVector(FltVector source) {
+        this._initDWordArrayFromMemoryInfo(source.buffer);
+        return this;
+    }
+    
     [] clear() {
         this._setAllDWord(Flt:ZERO_POS);
     }
@@ -178,6 +183,12 @@ class FltVector extends sys::core::utils::DWordArray {
             ret = Flt:add(ret, Flt:mul(a._saveGetDWord(i), b._saveGetDWord(i)));
         }
         return ret;
+    }
+    
+    global [FltVector] clone(FltVector a) {
+        if (!a) { return null; }
+        FltVector ret = a.rt().createInstance(FltVector:CLASSNAME);
+        return ret.initFromVector(a);
     }
     
 }

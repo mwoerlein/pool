@@ -1,0 +1,35 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::io;
+
+use sys::core::String;
+use sys::core::anycollection::AnyMap;
+use sys::core::math::FltMatrix;
+use sys::core::math::FltVector;
+
+class MemoryWeightLoader extends WeightLoader, sys::core::utils::Owner {
+
+    AnyMap matrices;
+    AnyMap vectors;
+
+    [] __init() {
+        matrices = this.createOwn(AnyMap:CLASSNAME);
+        vectors = this.createOwn(AnyMap:CLASSNAME);
+    }
+
+    [FltMatrix] loadMatrix(String id) { return FltMatrix:clone(matrices.get(id)); }
+    [FltMatrix] loadTMatrix(String id) { return FltMatrix:transpose(matrices.get(id)); }
+    [FltVector] loadVector(String id) { return FltVector:clone(vectors.get(id)); }
+    
+    [FltMatrix] addCMatrix(cstring id, FltMatrix m) {
+        return matrices.set(this.createOwnStringFromCString(id), this.own(m));
+    }
+    
+    [FltVector] addCVector(cstring id, FltVector m) {
+        return vectors.set(this.createOwnStringFromCString(id), this.own(m));
+    }
+
+}

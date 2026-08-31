@@ -55,6 +55,13 @@ class FltMatrix extends sys::core::utils::DWordArray {
         return this;
     }
     
+    [FltMatrix] initFromMatrix(FltMatrix source) {
+        this._rows = source.rows();
+        this._cols = source.cols();
+        this._initDWordArrayFromMemoryInfo(source.buffer);
+        return this;
+    }
+    
     [] clear() {
         this._setAllDWord(Flt:ZERO_POS);
     }
@@ -321,10 +328,7 @@ class FltMatrix extends sys::core::utils::DWordArray {
     }
 
     global [FltMatrix] transpose(FltMatrix a) {
-        if (!a) {
-            return null;
-        }
-        
+        if (!a) { return null; }
         FltMatrix ret = a.rt().createInstance(FltMatrix:CLASSNAME);
         ret.init(a._cols, a._rows);
         int i = a._rows;
@@ -335,6 +339,12 @@ class FltMatrix extends sys::core::utils::DWordArray {
             }
         }
         return ret;
+    }
+    
+    global [FltMatrix] clone(FltMatrix a) {
+        if (!a) { return null; }
+        FltMatrix ret = a.rt().createInstance(FltMatrix:CLASSNAME);
+        return ret.initFromMatrix(a);
     }
     
     global [FltMatrix] mmMulInto(
