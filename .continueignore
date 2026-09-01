@@ -1,0 +1,14 @@
+# blacklist all
+*
+**/*
+
+# allow .continue settings
+!.continue/
+!.continue/**
+
+# allow src
+!bootstrap-pool/
+!bootstrap-pool/src/**
+!bootstrap-pool/tests/**
+!bootstrap-pool/Makefile
+!bootstrap-pool/Makefile.inc
