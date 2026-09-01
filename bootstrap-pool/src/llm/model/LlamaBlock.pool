@@ -31,6 +31,12 @@ class LlamaBlock extends llm::MatrixLayer {
         ffwdNorm = this._ownRMSNormLayer(ffwdGamma);
         ffwd = this._ownSwiGLUFeedForwardLayer(ffwdWG, ffwdBG, ffwdWU, ffwdBU, ffwdWD, ffwdBD);
         if (!attn || !attnNorm || !ffwd || !ffwdNorm) {
+            this.rt().err()
+                .printCString(" attn: ").print(attn)
+                .printCString(" attnNorm: ").print(attnNorm)
+                .printCString(" ffwd: ").print(ffwd)
+                .printCString(" ffwdNorm: ").print(ffwdNorm)
+                .printNewline();
             return null;
         }
         attn.useCM(true);
@@ -38,6 +44,13 @@ class LlamaBlock extends llm::MatrixLayer {
         
         int dm := attn.dModel;
         if (attnNorm.dModel != dm || ffwd.getDIn() != dm || ffwd.getDOut() != dm || ffwdNorm.dModel != dm) {
+            this.rt().err()
+                .printCString(" attn: ").printInt(attn.dModel)
+                .printCString(" attnNorm: ").printInt(attnNorm.dModel)
+                .printCString(" ffwd in: ").printInt(ffwd.getDIn())
+                .printCString(" ffwd out: ").printInt(ffwd.getDOut())
+                .printCString(" ffwdNorm: ").printInt(ffwdNorm.dModel)
+                .printNewline();
             return null;
         }
         this.dModel = dm;
@@ -69,60 +82,3 @@ class LlamaBlock extends llm::MatrixLayer {
         return ffwdOut;
     }
 }
-
-/*
-CLASS LlamaBlock EXTENDS MatrixLayer
-
-    // Sub-Layer als Instanzvariablen
-    ATTRIBUTES:
-        rmsNormAttention : RMSNormLayer
-        multiHeadAttention : MultiHeadAttention
-        rmsNormFFN : RMSNormLayer
-        feedForward : SwiGLUFeedForwardLayer
-
-    // Konstruktor initialisiert die Schichten mit den geladenen Gewichten
-    CONSTRUCTOR(weightLoader, blockIndex)
-        // blockIndex hilft, die korrekten IDs aus der Safetensors-Datei zu laden
-        // z.B. "model.layers.0.input_layernorm.weight"
-        rmsNormAttention = weightLoader.loadRMSNorm(blockIndex, "input_layernorm")
-        multiHeadAttention = weightLoader.loadMHA(blockIndex, "self_attn")
-        rmsNormFFN = weightLoader.loadRMSNorm(blockIndex, "post_attention_layernorm")
-        feedForward = weightLoader.loadSwiGLU(blockIndex, "mlp")
-    END CONSTRUCTOR
-
-    // Die zentrale Verarbeitungs-Pipeline für eine Token-Matrix
-    METHOD forwardMatrix(inputMatrix : Matrix) RETURNS Matrix
-        
-        // --- 1. ATTENTION PFAD (Pre-Norm) ---
-        // Schritt A: Kopie für die erste Residual-Verbindung behalten
-        Matrix residual1 = inputMatrix.clone() 
-        
-        // Schritt B: RMSNorm vor der Attention (Zeilenweise)
-        Matrix normAttnOut = rmsNormAttention.forwardMatrix(inputMatrix)
-        
-        // Schritt C: Multi-Head-Attention (inklusive RoPE und Causal Mask intern)
-        Matrix attnOut = multiHeadAttention.forwardMatrix(normAttnOut)
-        
-        // Schritt D: Erste Residual-Addition (X = X + Attention(RMSNorm(X)))
-        Matrix xIntermediary = residual1.elementwiseAdd(attnOut)
-        
-        
-        // --- 2. FEED-FORWARD PFAD (Pre-Norm) ---
-        // Schritt E: Kopie für die zweite Residual-Verbindung behalten
-        Matrix residual2 = xIntermediary.clone()
-        
-        // Schritt F: RMSNorm vor dem FFN
-        Matrix normFFNOut = rmsNormFFN.forwardMatrix(xIntermediary)
-        
-        // Schritt G: SwiGLU Berechnung
-        Matrix ffnOut = feedForward.forwardMatrix(normFFNOut)
-        
-        // Schritt H: Zweite Residual-Addition (Output = X + FFN(RMSNorm(X)))
-        Matrix finalOutput = residual2.elementwiseAdd(ffnOut)
-        
-        RETURN finalOutput
-        
-    END METHOD
-END CLASS
-
-*/
