@@ -21,3 +21,8 @@ Overview of the documented aspects of the **POOL** programming language. Note th
   * Memory lists (`available`, `free`, `used`, `reserved`)
   * Defragmentation & optimization (`optimize`, `OPTIMIZE_THRESHOLD`)
   * `MemoryInfo` and distinction from object-level ownership (`oop.md`)
+
+* **[sys.md](sys.md)**:
+  * Standard Library (`sys`) & Core Namespace (`sys::core`)
+  * Streams (`sys::stream::OStream`, `IStream`) and the `printToStream` printable protocol
+  * Utilities (`Bitset`, `FltVector`, `FltMatrix`)
