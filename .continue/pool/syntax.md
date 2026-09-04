@@ -45,6 +45,8 @@ The `cstring` type is the second primitive type with direct language support.
 ### Object Variants vs. Primitives & Performance
 Despite POOL aiming to be a **"Pure Object-Oriented"** language (and offering full object wrappers like `sys::core::Integer`, `sys::core::Bool`, `sys::core::Float`, and `sys::core::String`), numeric and string computations using instance method calls on these objects introduce significant performance overhead compared to native primitives and static helper methods (e.g. `Flt`). Consequently, the language pragmatically moves away from strict object wrapping for heavy math and primitive workloads in favor of native `int` / `cstring` usage.
 
+* **Avoid Unnecessary Casts**: Where possible, avoid dynamic `cast` operations (e.g., when iterating over typed collections) if types are logically clear or when relying on future generics support (`AnyList<T>`).
+
 ---
 
 ## 3. Code Conventions
