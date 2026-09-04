@@ -6,6 +6,9 @@ version = 0.1.0
 namespace llm;
 
 use sys::core::Flt;
+use sys::core::Integer;
+use sys::core::anycollection::AnyList;
+use sys::core::anycollection::AnyIterator;
 use sys::core::math::FltMatrix;
 use sys::core::math::FltVector;
 
@@ -28,27 +31,29 @@ class Embedding extends sys::core::Object {
     }
     [int] getDModel() { return dModel; }
    
-    [FltMatrix] forwardTokens(FltVector tokenIds) {
+    [FltMatrix] forwardTokens(AnyList tokenIds) {
         if (!tokenIds) { return null; }
         int dm := this.dModel;
-        int pos = tokenIds.length();
         FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
-        ret.init(pos, dm);
+        ret.init(tokenIds.size(), dm);
         
+        AnyIterator it = tokenIds.iterator();
+        int pos = 0;
         if (usePE) {
             int dmFlt := Flt:fromInt(dm);
-            while (pos--) {
+            while (it.hasNext()) {
+                Integer tokenObj := it.next();
+                int token = tokenObj.getInt();
                 int posFlt := Flt:fromInt(pos);
-                int token := Flt:floor(tokenIds.get(pos)); // create and use IntArray for token IDs?
                 int i = dm;
                 while (i--) {
                     if (i % 2) {
-                        ret.set(pos, i, Flt:add(
+                        ret.set(pos++, i, Flt:add(
                             this.weights.get(token, i),
                             Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
                         ));
                     } else {
-                        ret.set(pos, i, Flt:add(
+                        ret.set(pos++, i, Flt:add(
                             this.weights.get(token, i),
                             Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
                         ));
@@ -56,14 +61,16 @@ class Embedding extends sys::core::Object {
                 }
             }
         } else {
-            while (pos--) {
-                int token := Flt:floor(tokenIds.get(pos)); // create and use IntArray for token IDs?
+            while (it.hasNext()) {
+                Integer tokenObj := it.next();
+                int token = tokenObj.getInt();
                 int i = dm;
                 while (i--) {
-                    ret.set(pos, i, this.weights.get(token, i));
+                    ret.set(pos++, i, this.weights.get(token, i));
                 }
             }
         }
+        it.destroy();
         
         return ret;
     }

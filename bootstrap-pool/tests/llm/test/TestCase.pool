@@ -6,12 +6,29 @@ version = 0.1.0
 namespace llm::test;
 
 use sys::core::Flt;
+use sys::core::Integer;
 use sys::core::String;
+use sys::core::anycollection::AnyList;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 use sys::stream::IStream;
 
 class TestCase extends test::TestCase {
+    
+    [AnyList] toAnyList(FltVector x) {
+        if (!x) { return null; }
+        AnyList list = this.rt().createInstance(AnyList:CLASSNAME);
+        int len = x.length();
+        int i = 0;
+        while (i < len) {
+            int tokenVal = Flt:floor(x.get(i));
+            Integer tObj = list.createOwn(Integer:CLASSNAME);
+            tObj.assignInt(tokenVal);
+            list.add(tObj);
+            i++;
+        }
+        return list;
+    }
     
     [FltVector] scaled1vec(int dividend, int a) {
         FltVector v = this.rt().createInstance(FltVector:CLASSNAME);

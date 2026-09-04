@@ -110,7 +110,7 @@ class LlamaModel extends llm::MatrixLayer {
         return id;
     }
     
-    [FltMatrix] forwardTokens(FltVector tokenIds) {
+    [FltMatrix] forwardTokens(AnyList tokenIds) {
         if (!tokenIds) { return null; }
         FltMatrix x = embedding.forwardTokens(tokenIds);
 //        this.rt().err().printCString("found tokens: ").printInt(x.rows()).printChar('x').printInt(x.cols()).printNewline();

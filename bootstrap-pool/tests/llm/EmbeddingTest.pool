@@ -7,6 +7,7 @@ namespace llm;
 
 use sys::core::Flt;
 use sys::core::String;
+use sys::core::anycollection::AnyList;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
@@ -75,7 +76,9 @@ class EmbeddingTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        FltMatrix y = e.usePE(usePE).forwardTokens(t);
+        AnyList tokenList = this.toAnyList(t);
+        FltMatrix y = e.usePE(usePE).forwardTokens(tokenList);
+        tokenList.destroy();
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

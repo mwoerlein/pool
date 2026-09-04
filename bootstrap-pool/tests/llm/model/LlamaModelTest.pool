@@ -10,6 +10,7 @@ use llm::io::WeightLoader;
 
 use sys::core::Flt;
 use sys::core::String;
+use sys::core::anycollection::AnyList;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
@@ -128,7 +129,9 @@ class LlamaModelTest extends llm::test::TestCase {
             message.printCString(" has invalid settings");
             return this.failCase(message.ostream());
         }
-        FltMatrix y = l.forwardTokens(x);
+        AnyList tokenList = this.toAnyList(x);
+        FltMatrix y = l.forwardTokens(tokenList);
+        tokenList.destroy();
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());
