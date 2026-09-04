@@ -73,6 +73,7 @@ Analogous to `__init()`, there is a `__destruct()` method where an instance can 
   * `owner`: Points to the owning object.
   * `_owned_entry`, `_owned_prev`, `_owned_next`: Form a doubly linked list of child instances subordinate ("owned") to the object.
 * **Automatic Co-Destruction**: When an object is destroyed (via `destroy()`), all child objects registered in its `_owned` list are automatically and iteratively destroyed (`__destructOwned()`), preventing memory leaks in complex object graphs.
+* **Ownership Caution in Test Cases & Factories**: Helper methods or test cases returning temporary/constructed instances (such as collections or data objects) should **not** bind these return values to `this` via `createOwn(...)`. Binding them to `this` (e.g., a test case instance) when they are meant to be returned or managed by the caller leads to ownership leaks or double-frees. Instead, instantiate them via `rt.createInstance(...)` or ensure ownership is correctly transferred to the recipient.
 * *(Note on MemoryInfo Owner: The `owner` field in the `MemoryInfo` structure is separate and intended for future low-level memory allocations outside of normal object instances).*
 
 ---

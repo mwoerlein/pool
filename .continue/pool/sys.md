@@ -35,3 +35,4 @@ To enable seamless printing of complex objects (such as `FltVector` or `FltMatri
 
 * **`Bitset` (`sys::core::utils::Bitset`)**: Provides bitwise operations (shifts, `and`, `or`, etc.) on native `int` values.
 * **`FltVector` & `FltMatrix` (`sys::core::math`)**: High-performance 1D and 2D arrays of `float32` values, stored flat in memory, optimized for mathematical operations (matrix multiplication, dot product, normalizations, etc.).
+* **Collections & Iterators**: When working with sequential collections (e.g., `AnyList`), prefer using iterators (`AnyIterator`) for linear $O(N)$ sequential processing instead of index-based lookups (`at(idx)`), which scale quadratically $O(N^2)$ on linked structures.

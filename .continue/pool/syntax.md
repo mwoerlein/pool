@@ -124,6 +124,7 @@ Example:
   * `if (expr) { ... } else { ... }` (incl. `else if` cascades)
   * `while (expr) { ... }`
   * `do { ... } while (expr);`
+  * **Note on Ternary Operators**: POOL does **not** support a ternary conditional operator (`? :`). Conditional assignments must be written explicitly using standard `if / else` statements.
 * **Inline PASM**: Direct assembler code inside POOL code:
   ```pool
   __pasm__("mov %eax, %ebx", { "ebx": inputVal }, { "eax": outputVal });
