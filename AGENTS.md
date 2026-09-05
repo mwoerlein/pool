@@ -13,3 +13,6 @@ Act like an autonomous software agent.
 
 ## Project Overview
 [Project Overview](.continue/overview.md)
+
+## Rules
+- **General Rules & Guidelines**: Read and apply all rule files located under [.continue/rules/](.continue/rules).

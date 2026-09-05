@@ -1,5 +1,5 @@
 ---
-invokable: true
+invokable: false
 ---
 
 Review this code for potential issues, including:
