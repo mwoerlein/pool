@@ -48,17 +48,18 @@ class Embedding extends sys::core::Object {
                 int i = dm;
                 while (i--) {
                     if (i % 2) {
-                        ret.set(pos++, i, Flt:add(
+                        ret.set(pos, i, Flt:add(
                             this.weights.get(token, i),
                             Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
                         ));
                     } else {
-                        ret.set(pos++, i, Flt:add(
+                        ret.set(pos, i, Flt:add(
                             this.weights.get(token, i),
                             Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
                         ));
                     }
                 }
+                pos++;
             }
         } else {
             while (it.hasNext()) {
@@ -66,8 +67,9 @@ class Embedding extends sys::core::Object {
                 int token = tokenObj.getInt();
                 int i = dm;
                 while (i--) {
-                    ret.set(pos++, i, this.weights.get(token, i));
+                    ret.set(pos, i, this.weights.get(token, i));
                 }
+                pos++;
             }
         }
         it.destroy();
