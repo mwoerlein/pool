@@ -11,6 +11,7 @@ use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
 use sys::core::math::FltMatrix;
 use sys::core::math::FltVector;
+use llm::model::TokenList;
 
 class Embedding extends sys::core::Object {
 
@@ -31,7 +32,7 @@ class Embedding extends sys::core::Object {
     }
     [int] getDModel() { return dModel; }
    
-    [FltMatrix] forwardTokens(AnyList tokenIds) {
+    [FltMatrix] forwardTokens(TokenList tokenIds) {
         if (!tokenIds) { return null; }
         int dm := this.dModel;
         FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);

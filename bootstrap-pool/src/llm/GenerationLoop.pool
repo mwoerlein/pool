@@ -7,9 +7,9 @@ namespace llm;
 
 use sys::core::Flt;
 use sys::core::Integer;
-use sys::core::anycollection::AnyList;
 use sys::core::math::FltMatrix;
 use llm::model::LlamaModel;
+use llm::model::TokenList;
 
 class GenerationLoop extends sys::core::Object {
 
@@ -27,7 +27,7 @@ class GenerationLoop extends sys::core::Object {
         return this;
     }
 
-    [int] generateInto(AnyList tokenIds, int maxNewTokens) {
+    [int] generateInto(TokenList tokenIds, int maxNewTokens) {
         if (!tokenIds) { return 0; }
 
         int step = 0;
@@ -46,9 +46,7 @@ class GenerationLoop extends sys::core::Object {
                 if (nextToken == eosTokenId) {
                     running = 0;
                 } else {
-                    Integer newInt = this.rt().createInstance(Integer:CLASSNAME);
-                    newInt.assignInt(nextToken);
-                    tokenIds.add(newInt);
+                    tokenIds.appendToken(nextToken);
                     step++;
                 }
             }

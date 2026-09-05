@@ -1,0 +1,36 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use sys::core::String;
+
+class TokenListTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testTokenListOperations();
+    }
+    
+    [int] testTokenListOperations() {
+        this.start("testTokenListOperations");
+
+        TokenList list = this.rt().createInstance(TokenList:CLASSNAME);
+        
+        if (list.size() != 0) { return this.fail("Initial size should be 0"); }
+        
+        list.appendToken(0).appendToken(2054).appendToken(102);
+        
+        if (list.size() != 3) { return this.fail("Size after appends should be 3"); }
+        if (list.getTokenIdAt(0) != 0) { return this.fail("Token at 0 should be 0"); }
+        if (list.getTokenIdAt(1) != 2054) { return this.fail("Token at 1 should be 2054"); }
+        if (list.getTokenIdAt(2) != 102) { return this.fail("Token at 2 should be 102"); }
+        if (list.getTokenIdAt(5) != TokenList:NOT_A_TOKEN) { return this.fail("Out of bounds should return NOT_A_TOKEN"); }
+        
+        list.destroy();
+        
+        return this.success();
+    }
+    
+}

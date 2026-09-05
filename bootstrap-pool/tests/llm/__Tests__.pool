@@ -23,6 +23,7 @@ class __Tests__ {
         suite.register(llm::model::LlamaBlock:CLASSNAME, llm::model::LlamaBlockTest:CLASSNAME);
         suite.register(llm::model::LlamaModel:CLASSNAME, llm::model::LlamaModelTest:CLASSNAME);
         suite.register(llm::model::PostNormBlock:CLASSNAME, llm::model::PostNormBlockTest:CLASSNAME);
+        suite.register(llm::model::TokenList:CLASSNAME, llm::model::TokenListTest:CLASSNAME);
         
         suite.register(llm::Embedding:CLASSNAME, llm::EmbeddingTest:CLASSNAME);
         

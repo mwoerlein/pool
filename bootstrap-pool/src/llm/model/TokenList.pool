@@ -1,0 +1,38 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::core::Integer;
+use sys::stream::OStream;
+
+class TokenList extends AnyList {
+
+    int NOT_A_TOKEN := -1;
+
+    [TokenList] appendToken(int tokenId) {
+        Integer val = this.createOwn(Integer:CLASSNAME);
+        val.assignInt(tokenId);
+        this.add(val);
+        return this;
+    }
+
+    [int] getTokenIdAt(int idx) {
+        Integer val := this.at(idx);
+        if (!val) { return TokenList:NOT_A_TOKEN; }
+        return val.getInt();
+    }
+
+    [OStream] printToStream(OStream stream) {
+        stream.printChar('[');
+        AnyIterator it = this.iterator();
+        if (it.hasNext()) { stream.print(it.next()); }
+        while (it.hasNext()) { stream.printChar(',').printChar(' ').print(it.next()); }
+        return stream.printChar(']');
+    }
+    
+}

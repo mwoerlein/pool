@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace llm;
 
+use llm::model::TokenList;
+
 use sys::core::Flt;
 use sys::core::String;
 use sys::core::anycollection::AnyList;
@@ -36,25 +38,25 @@ class EmbeddingTest extends llm::test::TestCase {
         this.startCases("testEmbeddingWithPositionalEncoding");
         
         this.caseEmbeddingWithPositionalEncoding(
-            this.scaled3vec(1, 2,0,3),
+            this.tokenList3(2,0,3),
             this.scaled43mat(10, 1,2,3, 4,5,6, 7,8,9, 10,11,12),
             false, // usePE
             this.scaled33mat(10, 7,8,9, 1,2,3, 10,11,12)
         );
         this.caseEmbeddingWithPositionalEncoding(
-            this.scaled3vec(1, 2,0,3),
+            this.tokenList3(2,0,3),
             this.scaled43mat(10, 1,2,3, 4,5,6, 7,8,9, 10,11,12),
             true, // usePE
             this.flt33mat(0x3f333333,0x3fe66666,0x3f666666, 0x3f71043e,0x3f3d8473,0x3e9ab3fd, 0x3ff463dc,0x3f2f1100,0x3f9a26cb)
         );
         this.caseEmbeddingWithPositionalEncoding( // empty input
-            this.flt0vec(),
+            this.emptyTokenList(),
             this.scaled44mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16),
             false, // usePE
             this.flt04mat()
         );
         this.caseEmbeddingWithPositionalEncoding( // empty input
-            this.flt0vec(),
+            this.emptyTokenList(),
             this.scaled44mat(10, 1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16),
             true, // usePE
             this.flt04mat()
@@ -63,7 +65,7 @@ class EmbeddingTest extends llm::test::TestCase {
         return this.successCases();
     }
 
-    [int] caseEmbeddingWithPositionalEncoding(FltVector t, FltMatrix w, int usePE, FltMatrix expected) {
+    [int] caseEmbeddingWithPositionalEncoding(TokenList t, FltMatrix w, int usePE, FltMatrix expected) {
 
         String message = this.rt().createInstance(String:CLASSNAME);
         message.printCString("Case ").print(t)
@@ -76,9 +78,7 @@ class EmbeddingTest extends llm::test::TestCase {
             return this.failCase(message.ostream());
         }
         
-        AnyList tokenList = this.toAnyList(t);
-        FltMatrix y = e.usePE(usePE).forwardTokens(tokenList);
-        tokenList.destroy();
+        FltMatrix y = e.usePE(usePE).forwardTokens(t);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

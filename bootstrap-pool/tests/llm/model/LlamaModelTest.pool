@@ -73,7 +73,7 @@ class LlamaModelTest extends llm::test::TestCase {
             l.addCMatrix("lm_head.weight", this.scaled34mat(1, 1,0,0,0, 0,1,0,0, 0,0,1,0));
 
             this.caseLlamaModel(
-                this.scaled2vec(1, 1,2),
+                this.tokenList2(1,2),
                 2,4,2,
                 l.weightLoader(),
                 this.flt23mat(0x3f6402c4,0x3f762268,0x3f842105, 0x3f6b0479,0x3f78b358,0x3f83311c)
@@ -97,7 +97,7 @@ class LlamaModelTest extends llm::test::TestCase {
             l.addCMatrix("lm_head.weight", this.scaled34mat(10, 5,0,1,0, 0,5,0,1, 1,1,5,5));
 
             this.caseLlamaModel(
-                this.scaled2vec(1, 1,2),
+                this.tokenList2(1,2),
                 1,4,2,
                 l.weightLoader(),
                 this.flt23mat(0x3e95d183,0x3ed13f7b,0x3f8da2f1, 0x3ea380bb,0x3edafaf3,0x3f90caed)
@@ -109,7 +109,7 @@ class LlamaModelTest extends llm::test::TestCase {
         return this.successCases();
     }
     
-    [int] caseLlamaModel(FltVector x, 
+    [int] caseLlamaModel(TokenList x, 
         int blocks, int dModel, int attnHeads,
         WeightLoader loader,
         FltMatrix expected
@@ -129,9 +129,7 @@ class LlamaModelTest extends llm::test::TestCase {
             message.printCString(" has invalid settings");
             return this.failCase(message.ostream());
         }
-        AnyList tokenList = this.toAnyList(x);
-        FltMatrix y = l.forwardTokens(tokenList);
-        tokenList.destroy();
+        FltMatrix y = l.forwardTokens(x);
         if (!y) {
             message.printCString(" has no result");
             return this.failCase(message.ostream());

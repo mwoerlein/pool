@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace llm::test;
 
+use llm::model::TokenList;
+
 use sys::core::Flt;
 use sys::core::Integer;
 use sys::core::String;
@@ -15,19 +17,20 @@ use sys::stream::IStream;
 
 class TestCase extends test::TestCase {
     
-    [AnyList] toAnyList(FltVector x) {
-        if (!x) { return null; }
-        AnyList list = this.rt().createInstance(AnyList:CLASSNAME);
-        int len = x.length();
-        int i = 0;
-        while (i < len) {
-            int tokenVal = Flt:floor(x.get(i));
-            Integer tObj = list.createOwn(Integer:CLASSNAME);
-            tObj.assignInt(tokenVal);
-            list.add(tObj);
-            i++;
-        }
-        return list;
+    [TokenList] emptyTokenList() {
+        return this.rt().createInstance(TokenList:CLASSNAME);
+    }
+    
+    [TokenList] tokenList1(int a) {
+        return this.emptyTokenList().appendToken(a);
+    }
+    
+    [TokenList] tokenList2(int a, int b) {
+        return this.emptyTokenList().appendToken(a).appendToken(b);
+    }
+    
+    [TokenList] tokenList3(int a, int b, int c) {
+        return this.emptyTokenList().appendToken(a).appendToken(b).appendToken(c);
     }
     
     [FltVector] scaled1vec(int dividend, int a) {
