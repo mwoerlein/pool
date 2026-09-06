@@ -1,3 +1,9 @@
+---
+name: update-documentation
+description: Analyze codebase and lessons learned records to incrementally update and consolidate project documentation.
+invokable: true
+---
+
 # Skill: Update Documentation and Analyze Codebase
 
 Execute the following steps to review and transfer new insights from `.continue/lessons_learned/` and actively analyze/restructure the existing project documentation under `.continue/`.

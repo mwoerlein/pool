@@ -1,3 +1,9 @@
+---
+name: create-lessons-learned
+description: Create a new lessons learned record based on session insights.
+invokable: true
+---
+
 # Skill: Create Lessons Learned
 
 Create a new lessons learned record based on the key insights and achievements of the current session.
