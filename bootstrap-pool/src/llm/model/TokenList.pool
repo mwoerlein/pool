@@ -29,9 +29,12 @@ class TokenList extends AnyList {
 
     [OStream] printToStream(OStream stream) {
         stream.printChar('[');
-        AnyIterator it = this.iterator();
-        if (it.hasNext()) { stream.print(it.next()); }
-        while (it.hasNext()) { stream.printChar(',').printChar(' ').print(it.next()); }
+        {
+            AnyIterator it = this.iterator();
+            if (it.hasNext()) { stream.print(it.next()); }
+            while (it.hasNext()) { stream.printChar(',').printChar(' ').print(it.next()); }
+            it.destroy();
+        }
         return stream.printChar(']');
     }
     

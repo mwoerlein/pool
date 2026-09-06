@@ -11,6 +11,7 @@ class TokenListTest extends llm::test::TestCase {
 
     [] runAll() {
         this.testTokenListOperations();
+        this.testPrintToStreamCases();
     }
     
     [int] testTokenListOperations() {
@@ -31,6 +32,44 @@ class TokenListTest extends llm::test::TestCase {
         list.destroy();
         
         return this.success();
+    }
+
+    [int] testPrintToStreamCases() {
+        this.startCases("testPrintToStreamCases");
+
+        this.casePrintToStream(
+            this.emptyTokenList(),
+            "[]"
+        );
+        this.casePrintToStream(
+            this.tokenList1(42),
+            "[42]"
+        );
+        this.casePrintToStream(
+            this.tokenList3(0, 2054, 102),
+            "[0, 2054, 102]"
+        );
+
+        return this.successCases();
+    }
+
+    [int] casePrintToStream(TokenList tokens, cstring expected) {
+        String streamResult = this.rt().createInstance(String:CLASSNAME);
+        String message = this.rt().createInstance(String:CLASSNAME);
+        
+        message.printCString("Case ").print(tokens).printCString(" => ").printCString(expected);
+        
+        tokens.printToStream(streamResult.ostream());
+        
+        if (streamResult.compareCString(expected) != 0) {
+            message.printCString(" got ").print(streamResult);
+            return this.failCase(message.ostream());
+        }
+        
+        message.destroy();
+        streamResult.destroy();
+        tokens.destroy();
+        return this.successCase();
     }
     
 }

@@ -38,42 +38,44 @@ class Embedding extends sys::core::Object {
         FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
         ret.init(tokenIds.size(), dm);
         
-        AnyIterator it = tokenIds.iterator();
-        int pos = 0;
-        if (usePE) {
-            int dmFlt := Flt:fromInt(dm);
-            while (it.hasNext()) {
-                Integer tokenObj := it.next();
-                int token = tokenObj.getInt();
-                int posFlt := Flt:fromInt(pos);
-                int i = dm;
-                while (i--) {
-                    if (i % 2) {
-                        ret.set(pos, i, Flt:add(
-                            this.weights.get(token, i),
-                            Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
-                        ));
-                    } else {
-                        ret.set(pos, i, Flt:add(
-                            this.weights.get(token, i),
-                            Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
-                        ));
+        {
+            int pos = 0;
+            AnyIterator it = tokenIds.iterator();
+            if (usePE) {
+                int dmFlt := Flt:fromInt(dm);
+                while (it.hasNext()) {
+                    Integer tokenObj := it.next();
+                    int token = tokenObj.getInt();
+                    int posFlt := Flt:fromInt(pos);
+                    int i = dm;
+                    while (i--) {
+                        if (i % 2) {
+                            ret.set(pos, i, Flt:add(
+                                this.weights.get(token, i),
+                                Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
+                            ));
+                        } else {
+                            ret.set(pos, i, Flt:add(
+                                this.weights.get(token, i),
+                                Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
+                            ));
+                        }
                     }
+                    pos++;
                 }
-                pos++;
-            }
-        } else {
-            while (it.hasNext()) {
-                Integer tokenObj := it.next();
-                int token = tokenObj.getInt();
-                int i = dm;
-                while (i--) {
-                    ret.set(pos, i, this.weights.get(token, i));
+            } else {
+                while (it.hasNext()) {
+                    Integer tokenObj := it.next();
+                    int token = tokenObj.getInt();
+                    int i = dm;
+                    while (i--) {
+                        ret.set(pos, i, this.weights.get(token, i));
+                    }
+                    pos++;
                 }
-                pos++;
             }
+            it.destroy();
         }
-        it.destroy();
         
         return ret;
     }
