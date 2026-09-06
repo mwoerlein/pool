@@ -7,12 +7,15 @@ Execute the following steps to review and transfer new insights from `.continue/
 ## Workflow
 
 1. **Read and Analyze**:
-   - Scan the `.continue/lessons_learned/` directory for raw lesson files and analyze their content. Even if `.continue/lessons_learned/` is empty, proceed to step 2.
+   - Scan the `.continue/lessons_learned/` directory for raw lesson files.
+   - **Explicit Content Verification**: Read the full content of *every* file found in `.continue/lessons_learned/` using the read tool. Never assume file contents based on past sessions, filenames, or previous assumptions.
+   - **Comprehensive Coverage Check**: Perform an itemized coverage check of *all* distinct sub-points across every lesson file to ensure 100% of the lessons are fully processed without omissions.
+   - **Pre-Check for Duplicates**: Search existing `.continue/` documentation files before proposing changes to ensure uniqueness and prevent duplicate or conflicting entries.
    - Review the existing project documentation under `.continue/` (such as `.continue/overview.md`, `.continue/pool/`, `.continue/pasm/`, etc.) to identify out-of-date sections, inconsistencies, architectural drift, or opportunities for structural optimization and consolidation.
 
 2. **Propose Changes & Await Approval**:
-   - Present a clear proposal to the developer specifying:
-     - Which insights from `lessons_learned/` (if any) to integrate and where.
+   - Present a clear, concrete proposal (including exact text adjustments rather than vague summaries) to the developer specifying:
+     - Which insights from `lessons_learned/` (if any) to integrate and where (backed by the itemized coverage check).
      - Which structural optimizations, updates, or refactoring of existing documentation under `.continue/` are recommended based on codebase and documentation analysis.
      - Which insights are too specific/temporary and should be discarded.
    - **Stop and wait for developer approval** before making any modifications.

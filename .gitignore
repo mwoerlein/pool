@@ -1,3 +1,6 @@
 .idea
 /tmp/
+/.archive/**
+/.continue/lessons_learned/**
+/.continue/projects/**
 /.continue/config.yaml

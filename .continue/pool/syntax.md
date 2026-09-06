@@ -49,14 +49,15 @@ Despite POOL aiming to be a **"Pure Object-Oriented"** language (and offering fu
 
 ---
 
-## 3. Code Conventions
+## 3. Code Conventions & Language Constraints
 
 To keep the codebase clean and consistent, adhere to the following naming and structuring conventions:
 * **Variables & Parameters**: Instance variables, method parameters, and local/helper variables are written in `lowerCamelCase` (e.g. `promptTokens`, `maxNewTokens`).
-* **Constants**: Constants are written in `UPPER_SNAKE_CASE` (e.g. `MAX_SIZE`).
+* **Constants**: Constants are written in `UPPER_SNAKE_CASE` (e.g. `MAX_SIZE`). Class-level constants/variables are declared **without** the `global` keyword (e.g., `int NOT_A_TOKEN := -1;`) and accessed via `ClassName:CONSTANT_NAME`.
 * **Classes & Structs**: Class and struct names are written in `UpperCamelCase` (e.g. `GenerationLoop`, `LlamaModel`).
 * **Namespaces**: Namespace segments are completely lowercase (`lower`), consisting of a single word or a concise abbreviation (e.g. `llm`, `sys::core`, `llm::model`).
-
+* **No Ternary Operator**: POOL does **not** support a ternary conditional operator (`? :`). Conditional assignments must be written explicitly using standard `if / else` statements.
+esk
 ---
 
 ## 4. Classes and Structs
