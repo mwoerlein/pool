@@ -16,11 +16,9 @@ Overview of the documented aspects of the **POOL** programming language. Note th
   * Method modifiers (`global`, `abstract`, `__entry__`) and low-level code (`__naked__`, `__pasm__`)
 
 * **[memory.md](memory.md)**:
-  * Low-level memory management without automatic garbage collection
-  * `MemoryManager` & `Allocator` interface
-  * Memory lists (`available`, `free`, `used`, `reserved`)
-  * Defragmentation & optimization (`optimize`, `OPTIMIZE_THRESHOLD`)
-  * `MemoryInfo` and distinction from object-level ownership (`oop.md`)
+  * Low-level memory management without automatic garbage collection (`MemoryManager`, `Allocator`)
+  * Memory lists (`available`, `free`, `used`, `reserved`) and defragmentation (`optimize`)
+  * Distinction between low-level `MemoryInfo` allocation and object-level ownership (`oop.md`)
 
 * **[sys.md](sys.md)**:
   * Standard Library (`sys`) & Core Namespace (`sys::core`)
