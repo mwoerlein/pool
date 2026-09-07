@@ -16,6 +16,16 @@
     - `pooltest`: Comprehensive test suite runner.
 - **Data flow and system interactions**: Source files are tokenized and parsed using generated parsers, compiled into intermediate representations or assembly, assembled into target binaries (`linux::elf`), and executed via the POOL runtime environment.
 
+## Documentation & Rules Overview (`.continue/`)
+- **Core Rules (`.continue/rules/`)**:
+    - `coding.md`: POOL syntax constraints (no ternary `? :`), object lifecycle & memory management (`createOwn`, `it.destroy()`), and test patterns.
+    - `workflow.md`: Collaboration workflow, dialog-first policy, clean commits, and git staging guidelines (excluding `.continue/lessons_learned/`).
+    - `documentation.md`: Standards for maintaining compact, generalized English project documentation.
+- **Technical Specifications (`.continue/pool/`, `.continue/pasm/`)**:
+    - Detailed references on POOL syntax, object-oriented concepts, memory management, system runtime, and PASM assembler specifications.
+- **Roadmaps (`.continue/projects/`)**:
+    - High-level architectural plans and feature roadmaps (e.g., TinyLlama model implementation).
+
 ## Directory Structure
 - **Important directories and their purposes**:
     - `bootstrap-pool/src/`: Core source code for the POOL language runtime, compiler, standard library, and tools (structured by namespaces):

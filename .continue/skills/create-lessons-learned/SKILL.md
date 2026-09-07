@@ -6,7 +6,7 @@ invokable: true
 
 # Skill: Create Lessons Learned
 
-Create a new lessons learned record based on the key insights and achievements of the current session.
+Create a new lessons learned record based on the key insights and achievements of the current session. Note that lessons learned must focus strictly on errors made, core insights, and prevented pitfalls rather than acting as a chronological change log.
 
 ## Workflow
 

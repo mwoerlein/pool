@@ -4,7 +4,7 @@ invokable: false
 
 # Coding & Testing Standards
 
-1. **POOL Language Syntax & Structure**: Ensure correct syntax, namespaces (`namespace ...;`), imports (`use ...;`), type declarations, and class structures (`class ... extends ...`).
+1. **POOL Language Syntax & Structure**: Ensure correct syntax, namespaces (`namespace ...;`), imports (`use ...;`), type declarations, and class structures (`class ... extends ...`). Note that POOL does **not** support ternary conditional operators (`? :`); use explicit `if / else` statements instead. Always check existing class definitions and method signatures before assuming or calling methods.
 2. **Parser & Lexer Consistency**: Check that changes to `.gram` grammar files correctly align with generated parser/tokenizer expectations and ensure `make regenerate-parsers` is executed when grammar changes occur.
 3. **Memory Management & Object Lifecycle**: Proper object allocation (`createOwn`) and explicit iterator destruction (`it.destroy()`) enclosed within dedicated lexical blocks (`{ AnyIterator it = ...; ... it.destroy(); }`) must be enforced to prevent memory leaks.
 4. **Error Handling & Logging**: Verify that compiler errors (`compiler.hasErrors()`) and logging (`Logger`, `LoggerAware`) are handled appropriately and proper error codes are returned on failure.

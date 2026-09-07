@@ -18,13 +18,12 @@ Execute the following steps to review and transfer new insights from `.continue/
    - **Explicit Content Verification**: Read the full content of *every* file found (lessons learned or selected session logs) using the read tool. Never assume file contents based on past sessions, filenames, or previous assumptions.
    - **Comprehensive Coverage Check**: Perform an itemized coverage check of *all* distinct sub-points across every source file to ensure 100% of the inputs are fully processed without omissions.
    - **Pre-Check for Duplicates**: Search existing `.continue/` documentation files before proposing changes to ensure uniqueness and prevent duplicate or conflicting entries.
-   - Review the entire documentation hierarchy under `.continue/`—specifically covering **`.continue/overview.md`**, **`.continue/rules/`**, **`.continue/pool/`** (`overview.md`, `syntax.md`, `oop.md`, `memory.md`, `sys.md`), **`.continue/pasm/`** (`overview.md`, `syntax.md`), and **`.continue/projects/`**—to ensure complete coverage and prevent omissions.
+   - **Exhaustive Documentation Hierarchy Review**: Actively review and cross-check the entire documentation hierarchy under `.continue/`—specifically covering **`.continue/overview.md`**, **`.continue/rules/`**, **`.continue/pool/`** (`overview.md`, `syntax.md`, `oop.md`, `memory.md`, `sys.md`), **`.continue/pasm/`** (`overview.md`, `syntax.md`), and **`.continue/projects/`**—for every single update cycle to ensure complete coverage, consistency, and prevent omissions.
 
 2. **Propose Changes & Await Approval**:
    - Present a clear, concrete proposal (including exact text adjustments rather than vague summaries) to the developer specifying:
-     - Which insights from `lessons_learned/` or recent sessions to integrate and where (backed by the itemized coverage check).
+     - **Itemized Mapping Table / Checklist**: Present an itemized checklist explicitly mapping every single point and insight found across all analyzed source files and lessons learned, indicating for each whether it will be integrated (and where), deferred to a project plan, or explicitly discarded with a clear rationale. No point may be silently ignored or omitted.
      - Which structural optimizations, updates, or refactoring of existing documentation under `.continue/` are recommended based on codebase and documentation analysis.
-     - Which insights are too specific/temporary and should be discarded.
    - **Stop and wait for developer approval** before making any modifications.
 
 3. **Apply Changes & Summarize**:
