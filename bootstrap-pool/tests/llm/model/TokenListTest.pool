@@ -11,6 +11,7 @@ class TokenListTest extends llm::test::TestCase {
 
     [] runAll() {
         this.testTokenListOperations();
+        this.testEqualsAndHashCode();
         this.testPrintToStreamCases();
     }
     
@@ -31,6 +32,24 @@ class TokenListTest extends llm::test::TestCase {
         
         list.destroy();
         
+        return this.success();
+    }
+
+    [int] testEqualsAndHashCode() {
+        this.start("testEqualsAndHashCode");
+
+        TokenList list1 = this.tokenList3(1, 2, 3);
+        TokenList list2 = this.tokenList3(1, 2, 3);
+        TokenList list3 = this.tokenList2(1, 2);
+
+        if (!list1.equals(list2)) { return this.fail("Equal lists should match"); }
+        if (list1.equals(list3)) { return this.fail("Different size lists should not match"); }
+        if (list1.hash() != list2.hash()) { return this.fail("Equal lists must have same hash"); }
+
+        list1.destroy();
+        list2.destroy();
+        list3.destroy();
+
         return this.success();
     }
 

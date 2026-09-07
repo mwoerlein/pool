@@ -17,7 +17,7 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::math::FltVector;
 use sys::core::math::FltMatrix;
 
-class LlamaModel extends llm::MatrixLayer {
+class LlamaModel extends llm::Model {
 
     Embedding embedding;
     AnyList blocks; // List<LlamaBlock>

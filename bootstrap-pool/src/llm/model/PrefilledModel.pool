@@ -1,0 +1,33 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::model;
+
+use sys::core::math::FltMatrix;
+use sys::core::math::FltVector;
+use llm::model::TokenList;
+
+class PrefilledModel extends llm::Model {
+
+    FltMatrix logitsMatrix;
+
+    [PrefilledModel] _init(FltMatrix logitsMatrix) {
+        if (!logitsMatrix) { return null; }
+        this.logitsMatrix = logitsMatrix;
+        return this;
+    }
+
+    [FltMatrix] forwardTokens(TokenList tokenIds) {
+        if (!tokenIds) { return null; }
+        int len = tokenIds.size();
+        if (len <= 0 || len > logitsMatrix.rows()) {
+            return null;
+        }
+        FltMatrix ret = this._emptyMatrix(len, logitsMatrix.cols());
+        FltMatrix:cloneInto(logitsMatrix, 0, 0, ret, 0, 0, len, logitsMatrix.cols());
+        return ret;
+    }
+
+}

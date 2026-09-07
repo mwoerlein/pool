@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm;
+
+use sys::core::math::FltMatrix;
+use llm::model::TokenList;
+
+class Model extends llm::MatrixLayer {
+
+    abstract [FltMatrix] forwardTokens(TokenList tokenIds);
+    
+    // TODO: remove with implicit cast
+    [Model] model() { return this; }
+
+}

@@ -26,6 +26,7 @@ class __Tests__ {
         suite.register(llm::model::TokenList:CLASSNAME, llm::model::TokenListTest:CLASSNAME);
         
         suite.register(llm::Embedding:CLASSNAME, llm::EmbeddingTest:CLASSNAME);
+        suite.register(llm::GenerationLoop:CLASSNAME, llm::GenerationLoopTest:CLASSNAME);
         
     }
 }

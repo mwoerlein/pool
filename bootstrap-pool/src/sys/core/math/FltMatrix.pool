@@ -466,4 +466,24 @@ class FltMatrix extends sys::core::utils::DWordArray {
         return r;
     }
     
+    global [FltMatrix] cloneInto(
+        FltMatrix source, int startRowS, int startColS,
+        FltMatrix target, int startRowT, int startColT,
+        int rows, int cols
+    ) {
+        if (!source || !target || rows < 0 || cols < 0
+            || startRowS < 0 || startColS < 0 || startRowS + rows > source.rows() || startColS + cols > source.cols()
+            || startRowT < 0 || startColT < 0 || startRowT + rows > target.rows() || startColT + cols > target.cols()
+        ) { return null; }
+
+        int i = rows;
+        while (i--) {
+            int j = cols;
+            while (j--) {
+                target.set(startRowT + i, startColT + j, source.get(startRowS + i, startColS + j));
+            }
+        }
+        return target;
+    }
+    
 }

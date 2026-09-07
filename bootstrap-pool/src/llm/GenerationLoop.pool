@@ -8,17 +8,17 @@ namespace llm;
 use sys::core::Flt;
 use sys::core::Integer;
 use sys::core::math::FltMatrix;
-use llm::model::LlamaModel;
+use llm::Model;
 use llm::model::TokenList;
 
 class GenerationLoop extends sys::core::Object {
 
-    LlamaModel model;
+    Model model;
     int temperature; // Stored as Flt representation
     int topK;
     int eosTokenId;
 
-    [GenerationLoop] _init(LlamaModel model, int temperature, int topK, int eosTokenId) {
+    [GenerationLoop] _init(Model model, int temperature, int topK, int eosTokenId) {
         if (!model) { return null; }
         this.model = model;
         this.temperature = temperature;

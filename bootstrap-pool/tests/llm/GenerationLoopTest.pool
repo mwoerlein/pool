@@ -1,0 +1,88 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm;
+
+use llm::model::PrefilledModel;
+use llm::model::TokenList;
+use sys::core::Flt;
+use sys::core::String;
+use sys::core::math::FltMatrix;
+
+class GenerationLoopTest extends llm::test::TestCase {
+
+    [] runAll() {
+        this.testGenerationLoop();
+    }
+    
+    [int] testGenerationLoop() {
+        this.startCases("testGenerationLoop");
+        
+        this.caseGenerationLoop(
+            this.tokenList1(5),
+            this.scaled23mat(1, 1, 10, 1,   1, 1, 20),
+            Flt:ZERO_POS,
+            0,
+            2,  // eosTokenId (column index 2 has max value 20)
+            5,  // maxNewTokens
+            this.tokenList2(5, 1) // expected tokens after generation stopped at column index 2
+        );
+        this.caseGenerationLoop(
+            this.tokenList1(5),
+            this.scaled23mat(1, 1, 10, 1,   1, 1, 30),
+            Flt:ZERO_POS,
+            0,
+            20, // eosTokenId (not reached in logits)
+            2,  // maxNewTokens limit = 2
+            this.tokenList3(5, 1, 2) // expected tokens: starts with 5, generates 1, then generates 2 (max 2 new tokens reached)
+        );
+        
+        return this.successCases();
+    }
+
+    [int] caseGenerationLoop(
+        TokenList tokens,
+        FltMatrix logits,
+        int temperature,
+        int topK,
+        int eosTokenId,
+        int maxNewTokens,
+        TokenList expectedTokens
+    ) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").print(tokens)
+            .printCString(" with logits ").print(logits);
+
+        PrefilledModel model = this.rt().createInstance(PrefilledModel:CLASSNAME);
+        if (!this.isSame(model, model._init(logits))) {
+            message.printCString(" has invalid model initialization");
+            return this.failCase(message.ostream());
+        }
+
+        GenerationLoop loop = this.rt().createInstance(GenerationLoop:CLASSNAME);
+        if (!this.isSame(loop, loop._init(model.model(), temperature, topK, eosTokenId))) {
+            message.printCString(" has invalid loop initialization");
+            return this.failCase(message.ostream());
+        }
+
+        int count = loop.generateInto(tokens, maxNewTokens);
+        
+        // Check if generated tokens match expectedTokens
+        if (!expectedTokens.equals(tokens)) {
+            message.printCString(" got ").print(tokens)
+                .printCString(" expected ").print(expectedTokens);
+            return this.failCase(message.ostream());
+        }
+
+        loop.destroy();
+        model.destroy();
+        logits.destroy();
+        tokens.destroy();
+        expectedTokens.destroy();
+        message.destroy();
+
+        return this.successCase();
+    }
+}

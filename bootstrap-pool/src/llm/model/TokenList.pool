@@ -22,9 +22,38 @@ class TokenList extends AnyList {
     }
 
     [int] getTokenIdAt(int idx) {
-        Integer val := this.at(idx);
-        if (!val) { return TokenList:NOT_A_TOKEN; }
-        return val.getInt();
+        return TokenList:_extractToken(this.at(idx));
+    }
+
+    [int] hash() { return this._hashTokenList(); }
+    [int] equals(__any__ obj) {
+        TokenList c = this.rt().cast(TokenList:CLASSNAME, obj);
+        return c && this._equalsTokenList(c);
+    }
+    
+    [int] _hashTokenList() {
+        int h = 0;
+        AnyIterator it = this.iterator();
+        while (it.hasNext()) {
+            h = h * 31 + TokenList:_extractToken(it.next());
+        }
+        it.destroy();
+        return h;
+    }
+    
+    [int] _equalsTokenList(TokenList c) {
+        if (this.size() != c.size()) { return false; }
+        AnyIterator it1 = this.iterator();
+        AnyIterator it2 = c.iterator();
+        int eq = true;
+        while (eq && it1.hasNext() && it2.hasNext()) {
+            if (TokenList:_extractToken(it1.next()) != TokenList:_extractToken(it2.next())) {
+                eq = false;
+            }
+        }
+        it1.destroy();
+        it2.destroy();
+        return eq;
     }
 
     [OStream] printToStream(OStream stream) {
@@ -38,4 +67,11 @@ class TokenList extends AnyList {
         return stream.printChar(']');
     }
     
+    // TODO: remove with implicit cast
+    [TokenList] tokenList() { return this; }
+
+    global [int] _extractToken(Integer val) {
+        if (!val) { return TokenList:NOT_A_TOKEN; }
+        return val.getInt();
+    }
 }
