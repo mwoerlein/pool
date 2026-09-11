@@ -1,6 +1,8 @@
 .idea
+/pasm/
+/p86/
 /tmp/
 /.archive/**
 /.continue/lessons_learned/**
 /.continue/projects/**
-/.continue/config.yaml
+/.continue/config*.yaml
