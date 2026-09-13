@@ -3,15 +3,15 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::store;
+namespace sys::storage;
 
-use pool::storage::PropertiesMarshaller;
 use sys::core::String;
+use sys::core::utils::PropertiesMarshaller;
+use sys::memory::MemoryInfo;
+use sys::storage::StorageElement;
 use sys::stream::SeekableIOStream;
 use sys::stream::IStream;
 use sys::stream::OStream;
-use sys::store::StorageElement;
-use sys::memory::MemoryInfo;
 
 class IOStreamElement extends StorageElement {
     

@@ -6,7 +6,8 @@ version = 0.1.0
 namespace pool::compiler::ast::visitor;
 
 use pool::compiler::test::TestStorage;
-use pool::storage::Mimetype;
+
+use sys::storage::Mimetype;
 
 class SignatureResolverTest extends pool::compiler::test::TestCase {
 

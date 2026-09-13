@@ -61,13 +61,13 @@ use pool::compiler::ast::scope::UnitScope;
 use pool::compiler::ast::scope::VariableScope;
 use pool::compiler::ast::scope::IntType;
 
-use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
+use sys::storage::Mimetype;
 use sys::stream::OStream;
 
 /**

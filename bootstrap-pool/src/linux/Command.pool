@@ -8,10 +8,11 @@ namespace linux;
 use linux::fs::File;
 use linux::fs::Directory;
 
+use pool::storage::Store;
+
 use sys::core::String;
 use sys::core::anycollection::AnyList;
 use sys::memory::Address;
-use sys::store::Store;
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;

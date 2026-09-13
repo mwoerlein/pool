@@ -12,7 +12,7 @@ use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
 use sys::log::Logger;
-use sys::store::StorageElement;
+use sys::storage::StorageElement;
 use sys::stream::OStream;
 use sys::stream::OStreamWrapper;
 

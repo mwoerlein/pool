@@ -22,7 +22,6 @@ use pool::compiler::backend::X86Generator;
 use pool::compiler::parser::Parser;
 
 use pool::storage::ClassPathStorage;
-use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
 use sys::core::String;
@@ -31,7 +30,8 @@ use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
 use sys::log::Logger;
-use sys::store::StorageElement;
+use sys::storage::Mimetype;
+use sys::storage::StorageElement;
 use sys::stream::IStream;
 use sys::stream::OStream;
 

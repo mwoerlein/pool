@@ -8,10 +8,10 @@ namespace pool::command;
 use pool::asm::Parser;
 use pool::asm::CompilationUnit;
 use pool::asm::i386::Compiler;
-use pool::storage::PropertiesMarshaller;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::utils::PropertiesMarshaller;
 use sys::core::utils::PropertyContainer;
 use sys::stream::IStream;
 use sys::stream::OStream;

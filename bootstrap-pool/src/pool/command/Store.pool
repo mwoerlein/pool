@@ -5,13 +5,12 @@ version = 0.1.0
 */
 namespace pool::command;
 
-use pool::storage::Mimetype;
-use pool::storage::PropertiesMarshaller;
-
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::utils::PropertiesMarshaller;
 use sys::core::utils::PropertyContainer;
-use sys::store::StorageElementDesc;
+use sys::storage::Mimetype;
+use sys::storage::StorageElementDesc;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
 

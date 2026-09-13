@@ -20,8 +20,6 @@ use pool::asm::value::PositionValue;
 use pool::asm::value::StringValue;
 use pool::asm::value::TextOperation;
 
-use pool::storage::Mimetype;
-
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
@@ -29,6 +27,7 @@ use sys::core::String;
 use sys::core::utils::Owner;
 use sys::core::utils::PropertyContainer;
 use sys::log::Logger;
+use sys::storage::Mimetype;
 use sys::stream::OStream;
 
 class CompilationUnit extends Owner, Logger {

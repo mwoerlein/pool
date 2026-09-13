@@ -29,13 +29,13 @@ use pool::languageserver::storage::UriAccessStorageWrapper;
 
 use pool::storage::ClassPathStorage;
 use pool::storage::PoolStorage;
-use sys::store::StorageElement;
 
 use json::value::JsonValue;
 
 use sys::core::String;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::storage::StorageElement;
 use sys::stream::OStream;
 
 class Server extends sys::core::Task {

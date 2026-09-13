@@ -3,17 +3,19 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace sys::store;
-
-use pool::storage::Mimetype;
-use pool::storage::PropertiesMarshaller;
+namespace pool::storage;
 
 use sys::core::String;
+use sys::core::utils::PropertiesMarshaller;
 use sys::core::utils::PropertyContainer;
 use sys::memory::Address;
 use sys::memory::MemoryIOStream;
 use sys::runtime::ClassDescriptor;
 use sys::runtime::ClassDescriptorLoader;
+use sys::storage::IOStreamElement;
+use sys::storage::Mimetype;
+use sys::storage::StorageElement;
+use sys::storage::StorageElementDesc;
 use sys::stream::SeekableIOStream;
 
 class Store extends PropertyContainer, ClassDescriptorLoader {

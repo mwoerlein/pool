@@ -51,12 +51,12 @@ use pool::compiler::pir::BasicBlock;
 use pool::compiler::pir::Method;
 use pool::compiler::pir::statement::CondStatement;
 
-use pool::storage::Mimetype;
 use pool::storage::PoolStorage;
 
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::String;
+use sys::storage::Mimetype;
 use sys::stream::OStream;
 
 class PrettyPrinter extends Visitor {

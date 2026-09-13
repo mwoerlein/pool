@@ -7,7 +7,7 @@ namespace pool::storage;
 
 use sys::core::String;
 use sys::core::utils::PropertyContainer;
-use sys::store::StorageElement;
+use sys::storage::StorageElement;
 use sys::stream::OStream;
 
 class PoolStorage extends sys::core::Object {

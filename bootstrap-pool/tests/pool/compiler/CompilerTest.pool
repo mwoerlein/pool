@@ -6,7 +6,8 @@ version = 0.1.0
 namespace pool::compiler;
 
 use pool::compiler::test::TestStorage;
-use pool::storage::Mimetype;
+
+use sys::storage::Mimetype;
 
 class CompilerTest extends pool::compiler::test::TestCase {
 

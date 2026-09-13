@@ -98,7 +98,7 @@ class Parser extends sys::core::Object {
         String classname = gram.getClassname();
         String fqn = gram.rt().createInstance(String:CLASSNAME);
         fqn.print(ns).printCString("::").print(classname);
-        OStream out = storage.writeElement(fqn, pool::storage::Mimetype:POOL_SRC, null);
+        OStream out = storage.writeElement(fqn, sys::storage::Mimetype:POOL_SRC, null);
         
         out.printChar('/').printChar('*').printCString(<"
 [meta]

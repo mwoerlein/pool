@@ -6,9 +6,9 @@ version = 0.1.0
 namespace pool::command;
 
 use pool::compiler::Compiler;
-use pool::storage::Mimetype;
 
 use sys::core::anycollection::AnyIterator;
+use sys::storage::Mimetype;
 use sys::stream::OStream;
 
 class PoolCompiler extends sys::log::LoggerAware, linux::Command {

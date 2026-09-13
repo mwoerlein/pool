@@ -3,12 +3,11 @@ mimetype = text/x-pool
 author = Marc Woerlein <marc.woerlein@gmx.de>
 version = 0.1.0
 */
-namespace pool::storage;
+namespace sys::core::utils;
 
 use sys::core::String;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
-use sys::core::utils::PropertyContainer;
 use sys::stream::IStream;
 use sys::stream::OStream;
 
