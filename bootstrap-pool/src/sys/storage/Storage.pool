@@ -1,0 +1,18 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::storage;
+
+use sys::core::String;
+use sys::storage::StorageElement;
+
+class Storage extends sys::core::Object {
+    
+    abstract [StorageElement] getElement(String name, int mimeType);
+    
+    // TODO: remove with implicit cast
+    [Storage] storage() { return this; }
+   
+}

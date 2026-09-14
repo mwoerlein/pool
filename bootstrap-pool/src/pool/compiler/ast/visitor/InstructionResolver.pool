@@ -47,26 +47,24 @@ use pool::compiler::ast::node::instruction::WhileInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
 use pool::compiler::ast::node::reference::AnyRefNode;
-use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
 use pool::compiler::ast::node::reference::TypeRefNode;
 
 use pool::compiler::ast::scope::BlockScope;
 use pool::compiler::ast::scope::ClassScope;
 use pool::compiler::ast::scope::InstanceScope;
+use pool::compiler::ast::scope::IntType;
 use pool::compiler::ast::scope::MethodScope;
 use pool::compiler::ast::scope::StructScope;
 use pool::compiler::ast::scope::UnitScope;
 use pool::compiler::ast::scope::VariableScope;
-use pool::compiler::ast::scope::IntType;
 
-use pool::storage::PoolStorage;
-
+use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
-use sys::core::String;
 use sys::storage::Mimetype;
 use sys::stream::OStream;
 

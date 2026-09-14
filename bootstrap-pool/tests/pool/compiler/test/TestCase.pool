@@ -19,9 +19,9 @@ class TestCase extends test::TestCase {
     [int] runTest(TestStorage storage) {
         Compiler c = this.rt().createInstance(Compiler:CLASSNAME);
         c.initLogger(storage.getLogger())
-            .addClassPath(storage.poolStorage())
-            .setOutput(storage.poolStorage())
-            .setPrettyOutput(storage.poolStorage())
+            .addClassPath(storage.storage())
+            .setOutput(storage.modifiableStorage())
+            .setPrettyOutput(storage.modifiableStorage())
         ;
         if (!storage.validateInitErrors()) { return this.fail("Compiler initialization"); }
         

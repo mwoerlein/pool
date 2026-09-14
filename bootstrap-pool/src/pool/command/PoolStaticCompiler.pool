@@ -76,7 +76,7 @@ Pool Bootstrap Static Compiler.
         compiler.initLogger(this.getLogger());
         {
             AnyIterator it = this.getListOption("classpath");
-            while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).poolStorage()); }
+            while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).storage()); }
             it.destroy();
         }
         if (this.hasOption("asm")) {

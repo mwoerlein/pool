@@ -6,6 +6,7 @@ version = 0.1.0
 namespace pool::generator::parser;
 
 use pool::generator::Symbol;
+
 use pool::generator::parser::grammar::Action;
 use pool::generator::parser::grammar::Grammar;
 use pool::generator::parser::grammar::State;
@@ -93,12 +94,12 @@ class Parser extends sys::core::Object {
     }
 
     // TODO: extract model based src-code generation
-    global [] generateFromGrammar(Grammar gram, pool::storage::PoolStorage storage) {
+    global [] generateFromGrammar(Grammar gram, sys::storage::ModifiableStorage storage) {
         String ns = gram.getNamespace();
         String classname = gram.getClassname();
         String fqn = gram.rt().createInstance(String:CLASSNAME);
         fqn.print(ns).printCString("::").print(classname);
-        OStream out = storage.writeElement(fqn, sys::storage::Mimetype:POOL_SRC, null);
+        OStream out = storage.createElement(fqn, sys::storage::Mimetype:POOL_SRC, null);
         
         out.printChar('/').printChar('*').printCString(<"
 [meta]

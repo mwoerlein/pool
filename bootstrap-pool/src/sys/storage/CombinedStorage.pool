@@ -1,0 +1,30 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::storage;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::storage::Mimetype;
+use sys::storage::StorageElement;
+use sys::stream::OStream;
+
+class CombinedStorage extends Storage, AnyList { // LinkedList<Storage>
+    
+    [CombinedStorage] addStorage(Storage s) { this.add(s); }
+    
+    [StorageElement] getElement(String name, int mimeType) {
+        StorageElement ret = null;
+        AnyIterator it = this.iterator();
+        while (!ret && it.hasNext()) {
+            Storage s = it.next();
+            ret = s.getElement(name, mimeType);
+        }
+        it.destroy();
+        return ret;
+    }
+   
+}

@@ -6,14 +6,11 @@ version = 0.1.0
 namespace pool::storage;
 
 use sys::core::String;
+use sys::storage::CombinedStorage;
 use sys::storage::Mimetype;
 use sys::storage::StorageElement;
-use sys::stream::OStream;
 
-use sys::core::anycollection::AnyIterator;
-use sys::core::anycollection::AnyList;
-
-class ClassPathStorage extends AnyList { // LinkedList<PoolStorage>
+class ClassPathStorage extends CombinedStorage {
     
     [StorageElement] getSourceClass(String fullQualifiedName) {
         return this.getElement(fullQualifiedName, Mimetype:POOL_SRC);
@@ -34,17 +31,6 @@ class ClassPathStorage extends AnyList { // LinkedList<PoolStorage>
         search.printCString("_footer");
         StorageElement ret = this.getElement(search, Mimetype:POOL_ASM);
         search.destroy();
-        return ret;
-    }
-    
-    [StorageElement] getElement(String fullQualifiedName, int mimeType) {
-        StorageElement ret = null;
-        AnyIterator it = this.iterator();
-        while (!ret && it.hasNext()) {
-            PoolStorage s = it.next();
-            ret = s.getElement(fullQualifiedName, mimeType);
-        }
-        it.destroy();
         return ret;
     }
    

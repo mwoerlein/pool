@@ -75,12 +75,12 @@ Pool Bootstrap Compiler.
         compiler.initLogger(this.getLogger());
         {
             AnyIterator it = this.getListOption("classpath");
-            while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).poolStorage()); }
+            while (it.hasNext()) { compiler.addClassPath(this.openDirectory(it.next()).storage()); }
             it.destroy();
         }
-        compiler.setOutput(this.openDirectory(this.getValueOption("output")).poolStorage());
+        compiler.setOutput(this.openDirectory(this.getValueOption("output")).modifiableStorage());
         if (this.hasOption("prettyprint")) {
-            compiler.setPrettyOutput(this.openDirectory(this.getValueOption("prettyprint")).poolStorage());
+            compiler.setPrettyOutput(this.openDirectory(this.getValueOption("prettyprint")).modifiableStorage());
         }
         if (this.hasOption("binary")) {
             compiler.setOutputMimetype(Mimetype:POOL_X86_CLASS);

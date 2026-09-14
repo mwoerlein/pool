@@ -42,8 +42,8 @@ use pool::compiler::ast::node::instruction::WhileInstNode;
 
 use pool::compiler::ast::node::reference::AllRefNode;
 use pool::compiler::ast::node::reference::AnyRefNode;
-use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::CStringRefNode;
+use pool::compiler::ast::node::reference::ClassRefNode;
 use pool::compiler::ast::node::reference::IntRefNode;
 use pool::compiler::ast::node::reference::TypeRefNode;
 
@@ -51,26 +51,25 @@ use pool::compiler::pir::BasicBlock;
 use pool::compiler::pir::Method;
 use pool::compiler::pir::statement::CondStatement;
 
-use pool::storage::PoolStorage;
-
+use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyMapEntryIterator;
-use sys::core::String;
 use sys::storage::Mimetype;
+use sys::storage::ModifiableStorage;
 use sys::stream::OStream;
 
 class PrettyPrinter extends Visitor {
 
-    PoolStorage _out;
+    ModifiableStorage _out;
     OStream _element;
     int _indent;
     
-    [PrettyPrinter] setStorage(PoolStorage out) { _out = this.own(out); return this; }
+    [PrettyPrinter] setStorage(ModifiableStorage out) { _out = this.own(out); return this; }
     
     // declarations
     [int] visitTranslationUnit(TranslationUnitNode node) {
         _indent = 0;
-        _element = _out.writeElement(node.getName(), Mimetype:POOL_SRC, node.getElement().propertyContainer());
+        _element = _out.createElement(node.getName(), Mimetype:POOL_SRC, node.getElement().propertyContainer());
         if (!_element) { return false; }
         
         if (node.getNamespace()) {

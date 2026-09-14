@@ -8,6 +8,7 @@ namespace pool::command;
 use pool::languageserver::MessageBus;
 use pool::languageserver::Server;
 use pool::languageserver::message::MessageFactory;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::stream::OStream;
@@ -58,7 +59,7 @@ Pool Language Server.
             while (it.hasNext()) {
                 String uri = it.next();
                 if (uri.startsWithCString("file:///")) {
-                    s.addSourceStorage(uri, this.openDirectory(uri.subString(7, 0)).poolStorage());
+                    s.addSourceStorage(uri, this.openDirectory(uri.subString(7, 0)).modifiableStorage());
                 } else {
                     this.rt().err().printCString("Unsupported source uri: ").print(uri).printNewline();
                     error = true;
@@ -73,7 +74,7 @@ Pool Language Server.
         
         String fallbackUri = this.createOwn(String:CLASSNAME);
         fallbackUri.assignCString("file://");
-        return s.setFallbackStorage(fallbackUri, this.openDirectory(fallbackUri.subString(-1, 0)).poolStorage()).run();
+        return s.setFallbackStorage(fallbackUri, this.openDirectory(fallbackUri.subString(-1, 0)).modifiableStorage()).run();
     }
     
     [Server] _createServer() {

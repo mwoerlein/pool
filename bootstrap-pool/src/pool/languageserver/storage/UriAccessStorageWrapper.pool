@@ -5,23 +5,22 @@ version = 0.1.0
 */
 namespace pool::languageserver::storage;
 
-use pool::storage::PoolStorage;
-
 use sys::core::String;
 use sys::core::utils::PropertyContainer;
 use sys::storage::Mimetype;
+use sys::storage::ModifiableStorage;
 use sys::storage::StorageElement;
-use sys::stream::OStream;
 use sys::stream::IStream;
+use sys::stream::OStream;
 
-class UriAccessStorageWrapper extends PoolStorage {
+class UriAccessStorageWrapper extends ModifiableStorage {
 
     int PATH_SEPARATOR := '/';
     
     String _baseUri;
-    PoolStorage _inner;
+    ModifiableStorage _inner;
     
-    [UriAccessStorageWrapper] init(String baseUri, PoolStorage storage) {
+    [UriAccessStorageWrapper] init(String baseUri, ModifiableStorage storage) {
         this._inner = storage;
         this._baseUri = this.own(baseUri);
         this._baseUri.printChar(UriAccessStorageWrapper:PATH_SEPARATOR);
@@ -38,8 +37,8 @@ class UriAccessStorageWrapper extends PoolStorage {
         return _inner.getElement(fullQualifiedName, mimeType);
     }
     
-    [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
-        return _inner.writeElement(fullQualifiedName, mimeType, properties);
+    [OStream] createElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
+        return _inner.createElement(fullQualifiedName, mimeType, properties);
     }
     
     [int] removeElement(String fullQualifiedName, int mimeType) {

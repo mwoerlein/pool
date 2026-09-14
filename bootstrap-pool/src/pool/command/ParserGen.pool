@@ -7,10 +7,10 @@ namespace pool::command;
 
 use pool::generator::parser::grammar::Parser as GrammarParser;
 use pool::generator::parser::grammar::Grammar;
-use pool::storage::PoolStorage;
 
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::storage::ModifiableStorage;
 use sys::stream::IStream;
 use sys::stream::OStream;
 use sys::stream::SeekableIOStream;
@@ -59,7 +59,7 @@ Parser Generator.
             return -1;
         }
         
-        PoolStorage storage = this.openDirectory(this.getValueOption("classpath")).poolStorage();
+        ModifiableStorage storage = this.openDirectory(this.getValueOption("classpath")).modifiableStorage();
         {
             AnyIterator argIt = this.getArguments();
             while (argIt.hasNext()) {
@@ -67,13 +67,13 @@ Parser Generator.
                 if (name.compareCString("-") == 0) {
                     IStream in = this.openStdIn();
                     out.printCString("refresh from stdin").printNewline();
-                    this.parseAndGenerate(in, name, storage.poolStorage());
+                    this.parseAndGenerate(in, name, storage);
                     in.destroy();
                 } else {
                     SeekableIOStream f = this.openFile(name, linux::fs::File:MODE_READ);
                     if (f) {
                         out.printCString("generate classes from ").print(name).printNewline();
-                        this.parseAndGenerate(f.istream(), name, storage.poolStorage());
+                        this.parseAndGenerate(f.istream(), name, storage);
                         f.destroy();
                     }
                 }
@@ -84,7 +84,7 @@ Parser Generator.
         return 0;
     }
     
-    [] parseAndGenerate(IStream input, String name, PoolStorage storage) {
+    [] parseAndGenerate(IStream input, String name, ModifiableStorage storage) {
         Grammar gram = parser.parse(input, name, name);
     
         if (gram) {

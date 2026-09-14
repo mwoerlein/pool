@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace pool::languageserver;
 
+use json::value::JsonValue;
+
 use pool::compiler::ast::node::declaration::TranslationUnitNode;
 
 use pool::languageserver::message::Message;
@@ -12,15 +14,15 @@ use pool::languageserver::message::MessageFactory;
 use pool::languageserver::message::Response;
 use pool::languageserver::message::UnknownMessage;
 use pool::languageserver::message::lifecycle::ExitNotification;
-use pool::languageserver::message::lifecycle::InitializedNotification;
 use pool::languageserver::message::lifecycle::InitializeRequest;
 use pool::languageserver::message::lifecycle::InitializeResponse;
+use pool::languageserver::message::lifecycle::InitializedNotification;
 use pool::languageserver::message::lifecycle::RegisterCapabilityRequest;
 use pool::languageserver::message::lifecycle::RegisterCapabilityResponse;
 use pool::languageserver::message::lifecycle::ShutdownRequest;
 use pool::languageserver::message::lifecycle::ShutdownResponse;
-use pool::languageserver::message::textdocument::DidOpenNotification;
 use pool::languageserver::message::textdocument::DidCloseNotification;
+use pool::languageserver::message::textdocument::DidOpenNotification;
 use pool::languageserver::message::textdocument::PublishDiagnosticsNotification;
 use pool::languageserver::message::window::ShowMessageNotification;
 use pool::languageserver::message::workspace::DidChangeWatchedFilesNotification;
@@ -28,13 +30,11 @@ use pool::languageserver::message::workspace::DidChangeWatchedFilesNotification;
 use pool::languageserver::storage::UriAccessStorageWrapper;
 
 use pool::storage::ClassPathStorage;
-use pool::storage::PoolStorage;
-
-use json::value::JsonValue;
 
 use sys::core::String;
-use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
+use sys::storage::ModifiableStorage;
 use sys::storage::StorageElement;
 use sys::stream::OStream;
 
@@ -58,14 +58,14 @@ class Server extends sys::core::Task {
         this.classpath = this.createOwn(ClassPathStorage:CLASSNAME);
     }
     
-    [Server] addSourceStorage(String uri, PoolStorage storage) {
+    [Server] addSourceStorage(String uri, ModifiableStorage storage) {
         UriAccessStorageWrapper uasw = this.createOwn(UriAccessStorageWrapper:CLASSNAME);
         sourceStorages.add(uasw.init(uri, storage));
-        classpath.add(storage);
+        classpath.addStorage(storage.storage());
         return this;
     }
     
-    [Server] setFallbackStorage(String uri, PoolStorage storage) {
+    [Server] setFallbackStorage(String uri, ModifiableStorage storage) {
         fallbackStorage = this.createOwn(UriAccessStorageWrapper:CLASSNAME);
         fallbackStorage.init(uri, storage);
         return this;

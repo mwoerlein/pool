@@ -1,0 +1,35 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::storage;
+
+use sys::core::String;
+use sys::runtime::ClassDescriptor;
+use sys::runtime::ClassDescriptorLoader;
+use sys::storage::Mimetype;
+use sys::storage::Storage;
+use sys::storage::StorageElement;
+
+class ClassLoadingStorage extends Storage, ClassDescriptorLoader {
+    
+    //// ClassDescriptorLoader ////
+    [ClassDescriptor] loadClassDesc(cstring name) {
+//    this.rt().err().printCString("try to load class desc '").printCString(name).printCString("' from ").print(this).printNewline();
+        String fullQualifiedName = this.rt().createInstance(String:CLASSNAME);
+        fullQualifiedName.assignCString(name);
+        StorageElement e = this.getElement(fullQualifiedName, Mimetype:POOL_X86_CLASS);
+        fullQualifiedName.destroy();
+        
+        ClassDescriptor ret = null;
+        if (e) {
+//    this.rt().err().printCString("found class desc '").printCString(name).printCString("' in ").print(this).printNewline();
+            // TODO: validate meta.mimetype and pool.class property?
+            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
+            e.destroy();
+        }
+        return ret;
+    }
+    
+}

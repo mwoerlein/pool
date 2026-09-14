@@ -94,13 +94,13 @@ class Tokenizer extends sys::core::anycollection::AnyIterator, SymbolTable {
     }
     
     // TODO: extract model based src-code generation
-    global [] generateFromGrammar(Grammar gram, pool::storage::PoolStorage storage) {
+    global [] generateFromGrammar(Grammar gram, sys::storage::ModifiableStorage storage) {
         DFA d = gram.getTokenizerDFA();
         String ns = gram.getNamespace();
         String classname = gram.getTokenizerClassname();
         String fqn = storage.rt().createInstance(String:CLASSNAME);
         fqn.print(ns).printCString("::").print(classname);
-        OStream out = storage.writeElement(fqn, sys::storage::Mimetype:POOL_SRC, null);
+        OStream out = storage.createElement(fqn, sys::storage::Mimetype:POOL_SRC, null);
         
         State init = d.getInitState();
         out.printChar('/').printChar('*').printCString(<"

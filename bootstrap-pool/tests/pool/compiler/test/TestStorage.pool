@@ -6,8 +6,8 @@ version = 0.1.0
 namespace pool::compiler::test;
 
 use sys::core::String;
-use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMap;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
@@ -16,7 +16,7 @@ use sys::storage::StorageElement;
 use sys::stream::OStream;
 use sys::stream::OStreamWrapper;
 
-class TestStorage extends sys::log::LoggerAware, sys::core::utils::Owner, pool::storage::PoolStorage {
+class TestStorage extends sys::log::LoggerAware, sys::core::utils::Owner, sys::storage::ModifiableStorage {
 
     TestLogger logger;
     String name;
@@ -99,14 +99,14 @@ class TestStorage extends sys::log::LoggerAware, sys::core::utils::Owner, pool::
     [int] validatePrepareErrors() { return logger.validate(this.expectPrepareErrors); }
     [int] validateCompileErrors() { return logger.validate(this.expectCompileErrors); }
 
-    // PoolStorage
+    // ModifiableStorage
     [StorageElement] getElement(String fullQualifiedName, int mimeType) {
         tmp.assignString(fullQualifiedName).printChar('#').printInt(mimeType);
         StringStorageElement e = in.get(tmp);
         if (e) { return e.storageElement(); }
         return null;
     }
-    [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
+    [OStream] createElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
         String key = out.createOwn(String:CLASSNAME);
         key.assignString(fullQualifiedName).printChar('#').printInt(mimeType);
         StringStorageElement e = out.createOwn(StringStorageElement:CLASSNAME);

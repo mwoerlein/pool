@@ -5,8 +5,8 @@ version = 0.1.0
 */
 namespace pool::compiler;
 
-use pool::asm::Parser as AsmParser;
 use pool::asm::CompilationUnit as AsmUnit;
+use pool::asm::Parser as AsmParser;
 use pool::asm::i386::Compiler as AsmCompiler;
 
 use pool::compiler::ast::NamedType;
@@ -22,15 +22,16 @@ use pool::compiler::backend::X86Generator;
 use pool::compiler::parser::Parser;
 
 use pool::storage::ClassPathStorage;
-use pool::storage::PoolStorage;
 
 use sys::core::String;
-use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
+use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyMapEntryIterator;
 use sys::core::utils::PropertyContainer;
 use sys::log::Logger;
 use sys::storage::Mimetype;
+use sys::storage::ModifiableStorage;
+use sys::storage::Storage;
 use sys::storage::StorageElement;
 use sys::stream::IStream;
 use sys::stream::OStream;
@@ -40,7 +41,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
     cstring VERSION := "0.3.0";
 
     ClassPathStorage classPath;
-    PoolStorage out;
+    ModifiableStorage out;
     Parser parser;
     AnyList preparedUnits; // LinkedList<TranslationUnitNode>
     int outputMimetype;
@@ -86,9 +87,9 @@ class Compiler extends pool::compiler::ast::TypeManager {
         return this;
     }
     
-    [Compiler] addClassPath(PoolStorage pool) { classPath.add(this.own(pool)); return this; }
-    [Compiler] setOutput(PoolStorage pool) { out = this.own(pool); return this; }
-    [Compiler] setPrettyOutput(PoolStorage pool) {
+    [Compiler] addClassPath(Storage pool) { classPath.addStorage(this.own(pool)); return this; }
+    [Compiler] setOutput(ModifiableStorage pool) { out = this.own(pool); return this; }
+    [Compiler] setPrettyOutput(ModifiableStorage pool) {
         pp = this.createOwn(PrettyPrinter:CLASSNAME);
         pp.setStorage(pool);
         if (this.getLogger()) { pp.setLogger(this.getLogger()); }
@@ -242,7 +243,7 @@ class Compiler extends pool::compiler::ast::TypeManager {
             if (srcAuthor) { unitProps.setCStringProperty("pool_source.author", srcAuthor.toCString()); }
         }
         
-        OStream elem = out.writeElement(fqn, this.outputMimetype, unitProps);
+        OStream elem = out.createElement(fqn, this.outputMimetype, unitProps);
         this._serializeAsmUnit(elem, unit, 0);
         elem.destroy();
         

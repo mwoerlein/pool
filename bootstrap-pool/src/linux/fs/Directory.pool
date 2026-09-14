@@ -5,19 +5,18 @@ version = 0.1.0
 */
 namespace linux::fs;
 
-use pool::storage::PoolStorage;
+use pool::storage::ClassLoadingStorage;
 
 use sys::core::String;
 use sys::core::utils::FullQualifiedNameIterator;
 use sys::core::utils::PropertiesMarshaller;
 use sys::core::utils::PropertyContainer;
-use sys::runtime::ClassDescriptor;
-use sys::runtime::ClassDescriptorLoader;
 use sys::storage::Mimetype;
+use sys::storage::ModifiableStorage;
 use sys::storage::StorageElement;
 use sys::stream::OStream;
 
-class Directory extends PoolStorage, ClassDescriptorLoader {
+class Directory extends ModifiableStorage, ClassLoadingStorage {
 
     String baseDir;
     PropertiesMarshaller pm;
@@ -36,25 +35,9 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
         return this;
     }
     
-    //// ClassDescriptorLoader ////
-    [ClassDescriptor] loadClassDesc(cstring name) {
-        String fullQualifiedName = this.rt().createInstance(String:CLASSNAME);
-        fullQualifiedName.assignCString(name);
-        StorageElement e = this.getElement(fullQualifiedName, Mimetype:POOL_X86_CLASS);
-        fullQualifiedName.destroy();
-        
-        ClassDescriptor ret = null;
-        if (e) {
-            // TODO: validate meta.mimetype and pool.class property?
-            ret = this.buildClassDescFromIStream(e.getContent(), e.getContentSize());
-            e.destroy();
-        }
-        return ret;
-    }
-
-    //// PoolStorage ////
-    [StorageElement] getElement(String fullQualifiedName, int mimeType) {
-        String filepath = this.buildFilePath(fullQualifiedName, mimeType, false);
+    //// Storage ////
+    [StorageElement] getElement(String name, int mimeType) {
+        String filepath = this.buildFilePath(name, mimeType, false);
         if (!File:exists(filepath.toCString())) {
             filepath.destroy();
             return null;
@@ -63,8 +46,8 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
         return fe.init(filepath, pm).storageElement();
     }
     
-    [OStream] writeElement(String fullQualifiedName, int mimeType, PropertyContainer properties) {
-        String filepath = this.buildFilePath(fullQualifiedName, mimeType, true);
+    [OStream] createElement(String name, int mimeType, PropertyContainer properties) {
+        String filepath = this.buildFilePath(name, mimeType, true);
         int buf = 0;
         File f = this.rt().createInstance(File:CLASSNAME);
         int r = f._init(filepath.toCString(), File:MODE_WRITE, 0);
@@ -77,21 +60,21 @@ class Directory extends PoolStorage, ClassDescriptorLoader {
         return f.ostream();
     }
     
-    [int] removeElement(String fullQualifiedName, int mimeType) {
-        String filepath = this.buildFilePath(fullQualifiedName, mimeType, false);
+    [int] removeElement(String name, int mimeType) {
+        String filepath = this.buildFilePath(name, mimeType, false);
         int ret = linux::SysCall:unlink(filepath.toCString());
         filepath.destroy();
         return ret;
     }
     
     //// Directory ////
-    [String] buildFilePath(String fullQualifiedName, int mimetype, int createPath) {
+    [String] buildFilePath(String name, int mimetype, int createPath) {
         String path = this.rt().createInstance(String:CLASSNAME);
         path.assignString(baseDir);
 
         {
             FullQualifiedNameIterator parts = this.rt().createInstance(FullQualifiedNameIterator:CLASSNAME);
-            parts.init(fullQualifiedName.toIStream());
+            parts.init(name.toIStream());
             while (parts.hasNext()) {
                 if (createPath) { linux::SysCall:mkdir(path.toCString()); }
                 path.printChar('/').print(parts.next());
