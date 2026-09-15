@@ -1,0 +1,99 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace pool::storage;
+
+use sys::core::utils::PropertiesMarshaller;
+use sys::core::utils::PropertyContainer;
+use sys::storage::Mimetype;
+use sys::stream::SeekableIOStream;
+use sys::storage::StorageElementDesc;
+
+class StoreBuilder extends sys::core::Object {
+    
+    PropertiesMarshaller pm;
+    SeekableIOStream store;
+    int elements;
+    int indexV2;
+    int curIndexPos;
+    int curElementPos;
+    
+    [StoreBuilder] _init(SeekableIOStream store, int elements, int indexV2) {
+        this.pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+        this.store = store;
+        this.elements = elements;
+        this.indexV2 = indexV2;
+        
+        store.printCString("/*[meta]").printNewline();
+        store.printCString("mimetype = ").printCString(Mimetype:TYPE_GRID_STORE).printNewline();
+        if (indexV2) {
+            store.printCString("[store]").printNewline();
+            store.printCString("indexVersion = 0.2.0").printNewline();
+            store.printCString("elements = ").printInt(elements).printNewline();
+        }
+        store.printCString("*/").printNewline();
+
+        this.curIndexPos = store.pos();
+        // prepare index
+        int indexSize = 2 * (elements + 1); // index terminator entry
+        if (indexV2) { indexSize = elements * StorageElementDesc:SIZEOF; }
+        while (indexSize--) { store.printRawInt(0); }
+        
+        this.curElementPos = store.pos();
+        
+        return this;
+    }
+    
+    [StoreBuilder] addElement(SeekableIOStream element) {
+        SeekableIOStream store := this.store;
+        
+        // create index entry
+        int size := element.length();
+        store.seek(this.curIndexPos);
+        if (this.indexV2) {
+            PropertyContainer p = this.rt().createInstance(PropertyContainer:CLASSNAME);
+            this.pm.unmarshall(element.istream(), p);
+            
+            int nameHash = 0;
+            if (p.hasCStringProperty("pool.name")) {
+                nameHash = p.getCStringProperty("pool.name").hash();
+            } else if (p.hasCStringProperty("pool_source.unit")) {
+                nameHash = p.getCStringProperty("pool_source.unit").hash();
+            }
+            // TODO: extract classname from .pool file?
+            
+            store
+                .printRawInt(/*start*/      this.curElementPos)
+                .printRawInt(/*size*/       size)
+                .printRawInt(/*headerSize*/ element.pos())
+                .printRawInt(/*mimeType*/   Mimetype:fromProperties(p))
+                .printRawInt(/*nameHash*/   nameHash)
+                .printRawInt(/*reserved*/   0)
+                .printRawInt(/*reserved*/   0)
+                .printRawInt(/*reserved*/   0)
+            ;
+            p.destroy();
+            element.seek(0);
+        } else {
+            store.printRawInt(this.curElementPos).printRawInt(size);
+        }
+        this.curIndexPos = store.pos();
+        
+        // copy element into store
+        store.seek(this.curElementPos);
+        store.print(this.own(element));
+        this.curElementPos = store.pos();
+        
+        return this;
+    }
+    
+    [StoreBuilder] align(int i) {
+        SeekableIOStream store := this.store;
+        while (store.pos() % i) {
+            store.printChar(0);
+        }
+        return this;
+    }
+}

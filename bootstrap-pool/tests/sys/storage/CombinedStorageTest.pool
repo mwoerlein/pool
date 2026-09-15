@@ -5,6 +5,8 @@ version = 0.1.0
 */
 namespace sys::storage;
 
+use pool::storage::StoreBuilder;
+
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::memory::MemoryIOStream;
@@ -17,69 +19,22 @@ class CombinedStorageTest extends test::TestCase {
         this.testCombinedStorageElements();
     }
     
-    [SeekableIOStream] _createDummyStore(cstring name1, cstring name2) {
-        MemoryIOStream storeStream = this.createOwn(MemoryIOStream:CLASSNAME);
-        storeStream._init(1024);
-        
-        // Header
-        storeStream.printCString("/*[meta]\n");
-        storeStream.printCString("mimetype = text/x-grid-store\n");
-        storeStream.printCString("[store]\n");
-        storeStream.printCString("indexVersion = 0.2.0\n");
-        storeStream.printCString("elements = 2\n");
-        storeStream.printCString("*/\n");
-        
-        int indexPos = storeStream.pos();
-        int i = 64;
-        while (i--) { storeStream.printRawInt(0); }
-        
-        // Element 1
-        int start1 = storeStream.pos();
-        storeStream.printCString("/*[pool]\nname = ");
-        storeStream.printCString(name1);
-        storeStream.printCString("\n*/\ncontent1");
-        int size1 = storeStream.pos() - start1;
-        
-        // Element 2
-        int start2 = storeStream.pos();
-        storeStream.printCString("/*[pool]\nname = ");
-        storeStream.printCString(name2);
-        storeStream.printCString("\n*/\ncontent2");
-        int size2 = storeStream.pos() - start2;
-        
-        // Index schreiben
-        storeStream.seek(indexPos);
-        
-        storeStream.printRawInt(start1)
-                  .printRawInt(size1)
-                  .printRawInt(0)
-                  .printRawInt(Mimetype:POOL_SRC)
-                  .printRawInt(String:hashCString(name1))
-                  .printRawInt(0).printRawInt(0).printRawInt(0);
-                  
-        storeStream.printRawInt(start2)
-                  .printRawInt(size2)
-                  .printRawInt(0)
-                  .printRawInt(Mimetype:POOL_SRC)
-                  .printRawInt(String:hashCString(name2))
-                  .printRawInt(0).printRawInt(0).printRawInt(0);
-        
-        return storeStream.iostream();
-    }
-
     [int] testCombinedStorageGetElement() {
         this.start("testCombinedStorageGetElement");
-        
-        SeekableIOStream s1 = this._createDummyStore("my::Class1", "my::Class2");
-        SeekableIOStream s2 = this._createDummyStore("my::Class3", "my::Class4");
-        
-        IOStreamStorage store1 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
-        store1._initFromStream(s1);
-        store1.own(s1);
-        
-        IOStreamStorage store2 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
-        store2._initFromStream(s2);
-        store2.own(s2);
+
+        SeekableIOStream s1 := this._createBufferStream(1024);
+        this._initStoreStream(s1, 2, true)
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class1\n*/\ncontent1"))
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class2\n*/\ncontent2"))
+            .destroy();
+        IOStreamStorage store1 := this._createIOStreamStorage(s1);
+
+        SeekableIOStream s2 := this._createBufferStream(1024);
+        this._initStoreStream(s2, 2, true)
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class3\n*/\ncontent3"))
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class4\n*/\ncontent4"))
+            .destroy();
+        IOStreamStorage store2 := this._createIOStreamStorage(s2);
         
         CombinedStorage combined = this.rt().createInstance(CombinedStorage:CLASSNAME);
         combined.addStorage(store1.storage());
@@ -132,17 +87,21 @@ class CombinedStorageTest extends test::TestCase {
 
     [int] testCombinedStorageElements() {
         this.start("testCombinedStorageElements");
-        
-        SeekableIOStream s1 = this._createDummyStore("my::Class1", "my::Class2");
-        SeekableIOStream s2 = this._createDummyStore("my::Class3", "my::Class4");
-        
-        IOStreamStorage store1 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
-        store1._initFromStream(s1);
-        store1.own(s1);
-        
-        IOStreamStorage store2 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
-        store2._initFromStream(s2);
-        store2.own(s2);
+
+        SeekableIOStream s1 := this._createBufferStream(1024);
+        this._initStoreStream(s1, 1, true)
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class1\n*/\ncontent1"))
+            .destroy();
+        IOStreamStorage store1 := this._createIOStreamStorage(s1);
+
+        SeekableIOStream s2 := this._createBufferStream(1024);
+        this._initStoreStream(s2, 4, true)
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class2\n*/\ncontent2"))
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class3\n*/\ncontent3"))
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class4\n*/\ncontent4"))
+            .addElement(this._createContentFromCString("/*[pool]\nname = my::Class5\n*/\ncontent5"))
+            .destroy();
+        IOStreamStorage store2 := this._createIOStreamStorage(s2);
         
         CombinedStorage combined = this.rt().createInstance(CombinedStorage:CLASSNAME);
         combined.addStorage(store1.storage());
@@ -158,12 +117,38 @@ class CombinedStorageTest extends test::TestCase {
         }
         it.destroy();
         
-        if (count != 4) {
-            return this.fail("Expected 4 elements from combined storage");
+        if (count != 5) {
+            return this.fail("Expected 5 elements from combined storage");
         }
         
         combined.destroy();
         
         return this.success();
     }
+
+    // TODO: extract to factory-class
+    [SeekableIOStream] _createBufferStream(int size) {
+        MemoryIOStream stream = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+        return stream._init(size).iostream();
+    }
+    
+    [StoreBuilder] _initStoreStream(SeekableIOStream stream, int elements, int indexV2) {
+        StoreBuilder sb := this.rt().createInstance(StoreBuilder:CLASSNAME);
+        return sb._init(stream, elements, indexV2);
+    }
+    
+    [SeekableIOStream] _createContentFromCString(cstring data) {
+        String s := this.rt().createInstance(String:CLASSNAME);
+        SeekableIOStream content := s.assignCString(data).toIOStream();
+        content.own(s);
+        return content;
+    }
+    
+    [IOStreamStorage] _createIOStreamStorage(SeekableIOStream stream) {
+        IOStreamStorage store = this.rt().createInstance(IOStreamStorage:CLASSNAME);
+        store._initFromStream(stream);
+        store.own(stream);
+        return store;
+    } 
+
 }
