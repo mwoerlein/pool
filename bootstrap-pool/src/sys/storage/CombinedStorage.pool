@@ -8,13 +8,14 @@ namespace sys::storage;
 use sys::core::String;
 use sys::core::anycollection::AnyIterator;
 use sys::core::anycollection::AnyList;
+use sys::storage::CombinedStorageIterator;
 use sys::storage::Mimetype;
 use sys::storage::StorageElement;
 use sys::stream::OStream;
 
 class CombinedStorage extends Storage, AnyList { // LinkedList<Storage>
     
-    [CombinedStorage] addStorage(Storage s) { this.add(s); }
+    [CombinedStorage] addStorage(Storage s) { this.add(this.own(s)); }
     
     [StorageElement] getElement(String name, int mimeType) {
         StorageElement ret = null;
@@ -25,6 +26,12 @@ class CombinedStorage extends Storage, AnyList { // LinkedList<Storage>
         }
         it.destroy();
         return ret;
+    }
+    
+    [AnyIterator] elements() {
+        CombinedStorageIterator it = this.rt().createInstance(CombinedStorageIterator:CLASSNAME);
+        it.init(this.iterator());
+        return this.rt().cast(AnyIterator:CLASSNAME, it);
     }
    
 }

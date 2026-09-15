@@ -1,0 +1,32 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::storage;
+
+use sys::core::anycollection::AnyIterator;
+use sys::memory::Address;
+
+class IOStreamStorageIterator extends AnyIterator {
+    
+    IOStreamStorage storage;
+    StorageElementDesc currentDesc;
+    
+    [IOStreamStorageIterator] init(IOStreamStorage s, StorageElementDesc firstDesc) {
+        this.storage = s;
+        this.currentDesc = firstDesc;
+        return this;
+    }
+    
+    [int] hasNext() {
+        return !!currentDesc;
+    }
+    
+    [__all__] next() {
+        if (!currentDesc) { return null; }
+        StorageElement e = storage._getElementFromDesc(currentDesc);
+        currentDesc = currentDesc.next;
+        return Address:convert(e);
+    }
+}

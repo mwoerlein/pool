@@ -1,0 +1,52 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::storage;
+
+use sys::core::anycollection::AnyIterator;
+
+class CombinedStorageIterator extends AnyIterator {
+    
+    AnyIterator storageIterator;
+    AnyIterator currentElementIterator;
+    
+    [CombinedStorageIterator] init(AnyIterator storageIt) {
+        this.storageIterator = storageIt;
+        this.currentElementIterator = null;
+        this._advance();
+        return this;
+    }
+    
+    [] __destruct() {
+        if (currentElementIterator) { currentElementIterator.destroy(); }
+        if (storageIterator) { storageIterator.destroy(); }
+    }
+    
+    [int] hasNext() {
+        return !!currentElementIterator;
+    }
+    
+    [__all__] next() {
+        if (!currentElementIterator) { return null; }
+        __all__ val = currentElementIterator.next();
+        if (!currentElementIterator.hasNext()) {
+            currentElementIterator.destroy();
+            currentElementIterator = null;
+            this._advance();
+        }
+        return val;
+    }
+    
+    [] _advance() {
+        while (!currentElementIterator && storageIterator.hasNext()) {
+            Storage s = this.rt().cast(Storage:CLASSNAME, storageIterator.next());
+            currentElementIterator = s.elements();
+            if (!currentElementIterator.hasNext()) {
+                currentElementIterator.destroy();
+                currentElementIterator = null;
+            }
+        }
+    }
+}

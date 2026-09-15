@@ -1,0 +1,169 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::storage;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::memory::MemoryIOStream;
+use sys::stream::SeekableIOStream;
+
+class CombinedStorageTest extends test::TestCase {
+
+    [] runAll() {
+        this.testCombinedStorageGetElement();
+        this.testCombinedStorageElements();
+    }
+    
+    [SeekableIOStream] _createDummyStore(cstring name1, cstring name2) {
+        MemoryIOStream storeStream = this.createOwn(MemoryIOStream:CLASSNAME);
+        storeStream._init(1024);
+        
+        // Header
+        storeStream.printCString("/*[meta]\n");
+        storeStream.printCString("mimetype = text/x-grid-store\n");
+        storeStream.printCString("[store]\n");
+        storeStream.printCString("indexVersion = 0.2.0\n");
+        storeStream.printCString("elements = 2\n");
+        storeStream.printCString("*/\n");
+        
+        int indexPos = storeStream.pos();
+        int i = 64;
+        while (i--) { storeStream.printRawInt(0); }
+        
+        // Element 1
+        int start1 = storeStream.pos();
+        storeStream.printCString("/*[pool]\nname = ");
+        storeStream.printCString(name1);
+        storeStream.printCString("\n*/\ncontent1");
+        int size1 = storeStream.pos() - start1;
+        
+        // Element 2
+        int start2 = storeStream.pos();
+        storeStream.printCString("/*[pool]\nname = ");
+        storeStream.printCString(name2);
+        storeStream.printCString("\n*/\ncontent2");
+        int size2 = storeStream.pos() - start2;
+        
+        // Index schreiben
+        storeStream.seek(indexPos);
+        
+        storeStream.printRawInt(start1)
+                  .printRawInt(size1)
+                  .printRawInt(0)
+                  .printRawInt(Mimetype:POOL_SRC)
+                  .printRawInt(String:hashCString(name1))
+                  .printRawInt(0).printRawInt(0).printRawInt(0);
+                  
+        storeStream.printRawInt(start2)
+                  .printRawInt(size2)
+                  .printRawInt(0)
+                  .printRawInt(Mimetype:POOL_SRC)
+                  .printRawInt(String:hashCString(name2))
+                  .printRawInt(0).printRawInt(0).printRawInt(0);
+        
+        return storeStream.iostream();
+    }
+
+    [int] testCombinedStorageGetElement() {
+        this.start("testCombinedStorageGetElement");
+        
+        SeekableIOStream s1 = this._createDummyStore("my::Class1", "my::Class2");
+        SeekableIOStream s2 = this._createDummyStore("my::Class3", "my::Class4");
+        
+        IOStreamStorage store1 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
+        store1._initFromStream(s1);
+        store1.own(s1);
+        
+        IOStreamStorage store2 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
+        store2._initFromStream(s2);
+        store2.own(s2);
+        
+        CombinedStorage combined = this.rt().createInstance(CombinedStorage:CLASSNAME);
+        combined.addStorage(store1.storage());
+        combined.addStorage(store2.storage());
+        
+        String name2 = this.rt().createInstance(String:CLASSNAME);
+        name2.assignCString("my::Class2");
+        
+        String name3 = this.rt().createInstance(String:CLASSNAME);
+        name3.assignCString("my::Class3");
+        
+        String nameNon = this.rt().createInstance(String:CLASSNAME);
+        nameNon.assignCString("my::NonExistent");
+        
+        // Test getElement from first store
+        StorageElement e1 = combined.getElement(name2, Mimetype:POOL_SRC);
+        if (this.isNull(e1)) {
+            return this.fail("Failed to find my::Class2 in combined storage");
+        }
+        String prop1 = e1.getCStringProperty("pool.name");
+        if (!prop1 || !prop1.cequals("my::Class2")) {
+            return this.fail("Incorrect element found for my::Class2");
+        }
+        e1.destroy();
+        
+        // Test getElement from second store
+        StorageElement e2 = combined.getElement(name3, Mimetype:POOL_SRC);
+        if (this.isNull(e2)) {
+            return this.fail("Failed to find my::Class3 in combined storage");
+        }
+        String prop2 = e2.getCStringProperty("pool.name");
+        if (!prop2 || !prop2.cequals("my::Class3")) {
+            return this.fail("Incorrect element found for my::Class3");
+        }
+        e2.destroy();
+        
+        // Test non-existent element
+        StorageElement e3 = combined.getElement(nameNon, Mimetype:POOL_SRC);
+        if (!this.isNull(e3)) {
+            return this.fail("Found non-existent element in combined storage");
+        }
+        
+        nameNon.destroy();
+        name3.destroy();
+        name2.destroy();
+        combined.destroy();
+        
+        return this.success();
+    }
+
+    [int] testCombinedStorageElements() {
+        this.start("testCombinedStorageElements");
+        
+        SeekableIOStream s1 = this._createDummyStore("my::Class1", "my::Class2");
+        SeekableIOStream s2 = this._createDummyStore("my::Class3", "my::Class4");
+        
+        IOStreamStorage store1 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
+        store1._initFromStream(s1);
+        store1.own(s1);
+        
+        IOStreamStorage store2 = this.rt().createInstance(IOStreamStorage:CLASSNAME);
+        store2._initFromStream(s2);
+        store2.own(s2);
+        
+        CombinedStorage combined = this.rt().createInstance(CombinedStorage:CLASSNAME);
+        combined.addStorage(store1.storage());
+        combined.addStorage(store2.storage());
+        
+        int count = 0;
+        AnyIterator it = combined.elements();
+        while (it.hasNext()) {
+            StorageElement e = this.rt().cast(StorageElement:CLASSNAME, it.next());
+            if (this.isNull(e)) { return this.fail("Combined iterator returned null element"); }
+            count++;
+            e.destroy();
+        }
+        it.destroy();
+        
+        if (count != 4) {
+            return this.fail("Expected 4 elements from combined storage");
+        }
+        
+        combined.destroy();
+        
+        return this.success();
+    }
+}

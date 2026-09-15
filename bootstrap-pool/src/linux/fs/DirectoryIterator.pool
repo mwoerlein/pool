@@ -1,0 +1,19 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::fs;
+
+use sys::core::anycollection::AnyIterator;
+
+class DirectoryIterator extends AnyIterator {
+    
+    [int] hasNext() {
+        return false;
+    }
+    
+    [__all__] next() {
+        return null;
+    }
+}

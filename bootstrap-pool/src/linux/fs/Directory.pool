@@ -8,9 +8,11 @@ namespace linux::fs;
 use pool::storage::ClassLoadingStorage;
 
 use sys::core::String;
+use sys::core::anycollection::AnyIterator;
 use sys::core::utils::FullQualifiedNameIterator;
 use sys::core::utils::PropertiesMarshaller;
 use sys::core::utils::PropertyContainer;
+use linux::fs::DirectoryIterator;
 use sys::storage::Mimetype;
 use sys::storage::ModifiableStorage;
 use sys::storage::StorageElement;
@@ -65,6 +67,11 @@ class Directory extends ModifiableStorage, ClassLoadingStorage {
         int ret = linux::SysCall:unlink(filepath.toCString());
         filepath.destroy();
         return ret;
+    }
+    
+    [AnyIterator] elements() {
+        DirectoryIterator it = this.rt().createInstance(DirectoryIterator:CLASSNAME);
+        return this.rt().cast(AnyIterator:CLASSNAME, it);
     }
     
     //// Directory ////

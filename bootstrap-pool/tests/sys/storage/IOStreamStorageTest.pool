@@ -1,0 +1,111 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::storage;
+
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::memory::MemoryIOStream;
+use sys::stream::SeekableIOStream;
+
+class IOStreamStorageTest extends test::TestCase {
+
+    [] runAll() {
+        this.testIOStreamStorageElements();
+    }
+    
+    [SeekableIOStream] _createDummyStore() {
+        MemoryIOStream storeStream = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+        storeStream._init(1024);
+        
+        // Header
+        storeStream.printCString("/*[meta]\n");
+        storeStream.printCString("mimetype = text/x-grid-store\n");
+        storeStream.printCString("[store]\n");
+        storeStream.printCString("indexVersion = 0.2.0\n");
+        storeStream.printCString("elements = 2\n");
+        storeStream.printCString("*/\n");
+        
+        int indexPos = storeStream.pos();
+        // Platzhalter für 2 StorageElementDesc (2 * 32 Bytes = 64 Bytes)
+        int i = 64;
+        while (i--) { storeStream.printRawInt(0); }
+        
+        // Element 1: "elem1.pool" Inhalt
+        int start1 = storeStream.pos();
+        storeStream.printCString("/*[pool]\nname = my::TestClass1\n*/\ncontent1");
+        int size1 = storeStream.pos() - start1;
+        
+        // Element 2: "elem2.pool" Inhalt
+        int start2 = storeStream.pos();
+        storeStream.printCString("/*[pool]\nname = my::TestClass2\n*/\ncontent2");
+        int size2 = storeStream.pos() - start2;
+        
+        // Index schreiben (bei indexPos)
+        storeStream.seek(indexPos);
+        
+        // Deskriptor 1
+        storeStream.printRawInt(/*start*/ start1)
+                  .printRawInt(/*size*/ size1)
+                  .printRawInt(/*headerSize*/ 0)
+                  .printRawInt(/*mimeType*/ Mimetype:POOL_SRC)
+                  .printRawInt(/*nameHash*/ String:hashCString("my::TestClass1"))
+                  .printRawInt(/*reserved*/ 0)
+                  .printRawInt(/*reserved*/ 0)
+                  .printRawInt(/*reserved*/ 0);
+        
+        // Deskriptor 2
+        storeStream.printRawInt(/*start*/ start2)
+                  .printRawInt(/*size*/ size2)
+                  .printRawInt(/*headerSize*/ 0)
+                  .printRawInt(/*mimeType*/ Mimetype:POOL_SRC)
+                  .printRawInt(/*nameHash*/ String:hashCString("my::TestClass2"))
+                  .printRawInt(/*reserved*/ 0)
+                  .printRawInt(/*reserved*/ 0)
+                  .printRawInt(/*reserved*/ 0);
+        
+        return storeStream.iostream();
+    }
+
+    [int] testIOStreamStorageElements() {
+        this.start("testIOStreamStorageElements");
+        
+        SeekableIOStream storeStream = this._createDummyStore();
+        
+        IOStreamStorage store = this.createOwn(IOStreamStorage:CLASSNAME);
+        store._initFromStream(storeStream);
+        store.own(storeStream);
+        
+        // Test elements() Iterator & order / content check
+        int count = 0;
+        AnyIterator it = store.elements();
+        while (it.hasNext()) {
+            StorageElement e = this.rt().cast(StorageElement:CLASSNAME, it.next());
+            if (this.isNull(e)) { return this.fail("Iterator returned null element"); }
+            
+            String prop = e.getCStringProperty("pool.name");
+            if (count == 0) {
+                if (!prop || !prop.cequals("my::TestClass1")) {
+                    return this.fail("First element name does not match expected 'my::TestClass1'");
+                }
+            } else if (count == 1) {
+                if (!prop || !prop.cequals("my::TestClass2")) {
+                    return this.fail("Second element name does not match expected 'my::TestClass2'");
+                }
+            }
+            count++;
+            e.destroy();
+        }
+        it.destroy();
+        
+        if (count != 2) {
+            return this.fail("Expected 2 elements");
+        }
+        
+        store.destroy();
+        
+        return this.success();
+    }
+}
