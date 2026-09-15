@@ -31,7 +31,7 @@ class CombinedStorage extends Storage, AnyList { // LinkedList<Storage>
     [AnyIterator] elements() {
         CombinedStorageIterator it = this.rt().createInstance(CombinedStorageIterator:CLASSNAME);
         it.init(this.iterator());
-        return this.rt().cast(AnyIterator:CLASSNAME, it);
+        return it.iterator();
     }
    
 }

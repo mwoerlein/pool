@@ -48,6 +48,11 @@ class Directory extends ModifiableStorage, ClassLoadingStorage {
         return fe.init(filepath, pm).storageElement();
     }
     
+    [AnyIterator] elements() {
+        DirectoryIterator it = this.rt().createInstance(DirectoryIterator:CLASSNAME);
+        return it.iterator();
+    }
+    
     [OStream] createElement(String name, int mimeType, PropertyContainer properties) {
         String filepath = this.buildFilePath(name, mimeType, true);
         int buf = 0;
@@ -67,11 +72,6 @@ class Directory extends ModifiableStorage, ClassLoadingStorage {
         int ret = linux::SysCall:unlink(filepath.toCString());
         filepath.destroy();
         return ret;
-    }
-    
-    [AnyIterator] elements() {
-        DirectoryIterator it = this.rt().createInstance(DirectoryIterator:CLASSNAME);
-        return this.rt().cast(AnyIterator:CLASSNAME, it);
     }
     
     //// Directory ////

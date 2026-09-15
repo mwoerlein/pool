@@ -10,4 +10,8 @@ use sys::core::Object;
 class AnyIterator extends Object {
     abstract [int] hasNext();
     abstract [__all__] next();
+    
+    // TODO: remove with implicit cast
+    [AnyIterator] iterator() { return this; }
+    
 }

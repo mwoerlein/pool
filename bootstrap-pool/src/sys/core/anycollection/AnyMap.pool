@@ -173,14 +173,14 @@ class AnyMap extends AnyCollection {
         Runtime rt = this.rt();
         AnyMapKeyIterator it = rt.createInstance(AnyMapKeyIterator:CLASSNAME);
         it.setNext(_first);
-        return rt.cast(AnyIterator:CLASSNAME, it);
+        return it.iterator();
     }
     
     [AnyIterator] values() {
         Runtime rt = this.rt();
         AnyMapValueIterator it = rt.createInstance(AnyMapValueIterator:CLASSNAME);
         it.setNext(_first);
-        return rt.cast(AnyIterator:CLASSNAME, it);
+        return it.iterator();
     }
     
     [AnyMapEntryIterator] entries() {

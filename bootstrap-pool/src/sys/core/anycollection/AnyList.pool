@@ -117,7 +117,7 @@ class AnyList extends AnyCollection {
         Runtime rt = this.rt();
         AnyListIterator it = rt.createInstance(AnyListIterator:CLASSNAME);
         it.setNext(_first);
-        return rt.cast(AnyIterator:CLASSNAME, it);
+        return it.iterator();
     }
     
     [__all__] first() {

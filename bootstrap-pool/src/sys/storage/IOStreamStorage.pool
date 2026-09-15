@@ -86,6 +86,12 @@ class IOStreamStorage extends Storage, IOStreamElement {
         return null;
     }
     
+    [AnyIterator] elements() {
+        IOStreamStorageIterator it = this.rt().createInstance(IOStreamStorageIterator:CLASSNAME);
+        it.init(this, first);
+        return it.iterator();
+    }
+    
     [StorageElement] _getElementFromDesc(StorageElementDesc desc) {
         IOStreamElement e = this.rt().createInstance(IOStreamElement:CLASSNAME);
         e.init(data.getView(desc.start, desc.size), pm);
@@ -102,11 +108,5 @@ class IOStreamStorage extends Storage, IOStreamElement {
     [int] _elementMatches(StorageElement se, String name, int mimeType) {
         // TODO: implement mimeType specific checks
         return true;
-    }
-    
-    [AnyIterator] elements() {
-        IOStreamStorageIterator it = this.rt().createInstance(IOStreamStorageIterator:CLASSNAME);
-        it.init(this, first);
-        return this.rt().cast(AnyIterator:CLASSNAME, it);
     }
 }
