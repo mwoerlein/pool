@@ -31,6 +31,7 @@ class IOStreamStorage extends Storage, IOStreamElement {
     [] _initIOStreamStorage() {
         this._initStorageElement();
         this.pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+        this.first = null;
     }
     [] __destruct() { this._destructIOStreamStorage(); }
     [] _destructIOStreamStorage() {
@@ -42,8 +43,10 @@ class IOStreamStorage extends Storage, IOStreamElement {
         this.init(content, this.pm);
 
         String elements = this.getCStringProperty("store.elements");
-        if (elements) {
-            elementCount = elements.toInt();
+        if (!elements) {
+            // TODO: Bailout? Read old index? 
+//    this.rt().err().printCString("store.elements not found!").printNewline();
+        } else if ((elementCount = elements.toInt()) > 0) {
 //    this.rt().err().printCString("store.elements: ").printInt(elementCount).printNewline();
             
             // read element descriptors into memory
@@ -62,9 +65,6 @@ class IOStreamStorage extends Storage, IOStreamElement {
                 cur = cur.next;
             }
             cur.next = null;
-        } else {
-            // TODO: Bailout? Read old index? 
-//    this.rt().err().printCString("store.elements not found!").printNewline();
         }
         return this;
     }

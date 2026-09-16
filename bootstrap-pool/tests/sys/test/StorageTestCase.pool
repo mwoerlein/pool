@@ -1,0 +1,76 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace sys::test;
+
+use pool::storage::StoreBuilder;
+
+use sys::core::String;
+use sys::memory::MemoryIOStream;
+use sys::storage::CombinedStorage;
+use sys::storage::IOStreamStorage;
+use sys::storage::StorageElement;
+use sys::stream::SeekableIOStream;
+
+class StorageTestCase extends test::TestCase {
+
+    [SeekableIOStream] _createBufferStream(int size) {
+        MemoryIOStream stream = this.rt().createInstance(MemoryIOStream:CLASSNAME);
+        return stream._init(size).iostream();
+    }
+    
+    [StoreBuilder] _initStoreStream(SeekableIOStream stream, int elements, int indexV2) {
+        StoreBuilder sb := this.rt().createInstance(StoreBuilder:CLASSNAME);
+        return sb._init(stream, elements, indexV2);
+    }
+    
+    [SeekableIOStream] _createContentFromCString(cstring mimetype, cstring name, cstring data) {
+        String s := this.rt().createInstance(String:CLASSNAME);
+        s.printCString("/*[meta]\nmimetype = ").printCString(mimetype)
+            .printCString("\n[pool]\nname = ").printCString(name)
+            .printCString("\n*/\n").printCString(data);
+        SeekableIOStream content := s.toIOStream();
+        content.own(s);
+        return content;
+    }
+    
+    [IOStreamStorage] _createIOStreamStorage(SeekableIOStream stream) {
+        IOStreamStorage storage = this.rt().createInstance(IOStreamStorage:CLASSNAME);
+        storage._initFromStream(stream);
+        storage.own(stream);
+        return storage;
+    } 
+    
+    [CombinedStorage] _createCombinedStorage() {
+        CombinedStorage storage = this.rt().createInstance(CombinedStorage:CLASSNAME);
+        return storage;
+    } 
+    
+    [int] caseNoElement(StorageElement e, cstring msg) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case: ").printCString(msg);
+        
+        if (!this.isNull(e)) { e.destroy(); return this.failCase(message.ostream()); }
+        
+        message.destroy();
+        return this.successCase();        
+    }
+    
+    [int] caseMatchElement(StorageElement e, cstring mimetype, cstring name) {
+        String message = this.rt().createInstance(String:CLASSNAME);
+        message.printCString("Case ").printCString(name).printCString(": ");
+        
+        if (this.isNull(e)) { return this.failCase(message.printCString("not found")); }
+        String pMime = e.getCStringProperty("meta.mimetype");
+        if (!pMime || !pMime.cequals(mimetype)) { return this.failCase(message.printCString("incorrect mimetype")); }
+        String pName = e.getCStringProperty("pool.name");
+        if (!pName || !pName.cequals(name)) { return this.failCase(message.printCString("incorrect name")); }
+        
+        e.destroy();
+        message.destroy();
+        return this.successCase();        
+    }
+    
+}

@@ -15,7 +15,10 @@ use sys::stream::OStream;
 
 class CombinedStorage extends Storage, AnyList { // LinkedList<Storage>
     
-    [CombinedStorage] addStorage(Storage s) { this.add(this.own(s)); }
+    [CombinedStorage] addStorage(Storage s) {
+        this.add(this.own(s));
+        return this;
+    }
     
     [StorageElement] getElement(String name, int mimeType) {
         StorageElement ret = null;
