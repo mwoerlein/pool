@@ -20,28 +20,28 @@ class IOStreamStorageTest extends sys::test::StorageTestCase {
     [int] testIOStreamStorageGetElement() {
         this.startCases("testIOStreamStorageGetElement");
 
-        SeekableIOStream storeStream := this._createBufferStream(1024);
-        this._initStoreStream(storeStream, 2, true)
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::ClassA", "contentA"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::ClassB", "contentB"))
+        SeekableIOStream stream := this._createBufferStream(1024);
+        this._initStorageStream(stream, 2, true)
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::ClassA", "contentA"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::ClassB", "contentB"))
             .destroy();
-        IOStreamStorage store = this._createIOStreamStorage(storeStream);
+        IOStreamStorage storage = this._createIOStreamStorage(stream);
 
         String name = this.rt().createInstance(String:CLASSNAME);
         
         // Search with correct mimetype and name
         name.assignCString("my::ClassA");
-        this.caseMatchElement(store.getElement(name, Mimetype:POOL_SRC), Mimetype:TYPE_POOL_SRC, "my::ClassA");
+        this.caseMatchElement(storage.getElement(name, Mimetype:POOL_SRC), Mimetype:TYPE_POOL_SRC, "my::ClassA");
         
         // Search with incorrect mimetype
-        this.caseNoElement(store.getElement(name, Mimetype:POOL_ASM), "Found element with wrong mimetype");
+        this.caseNoElement(storage.getElement(name, Mimetype:POOL_ASM), "Found element with wrong mimetype");
 
         // Search with incorrect name
         name.assignCString("my::NonExistent");
-        this.caseNoElement(store.getElement(name, Mimetype:POOL_SRC), "Found non-existent element");
+        this.caseNoElement(storage.getElement(name, Mimetype:POOL_SRC), "Found non-existent element");
 
         name.destroy();
-        store.destroy();
+        storage.destroy();
 
         return this.successCases();
     }
@@ -49,21 +49,21 @@ class IOStreamStorageTest extends sys::test::StorageTestCase {
     [int] testIOStreamStorageElements() {
         this.startCases("testIOStreamStorageElements");
         
-        SeekableIOStream storeStream := this._createBufferStream(1024);
-        this._initStoreStream(storeStream, 2, true)
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::TestClass1", "content1"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::TestClass2", "content2"))
+        SeekableIOStream stream := this._createBufferStream(1024);
+        this._initStorageStream(stream, 2, true)
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::TestClass1", "content1"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::TestClass2", "content2"))
             .destroy();
-        IOStreamStorage store = this._createIOStreamStorage(storeStream);
+        IOStreamStorage storage = this._createIOStreamStorage(stream);
         
         // Test elements() Iterator & order / content check
-        AnyIterator it = store.elements();
+        AnyIterator it = storage.elements();
         this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::TestClass1");
         this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::TestClass2");
         this.caseNoElement(it.next(), "Expected 2 elements");
         it.destroy();
         
-        store.destroy();
+        storage.destroy();
         
         return this.successCases();
     }
@@ -71,20 +71,20 @@ class IOStreamStorageTest extends sys::test::StorageTestCase {
     [int] testIOStreamStorageEmpty() {
         this.startCases("testIOStreamStorageEmpty");
 
-        SeekableIOStream storeStream := this._createBufferStream(512);
-        this._initStoreStream(storeStream, 0, true).destroy();
-        IOStreamStorage store = this._createIOStreamStorage(storeStream);
+        SeekableIOStream stream := this._createBufferStream(512);
+        this._initStorageStream(stream, 0, true).destroy();
+        IOStreamStorage storage = this._createIOStreamStorage(stream);
 
         String name = this.rt().createInstance(String:CLASSNAME);
         name.assignCString("my::Anything");
-        this.caseNoElement(store.getElement(name, Mimetype:POOL_SRC), "Empty store should return null on getElement");
+        this.caseNoElement(storage.getElement(name, Mimetype:POOL_SRC), "Empty storage should return null on getElement");
 
-        AnyIterator it = store.elements();
-        this.caseNoElement(it.next(), "Empty store iterator should not have elements");
+        AnyIterator it = storage.elements();
+        this.caseNoElement(it.next(), "Empty storage iterator should not have elements");
         it.destroy();
 
         name.destroy();
-        store.destroy();
+        storage.destroy();
         
         return this.successCases();
     }

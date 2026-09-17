@@ -21,19 +21,9 @@ class StorageTestCase extends test::TestCase {
         return stream._init(size).iostream();
     }
     
-    [StoreBuilder] _initStoreStream(SeekableIOStream stream, int elements, int indexV2) {
+    [StoreBuilder] _initStorageStream(SeekableIOStream stream, int elements, int indexV2) {
         StoreBuilder sb := this.rt().createInstance(StoreBuilder:CLASSNAME);
         return sb._init(stream, elements, indexV2);
-    }
-    
-    [SeekableIOStream] _createContentFromCString(cstring mimetype, cstring name, cstring data) {
-        String s := this.rt().createInstance(String:CLASSNAME);
-        s.printCString("/*[meta]\nmimetype = ").printCString(mimetype)
-            .printCString("\n[pool]\nname = ").printCString(name)
-            .printCString("\n*/\n").printCString(data);
-        SeekableIOStream content := s.toIOStream();
-        content.own(s);
-        return content;
     }
     
     [IOStreamStorage] _createIOStreamStorage(SeekableIOStream stream) {
@@ -47,6 +37,16 @@ class StorageTestCase extends test::TestCase {
         CombinedStorage storage = this.rt().createInstance(CombinedStorage:CLASSNAME);
         return storage;
     } 
+    
+    [SeekableIOStream] _createElementStream(cstring mimetype, cstring name, cstring data) {
+        String s := this.rt().createInstance(String:CLASSNAME);
+        s.printCString("/*[meta]\nmimetype = ").printCString(mimetype)
+            .printCString("\n[pool]\nname = ").printCString(name)
+            .printCString("\n*/\n").printCString(data);
+        SeekableIOStream content := s.toIOStream();
+        content.own(s);
+        return content;
+    }
     
     [int] caseNoElement(StorageElement e, cstring msg) {
         String message = this.rt().createInstance(String:CLASSNAME);

@@ -21,22 +21,20 @@ class CombinedStorageTest extends sys::test::StorageTestCase {
         this.startCases("testCombinedStorageGetElement");
 
         SeekableIOStream s1 := this._createBufferStream(1024);
-        this._initStoreStream(s1, 2, true)
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class1", "content1"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class2", "content2"))
+        this._initStorageStream(s1, 2, true)
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class1", "content1"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class2", "content2"))
             .destroy();
-        IOStreamStorage store1 := this._createIOStreamStorage(s1);
 
         SeekableIOStream s2 := this._createBufferStream(1024);
-        this._initStoreStream(s2, 2, true)
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class3", "content3"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class4", "content4"))
+        this._initStorageStream(s2, 2, true)
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class3", "content3"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class4", "content4"))
             .destroy();
-        IOStreamStorage store2 := this._createIOStreamStorage(s2);
         
         CombinedStorage combined := this._createCombinedStorage()
-            .addStorage(store1.storage())
-            .addStorage(store2.storage());
+            .addStorage(this._createIOStreamStorage(s1).storage())
+            .addStorage(this._createIOStreamStorage(s2).storage());
         
         String name = this.rt().createInstance(String:CLASSNAME);
         
@@ -63,23 +61,21 @@ class CombinedStorageTest extends sys::test::StorageTestCase {
         this.startCases("testCombinedStorageElements");
 
         SeekableIOStream s1 := this._createBufferStream(1024);
-        this._initStoreStream(s1, 1, true)
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class1", "content1"))
+        this._initStorageStream(s1, 1, true)
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class1", "content1"))
             .destroy();
-        IOStreamStorage store1 := this._createIOStreamStorage(s1);
 
         SeekableIOStream s2 := this._createBufferStream(1024);
-        this._initStoreStream(s2, 4, true)
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class2", "content2"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class3", "content3"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class4", "content4"))
-            .addElement(this._createContentFromCString(Mimetype:TYPE_POOL_SRC, "my::Class5", "content5"))
+        this._initStorageStream(s2, 4, true)
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class2", "content2"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class3", "content3"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class4", "content4"))
+            .addElement(this._createElementStream(Mimetype:TYPE_POOL_SRC, "my::Class5", "content5"))
             .destroy();
-        IOStreamStorage store2 := this._createIOStreamStorage(s2);
         
         CombinedStorage combined := this._createCombinedStorage()
-            .addStorage(store1.storage())
-            .addStorage(store2.storage());
+            .addStorage(this._createIOStreamStorage(s1).storage())
+            .addStorage(this._createIOStreamStorage(s2).storage());
         
         // Test elements() Iterator & order / content check
         AnyIterator it = combined.elements();
@@ -111,10 +107,9 @@ class CombinedStorageTest extends sys::test::StorageTestCase {
             it.destroy();
         }
 
-        SeekableIOStream storeStream := this._createBufferStream(512);
-        this._initStoreStream(storeStream, 0, true).destroy();
-        IOStreamStorage store = this._createIOStreamStorage(storeStream);
-        combined.addStorage(store.storage());
+        SeekableIOStream s0 := this._createBufferStream(512);
+        this._initStorageStream(s0, 0, true).destroy();
+        combined.addStorage(this._createIOStreamStorage(s0).storage());
 
         this.caseNoElement(combined.getElement(name, Mimetype:POOL_SRC), "Combined storage with empty storage should return null on getElement");
         {
