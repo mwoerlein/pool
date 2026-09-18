@@ -12,10 +12,12 @@ use sys::stream::OStream;
 
 class File extends SeekableIOStream {
     
-    int MODE_READ   := 00000; // O_RDONLY
-    int MODE_WRITE  := 01102; // O_RDWR + O_CREAT + O_TRUNC
-    int MODE_APPEND := 02102; // O_RDWR + O_CREAT + O_APPEND
-/*        
+    int MODE_READ   :=   00000; // O_RDONLY
+    int MODE_WRITE  :=   01102; // O_RDWR + O_CREAT + O_TRUNC
+    int MODE_APPEND :=   02102; // O_RDWR + O_CREAT + O_APPEND
+    int MODE_DIR    := 0200000; // O_RDONLY + O_DIRECTORY
+
+/* see https://elixir.bootlin.com/glibc/glibc-2.25/source/sysdeps/unix/sysv/linux/bits/fcntl-linux.h#L78
     int O_ACCMODE  :=     0003;
     int O_RDONLY   :=       00;
     int O_WRONLY   :=       01;
@@ -25,6 +27,9 @@ class File extends SeekableIOStream {
     int O_NOCTTY   :=     0400;
     int O_TRUNC    :=    01000;
     int O_APPEND   :=    02000;
+    int O_NONBLOCK :=    04000;
+    int O_LARGEFILE:=  0100000;
+    int O_DIRECTORY:=  0200000;
 */    
     
     int fd;

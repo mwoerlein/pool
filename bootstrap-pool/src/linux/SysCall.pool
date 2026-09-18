@@ -16,7 +16,16 @@ class SysCall {
     int SEEK_SET := 0;   /* set file offset to offset */
     int SEEK_CUR := 1;   /* set file offset to current plus offset */
     int SEEK_END := 2;   /* set file offset to EOF plus offset */
-
+    
+    int DT_UNKNOWN := 0;
+    int DT_FIFO    := 1;
+    int DT_CHR     := 2;
+    int DT_DIR     := 4;
+    int DT_BLK     := 6;
+    int DT_REG     := 8;
+    int DT_LNK     := 10;
+    int DT_SOCK    := 12;
+    
     global [int, int] readChar(int fd) {
         int ret = 0;
         int read = 0;
@@ -122,6 +131,12 @@ class SysCall {
         int ret = 0;
         __pasm__("int 0x80", {"%eax": 40, "%ebx": path}, {"%eax": ret});
         return ret == 0;
+    }
+    
+    global [int] getdents(int fd, int buffer, int size) {
+        int read = 0;
+        __pasm__("int 0x80", {"%eax": 141, "%ebx": fd, "%ecx": buffer, "%edx": size}, {"%eax": read});
+        return read;
     }
     
     global [int, int] pageAlloc(int pages) {
