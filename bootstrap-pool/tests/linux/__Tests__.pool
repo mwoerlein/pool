@@ -1,0 +1,13 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux;
+
+class __Tests__ {
+    
+    global [] setup(test::TestSuite suite) {
+        suite.register(linux::fs::Directory:CLASSNAME, linux::fs::DirectoryTest:CLASSNAME);
+    }
+}

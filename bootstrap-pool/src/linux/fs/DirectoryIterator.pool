@@ -5,15 +5,90 @@ version = 0.1.0
 */
 namespace linux::fs;
 
+use linux::SysCall;
+use linux::fs::File;
+use linux::fs::FileElement;
+
+use sys::core::String;
 use sys::core::anycollection::AnyIterator;
+use sys::core::utils::PropertiesMarshaller;
+use sys::memory::Address;
+use sys::memory::MemoryIOStream;
 
 class DirectoryIterator extends AnyIterator {
+
+    int fd;
+    MemoryIOStream buffer;
+    int read;
+    int pos;
+    String basePath;
+    PropertiesMarshaller pm;
+    
+    [] __init() {
+        this.basePath = this.createOwn(String:CLASSNAME);
+        this.pm = this.createOwn(PropertiesMarshaller:CLASSNAME);
+        this.buffer = this.createOwn(MemoryIOStream:CLASSNAME);
+        this.buffer._init(1024);
+        this.fd = -1;
+        this.read = 0;
+        this.pos = 0;
+    }
+    
+    [] __destroy() {
+        this._closeFd();
+    }
+
+    [DirectoryIterator] _init(cstring dirname) {
+        fd = SysCall:open(dirname, File:MODE_DIR);
+        basePath.assignCString(dirname);
+        if (fd < 0) {
+            this.rt().err().printCString("failed to open dir: ").printCString(dirname).printNewline();
+            return null;
+        }
+        this._advance(0);
+        return this;
+    }
     
     [int] hasNext() {
-        return false;
+        return pos < read;
     }
     
     [__all__] next() {
-        return null;
+        if (pos >= read) { return null; }
+        int buf := buffer.startAddr();
+        
+        String filename := this.rt().createInstance(String:CLASSNAME);
+        filename.print(basePath).printChar('/').printCString(Address:string(null, buf+pos+10));
+        this._advance(Address:loadWord(buf+pos+8)); 
+        
+        FileElement fe = this.rt().createInstance(FileElement:CLASSNAME);
+        fe.init(filename, pm);
+        fe.setCStringProperty("linux.filename", filename.toCString());
+        
+        return Address:convert(fe.storageElement());
+    }
+    
+    [] _advance(int skip) {
+        if (fd < 0) { return; }
+        int buf := buffer.startAddr();
+        int len := buffer.length();
+        pos += skip;
+        do {
+            while (pos < read) {
+//                int inode := Address:loadDWord(buf+pos);
+//                int offset := Address:loadDWord(buf+pos+4);
+                int reclen := Address:loadWord(buf+pos+8);
+                int type := Address:loadChar(buf+pos+reclen-1);
+                if (type == SysCall:DT_REG) { return; }
+                pos += reclen; 
+            }
+            read = SysCall:getdents(fd, buf, len);
+            pos = 0;
+        } while (read > 0);
+        this._closeFd();
+    }
+    
+    [] _closeFd() {
+        if (fd >= 0) { SysCall:close(fd); fd = -1; pos = 0; read = 0; }
     }
 }

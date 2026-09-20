@@ -50,6 +50,7 @@ class Directory extends ModifiableStorage, ClassLoadingStorage {
     
     [AnyIterator] elements() {
         DirectoryIterator it = this.rt().createInstance(DirectoryIterator:CLASSNAME);
+        it._init(baseDir.toCString());
         return it.iterator();
     }
     

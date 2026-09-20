@@ -1,0 +1,135 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace linux::fs;
+
+use linux::fs::File;
+use sys::memory::Address;
+use sys::core::String;
+use sys::core::anycollection::AnyIterator;
+use sys::storage::Mimetype;
+use sys::storage::StorageElement;
+use sys::stream::OStream;
+
+class DirectoryTest extends sys::test::StorageTestCase {
+
+    [] runAll() {
+        this.testDirectoryCreateAndGet();
+        this.testDirectoryIterator();
+        this.testDirectoryRemove();
+    }
+
+    [int] testDirectoryCreateAndGet() {
+        this.start("testDirectoryCreateAndGet");
+
+        Directory dir = this.rt().createInstance(Directory:CLASSNAME);
+        String base = this.rt().createInstance(String:CLASSNAME);
+        base.assignCString("test_storage_dir");
+        dir.setBaseDir(base);
+        base.destroy();
+
+        
+        // Create element
+        this.createPoolSrc(dir, "my::SimpleClass").printCString("class SimpleClass {}").destroy();
+
+        String name = this.rt().createInstance(String:CLASSNAME);
+        name.assignCString("my::SimpleClass");
+        // Get element
+        StorageElement elem = dir.getElement(name, Mimetype:POOL_SRC);
+        if (!elem) {
+            this.fail("Failed to retrieve created element");
+        }
+        elem.destroy();
+
+        name.destroy();
+        dir.destroy();
+
+        // Clean up directory created on disk
+        linux::SysCall:unlink("test_storage_dir/my/SimpleClass.pool");
+        linux::SysCall:rmdir("test_storage_dir/my");
+        linux::SysCall:rmdir("test_storage_dir");
+
+        return this.success();
+    }
+
+    [int] testDirectoryIterator() {
+        this.startCases("testDirectoryIterator");
+
+        Directory dir = this.rt().createInstance(Directory:CLASSNAME);
+        Directory dirMy = this.rt().createInstance(Directory:CLASSNAME);
+        String base = this.rt().createInstance(String:CLASSNAME);
+        base.assignCString("test_iter_dir");
+        dir.setBaseDir(base);
+        base.printCString("/my");
+        dirMy.setBaseDir(base);
+        base.destroy();
+
+        // Create two elements
+        this.createPoolSrc(dir, "my::ClassOne").printCString("class ClassOne {}").destroy();
+        this.createPoolSrc(dir, "my::ClassTwo").printCString("class ClassTwo {}").destroy();
+
+        // Iterate
+        AnyIterator it = dirMy.elements();
+        this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassOne");
+        this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassTwo");
+        it.destroy();
+
+        dirMy.destroy();
+        dir.destroy();
+
+        // Clean up
+        linux::SysCall:unlink("test_iter_dir/my/ClassOne.pool");
+        linux::SysCall:unlink("test_iter_dir/my/ClassTwo.pool");
+        linux::SysCall:rmdir("test_iter_dir/my");
+        linux::SysCall:rmdir("test_iter_dir");
+
+        return this.successCases();
+    }
+
+    [int] testDirectoryRemove() {
+        this.start("testDirectoryRemove");
+
+        Directory dir = this.rt().createInstance(Directory:CLASSNAME);
+        String base = this.rt().createInstance(String:CLASSNAME);
+        base.assignCString("test_remove_dir");
+        dir.setBaseDir(base);
+        base.destroy();
+
+        this.createPoolSrc(dir, "my::ToRemove").printCString("class ToRemove {}").destroy();
+
+        String name = this.rt().createInstance(String:CLASSNAME);
+        name.assignCString("my::ToRemove");
+        // Remove element
+        int res = dir.removeElement(name, Mimetype:POOL_SRC);
+        if (res < 0) {
+            return this.fail("Failed to remove element");
+        } else {
+            StorageElement elem = dir.getElement(name, Mimetype:POOL_SRC);
+            if (elem) {
+                elem.destroy();
+                return this.fail("Element still exists after removal");
+            }
+        }
+
+        name.destroy();
+        dir.destroy();
+
+        linux::SysCall:rmdir("test_remove_dir/my");
+        linux::SysCall:rmdir("test_remove_dir");
+
+        return this.success();
+    }
+    
+    [OStream] createPoolSrc(Directory dir, cstring classname) {
+        String name = this.rt().createInstance(String:CLASSNAME);
+        name.assignCString(classname);
+        OStream out = dir.createElement(name, Mimetype:POOL_SRC, null);
+        if (out) {
+            out.printCString("/*[meta]\nmimetype = text/x-pool-src\n[pool]\nname = ").printCString(classname).printCString("\n*/");
+        }
+        name.destroy();
+        return out;
+    }
+}
