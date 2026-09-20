@@ -21,6 +21,8 @@ class DirectoryIterator extends AnyIterator {
     MemoryIOStream buffer;
     int read;
     int pos;
+    int recursive;
+    DirectoryIterator inner;
     String basePath;
     PropertiesMarshaller pm;
     
@@ -32,20 +34,23 @@ class DirectoryIterator extends AnyIterator {
         this.fd = -1;
         this.read = 0;
         this.pos = 0;
+        this.recursive = false;
+        this.inner = null;
     }
     
     [] __destroy() {
         this._closeFd();
     }
 
-    [DirectoryIterator] _init(cstring dirname) {
+    [DirectoryIterator] _init(cstring dirname, int recursive) {
         fd = SysCall:open(dirname, File:MODE_DIR);
         basePath.assignCString(dirname);
         if (fd < 0) {
             this.rt().err().printCString("failed to open dir: ").printCString(dirname).printNewline();
             return null;
         }
-        this._advance(0);
+        this.recursive = recursive;
+        this._advance(false);
         return this;
     }
     
@@ -54,12 +59,15 @@ class DirectoryIterator extends AnyIterator {
     }
     
     [__all__] next() {
+        if (inner) {
+            __all__ n := inner.next();
+            this._advance(false);
+            return n;
+        }
         if (pos >= read) { return null; }
-        int buf := buffer.startAddr();
         
-        String filename := this.rt().createInstance(String:CLASSNAME);
-        filename.print(basePath).printChar('/').printCString(Address:string(null, buf+pos+10));
-        this._advance(Address:loadWord(buf+pos+8)); 
+        String filename := this._createCurrentName();
+        this._advance(true); 
         
         FileElement fe = this.rt().createInstance(FileElement:CLASSNAME);
         fe.init(filename, pm);
@@ -68,18 +76,44 @@ class DirectoryIterator extends AnyIterator {
         return Address:convert(fe.storageElement());
     }
     
-    [] _advance(int skip) {
+    [] _advance(int skipCurrent) {
         if (fd < 0) { return; }
         int buf := buffer.startAddr();
         int len := buffer.length();
-        pos += skip;
+        if (skipCurrent) {
+            pos += Address:loadWord(buf+pos+8); 
+        }
         do {
+            if (inner) {
+                if (inner.hasNext()) { return; }
+                inner.destroy();
+                inner = null;
+                pos += Address:loadWord(buf+pos+8); 
+            }
             while (pos < read) {
 //                int inode := Address:loadDWord(buf+pos);
 //                int offset := Address:loadDWord(buf+pos+4);
                 int reclen := Address:loadWord(buf+pos+8);
                 int type := Address:loadChar(buf+pos+reclen-1);
                 if (type == SysCall:DT_REG) { return; }
+                if (type == SysCall:DT_DIR && recursive) {
+                    int c10 := Address:loadChar(buf+pos+10);
+                    int c11 := Address:loadChar(buf+pos+11);
+                    int c12 := Address:loadChar(buf+pos+12);
+                    if (c10 == '.' && c11 == 0) {
+                        // "."
+                    } else if (c10 == '.' && c11 == '.' && c12 == 0) {
+                        // ".."
+                    } else {
+                        String dirname := this._createCurrentName();
+                        inner = this.rt().createInstance(DirectoryIterator:CLASSNAME);
+                        inner._init(dirname.toCString(), recursive);
+                        inner.own(dirname);
+                        if (inner.hasNext()) { return; }
+                        inner.destroy();
+                        inner = null;
+                    }
+                }
                 pos += reclen; 
             }
             read = SysCall:getdents(fd, buf, len);
@@ -89,6 +123,14 @@ class DirectoryIterator extends AnyIterator {
     }
     
     [] _closeFd() {
+        if (inner) { inner.destroy(); }
         if (fd >= 0) { SysCall:close(fd); fd = -1; pos = 0; read = 0; }
+    }
+    
+    [String] _createCurrentName() {
+        int buf := buffer.startAddr();
+        String name := this.rt().createInstance(String:CLASSNAME);
+        name.print(basePath).printChar('/').printCString(Address:string(null, buf+pos+10));
+        return name;
     }
 }

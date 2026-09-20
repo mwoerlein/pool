@@ -57,32 +57,50 @@ class DirectoryTest extends sys::test::StorageTestCase {
     [int] testDirectoryIterator() {
         this.startCases("testDirectoryIterator");
 
+        linux::SysCall:mkdir("test_iter_dir/empty");
+        
         Directory dir = this.rt().createInstance(Directory:CLASSNAME);
-        Directory dirMy = this.rt().createInstance(Directory:CLASSNAME);
         String base = this.rt().createInstance(String:CLASSNAME);
         base.assignCString("test_iter_dir");
         dir.setBaseDir(base);
         base.printCString("/my");
-        dirMy.setBaseDir(base);
-        base.destroy();
 
-        // Create two elements
+        // Create some elements
         this.createPoolSrc(dir, "my::ClassOne").printCString("class ClassOne {}").destroy();
         this.createPoolSrc(dir, "my::ClassTwo").printCString("class ClassTwo {}").destroy();
+        this.createPoolSrc(dir, "my::other::very::deep::ClassThree").printCString("class ClassThree {}").destroy();
 
         // Iterate
-        AnyIterator it = dirMy.elements();
-        this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassOne");
-        this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassTwo");
-        it.destroy();
+        {
+            AnyIterator it = dir.elements();
+            this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::other::very::deep::ClassThree");
+            this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassOne");
+            this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassTwo");
+            this.caseNoElement(it.next(), "Found more elements as expected");
+            it.destroy();
+        }
+        // Iterate Flat
+        {
+            DirectoryIterator it = this.rt().createInstance(DirectoryIterator:CLASSNAME);
+            it._init(base.toCString(), false);
+            this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassOne");
+            this.caseMatchElement(it.next(), Mimetype:TYPE_POOL_SRC, "my::ClassTwo");
+            this.caseNoElement(it.next(), "Found more elements as expected");
+            it.destroy();
+        }
 
-        dirMy.destroy();
+        base.destroy();
         dir.destroy();
 
         // Clean up
+        linux::SysCall:unlink("test_iter_dir/my/other/very/deep/ClassThree.pool");
         linux::SysCall:unlink("test_iter_dir/my/ClassOne.pool");
         linux::SysCall:unlink("test_iter_dir/my/ClassTwo.pool");
+        linux::SysCall:rmdir("test_iter_dir/my/other/very/deep");
+        linux::SysCall:rmdir("test_iter_dir/my/other/very");
+        linux::SysCall:rmdir("test_iter_dir/my/other");
         linux::SysCall:rmdir("test_iter_dir/my");
+        linux::SysCall:rmdir("test_iter_dir/empty");
         linux::SysCall:rmdir("test_iter_dir");
 
         return this.successCases();
