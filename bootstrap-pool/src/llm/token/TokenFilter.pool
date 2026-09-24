@@ -1,0 +1,16 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::token;
+
+
+class TokenFilter extends sys::core::Object {
+
+    abstract [int] isValidToken(int tokenId);
+    
+    // TODO: remove with implicit cast
+    [TokenFilter] tokenFilter() { return this; }
+
+}

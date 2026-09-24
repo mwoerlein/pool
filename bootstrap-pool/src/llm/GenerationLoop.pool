@@ -10,20 +10,20 @@ use sys::core::Integer;
 use sys::core::math::FltMatrix;
 use llm::Model;
 use llm::model::TokenList;
+use llm::token::TokenSampler;
 
 class GenerationLoop extends sys::core::Object {
 
     Model model;
-    int temperature; // Stored as Flt representation
-    int topK;
+    TokenSampler sampler;
     int eosTokenId;
 
     [GenerationLoop] _init(Model model, int temperature, int topK, int eosTokenId) {
         if (!model) { return null; }
         this.model = model;
-        this.temperature = temperature;
-        this.topK = topK;
         this.eosTokenId = eosTokenId;
+        this.sampler = this.createOwn(TokenSampler:CLASSNAME);
+        this.sampler._init(temperature, topK);
         return this;
     }
 
@@ -40,10 +40,11 @@ class GenerationLoop extends sys::core::Object {
             if (!logits) {
                 running = 0;
             } else {
-                int nextToken = this.sampleToken(logits);
+                int nextToken = this.sampler.sampleToken(logits);
+                
                 logits.destroy();
 
-                if (nextToken == eosTokenId) {
+                if (nextToken == -1 || nextToken == eosTokenId) {
                     running = 0;
                 } else {
                     tokenIds.appendToken(nextToken);
@@ -54,17 +55,5 @@ class GenerationLoop extends sys::core::Object {
 
         return step;
     }
-
-    [int] sampleToken(FltMatrix logits) {
-        int lastRow = logits.rows() - 1;
-
-        // Greedy search if temperature <= 0.0 (compare <= 0 returns <= 0)
-        if (Flt:compare(this.temperature, Flt:ZERO_POS) <= 0) {
-            return logits.rowMaxCol(lastRow);
-        }
-
-        // Temperature scaling, softmax, top-k, and multinomial sampling can be added here
-        // Fallback to greedy if temperature > 0 but advanced sampling not fully wired yet
-        return logits.rowMaxCol(lastRow);
-    }
+    
 }

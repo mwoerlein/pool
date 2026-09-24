@@ -1,0 +1,104 @@
+/*[meta]
+mimetype = text/x-pool
+author = Marc Woerlein <marc.woerlein@gmx.de>
+version = 0.1.0
+*/
+namespace llm::token;
+
+use llm::layer::SelfAttention;
+use llm::layer::SoftmaxLayer;
+
+use sys::core::Flt;
+use sys::core::math::FltMatrix;
+use sys::core::math::FltVector;
+use sys::core::utils::DWordArray;
+use sys::core::utils::RandomGenerator;
+
+class TokenSampler extends sys::core::Object {
+
+    int temperature; // Stored as Flt representation
+    FltVector topKLogits;
+    DWordArray topKIds;
+    SoftmaxLayer softmax;
+    RandomGenerator rand;
+    
+    [TokenSampler] _init(int temperature, int topK) {
+        int k = topK;
+        if (Flt:compare(temperature, Flt:ZERO_POS) <= 0 || topK < 1) {
+            // Greedy search if temperature <= 0.0 or no topK is given
+            k = 1;
+        }
+        this.temperature = temperature;
+        this.topKLogits = this.createOwn(FltVector:CLASSNAME);
+        this.topKLogits.init(k);
+        this.topKIds = this.createOwn(DWordArray:CLASSNAME);
+        this.topKIds._initDWordArray(k);
+        this.softmax = this.createOwn(SoftmaxLayer:CLASSNAME);
+        this.rand = this.createOwn(RandomGenerator:CLASSNAME);
+        if (this.rt().hasClock()) {
+            [int a, int b] := this.rt().getClock().getTime();
+            this.rand.setSeed(a + b);
+        }
+        return this;
+    }
+
+    [int] sampleToken(FltMatrix logits) {
+        int n := logits.cols();
+        int lastRow := logits.rows() - 1;
+        FltVector kl := this.topKLogits;
+        DWordArray ki := this.topKIds;
+        int lastK := kl.length() - 1;
+        int curK = lastK;
+        
+        // clear buffer
+        this.topKLogits._setAllDWord(SelfAttention:MASK_FLT);
+        this.topKIds._setAllDWord(-1);
+        
+        // collect top-k tokens
+        int i = 0;
+        while (i < n) {
+            if (this.isValidToken(i)) { 
+                int l := logits.get(lastRow, i);
+                if (Flt:compare(l, kl.get(lastK)) > 0) {
+                    kl._saveSetDWord(lastK, l);
+                    ki._saveSetDWord(lastK, i);
+                    curK = lastK;
+                    while (curK-- && (Flt:compare(l, kl._saveGetDWord(curK)) >= 0)) {
+                        kl._saveSetDWord(curK+1, kl._saveSetDWord(curK, l));
+                        ki._saveSetDWord(curK+1, ki._saveSetDWord(curK, i));
+                    }
+                }
+            }
+            i++;
+        }
+        
+        // count valid top-k tokens
+        curK = lastK;
+        while (curK >=0 && ki._saveGetDWord(curK) == -1) { curK--; }
+        if (curK < 0) { return -1; } // no valid token found
+        if (curK == 0) { return ki._saveGetDWord(0); } // greedy, if only one token is selected
+        
+        // slice valid candidates
+        FltVector x := this.createOwn(FltVector:CLASSNAME);
+        x.init(curK + 1);
+        kl._saveGetDWordArray(0, x.dwordArray());
+        
+        // temperature scaling, softmax, and multinomial sampling
+        FltVector y := this.softmax.forwardVector(x.divFlt(this.temperature));
+        int idx = y.length();
+        int target = this.rand.nextFloat();
+        while (idx-- && Flt:compare(target, Flt:ZERO_POS) > 0) {
+            target = Flt:sub(target, y.get(idx));
+        }
+        y.destroy();
+        x.destroy();
+        
+        return ki._saveGetDWord(idx + 1);
+    }
+    
+    [int] isValidToken(int tokenId) {
+        // TODO add and apply TokenFilter instances
+        return true;
+    }
+
+}
