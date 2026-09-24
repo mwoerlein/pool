@@ -5,8 +5,9 @@ version = 0.1.0
 */
 namespace llm;
 
+use llm::token::TokenList;
+
 use sys::core::math::FltMatrix;
-use llm::model::TokenList;
 
 class Model extends llm::MatrixLayer {
 

@@ -9,6 +9,7 @@ use llm::Embedding;
 use llm::io::WeightLoader;
 use llm::layer::LinearLayer;
 use llm::layer::RMSNormLayer;
+use llm::token::TokenList;
 
 use sys::core::String;
 use sys::core::anycollection::AnyList;

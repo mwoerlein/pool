@@ -5,9 +5,10 @@ version = 0.1.0
 */
 namespace llm::model;
 
+use llm::token::TokenList;
+
 use sys::core::math::FltMatrix;
 use sys::core::math::FltVector;
-use llm::model::TokenList;
 
 class PrefilledModel extends llm::Model {
 

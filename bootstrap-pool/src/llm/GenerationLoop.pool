@@ -5,12 +5,13 @@ version = 0.1.0
 */
 namespace llm;
 
+use llm::Model;
+use llm::token::TokenList;
+use llm::token::TokenSampler;
+
 use sys::core::Flt;
 use sys::core::Integer;
 use sys::core::math::FltMatrix;
-use llm::Model;
-use llm::model::TokenList;
-use llm::token::TokenSampler;
 
 class GenerationLoop extends sys::core::Object {
 

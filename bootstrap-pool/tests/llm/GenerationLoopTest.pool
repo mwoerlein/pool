@@ -6,7 +6,8 @@ version = 0.1.0
 namespace llm;
 
 use llm::model::PrefilledModel;
-use llm::model::TokenList;
+use llm::token::TokenList;
+
 use sys::core::Flt;
 use sys::core::String;
 use sys::core::math::FltMatrix;

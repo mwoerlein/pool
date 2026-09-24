@@ -5,13 +5,14 @@ version = 0.1.0
 */
 namespace llm;
 
+use llm::token::TokenList;
+
 use sys::core::Flt;
 use sys::core::Integer;
 use sys::core::anycollection::AnyList;
 use sys::core::anycollection::AnyIterator;
 use sys::core::math::FltMatrix;
 use sys::core::math::FltVector;
-use llm::model::TokenList;
 
 class Embedding extends sys::core::Object {
 
