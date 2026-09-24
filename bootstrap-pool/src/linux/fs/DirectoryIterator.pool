@@ -66,12 +66,15 @@ class DirectoryIterator extends AnyIterator {
         }
         if (pos >= read) { return null; }
         
-        String filename := this._createCurrentName();
-        this._advance(true); 
-        
-        FileElement fe = this.rt().createInstance(FileElement:CLASSNAME);
+        int buf := buffer.startAddr();
+        cstring basename := Address:string(null, buf+pos+10);
+        String filename := this._createAbsoluteName(basename);
+        FileElement fe := this.rt().createInstance(FileElement:CLASSNAME);
         fe.init(filename, pm);
         fe.setCStringProperty("linux.filename", filename.toCString());
+        fe.setCStringProperty("linux.basename", basename);
+        
+        this._advance(true); 
         
         return Address:convert(fe.storageElement());
     }
@@ -105,7 +108,7 @@ class DirectoryIterator extends AnyIterator {
                     } else if (c10 == '.' && c11 == '.' && c12 == 0) {
                         // ".."
                     } else {
-                        String dirname := this._createCurrentName();
+                        String dirname := this._createAbsoluteName(Address:string(null, buf+pos+10));
                         inner = this.rt().createInstance(DirectoryIterator:CLASSNAME);
                         inner._init(dirname.toCString(), recursive);
                         inner.own(dirname);
@@ -127,10 +130,9 @@ class DirectoryIterator extends AnyIterator {
         if (fd >= 0) { SysCall:close(fd); fd = -1; pos = 0; read = 0; }
     }
     
-    [String] _createCurrentName() {
-        int buf := buffer.startAddr();
-        String name := this.rt().createInstance(String:CLASSNAME);
-        name.print(basePath).printChar('/').printCString(Address:string(null, buf+pos+10));
-        return name;
+    [String] _createAbsoluteName(cstring name) {
+        String abs := this.rt().createInstance(String:CLASSNAME);
+        abs.print(basePath).printChar('/').printCString(name);
+        return abs;
     }
 }
