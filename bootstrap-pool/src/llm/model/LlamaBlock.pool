@@ -58,6 +58,10 @@ class LlamaBlock extends llm::MatrixLayer {
         return this;
     }
     
+    [int] prepareIncremental(int maxTokens) {
+        return attn && attn.prepareIncremental(maxTokens);
+    }
+    
     [FltMatrix] forwardMatrix(FltMatrix x) {
         if (!x) { return null; }
 

@@ -30,26 +30,28 @@ class GenerationLoop extends sys::core::Object {
 
     [int] generateInto(TokenList tokenIds, int maxNewTokens) {
         if (!tokenIds) { return 0; }
+        
+        int incremental := this.model.prepareIncremental(tokenIds.size() + maxNewTokens);
 
+        this.rt().out().printChar('.');
+        FltMatrix logits = this.model.forwardTokens(tokenIds);
         int step = 0;
-        int running = 1;
-        while (step < maxNewTokens && running) {
-            this.rt().out().printChar('.');
-
-            FltMatrix logits = this.model.forwardTokens(tokenIds);
+        while (logits) {
+            int nextToken = this.sampler.sampleToken(logits);
+            logits.destroy();
+            logits = null;
             
-            if (!logits) {
-                running = 0;
+            if (nextToken == -1 || nextToken == eosTokenId) {
+                // exit loop
             } else {
-                int nextToken = this.sampler.sampleToken(logits);
-                
-                logits.destroy();
-
-                if (nextToken == -1 || nextToken == eosTokenId) {
-                    running = 0;
-                } else {
-                    tokenIds.appendToken(nextToken);
-                    step++;
+                tokenIds.appendToken(nextToken); step++;
+                if (step < maxNewTokens) {
+                    this.rt().out().printChar('.');
+                    if (incremental) {
+                        logits = this.model.forwardIncrementalToken(nextToken);
+                    } else {
+                        logits = this.model.forwardTokens(tokenIds);
+                    }
                 }
             }
         }

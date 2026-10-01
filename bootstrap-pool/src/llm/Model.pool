@@ -12,6 +12,8 @@ use sys::core::math::FltMatrix;
 class Model extends llm::MatrixLayer {
 
     abstract [FltMatrix] forwardTokens(TokenList tokenIds);
+    [int] prepareIncremental(int maxTokens) { return false; }
+    [FltMatrix] forwardIncrementalToken(int tokenId) { return null; }
     
     // TODO: remove with implicit cast
     [Model] model() { return this; }

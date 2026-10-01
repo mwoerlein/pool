@@ -111,6 +111,24 @@ class LlamaModel extends llm::Model {
         return id;
     }
     
+    [int] prepareIncremental(int maxTokens) {
+        int ret = true;
+        AnyIterator it = blocks.iterator();
+        while (it.hasNext()) {
+            LlamaBlock block := it.next();
+            ret = ret && block.prepareIncremental(maxTokens);
+        }
+        it.destroy();
+        return ret;
+    }
+    
+    [FltMatrix] forwardIncrementalToken(int tokenId) {
+        FltMatrix x = embedding.forwardToken(tokenId, -1); // no PE
+        FltMatrix logits = this.forwardMatrix(x);
+        x.destroy();
+        return logits;
+    }
+    
     [FltMatrix] forwardTokens(TokenList tokenIds) {
         if (!tokenIds) { return null; }
         FltMatrix x = embedding.forwardTokens(tokenIds);

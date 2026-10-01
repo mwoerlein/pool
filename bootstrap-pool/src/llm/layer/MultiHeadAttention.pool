@@ -29,6 +29,10 @@ class MultiHeadAttention extends llm::MatrixLayer {
     int useRoPE;
     int useCM;
     
+    int idxCache;
+    FltMatrix kCache;
+    FltMatrix vCache;
+    
     [MultiHeadAttention] _init(int heads, FltMatrix wq, FltVector bq, FltMatrix wk, FltVector bk, FltMatrix wv, FltVector bv, FltMatrix wo, FltVector bo) {
         linearQ = this._ownLinearLayer(wq, bq);
         linearK = this._ownLinearLayer(wk, bk);
@@ -51,6 +55,7 @@ class MultiHeadAttention extends llm::MatrixLayer {
         }
         this.softmax = this._ownSoftmaxLayer();
         this.scale = Flt:sqrt(Flt:fromInt(this.dHead));
+        this.idxCache = -1;
         return this;
     }
     [MultiHeadAttention] useRoPE(int mode) {
@@ -60,6 +65,24 @@ class MultiHeadAttention extends llm::MatrixLayer {
     [MultiHeadAttention] useCM(int b) {
         this.useCM = b;
         return this;
+    }
+    
+    [int] prepareIncremental(int maxTokens) {
+        int dm := this.dModel;
+        if (!kCache) {
+            kCache = this._emptyMatrix(maxTokens, dm);
+        } else if (kCache.rows() < maxTokens) {
+            kCache.destroy();
+            kCache = this._emptyMatrix(maxTokens, dm);
+        }
+        if (!vCache) {
+            vCache = this._emptyMatrix(maxTokens, dm);
+        } else if (vCache.rows() < maxTokens) {
+            vCache.destroy();
+            vCache = this._emptyMatrix(maxTokens, dm);
+        }
+        idxCache = 0;
+        return kCache && vCache;
     }
     
     [FltMatrix] forwardMatrix(FltMatrix x) {
@@ -88,14 +111,26 @@ class MultiHeadAttention extends llm::MatrixLayer {
         int dh := this.dHead;
         int dt := x.rows();
         int sh := this.scale;
+        
+        FltMatrix kUse = k;
+        FltMatrix vUse = v;
+        int len := dt; 
+        if (idxCache >= 0) {
+            kUse = kCache;
+            vUse = vCache;
+            kCache._saveSetDWordArray(idxCache*dm, k.dwordArray());
+            vCache._saveSetDWordArray(idxCache*dm, v.dwordArray());
+            len = idxCache += dt;
+        }
+        
         FltMatrix tmp := this._emptyMatrix(dt, dm);
         
         if (dt) {
-            FltMatrix scores := this._emptyMatrix(dt, dt);
+            FltMatrix scores := this._emptyMatrix(dt, len);
             int i = this.heads;
             while (i--) {
                 int start := i*dh;
-                if (!FltMatrix:mtMulInto(q, 0, start, k, 0, start, scores, 0, 0, dt, dt, dh)) {
+                if (!FltMatrix:mtMulInto(q, 0, start, kUse, 0, start, scores, 0, 0, dt, len, dh)) {
                     this.rt().err().printCString("aaaahhhh1").printNewline();
                 }
 /*
@@ -116,7 +151,7 @@ class MultiHeadAttention extends llm::MatrixLayer {
                 ;
 */
                 FltMatrix weights := softmax.forwardMatrix(scores);
-                if (!FltMatrix:mmMulInto(weights, 0, 0, v, 0, start, tmp, 0, start, dt, dh, dt)) {
+                if (!FltMatrix:mmMulInto(weights, 0, 0, vUse, 0, start, tmp, 0, start, dt, dh, len)) {
                     this.rt().err().printCString("aaaahhhh2").printNewline();
                 }
 /*
@@ -150,8 +185,10 @@ class MultiHeadAttention extends llm::MatrixLayer {
         int dh := this.dHead;
         int dh2 := this.dHead/2;
         int pos = q.rows();
+        int shift = 0;
+        if (idxCache > 0) { shift = idxCache; }
         while (pos--) {
-            int posFlt := Flt:fromInt(pos);
+            int posFlt := Flt:fromInt(pos + shift);
             int h = this.heads;
             while (h--) {
                 int start := h*dh;
@@ -173,8 +210,10 @@ class MultiHeadAttention extends llm::MatrixLayer {
         int dh := this.dHead;
         int dh2 := this.dHead/2;
         int pos = q.rows();
+        int shift = 0;
+        if (idxCache > 0) { shift = idxCache; }
         while (pos--) {
-            int posFlt := Flt:fromInt(pos);
+            int posFlt := Flt:fromInt(pos + shift);
             int h = this.heads;
             while (h--) {
                 int start := h*dh;

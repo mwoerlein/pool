@@ -43,35 +43,15 @@ class Embedding extends sys::core::Object {
             int pos = 0;
             AnyIterator it = tokenIds.iterator();
             if (usePE) {
-                int dmFlt := Flt:fromInt(dm);
                 while (it.hasNext()) {
                     Integer tokenObj := it.next();
-                    int token = tokenObj.getInt();
-                    int posFlt := Flt:fromInt(pos);
-                    int i = dm;
-                    while (i--) {
-                        if (i % 2) {
-                            ret.set(pos, i, Flt:add(
-                                this.weights.get(token, i),
-                                Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
-                            ));
-                        } else {
-                            ret.set(pos, i, Flt:add(
-                                this.weights.get(token, i),
-                                Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
-                            ));
-                        }
-                    }
+                    this._insertTokenInto(ret, pos, tokenObj.getInt(), pos);
                     pos++;
                 }
             } else {
                 while (it.hasNext()) {
                     Integer tokenObj := it.next();
-                    int token = tokenObj.getInt();
-                    int i = dm;
-                    while (i--) {
-                        ret.set(pos, i, this.weights.get(token, i));
-                    }
+                    this._insertTokenInto(ret, pos, tokenObj.getInt(), -1);
                     pos++;
                 }
             }
@@ -79,6 +59,41 @@ class Embedding extends sys::core::Object {
         }
         
         return ret;
+    }
+    
+    [FltMatrix] forwardToken(int tokenId, int pos) {
+        int dm := this.dModel;
+        FltMatrix ret = this.rt().createInstance(FltMatrix:CLASSNAME);
+        ret.init(1, dm);
+        this._insertTokenInto(ret, 0, tokenId, pos);
+        return ret;
+    }
+    
+    [] _insertTokenInto(FltMatrix m, int row, int tokenId, int pos) {
+        int dm := this.dModel;
+        if (pos < 0) {
+            int i = dm;
+            while (i--) {
+                m.set(row, i, this.weights.get(tokenId, i));
+            }
+        } else {
+            int dmFlt := Flt:fromInt(dm);
+            int posFlt := Flt:fromInt(pos);
+            int i = dm;
+            while (i--) {
+                if (i % 2) {
+                    m.set(row, i, Flt:add(
+                        this.weights.get(tokenId, i),
+                        Flt:cos(MatrixLayer:alpha(dmFlt, posFlt, i - 1))
+                    ));
+                } else {
+                    m.set(row, i, Flt:add(
+                        this.weights.get(tokenId, i),
+                        Flt:sin(MatrixLayer:alpha(dmFlt, posFlt, i))
+                    ));
+                }
+            }
+        }
     }
     
 }
