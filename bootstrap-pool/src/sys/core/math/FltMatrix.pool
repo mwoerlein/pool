@@ -360,7 +360,17 @@ class FltMatrix extends sys::core::utils::DWordArray {
             || startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()
         ) { return null; }
 /*/
-        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0) { return null; }
+        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0) {
+            a.rt().err().printCString("Problem ?").printNewline()
+                .printCString("a   : ").print(a).printNewline()
+                .printCString("b   : ").print(b).printNewline()
+                .printCString("r   : ").print(r).printNewline()
+                .printCString("rows: ").printInt(rows).printNewline()
+                .printCString("cols: ").printInt(cols).printNewline()
+                .printCString("com : ").printInt(commons).printNewline()
+            ;
+            return null;
+        }
         if (startRowA < 0 || startColA < 0 || startRowA + rows > a.rows() || startColA + commons > a.cols()) {
             a.rt().err().printCString("Problem A").printNewline()
                 .printCString("startRow: ").printInt(startRowA).printNewline()
@@ -420,7 +430,17 @@ class FltMatrix extends sys::core::utils::DWordArray {
             || startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()
         ) { return null; }
 /*/
-        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0) { return null; }
+        if (!a || !b || !r || rows < 0 || cols < 0 || commons < 0) {
+            a.rt().err().printCString("Problem ?").printNewline()
+                .printCString("a   : ").print(a).printNewline()
+                .printCString("b   : ").print(b).printNewline()
+                .printCString("r   : ").print(r).printNewline()
+                .printCString("rows: ").printInt(rows).printNewline()
+                .printCString("cols: ").printInt(cols).printNewline()
+                .printCString("com : ").printInt(commons).printNewline()
+            ;
+            return null;
+        }
         if (startRowA < 0 || startColA < 0 || startRowA + rows > a.rows() || startColA + commons > a.cols()) {
             a.rt().err().printCString("Problem A").printNewline()
                 .printCString("startRow: ").printInt(startRowA).printNewline()
@@ -444,7 +464,14 @@ class FltMatrix extends sys::core::utils::DWordArray {
             return null;
         }
         if (startRowR < 0 || startColR < 0 || startRowR + rows > r.rows() || startColR + cols > r.cols()) {
-            r.rt().err().printCString("Problem R").printNewline();
+            r.rt().err().printCString("Problem R").printNewline()
+                .printCString("startRow: ").printInt(startRowR).printNewline()
+                .printCString("endRow  : ").printInt(startRowR+rows).printNewline()
+                .printCString("rows    : ").printInt(r.rows()).printNewline()
+                .printCString("startCol: ").printInt(startColR).printNewline()
+                .printCString("endCol  : ").printInt(startColR+cols).printNewline()
+                .printCString("cols    : ").printInt(r.cols()).printNewline()
+            ;
             return null;
         }
  //*/       
